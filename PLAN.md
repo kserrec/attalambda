@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phases 1–3 complete; continuing Phases 4–8 autonomously as authorized.
+Status: Phases 1–4 complete; continuing Phases 5–8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -346,15 +346,23 @@ Phase 3 is complete; Phase 4 follows under the continuous approval.
 
 ### Step 4.1 — Implement left reduction
 
-- [ ] Add the small accumulator recursion and typed `reduce` wrapper to the
+- [x] Add the small accumulator recursion and typed `reduce` wrapper to the
   transform module. `reduce f initial NIL` returns initial. Test a
   noncommutative combining function to distinguish argument order and left
   association from the existing right fold. Prove callback Error propagation
   stops further callback evaluation and preserves remaining-arity behavior.
 
+Step 4.1 result (2026-09-06): implemented direct left reduction in the
+transform module with accumulator-first callback application and immediate
+callback Error propagation. The first test load exposed a reference to a
+nonexistent third-position alias; used the checker's existing church-succ on
+argument-position-two instead, adding no metadata binding. Focused tests cover
+noncommutative reduction, NIL identity, mixed accumulation, early Errors,
+callback stopping, preserved frames, and curried arity.
+
 ### Step 4.2 — Implement the five searches
 
-- [ ] Add `any?`, `all?`, `find`, `find-index`, and `contains?` in
+- [x] Add `any?`, `all?`, `find`, `find-index`, and `contains?` in
   `core/list-search.rkt`, using the same predicate-result rule. Keep loops
   direct; do not create a general search engine. Empty answers are FALSE,
   TRUE, NONE, NONE, and FALSE respectively. Return the first matching value
@@ -363,6 +371,26 @@ Phase 3 is complete; Phase 4 follows under the continuous approval.
   callbacks that would fail if short-circuiting were lost. Add the matching
   search suite, exports, diagnostics, public cases, and docs; run the Phase
   completion gate.
+
+Step 4.2 result (2026-09-06): added the small search peer with direct loops,
+sharing only the identical any/contains traversal and the existing predicate
+result helper. Option results and whole Rat indices use existing constructors
+and private binary counting. Tests prove first/later stopping, equality order,
+NIL/singleton/heterogeneous cases, non-Bool answers, incoming/callback Errors,
+preserved frames, and curried arity. The final focused transform/search run
+passed 192 assertions (84 and 108); encoded-name tests passed 292 and installed
+language tests passed 115, including all six new public functions and stopping
+programs. The full run passed all 41 suites, 13,900 assertions, expanded purity
+for 32 modules, and complete boundaries. Updated all three exact core counts
+to 24 before the gate. The relevant diff and whitespace checks passed.
+
+Phase 4 executable changes: direct reduction in the transform peer, one pure
+search peer, and six exports/encoded names. Tests/tooling: search suite,
+reduction/public/diagnostic coverage, and exact facade/inventory tables.
+Documentation: current reference, README, architecture, acceptance, and plan.
+Existing raw algorithms, tag table, generalized checker, runtime, and host
+capabilities remain unchanged. Phase 4 is complete; Phase 5 follows under the
+continuous approval.
 
 ## Phase 5 — Indexing and predicate prefixes
 

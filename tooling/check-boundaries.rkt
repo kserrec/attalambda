@@ -389,8 +389,10 @@
               (typed-len-rat LEN)
               (typed-take-rat TAKE)
               (typed-drop-rat DROP))
+     (only-in "../core/list-search.rkt"
+              typed-any? typed-all? typed-find typed-find-index typed-contains?)
      (only-in "../core/list-transform.rkt"
-              typed-append typed-reverse typed-map typed-filter)
+              typed-append typed-reverse typed-map typed-filter typed-reduce)
      (only-in "../core/lists.rkt"
               NIL
               raw-cons
@@ -485,6 +487,12 @@
      (typed-reverse reverse)
      (typed-map map)
      (typed-filter filter)
+     (typed-reduce reduce)
+     (typed-any? any?)
+     (typed-all? all?)
+     (typed-find find)
+     (typed-find-index find-index)
+     (typed-contains? contains?)
      (NOT not)
      (AND and)
      (OR or)
@@ -588,6 +596,9 @@
       MAP-CONTAINS? MAP-SET MAP-REMOVE
       head tail is-nil len take drop
       append reverse map filter typed-append typed-reverse typed-map typed-filter
+      reduce typed-reduce
+      any? all? find find-index contains?
+      typed-any? typed-all? typed-find typed-find-index typed-contains?
       not and or xor succ add
       sub mult div eq lt lte
       gt gte is-zero make-char char-eq char-lt

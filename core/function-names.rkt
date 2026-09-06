@@ -17,6 +17,12 @@
          reverse-function-name
          map-function-name
          filter-function-name
+         reduce-function-name
+         any-function-name
+         all-function-name
+         find-function-name
+         find-index-function-name
+         contains-function-name
          not-function-name
          and-function-name
          or-function-name
@@ -98,6 +104,12 @@
 (define-function-name reverse-function-name reverse)
 (define-function-name map-function-name map)
 (define-function-name filter-function-name filter)
+(define-function-name reduce-function-name reduce)
+(define-function-name any-function-name any?)
+(define-function-name all-function-name all?)
+(define-function-name find-function-name find)
+(define-function-name find-index-function-name find-index)
+(define-function-name contains-function-name contains?)
 
 (define-function-name not-function-name not)
 (define-function-name and-function-name and)

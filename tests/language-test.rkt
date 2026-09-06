@@ -251,6 +251,17 @@ PROBE
 (check (is-nil (filter loop NIL)))
 (check (is-nil (reverse NIL)))
 (check (is-nil (append NIL NIL)))
+(check (eq (reduce sub 10 values) 4))
+(check (any? (lambda (value) (gt value 1)) values))
+(check (all? (lambda (value) (lt value 4)) values))
+(check (option-case (find (eq 2) values) (lambda (value) (eq value 2)) FALSE))
+(check (option-case (find-index (eq 2) values) (lambda (value) (eq value 1)) FALSE))
+(check (contains? eq 2 values))
+(check (any? (lambda (value) (if (eq value 1) TRUE (loop value))) values))
+(check (not (all? (lambda (value) (if (eq value 1) FALSE (loop value))) values)))
+(check (is-some (find (lambda (value) (if (eq value 1) TRUE (loop value))) values)))
+(check (is-some (find-index (lambda (value) (if (eq value 1) TRUE (loop value))) values)))
+(check (eq (reduce loop 5 NIL) 5))
 PROGRAM
      )
     (check-command-success
@@ -258,7 +269,7 @@ PROGRAM
                   racket-executable
                   (list (path->string list-library-program))
                   20)
-     (make-bytes 8 46))
+     (make-bytes 19 46))
 
     ;; Every ASCII literal must agree with make-char and a one-byte String.
     ;; Sending each through the existing String codec also validates its tag,
@@ -350,6 +361,8 @@ PROGRAM
 (def nested-type-error = (add (mult TRUE 1) 2))
 (def map-callback-error = (map (lambda (value) (add TRUE value)) (cons 1 NIL)))
 (def filter-callback-error = (filter (lambda (value) value) (cons 1 NIL)))
+(def reduce-callback-error = (reduce sub TRUE (cons 1 NIL)))
+(def any-callback-error = (any? (lambda (value) value) (cons 1 NIL)))
 (def saved-host = host)
 PROGRAM
      )
@@ -394,6 +407,8 @@ PROGRAM
 (displayln (error-value->string (target-value 'nested-type-error)))
 (displayln (error-value->string (target-value 'map-callback-error)))
 (displayln (error-value->string (target-value 'filter-callback-error)))
+(displayln (error-value->string (target-value 'reduce-callback-error)))
+(displayln (error-value->string (target-value 'any-callback-error)))
 PROBE
      )
     (check-command-success
@@ -409,7 +424,9 @@ PROBE
       #"string-append(arg2 expected STRING got RAT)\n"
       #"mult(arg1 expected RAT got BOOL)\n  -> add(arg1 expected RAT)\n"
       #"add(arg1 expected RAT got BOOL)\n  -> map(result)\n"
-      #"filter(arg1 expected BOOL got RAT)\n"))
+      #"filter(arg1 expected BOOL got RAT)\n"
+      #"sub(arg1 expected RAT got BOOL)\n  -> reduce(result)\n"
+      #"any?(arg1 expected BOOL got RAT)\n"))
 
     (for ([case
            (in-list

@@ -2,6 +2,7 @@
 
 (require "../macros/macros.rkt"
          "errors.rkt"
+         "fix.rkt"
          "function-names.rkt"
          "lists.rkt"
          "logic.rkt"
@@ -13,6 +14,7 @@
          typed-reverse
          typed-map
          typed-filter
+         typed-reduce
          typed-predicate-result)
 
 (def list-binary-signature =
@@ -92,3 +94,22 @@
      raw-keep-return)
     (raw-filter (typed-filter-choice predicate)))
    list))
+
+(def typed-reduce-step recur function accumulator list =
+  (((raw-if (raw-list-is-nil list))
+    accumulator)
+   (lambda-let next =
+     ((function accumulator) (raw-list-head list))
+     (((raw-if ((raw-is-type error-type) next))
+       ((raw-add-result-frame next) reduce-function-name))
+      (((recur function) next) (raw-list-tail list))))))
+
+(def typed-reduce function initial list =
+  (((raw-if ((raw-is-type error-type) initial))
+    ((raw-add-result-frame initial) reduce-function-name))
+   ((((((raw-check-argument reduce-function-name)
+        (church-succ argument-position-two))
+       list-type)
+      raw-keep-return)
+     (((raw-fix typed-reduce-step) function) initial))
+    list)))

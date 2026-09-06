@@ -1,7 +1,7 @@
 # Public API
 
 This reference describes the source surface on
-`feature/public-api-and-list-library` after Phase 3. The published 0.3.0
+`feature/public-api-and-list-library` after Phase 4. The published 0.3.0
 archive retains its earlier uppercase library names. All callable built-ins
 below are lowercase; their old uppercase aliases are absent from the language.
 Constants keep their names. Further List operations remain planned in
@@ -56,13 +56,19 @@ and `function` denote parameters, not an Any or Function runtime type.
 | `reverse list` | List in reverse order. |
 | `map function list` | Apply function to each element in order; a callback Error propagates as the whole result. |
 | `filter predicate list` | Retain elements whose predicate returns TRUE, in their original order. |
+| `reduce function initial list` | Accumulate left to right; function receives accumulator, then element. NIL returns initial; callback Error stops reduction. |
+| `any? predicate list`, `all? predicate list` | Bool; stop at the first true or false answer respectively. NIL yields FALSE for any? and TRUE for all?. |
+| `find predicate list` | First matching element in Option, otherwise NONE. |
+| `find-index predicate list` | First matching zero-based whole Rat index in Option, otherwise NONE. |
+| `contains? equality value list` | Bool membership; apply curried equality to value, then each element. Stop at the first match; NIL yields FALSE. |
 
-List callbacks are pure unary functions. Predicates must return tagged Bool;
+List callbacks are pure unary or curried functions. Predicates must return tagged Bool;
 Error propagates with the List operation's frame, and another tagged answer
 produces TypeMismatch expecting Bool. Neither map nor filter calls its callback
 on NIL. Result Err remains an ordinary element. No Function or Any tag is added.
-Checking for later callback Errors can require traversing a finite result;
-these functions make no infinite-List productivity guarantee.
+Searches stop as soon as their answer is known. Checking for later callback
+Errors in map/filter can require traversing a finite result; those transforms
+make no infinite-List productivity guarantee.
 
 ## Rat
 

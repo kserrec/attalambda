@@ -234,6 +234,15 @@ suffix Errors before retaining a node. A small pure predicate-result helper
 uses the same checker and diagnostic convention as Map equality. There is no
 new tag, callback registry, or host computation.
 
+The transform module also implements `reduce` as a direct left accumulator
+loop, receiving accumulator before element and stopping at callback Error.
+`core/list-search.rkt` implements `any?`, `all?`, `find`, `find-index`, and
+`contains?` through direct loops and the same predicate-result helper. Any and
+contains share their identical Boolean traversal; supplied equality receives
+the sought value before the element. Find returns Option; find-index counts
+with private binary Nat and wraps a canonical whole Rat in Option. Each search
+stops before another predicate call once its answer is determined.
+
 ### Natural numbers (private machinery)
 
 Binary Nat values are private machinery since Milestone 4: no public Nat type

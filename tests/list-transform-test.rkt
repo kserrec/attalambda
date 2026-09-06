@@ -7,7 +7,7 @@
          "../core/list-transform.rkt"
          "../core/result.rkt"
          (only-in "../core/typed-logic.rkt" TRUE FALSE)
-         (only-in "../core/typed-rat.rkt" typed-rat-succ typed-rat-equal)
+         (only-in "../core/typed-rat.rkt" typed-rat-succ typed-rat-equal typed-rat-sub)
          "../readers/error.rkt"
          "../runtime/codec.rkt"
          "helpers/lazy.rkt"
@@ -138,3 +138,59 @@
                               (lazy-apply typed-map typed-rat-succ)
                               (lazy-apply typed-filter (lambda (value) TRUE))))])
   (check-equal? (procedure-arity (lazy-force partial)) 1))
+
+;; Reduction is left-associated and passes accumulator before element.
+(check-equal?
+ (object-rat->exact (apply3 typed-reduce typed-rat-sub (exact->object-rat 10) sample))
+ 4)
+(check-equal?
+ (object-rat->exact (apply3 typed-reduce typed-rat-sub (exact->object-rat 10)
+                           (numbers '(2))))
+ 8)
+(for ([initial (in-list (list one TRUE NIL result-err))])
+  (check-eq? (lazy-force (apply3 typed-reduce unused initial NIL))
+             (lazy-force initial)))
+(check-equal?
+ (read-numbers
+  (apply3 typed-reduce
+          (lambda (accumulator) (lambda (value) (apply2 typed-cons value accumulator)))
+          NIL sample))
+ '(3 2 1))
+(check-equal?
+ (error-value->string (apply3 typed-reduce unused invalid-count-error unused))
+ "INVALID-COUNT\n  -> reduce(result)")
+(check-equal?
+ (error-value->string (apply3 typed-reduce unused one TRUE))
+ "reduce(arg3 expected LIST got BOOL)")
+(check-equal?
+ (error-value->string (apply3 typed-reduce unused one invalid-count-error))
+ "INVALID-COUNT\n  -> reduce(arg3 expected LIST)")
+(for ([failure-at (in-list '(1 2))])
+  (define calls '())
+  (define result
+    (apply3 typed-reduce
+            (lambda (accumulator)
+              (lambda (value)
+                (define number (object-rat->exact value))
+                (set! calls (append calls (list number)))
+                (cond [(= number failure-at) (lazy-apply typed-head NIL)]
+                      [(> number failure-at) (error 'reduce "continued after Error")]
+                      [else accumulator])))
+            one sample))
+  (check-equal? (error-value->string result)
+                "EMPTY-LIST\n  -> head(result)\n  -> reduce(result)")
+  (check-equal? calls (if (= failure-at 1) '(1) '(1 2))))
+(for ([partial (in-list (list typed-reduce
+                              (lazy-apply typed-reduce unused)
+                              (apply2 typed-reduce unused one)
+                              (apply2 typed-reduce unused invalid-count-error)))])
+  (check-equal? (procedure-arity (lazy-force partial)) 1))
+
+(check-eq?
+ (lazy-force
+  (apply3 typed-reduce (lambda (accumulator) (lambda (value) result-err)) NIL sample))
+ (lazy-force result-err))
+(check-eq?
+ (lazy-force
+  (apply3 typed-reduce (lambda (accumulator) (lambda (value) value)) NIL heterogeneous))
+ (lazy-force (lazy-apply typed-head (lazy-apply typed-tail (lazy-apply typed-tail heterogeneous)))))
