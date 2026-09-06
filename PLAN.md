@@ -1,4 +1,252 @@
-# Non-core simplification plan
+# HTTP, empty-List consistency, and explicit exit plan
+
+Status: approved for serial execution on 2026-09-05; Phase 0 complete;
+Phase 1 next.
+Branch: `refactor/non-core-simplification`; no new branch.
+Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
+working tree before this planning edit.
+Source: [Kyle's HTTP/List/exit specification](/home/serrecchia/Downloads/ATTALAMBDA_HTTP_LIST_EXIT_SPEC.md),
+SHA-256 `b57cfc8a694ac9af02b60d50cec950ea66706641b60922c6181aed9912903e1f`.
+The three [language specifications](docs/specifications/README.md) remain
+normative; Phase 0 explicitly amends them before adding the new effect.
+
+## Size and verified starting state
+
+Three bounded changes, with five Phases and thirteen single-pass Steps as
+the supplied specification requires. This is smaller in implementation scope
+than the completed non-core refactor, but not three tiny passes. Empty-List
+consistency is expected to require tests only; HTTP changes two existing
+production modules; exit adds one small effect across existing layers.
+Specification, checker, subprocess, and packaged acceptance work account for
+the remaining Steps. The prior baseline full suite took about 23 minutes;
+five required Phase runs plus the Linux build/consumer make verification a
+material part of the work. That is prior timing, not a new runtime estimate.
+
+- **HTTP exists:** `effects/http-server.rkt:161` implements
+  `raw-read-http-request-step` with `raw-string-append`, whole-List length,
+  and `parse-http-request` after each read. `effects/http.rkt:663` first
+  scans for `CR LF CR LF` and returns incomplete until it is present. The
+  existing parser can therefore remain the sole semantic parser.
+- **Canonical reconstruction exists:** `raw-rebuild-list` in
+  `core/lists.rkt` is already used by `MAKE-STRING` and public `DROP`.
+  `runtime/codec.rkt:105` accepts only the canonical `NIL` terminator.
+  A read-only planning probe passed all 18 requested empty-producing cases,
+  checking both codec conversion and canonical List/String termination.
+  The existing `tests/codec-test.rkt` suite passed 144 tests. The expanded
+  persistent regression matrix has not yet been written.
+- **Public exit is new:** no `effects/exit.rkt`, `tests/exit-test.rkt`,
+  public exit binding, protocol entry, or host performer exists. The protocol
+  and real dispatcher each contain nine operations. Native exit currently
+  appears in the runner's launcher-failure path. Existing bounded Rat
+  decoding and language host injection can be reused.
+
+## Change boundary and execution
+
+The planning turn changed only `PLAN.md`; the completed plan below is retained
+as history. Kyle approved all five Phases on 2026-09-05 after discussing purity
+and the exit boundary. Execute them serially without routine reconfirmation.
+This named work is separate from the previous plan's final stop.
+
+The approved scope modifies the two HTTP modules, protocol, real host, language
+expander, directly affected tests/checkers, normative specifications, current
+documentation, and existing Linux consumer harness named below. Create only
+`effects/exit.rkt` and `tests/exit-test.rkt` as new production/test modules.
+List producers change only if the persistent matrix proves a specific failure;
+the planning probe gives no present reason to modify one.
+
+Behaviorally unchanged: List representation and codec acceptance; existing
+HTTP grammar, 8192-byte cap, trailing-data rejection, error propagation,
+cleanup, and laziness; all nine existing host operations; launcher failure
+statuses; normal status-0 completion without explicit exit. Intended changes
+are incremental HTTP work and the new explicit program-chosen exit effect.
+No dependencies, new runtime layer, generic streaming parser, HTTP bodies,
+concurrency, timeout, TLS, stderr effect, process spawning/signals, exit codes
+2..255, automatic Error printing, or final-value/status inference.
+
+Before each Step, read `AGENTS.md`, all three normative specifications, the
+named production files, and directly relevant tests. Execute and record one
+Step at a time in source order; each numbered Step is one pass. Run focused
+tests while working and both architectural checkers after production edits:
+`racket tooling/check-purity.rkt` and `racket tooling/check-boundaries.rkt`.
+After every Step, inspect `git diff --check` and the complete relevant diff,
+explicitly excluding `.env`, `*.env`, `.env.*`, and `*.env.*` from every
+recursive listing/search/bulk read or diff. Never inspect dotenv contents.
+
+At each Phase boundary, run `./run-all-tests.sh`, then obtain a fresh agent
+review focused only on that Phase's diff and direct interactions. Prove causes
+before repairs; fix serially, at most ten findings per batch, obtain fresh
+review of repairs, and repeat invalidated checks before continuing. Record
+executable, test/tooling, and comment/doc changes separately. Commit and push
+each verified Phase only to this branch. Use isolated temporary filesystem
+fixtures, ephemeral loopback ports, and existing finite test deadlines.
+Stop on a normative conflict, a broad List representation problem, or two
+failed diagnostic hypotheses. No unrelated cleanup or weakened checks.
+
+## Phase 0 — Specify exit (one Step)
+
+### Step 0.1 — Amend the normative contract
+
+- [x] Append dated amendments to the three normative specification files;
+  update precedence/provenance and hashes in `docs/specifications/README.md`.
+  Specify public `(exit status)`: Rat 0/1 only; wrong type yields ordinary
+  TypeMismatch Error, other Rats yield existing InvalidCount Error, and
+  incoming Error bubbles. Pure code validates/chooses; only the real host
+  terminates with the requested OS status and does not return. Fake hosts
+  may return. Runner-native exit remains launcher/source scaffolding;
+  Error/Err values never automatically determine process status. Programs
+  without exit retain normal status 0. No production changes in this Step.
+  Run the full suite, diff checks, and Phase review before committing.
+
+Step 0.1 result (2026-09-05): appended all three amendments, updated the
+index's precedence and SHA-256 provenance, and verified that every original
+byte remains an exact prefix. Executable/test changes: none. Documentation:
+the approved plan and four specification documents. `./run-all-tests.sh`
+passed all 38 suites; expanded purity passed 29 production modules and the
+repository-wide boundary gate passed. Exact-file diff checks passed. Fresh
+Phase 0 review found zero confirmed issues. No repairs were needed.
+
+## Phase 1 — Prove empty-List consistency (two Steps)
+
+### Step 1.1 — Persist the codec consistency matrix
+
+- [ ] Extend the canonical-empty section of `tests/codec-test.rkt`. Generic
+  Lists: `NIL`, singleton `TAIL`, nonempty `TAKE 0`, exact/beyond-length
+  `DROP`, `TAKE 0` after another List operation, and empty `DROP` after
+  `TAKE`. List Byte: singleton `TAIL`, `TAKE 0`, exact/beyond-length `DROP`.
+  Strings: `MAKE-STRING NIL`, singleton `STRING-TAIL`, append two empty
+  Strings, and `BYTES-TO-STRING NIL`. Also convert empty String and singleton
+  String tail to bytes; compose `"A" -> STRING-TO-BYTES -> DROP 1 ->
+  BYTES-TO-STRING -> STRING-TO-BYTES -> codec`. Assert empty host List/bytes
+  and canonical `NIL` where required, retaining forged-terminator rejection.
+
+### Step 1.2 — Verify; repair only a proven producer
+
+- [ ] Run codec, List, and String suites, plus List-count/Byte suites if
+  their producers change. If all cases pass, retain only the regression
+  tests. Otherwise name the failing producer and repair its smallest pure
+  reconstruction path using canonical `NIL`/existing `raw-rebuild-list`.
+  No codec loosening or List redesign; stop if the cause is broader. Run
+  applicable checkers, full suite, and Phase review before committing.
+
+## Phase 2 — Incremental HTTP framing and accumulation (three Steps)
+
+### Step 2.1 — Add the pure delimiter scanner
+
+- [ ] Add `raw-scan-http-header-end` in `effects/http.rkt`, returning a raw
+  Pair of found flag and next suffix. Inspect only the new chunk plus at
+  most three preceding characters, using existing pure List/String tools;
+  retain at most the last three characters when incomplete. Extend
+  `tests/http-test.rkt` for a whole delimiter, all three internal delimiter
+  splits, byte-at-a-time input, overlapping CRs, near matches, empty chunks,
+  trailing characters, and every two-chunk split of a complete valid request.
+
+### Step 2.2 — Replace the server's repeated prefix work
+
+- [ ] Change `effects/http-server.rkt` loop state to reversed accumulated
+  characters, running private binary Nat count, and at-most-three-character
+  suffix. Convert/count/reverse only the new chunk; prepend its reverse
+  without walking the old prefix. Check the running count against 8192
+  before parsing. Scan suffix plus chunk; incomplete nonempty reads recur
+  without full parsing. At completion or EOF, reconstruct once and call the
+  existing parser once. Include all bytes from the completing chunk so
+  trailing-data rejection stays intact. Update the loop's obsolete comments;
+  preserve callers, cleanup, EOF and failure behavior. Run both HTTP suites.
+
+### Step 2.3 — Verify server behavior across chunk boundaries
+
+- [ ] Extend existing fake-host tests in `tests/http-server-test.rkt` for
+  one chunk, one byte per chunk, every nonempty two-chunk split, and each
+  delimiter split. An empty TCP read remains EOF, not an interior fragment.
+  Pin premature EOF, exactly 8192 and over-cap requests, malformed and
+  unsupported requests, trailing data, read failures, cleanup, read order,
+  and repeated-forcing laziness. Review source to prove no full parse on
+  incomplete chunks, no repeated old-prefix append traversal, and no whole
+  request recount. Run both HTTP suites, checkers, full suite, and review.
+
+## Phase 3 — Add public exit 0/1 (four Steps)
+
+### Step 3.1 — Construct and validate the pure exit request
+
+- [ ] Create peer `effects/exit.rkt` and `tests/exit-test.rkt`; extend
+  `effects/protocol.rkt` with `exit-function-name`, `exit-operation` and
+  the closed operation-table entry. Request: List `["exit", Rat(status)]`.
+  Reuse the generalized checker, existing raw Rat primitives, and request
+  dispatch/bubbling pattern. Validate 0/1 before calling the injected host.
+  Test both encodings, unary shape, no call before forcing, exactly one call
+  per valid status, TypeMismatch, InvalidCount for `-1`, `2`, and `1/2`,
+  incoming Error, and fake-host return propagation. Verify direct malformed
+  protocol requests retain InvalidHostRequest behavior. Change checker
+  inventories only as required.
+
+### Step 3.2 — Perform explicit process termination in the real host
+
+- [ ] Extend `runtime/host.rkt` with the tenth dispatch case and
+  `perform-exit`; reuse `decode-bounded-count` with bounds 0 and 1 for
+  defensive canonical whole-Rat decoding. No automatic output, final-value
+  inspection, Error mapping, or returning `Ok UNIT` after successful real
+  exit. Update `tooling/check-boundaries.rkt`, host tests, and
+  `docs/design/host-boundary.md` for this exact capability. Successful real
+  calls run only in child processes; malformed requests must not terminate
+  tests. Native exit remains forbidden in pure effects, codec, and readers.
+
+### Step 3.3 — Expose the canonical public binding
+
+- [ ] In `lang/expander.rkt`, inject `language-host` once into `make-exit`,
+  bind internally as `language-exit`, and rename/export as `exit` without
+  colliding with native Racket exit. Update language tests and exact
+  import/export/injection checks; run boundary/purity suites as applicable.
+  Add no other public alias or constant; runner production behavior stays.
+
+### Step 3.4 — Prove operating-system statuses and sequencing
+
+- [ ] Extend existing runner/subprocess tests with temporary public-only
+  `#lang attalambda` programs: exit 0/1 gives exact status and empty output;
+  no exit, including `(DIV 1 0)` and ordinary Error, remains status 0;
+  missing-file Err chosen fatal/recoverable gives 1/0; stdout before exit
+  appears, stdout afterward does not; an unselected exit branch stays lazy.
+  Run exit, host, language, runner suites, both checkers, full suite, and
+  Phase review. Pure AttaLambda makes every fatal/recoverable decision.
+
+## Phase 4 — Documentation, packaged behavior, acceptance (three Steps)
+
+### Step 4.1 — Synchronize current documentation
+
+- [ ] Update `README.md`, `ARCHITECTURE.md`, `docs/design/host-boundary.md`,
+  and `docs/ACCEPTANCE.md` for ten operations, public exit 0/1, unchanged
+  no-exit completion and launcher statuses, and incremental HTTP work.
+  Also update the shipped `distribution/GETTING_STARTED.md.in` status table,
+  which currently has no explicit program-exit entries. Remove the
+  deferred quadratic HTTP finding only after both parsing and prefix
+  accumulation/count repetition are eliminated. Preserve the blocking,
+  single-connection limitation; no new timeout/nonblocking claims or old
+  milestone narration. Record observed implementation separately from plans.
+
+### Step 4.2 — Extend existing Linux consumer checks
+
+- [ ] Extend `tooling/test-linux-distribution.sh` and directly relevant
+  `tests/distribution-test.rkt` checks to prove packaged exit 0, exit 1,
+  and unchanged no-exit status 0, including captured stdout/stderr. Reuse
+  existing temporary programs, status capture, and consumer isolation;
+  no new distribution framework, artifact policy, version, or release.
+
+### Step 4.3 — Final acceptance and fresh review
+
+- [ ] Run the full suite and both checkers; review only this milestone's
+  changes with a fresh agent. In isolated temporary fixtures, prove checker
+  rejection of native computation in pure HTTP framing and native exit in
+  effects, codec, and a reader; retain no mutations. Resolve proven findings
+  and rerun invalidated checks. Build a recorded clean implementation commit
+  with the existing Racket CS 9.3 Linux harness and run the independent
+  no-Racket consumer. Record revision, checksum, packaged 0/1/default
+  statuses, and pure program decisions making a missing-file Err fatal or
+  recoverable. Keep acceptance artifacts unpublished. Commit/push verified
+  results on this branch and stop: no pull request, merge, tag, or release
+  without Kyle's explicit approval. Any later evidence-only commit must be
+  distinguished from the implementation revision actually tested.
+
+---
+
+# Completed non-core simplification plan
 
 Status: complete on 2026-09-05; pushed for Kyle's review. The permanent stop
 at the end of Step 4.2 now applies.
