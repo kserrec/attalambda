@@ -262,6 +262,12 @@ PROBE
 (check (is-some (find (lambda (value) (if (eq value 1) TRUE (loop value))) values)))
 (check (is-some (find-index (lambda (value) (if (eq value 1) TRUE (loop value))) values)))
 (check (eq (reduce loop 5 NIL) 5))
+(check (option-case (nth 1 values) (lambda (value) (eq value 2)) FALSE))
+(check (is-none (nth 3 values)))
+(check (eq (len (take-while (lambda (value) (lt value 3)) values)) 2))
+(check (eq (head (drop-while (lambda (value) (lt value 2)) values)) 2))
+(check (is-nil (take-while (lambda (value) (if (eq value 1) FALSE (loop value))) values)))
+(check (eq (head (drop-while (lambda (value) (if (eq value 1) FALSE (loop value))) values)) 1))
 PROGRAM
      )
     (check-command-success
@@ -269,7 +275,7 @@ PROGRAM
                   racket-executable
                   (list (path->string list-library-program))
                   20)
-     (make-bytes 19 46))
+     (make-bytes 25 46))
 
     ;; Every ASCII literal must agree with make-char and a one-byte String.
     ;; Sending each through the existing String codec also validates its tag,

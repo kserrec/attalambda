@@ -29,9 +29,11 @@
          (only-in "../core/list-nat.rkt"
                   [typed-len-rat LEN]
                   [typed-take-rat TAKE]
-                  [typed-drop-rat DROP])
+                  [typed-drop-rat DROP]
+                  typed-nth-rat)
          (only-in "../core/list-search.rkt"
-                  typed-any? typed-all? typed-find typed-find-index typed-contains?)
+                  typed-any? typed-all? typed-find typed-find-index typed-contains?
+                  typed-take-while typed-drop-while)
          (only-in "../core/list-transform.rkt"
                   typed-append typed-reverse typed-map typed-filter typed-reduce)
          (only-in "../core/lists.rkt"
@@ -158,6 +160,9 @@
                      [LEN len]
                      [TAKE take]
                      [DROP drop]
+                     [typed-nth-rat nth]
+                     [typed-take-while take-while]
+                     [typed-drop-while drop-while]
                      [typed-append append]
                      [typed-reverse reverse]
                      [typed-map map]

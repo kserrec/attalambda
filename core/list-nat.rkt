@@ -7,6 +7,7 @@
          "lists.rkt"
          "logic.rkt"
          "objects.rkt"
+         (only-in "option.rkt" NONE raw-make-some)
          "tags.rkt"
          "typecheck.rkt"
          (only-in "errors.rkt"
@@ -22,7 +23,8 @@
          raw-list-drop
          typed-len-rat
          typed-take-rat
-         typed-drop-rat)
+         typed-drop-rat
+         typed-nth-rat)
 
 (def raw-list-length-step recur list count =
   (((raw-if
@@ -120,5 +122,21 @@
 (def typed-drop-rat =
   ((((make-typed-function raw-list-drop-rat-values)
      drop-function-name)
+    rat-list-signature)
+   raw-keep-return))
+
+(def raw-list-nth-rat-values index list-value =
+  (((raw-if (raw-rat-is-nonnegative-whole index))
+    (lambda-let remaining =
+      ((raw-list-drop (raw-rat-magnitude-bits index))
+       (raw-rebuild-list list-value))
+      (((raw-if (raw-list-is-nil remaining))
+        NONE)
+       (raw-make-some (raw-list-head remaining)))))
+   ((raw-add-result-frame invalid-count-error) nth-function-name)))
+
+(def typed-nth-rat =
+  ((((make-typed-function raw-list-nth-rat-values)
+     nth-function-name)
     rat-list-signature)
    raw-keep-return))

@@ -19,7 +19,9 @@
          typed-all?
          typed-find
          typed-find-index
-         typed-contains?)
+         typed-contains?
+         typed-take-while
+         typed-drop-while)
 
 ;; any? and contains? share this same Boolean search; the supplied name
 ;; keeps callback failures attributed to the public operation being called.
@@ -101,3 +103,40 @@
       raw-keep-return)
      (((raw-fix typed-any-step) (equality value)) contains-function-name))
     list)))
+
+(def typed-take-while-step recur predicate list =
+  (((raw-if (raw-list-is-nil list))
+    NIL)
+   (((typed-predicate-result (predicate (raw-list-head list))) take-while-function-name)
+    (lambda (matched)
+      (((raw-if matched)
+        (lambda-let rest = ((recur predicate) (raw-list-tail list))
+          (((raw-if ((raw-is-type error-type) rest))
+            rest)
+           ((raw-cons (raw-list-head list)) rest))))
+       NIL)))))
+
+(def typed-take-while predicate list =
+  ((((((raw-check-argument take-while-function-name)
+       argument-position-two)
+      list-type)
+     raw-keep-return)
+    ((raw-fix typed-take-while-step) predicate))
+   list))
+
+(def typed-drop-while-step recur predicate list =
+  (((raw-if (raw-list-is-nil list))
+    NIL)
+   (((typed-predicate-result (predicate (raw-list-head list))) drop-while-function-name)
+    (lambda (matched)
+      (((raw-if matched)
+        ((recur predicate) (raw-list-tail list)))
+       list)))))
+
+(def typed-drop-while predicate list =
+  ((((((raw-check-argument drop-while-function-name)
+       argument-position-two)
+      list-type)
+     raw-keep-return)
+    ((raw-fix typed-drop-while-step) predicate))
+   list))

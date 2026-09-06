@@ -193,3 +193,65 @@
                               (apply2 typed-contains? unused one)
                               (apply2 typed-contains? unused invalid-count-error)))])
   (check-equal? (procedure-arity (lazy-force partial)) 1))
+
+;; Predicate prefixes preserve order and stop before any later callback.
+(define (read-numbers value)
+  (map object-rat->exact (object-list->host-list value)))
+(for ([function (in-list (list typed-take-while typed-drop-while))]
+      [name (in-list '("take-while" "drop-while"))])
+  (check-eq? (lazy-force (apply2 function unused NIL)) (lazy-force NIL))
+  (check-equal? (object-list->host-list (apply2 function unused NIL)) '())
+  (check-equal? (procedure-arity (lazy-force function)) 1)
+  (check-equal? (procedure-arity (lazy-force (lazy-apply function unused))) 1)
+  (check-equal? (error-value->string (apply2 function unused TRUE))
+                (format "~a(arg2 expected LIST got BOOL)" name))
+  (check-equal? (error-value->string (apply2 function unused invalid-count-error))
+                (format "INVALID-COUNT\n  -> ~a(arg2 expected LIST)" name))
+  (for ([stop-at (in-list '(1 2))])
+    (define calls '())
+    (define result
+      (apply2 function
+              (lambda (value)
+                (define number (object-rat->exact value))
+                (set! calls (append calls (list number)))
+                (when (> number stop-at) (error 'prefix "continued after false"))
+                (if (= number stop-at) FALSE TRUE))
+              sample))
+    (check-equal? (read-numbers result)
+                  (if (equal? name "take-while")
+                      (if (= stop-at 1) '() '(1))
+                      (if (= stop-at 1) '(1 2 3) '(2 3))))
+    (check-equal? calls (if (= stop-at 1) '(1) '(1 2))))
+  (for ([failure-at (in-list '(1 2))])
+    (define calls '())
+    (define result
+      (apply2 function
+              (lambda (value)
+                (define number (object-rat->exact value))
+                (set! calls (append calls (list number)))
+                (cond [(= number failure-at) (lazy-apply typed-head NIL)]
+                      [(> number failure-at) (error 'prefix "continued after Error")]
+                      [else TRUE]))
+              sample))
+    (check-equal? (error-value->string result)
+                  (format "EMPTY-LIST\n  -> head(result)\n  -> ~a(result)" name))
+    (check-equal? calls (if (= failure-at 1) '(1) '(1 2))))
+  (for ([answer-at (in-list '(1 2))])
+    (check-equal?
+     (error-value->string
+      (apply2 function
+              (lambda (value) (if (= (object-rat->exact value) answer-at) one TRUE))
+              sample))
+     (format "~a(arg1 expected BOOL got RAT)" name))))
+(check-equal? (read-numbers (apply2 typed-take-while always sample)) '(1 2 3))
+(check-eq? (lazy-force (apply2 typed-drop-while always sample)) (lazy-force NIL))
+(check-eq? (lazy-force (apply2 typed-take-while never sample)) (lazy-force NIL))
+(check-eq? (lazy-force (apply2 typed-drop-while never sample)) (lazy-force sample))
+(check-equal? (read-numbers (apply2 typed-take-while always (numbers '(1)))) '(1))
+(check-eq? (lazy-force (apply2 typed-drop-while always (numbers '(1)))) (lazy-force NIL))
+(check-equal? (map object-tag (object-list->host-list
+                              (apply2 typed-take-while always heterogeneous)))
+              '(1 6 4))
+(check-equal? (map object-tag (object-list->host-list
+                              (apply2 typed-drop-while never heterogeneous)))
+              '(1 6 4))

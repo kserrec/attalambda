@@ -243,6 +243,12 @@ the sought value before the element. Find returns Option; find-index counts
 with private binary Nat and wraps a canonical whole Rat in Option. Each search
 stops before another predicate call once its answer is determined.
 
+`nth` extends the numeric List module by reusing drop after the same count
+validation and returning Some or NONE. The search peer also supplies
+`take-while` and `drop-while`: both stop predicate calls at the first false
+answer, and drop returns the retained suffix directly. Take propagates a
+later predicate Error before constructing an earlier output node.
+
 ### Natural numbers (private machinery)
 
 Binary Nat values are private machinery since Milestone 4: no public Nat type

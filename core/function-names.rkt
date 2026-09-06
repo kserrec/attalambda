@@ -13,6 +13,9 @@
          len-function-name
          take-function-name
          drop-function-name
+         nth-function-name
+         take-while-function-name
+         drop-while-function-name
          append-function-name
          reverse-function-name
          map-function-name
@@ -100,6 +103,9 @@
 (define-function-name len-function-name len)
 (define-function-name take-function-name take)
 (define-function-name drop-function-name drop)
+(define-function-name nth-function-name nth)
+(define-function-name take-while-function-name take-while)
+(define-function-name drop-while-function-name drop-while)
 (define-function-name append-function-name append)
 (define-function-name reverse-function-name reverse)
 (define-function-name map-function-name map)

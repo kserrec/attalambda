@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phases 1–4 complete; continuing Phases 5–8 autonomously as authorized.
+Status: Phases 1–5 complete; continuing Phases 6–8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -396,20 +396,42 @@ continuous approval.
 
 ### Step 5.1 — Add nth
 
-- [ ] Extend `core/list-nat.rkt` and its suite with zero-based `nth` using
+- [x] Extend `core/list-nat.rkt` and its suite with zero-based `nth` using
   existing count validation and Option construction. Test zero, last valid,
   exact-length, past-length, negative, fractional, wrong-type, and incoming
   Error indices, NIL, and partial application. Expected absence returns NONE;
   invalid counts return the existing attributed InvalidCount Error.
 
+Step 5.1 result (2026-09-06): nth reuses raw-list-drop after the existing
+Rat count validation, returns existing Option values, and reconstructs canonical
+NIL before traversal. Focused numeric List tests passed 77 assertions, covering
+valid/boundary/past-end indices, NIL, heterogeneous elements, negative/fractional
+counts, type and incoming Errors, and remaining-arity absorption.
+
 ### Step 5.2 — Add take-while and drop-while
 
-- [ ] Extend the search module with direct prefix traversal and the shared
+- [x] Extend the search module with direct prefix traversal and the shared
   predicate-result rule. Stop predicate calls at the first false result;
   `drop-while` retains that element and its suffix. Test immediate stop,
   all-match, NIL, predicate Error/non-Bool answers, canonical empty results,
   and unevaluated later callbacks. Add exports, names, public cases, and docs;
   run the Phase completion gate.
+
+Step 5.2 result (2026-09-06): added direct predicate-prefix loops using the
+existing Bool-result rule. Drop retains the first false element and suffix;
+take checks the recursive result before building a prefix cell. Focused tests
+passed 148 search, 77 numeric List, 298 diagnostic, and 115 installed-language
+assertions, including first/later stopping and failures, full matches, NIL,
+singletons, heterogeneous values, and canonical empty output. The full run
+passed all 41 suites, 13,973 assertions, expanded purity for 32 modules, and
+the complete boundary gate. Relevant diff and whitespace checks passed.
+
+Phase 5 executable changes: three pure functions in the existing numeric and
+search peers, with their exports and encoded names. Tests/tooling: focused and
+public cases and exact facade tables. Documentation: current reference,
+README, architecture, acceptance, and plan. No module, dependency, runtime
+helper, checker mechanism, or host capability was added. Phase 5 is complete;
+Phase 6 follows under the continuous approval.
 
 ## Phase 6 — Zip, concat, and flatten
 

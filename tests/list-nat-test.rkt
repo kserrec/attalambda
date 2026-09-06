@@ -10,6 +10,9 @@
          "../core/objects.rkt"
          "../core/tags.rkt"
          "../core/rat.rkt"
+         (only-in "../core/option.rkt" NONE typed-option-is-some raw-option-value)
+         "../readers/error.rkt"
+         (only-in "../runtime/codec.rkt" exact->object-rat object-rat->exact host-list->object-list)
          "../readers/bool.rkt"
          "../readers/list.rkt"
          "../readers/rat.rkt"
@@ -19,7 +22,8 @@
                   apply2
                   host-bits->raw
                   whole-rat-object
-                  rat-object->number))
+                  rat-object->number
+                  object-tag))
 
 (define (prepend value tail)
   (apply2 typed-cons value tail))
@@ -270,3 +274,43 @@
     (lazy-force
      (lazy-apply function true-object)))
    1))
+
+;; nth uses the existing nonnegative whole-Rat count contract and returns
+;; Option for ordinary absence, including an index exactly at the length.
+(define numbered (host-list->object-list (map exact->object-rat '(10 20 30))))
+(for ([index (in-list '(0 1 2 3 10))]
+      [expected (in-list '(10 20 30 none none))])
+  (define result (apply2 typed-nth-rat (exact->object-rat index) numbered))
+  (check-equal? (object-tag result) 10)
+  (if (eq? expected 'none)
+      (check-eq? (lazy-force result) (lazy-force NONE))
+      (begin
+        (check-true (bool->boolean (lazy-apply typed-option-is-some result)))
+        (check-equal?
+         (object-rat->exact
+          (lazy-apply raw-option-value (lazy-apply raw-object-value result)))
+         expected))))
+(check-eq? (lazy-force (apply2 typed-nth-rat ZERO NIL)) (lazy-force NONE))
+(check-eq? (lazy-force (apply2 typed-nth-rat TEN NIL)) (lazy-force NONE))
+(check-eq?
+ (lazy-force (lazy-apply raw-option-value
+                         (lazy-apply raw-object-value (apply2 typed-nth-rat ZERO sample))))
+ (lazy-force true-object))
+(for ([index (in-list '(-1 -1/2 1/2))])
+  (check-equal?
+   (error-value->string (apply2 typed-nth-rat (exact->object-rat index) numbered))
+   "INVALID-COUNT\n  -> nth(result)"))
+(define unused-nth-list (delay (error 'nth "forced list after index Error")))
+(check-equal? (error-value->string (apply2 typed-nth-rat true-object unused-nth-list))
+              "nth(arg1 expected RAT got BOOL)")
+(check-equal? (error-value->string (apply2 typed-nth-rat incoming-error unused-nth-list))
+              "INVALID-NAT\n  -> nth(arg1 expected RAT)")
+(check-equal? (error-value->string (apply2 typed-nth-rat ZERO true-object))
+              "nth(arg2 expected LIST got BOOL)")
+(check-equal? (error-value->string (apply2 typed-nth-rat ZERO incoming-error))
+              "INVALID-NAT\n  -> nth(arg2 expected LIST)")
+(for ([partial (in-list (list typed-nth-rat
+                              (lazy-apply typed-nth-rat ZERO)
+                              (lazy-apply typed-nth-rat true-object)
+                              (lazy-apply typed-nth-rat incoming-error)))])
+  (check-equal? (procedure-arity (lazy-force partial)) 1))

@@ -1,7 +1,7 @@
 # Public API
 
 This reference describes the source surface on
-`feature/public-api-and-list-library` after Phase 4. The published 0.3.0
+`feature/public-api-and-list-library` after Phase 5. The published 0.3.0
 archive retains its earlier uppercase library names. All callable built-ins
 below are lowercase; their old uppercase aliases are absent from the language.
 Constants keep their names. Further List operations remain planned in
@@ -52,6 +52,8 @@ and `function` denote parameters, not an Any or Function runtime type.
 | `is-nil list` | Bool indicating emptiness. |
 | `len list` | Length as a whole Rat. |
 | `take count list`, `drop count list` | Keep or omit the first count elements; require a nonnegative whole Rat. Counts beyond length exhaust the input. |
+| `nth index list` | Some element at the zero-based index, otherwise NONE. Require a nonnegative whole Rat; negative or fractional indices produce InvalidCount. |
+| `take-while predicate list`, `drop-while predicate list` | Keep or omit the matching prefix; stop predicate calls at the first FALSE. Drop retains that element and its suffix. |
 | `append left right` | List containing all left elements, then all right elements. |
 | `reverse list` | List in reverse order. |
 | `map function list` | Apply function to each element in order; a callback Error propagates as the whole result. |
