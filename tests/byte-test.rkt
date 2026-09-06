@@ -45,17 +45,17 @@
   (check-equal?
    (error-value->string
     (lazy-apply MAKE-BYTE (exact->typed-rat bad)))
-   "INVALID-BYTE\n  -> MAKE-BYTE(result)"))
+   "INVALID-BYTE\n  -> make-byte(result)"))
 
 ;; Wrong argument types are ordinary strict mismatches.
 (check-equal?
  (error-value->string
   (lazy-apply MAKE-BYTE TRUE))
- "MAKE-BYTE(arg1 expected RAT got BOOL)")
+ "make-byte(arg1 expected RAT got BOOL)")
 (check-equal?
  (error-value->string
   (lazy-apply BYTE-VALUE TRUE))
- "BYTE-VALUE(arg1 expected BYTE got BOOL)")
+ "byte-value(arg1 expected BYTE got BOOL)")
 
 ;; Ordinary Rat arithmetic rejects Byte: Byte is data, not a number.
 (define byte-65
@@ -63,7 +63,7 @@
 (check-equal?
  (error-value->string
   (apply2 typed-rat-add byte-65 (exact->typed-rat 1)))
- "ADD(arg1 expected RAT got BYTE)")
+ "add(arg1 expected RAT got BYTE)")
 
 ;; Comparisons agree with host comparison across boundaries.
 (for* ([left-code (in-list '(0 1 64 255))]
@@ -85,7 +85,7 @@
 (check-equal?
  (error-value->string
   (apply2 BYTE-EQ byte-65 TRUE))
- "BYTE-EQ(arg2 expected BYTE got BOOL)")
+ "byte-eq(arg2 expected BYTE got BOOL)")
 
 ;; Operations remain chains of unary lambdas.
 (for ([function (in-list
@@ -159,12 +159,12 @@
  (error-value->string
   (lazy-apply BYTES-TO-STRING
               (value-list (list byte-65 TRUE))))
- "INVALID-BYTE\n  -> BYTES-TO-STRING(result)")
+ "INVALID-BYTE\n  -> bytes-to-string(result)")
 (check-equal?
  (error-value->string
   (lazy-apply BYTES-TO-STRING
               (value-list (list A))))
- "INVALID-BYTE\n  -> BYTES-TO-STRING(result)")
+ "INVALID-BYTE\n  -> bytes-to-string(result)")
 
 ;; Wrong argument types and incoming Errors behave like every strict
 ;; operation, and laziness holds: validation stops at the first bad
@@ -172,11 +172,11 @@
 (check-equal?
  (error-value->string
   (lazy-apply STRING-TO-BYTES TRUE))
- "STRING-TO-BYTES(arg1 expected STRING got BOOL)")
+ "string-to-bytes(arg1 expected STRING got BOOL)")
 (check-equal?
  (error-value->string
   (lazy-apply BYTES-TO-STRING invalid-nat-error))
- "INVALID-NAT\n  -> BYTES-TO-STRING(arg1 expected LIST)")
+ "INVALID-NAT\n  -> bytes-to-string(arg1 expected LIST)")
 
 ;; Validation fails on the first non-Byte element without examining any
 ;; later element: the second element's tag is a divergent computation.
@@ -189,7 +189,7 @@
  (error-value->string
   (lazy-apply BYTES-TO-STRING
               (value-list (list TRUE fragile-element))))
- "INVALID-BYTE\n  -> BYTES-TO-STRING(result)")
+ "INVALID-BYTE\n  -> bytes-to-string(result)")
 
 (for ([function (in-list (list STRING-TO-BYTES BYTES-TO-STRING))])
   (check-equal?

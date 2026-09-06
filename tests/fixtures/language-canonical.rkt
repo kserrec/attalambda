@@ -9,6 +9,6 @@
   (choose "λ🙂" TRUE))
 
 (stdout
- (if (IS-NIL (TAIL selected))
-     (HEAD selected)
+ (if (is-nil (tail selected))
+     (head selected)
      "wrong"))

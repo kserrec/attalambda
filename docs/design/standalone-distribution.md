@@ -152,7 +152,7 @@ The exact reasons are:
 | invalid encoding | 65 | `source is not valid UTF-8` |
 | reader failure | 65 | `source could not be read; check delimiters and UTF-8 encoding` |
 | unavailable identifier | 65 | `unknown AttaLambda name: IDENTIFIER` |
-| unsupported datum | 65 | `unsupported literal; only exact Rat and String literals are supported` |
+| unsupported datum | 65 | `unsupported literal; only exact Rat, String, and ASCII Char literals are supported` |
 | other expansion failure | 65 | `source has invalid syntax` |
 | unexpected failure | 70 | `unexpected launcher failure; verify the AttaLambda installation` |
 
@@ -189,8 +189,11 @@ different syntax, so build tooling checks this closed projection:
 | `0.2.0` | `0.2` |
 | `0.3.0-dev` | `0.2.900` |
 | `0.3.0` | `0.3` |
+| `0.4.0` | `0.4` |
 
-A new version state requires an explicit plan change.
+A new version state requires an explicit plan change. The 2026-09-06 release
+plan authorizes 0.4.0 for the public API/List update; publication evidence is
+recorded separately from version preparation.
 
 ## Build, archive, and consumer contract
 

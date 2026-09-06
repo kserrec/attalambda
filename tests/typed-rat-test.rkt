@@ -136,27 +136,27 @@
 (check-equal?
  (error-value->string
   (apply2 typed-rat-add TRUE (exact->typed-rat 1)))
- "ADD(arg1 expected RAT got BOOL)")
+ "add(arg1 expected RAT got BOOL)")
 
 (check-equal?
  (error-value->string
   (apply2 typed-rat-add (exact->typed-rat 1) FALSE))
- "ADD(arg2 expected RAT got BOOL)")
+ "add(arg2 expected RAT got BOOL)")
 
 (check-equal?
  (error-value->string
   (lazy-apply typed-rat-recip TRUE))
- "RECIP(arg1 expected RAT got BOOL)")
+ "recip(arg1 expected RAT got BOOL)")
 
 (check-equal?
  (error-value->string
   (apply2 typed-rat-exp TRUE (exact->typed-rat 2)))
- "EXP(arg1 expected RAT got BOOL)")
+ "exp(arg1 expected RAT got BOOL)")
 
 (check-equal?
  (error-value->string
   (lazy-apply typed-rat-is-nonnegative-whole TRUE))
- "IS-NONNEGATIVE-WHOLE(arg1 expected RAT got BOOL)")
+ "is-nonnegative-whole(arg1 expected RAT got BOOL)")
 
 ;; An incoming Error bubbles with a new frame instead of being replaced.
 (let ([bubbled
@@ -166,7 +166,7 @@
   (check-equal? (object-tag bubbled) 0)
   (check-equal?
    (error-value->string bubbled)
-   "ADD(arg1 expected RAT got BOOL)\n  -> MULT(arg1 expected RAT)"))
+   "add(arg1 expected RAT got BOOL)\n  -> mult(arg1 expected RAT)"))
 
 ;; Failure on the first argument still absorbs the remaining arity.
 (let ([absorbed (lazy-apply typed-rat-add TRUE)])

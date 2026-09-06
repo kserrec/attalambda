@@ -427,18 +427,18 @@
 (check-equal?
  (error-value->string
   (apply2 typed-take-rat (typed-whole-rat -1) five-chars))
- "INVALID-COUNT\n  -> TAKE(result)")
+ "INVALID-COUNT\n  -> take(result)")
 
 (check-equal?
  (error-value->string
   (apply2 typed-drop-rat (typed-whole-rat 1/2) five-chars))
- "INVALID-COUNT\n  -> DROP(result)")
+ "INVALID-COUNT\n  -> drop(result)")
 
 ;; Wrong argument types remain ordinary type mismatches.
 (check-equal?
  (error-value->string
   (apply2 typed-take-rat A five-chars))
- "TAKE(arg1 expected RAT got CHAR)")
+ "take(arg1 expected RAT got CHAR)")
 
 ;; STRING-LENGTH returns a whole-valued Rat.
 (let ([hello (lazy-apply MAKE-STRING five-chars)])
@@ -456,14 +456,14 @@
 (check-equal?
  (error-value->string
   (lazy-apply typed-make-char-rat (typed-whole-rat 256)))
- "INVALID-CHAR\n  -> MAKE-CHAR(result)")
+ "INVALID-CHAR\n  -> make-char(result)")
 
 (check-equal?
  (error-value->string
   (lazy-apply typed-make-char-rat (typed-whole-rat -1)))
- "INVALID-COUNT\n  -> MAKE-CHAR(result)")
+ "INVALID-COUNT\n  -> make-char(result)")
 
 (check-equal?
  (error-value->string
   (lazy-apply typed-make-char-rat (typed-whole-rat 3/2)))
- "INVALID-COUNT\n  -> MAKE-CHAR(result)")
+ "INVALID-COUNT\n  -> make-char(result)")

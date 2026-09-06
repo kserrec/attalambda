@@ -2355,3 +2355,116 @@ scaffolding failures. Only `runtime/host.rkt` performs explicit
 AttaLambda-program-requested process termination. This amendment introduces
 no other exit codes, automatic Error output, stderr effect, process spawning,
 signals, or exception-style object-language errors.
+
+---
+
+# Public API and List Library Amendment (2026-09-06)
+
+This amendment defines the approved public API update. It overrides earlier
+sections only for public callable spellings, Char literal syntax and public
+Char constants, and the List contracts below. Existing representations,
+numeric semantics, Error/Result distinction, and host authority remain in
+force. The matching naming and purity amendments apply. `PLAN.md` records
+which implementation Phases have actually completed; specification text is
+not evidence that a future Phase has shipped.
+
+## Public spelling and Char literals
+
+Every public callable built-in uses lowercase words separated by hyphens,
+preserving existing question marks. The naming amendment gives the complete
+inventory. Existing operation behavior is unchanged by renaming; structured
+Error frames use the same lowercase public spelling as the called operation.
+Old uppercase callable exports are removed, without compatibility aliases.
+Map remains Map, with `map-*` operations; `map` transforms a List.
+
+Direct `#\` Char literals mechanically emit the existing canonical Char
+representation. Accept ASCII values 0 through 127, including letters, digits,
+punctuation, delimiters, and `#\space`, `#\tab`, `#\newline`, `#\return`.
+For example `a` is an identifier, `#\a` is a Char, and `"a"` is a String.
+Reject non-ASCII Char literals during expansion: their UTF-8 encoding uses
+multiple bytes, whereas one Char holds one byte. `make-char` still accepts
+the existing nonnegative whole Rat range 0 through 255, and String literals
+retain their existing UTF-8 byte encoding. No host Char survives expansion
+as an object-language value. After literal support lands, remove all named
+public Chars, including letters, digit names, and punctuation/whitespace
+names; internal constants may remain for existing implementation use.
+
+## List contracts
+
+All apparent multi-argument applications below are curried unary applications.
+Every List result is a proper Michaelson List with canonical NIL termination.
+Lists may be heterogeneous wherever an operation does not require a particular
+element type. The words `value`, `function`, and `predicate` in this section
+describe parameters; they introduce no new runtime type or tag.
+
+| Application | Contract |
+| --- | --- |
+| `cons value tail` | Existing typed constructor; tail must be List, incoming Error propagates. |
+| `head list` | First element; NIL yields the existing empty-List Error. |
+| `tail list` | Remaining List; NIL yields the existing empty-List Error. |
+| `is-nil list` | Bool indicating whether the List is empty. |
+| `len list` | Length as a nonnegative whole Rat. |
+| `take count list` | Existing nonnegative whole Rat count contract; preserve the first count elements, or the whole List if shorter. Zero returns NIL. |
+| `drop count list` | Existing nonnegative whole Rat count contract; omit the first count elements. Exact/beyond-length counts return NIL. |
+| `nth index list` | Zero-based indexing; Some element at the index, otherwise NONE. Index must be a nonnegative whole Rat. |
+| `take-while predicate list` | Preserve the initial matching prefix, stopping at the first false predicate result. |
+| `drop-while predicate list` | Omit the initial matching prefix; retain the first nonmatching element and its suffix. Stop predicate calls there. |
+| `append left right` | Both arguments are Lists; all left elements followed by all right elements, preserving order. |
+| `reverse list` | Reverse element order; NIL returns NIL. |
+| `zip left right` | Pair corresponding elements as two-element Lists; stop when either input ends. No public Pair type is added. |
+| `concat lists` | Remove exactly one nesting level, preserving order. Each outer element must be List; a non-List produces a structured TypeMismatch Error attributed to concat. |
+| `flatten list` | Recursively visit nested Lists in order, using their type tags; ordinary non-List values are leaves. Empty nested Lists contribute no elements. |
+| `map function list` | Apply the function to each element, preserving order. A callback Error propagates as the operation's Error, never an output element. |
+| `filter predicate list` | Preserve exactly the elements whose predicate answers true, in original order. |
+| `reduce function initial list` | Accumulate left to right. The curried function receives accumulator, then current element. NIL returns initial. Callback Errors propagate and stop subsequent callback calls. |
+| `any? predicate list` | Bool; FALSE on NIL, stop at the first true result. |
+| `all? predicate list` | Bool; TRUE on NIL, stop at the first false result. |
+| `find predicate list` | First matching value in Option, otherwise NONE; stop at the match. |
+| `find-index predicate list` | Zero-based whole Rat index of the first match in Option, otherwise NONE; stop at the match. |
+| `contains? equality value list` | Apply the curried equality to value, then each current element. Return Bool, stopping at the first match; FALSE on NIL. Equality is caller-supplied, never universal. |
+| `range start end` | Both arguments are whole Rats, including negatives. Start is inclusive, end exclusive, step is +1; start >= end returns NIL. Only this two-argument form exists. |
+| `repeat count value` | Repeat value count times; count is a nonnegative whole Rat. Zero returns NIL without using value. |
+
+Thus `reduce f initial [a b c]` means `f (f (f initial a) b) c`, not a
+right fold. `zip [a b c] [1 2]` yields `[[a 1] [b 2]]`;
+`concat [[1 2] [3]]` yields `[1 2 3]`, while nested Lists within those
+elements remain nested; `flatten [1 [2 [3]] NIL]` yields `[1 2 3]`.
+`range -2 2` yields `[-2 -1 0 1]`. Bracketed examples here describe values;
+they add no List literal syntax.
+
+## Checking, Errors, and evaluation
+
+Typed List/number arguments use the existing exact-tag checking and Error
+propagation rules. Negative/fractional counts or indices produce the existing
+InvalidCount Error. Fractional range endpoints also produce InvalidCount;
+negative whole endpoints are valid. Wrong tagged argument types produce
+TypeMismatch. Out-of-range indexing and unsuccessful searches are expected
+absence, represented by NONE rather than Error or Result Err.
+
+The predicate rule is identical for `filter`, `any?`, `all?`, `find`,
+`find-index`, `take-while`, `drop-while`, and the equality in `contains?`:
+a tagged Bool is used normally; Error propagates preserving its root and
+existing frames; another tagged result produces TypeMismatch expecting Bool
+and attributed to the public List operation. Callbacks are supplied as pure
+unary/curried functions, as with Map equality; do not inspect arbitrary
+lambdas as tagged values or introduce a Function or Any tag. Check their
+returned tagged values at the point the operation needs them.
+
+Encountered Errors propagate through the typed operations instead of becoming
+elements or improper tails in generated Lists. Result Err remains an ordinary
+value, not an automatically propagated Error. An Error detected before the
+last source argument must absorb exactly the remaining arguments through
+unary lambdas. Retain ordinary lazy evaluation, and do not evaluate later
+predicates after an answer is determined. In particular, `any?`, `all?`,
+`find`, `find-index`, `contains?`, `take-while`, and `drop-while` must prove
+their stopping rules. Whole-operation propagation of a later callback Error
+can require traversing a finite produced List; this amendment introduces no
+infinite-List productivity guarantee.
+
+Tests must cover each public spelling and new operation, rejected retired
+names, literal/identifier separation, normal/NIL/singleton/heterogeneous Lists,
+wrong types, incoming and callback Errors, non-Bool predicates, partial
+application, short-circuiting, zero/negative/fractional counts, boundary/past-end
+indices, unequal zip lengths, one-level versus recursive flattening, nested
+empty Lists, and signed/equal/reversed ranges. Both behavioral and structural
+purity suites must pass after each major implementation part.

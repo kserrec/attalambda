@@ -5,6 +5,11 @@ calculus. The three documents in
 [`docs/specifications/`](docs/specifications/README.md) define the language;
 this file explains how the current implementation is arranged.
 
+Operation spellings below describe the public language unless an internal
+`raw-*` or `typed-*` binding is named. The facade exposes lowercase callable
+names through explicit export renaming; core implementation exports may retain
+their earlier names. This changes neither the operations nor their imports.
+
 ## Computational boundary
 
 After mechanical expansion, object-language computation contains only:
@@ -174,8 +179,9 @@ structure. The representation must remain entirely inside the calculus.
 `TRUE` and `FALSE` are Bool-tagged objects containing `raw-true` and
 `raw-false`. `typed-not`, `typed-and`, `typed-or`, and `typed-xor` use the
 generalized checker with List signatures, unwrap their Bool inputs, run the
-existing raw operations, and wrap the raw result as Bool. The module also
-exports the specified `NOT`, `AND`, `OR`, and `XOR` names.
+existing raw operations, and wrap the raw result as Bool. The language facade
+exports them as `not`, `and`, `or`, and `xor`; the core module retains its
+implementation exports.
 
 `typed-if` validates only its tagged Bool condition because both branches are
 intentionally polymorphic. A valid condition unwraps to the raw selector and
@@ -202,7 +208,7 @@ TypeMismatch roots, while incoming Errors gain the current argument frame.
 `typed-cons` is not built by the checker because its head is intentionally
 polymorphic and therefore has no expected runtime tag for a signature entry.
 Its polymorphic head preserves an incoming Error without inventing an expected
-type; its List tail has ordinary framed propagation. `HEAD` and `TAIL` on
+type; its List tail has ordinary framed propagation. `head` and `tail` on
 `NIL` return the canonical EmptyList Error with a result frame naming the
 operation. Deciding that requires reading the tail's tag, which `cons` has
 already validated for every public List; a raw-built List pays one extra cell
@@ -215,9 +221,46 @@ fold callback receives the head followed by the folded tail.
 available. Length returns canonical raw Nat bits. Take and drop accept raw Nat
 bits first and a List second; taking beyond the end returns the complete List,
 while dropping beyond the end returns `NIL`. The strict wrappers now use the
-generalized checker. `LEN` returns a tagged whole Rat; `TAKE` and `DROP` accept
+generalized checker. `len` returns a tagged whole Rat; `take` and `drop` accept
 a nonnegative whole Rat count and a List. They bubble incoming Errors and
 preserve the one remaining application after a bad first argument.
+
+`core/list-transform.rkt` adds public `append`, `reverse`, `map`, and
+`filter` without changing the foundational raw algorithms. The structural
+wrappers reconstruct canonical List inputs after checker unwrapping. Map
+folds its lazy raw results to propagate an Error as the whole answer; filter
+adapts its existing branch selector to validate Bool results and propagate
+suffix Errors before retaining a node. A small pure predicate-result helper
+uses the same checker and diagnostic convention as Map equality. There is no
+new tag, callback registry, or host computation.
+
+The transform module also implements `reduce` as a direct left accumulator
+loop, receiving accumulator before element and stopping at callback Error.
+`core/list-search.rkt` implements `any?`, `all?`, `find`, `find-index`, and
+`contains?` through direct loops and the same predicate-result helper. Any and
+contains share their identical Boolean traversal; supplied equality receives
+the sought value before the element. Find returns Option; find-index counts
+with private binary Nat and wraps a canonical whole Rat in Option. Each search
+stops before another predicate call once its answer is determined.
+
+`nth` extends the numeric List module by reusing drop after the same count
+validation and returning Some or NONE. The search peer also supplies
+`take-while` and `drop-while`: both stop predicate calls at the first false
+answer, and drop returns the retained suffix directly. Take propagates a
+later predicate Error before constructing an earlier output node.
+
+The transform peer supplies `zip` as raw pairwise List traversal with typed
+List arguments, `concat` as checked one-level append, and `flatten` as a direct
+List-tag recursion. Flatten passes the remaining output as a suffix when
+entering a nested List, preserving order without repeated prefix append.
+Encountered Error leaves propagate; Result Err is retained as an ordinary leaf.
+
+The numeric List module completes the library with `range` and `repeat`.
+Range validates whole Rat endpoints and advances with existing raw Rat
+comparison and successor operations; repeat validates a nonnegative whole
+count and counts down with private binary Nat. Zero repetition returns the
+canonical NIL before examining its value. Both preserve the existing
+List/Rat representations and generalized argument checker.
 
 ### Natural numbers (private machinery)
 
@@ -294,9 +337,9 @@ only.
 
 `core/typed-rat.rkt` is the strict tagged Rat layer (tag 7, church-seven)
 over the private rationals, built entirely on the unchanged generalized
-exact-tag checker: `SUCC`, `ADD`, `SUB`, `MULT`, `NEG`, `ABS`, and `FLOOR`
+exact-tag checker: `succ`, `add`, `sub`, `mult`, `neg`, `abs`, and `floor`
 wrap Rat returns; the comparisons and the zero/whole/nonnegative-whole
-checks wrap Bool returns; `DIV`, `EXP`, and `RECIP` keep their
+checks wrap Bool returns; `div`, `exp`, and `recip` keep their
 already-typed Result, re-wrapping a successful raw payload as a tagged Rat.
 Since the Step 35.5 public switch this is the language's entire number
 surface: `core/typed-nat.rkt` is deleted, the Nat tag (3) is permanently
@@ -316,7 +359,7 @@ with a proper List of propagation frames. Root kinds are the small Church
 discriminants TypeMismatch, EmptyList, InvalidNat, DivideByZero, InvalidChar,
 InvalidString for a List that violates the String element invariant,
 WrongResultVariant for unwrapping the variant a Result does not hold,
-NonWholeExponent for EXP with a fractional exponent, InvalidCount for a
+NonWholeExponent for exp with a fractional exponent, InvalidCount for a
 count-valued Rat that is not a nonnegative whole within bounds, and
 InvalidByte for a Byte construction outside 0 through 255; the host protocol
 and HTTP layers extend the same kind space with their own discriminants. A
@@ -331,8 +374,8 @@ metadata never changes. Fresh TypeMismatch roots receive the same named frame
 as propagated Errors.
 
 A strict operation whose valid arguments still make its algorithm fail —
-`HEAD` or `TAIL` on `NIL`, `MAKE-CHAR` above 255, `MAKE-STRING` with a
-non-Char element, `STRING-HEAD` or `STRING-TAIL` on the empty String, and
+`head` or `tail` on `NIL`, `make-char` above 255, `make-string` with a
+non-Char element, `string-head` or `string-tail` on the empty String, and
 `unwrap-ok` or `unwrap-err` on the wrong variant — returns the canonical root
 with one *result frame*: the function name, argument position `church-zero`
 (argument positions start at one, so zero unambiguously means "at the
@@ -368,19 +411,22 @@ Result until a caller explicitly unwraps and uses its Error payload.
 
 `core/chars.rkt` represents Char as a Char-tagged object containing normalized
 raw Nat bits rather than a nested Nat object. Its pure upper bound is computed
-as `(16 × 16) − 1` with raw binary operations. `MAKE-CHAR` uses the generalized
+as `(16 × 16) − 1` with raw binary operations. `make-char` uses the generalized
 checker for its Rat argument, requires a nonnegative whole value, returns Char
 for values 0 through 255, and returns the canonical InvalidChar Error above
 that range.
 
-`CHAR-EQ`, `CHAR-LT`, `CHAR-LTE`, `CHAR-GT`, and `CHAR-GTE` use two-Char
+`char-eq`, `char-lt`, `char-lte`, `char-gt`, and `char-gte` use two-Char
 signatures through the same checker. They reuse raw binary Nat comparisons on
 unwrapped Char payloads and return tagged Bool values.
 
 The module defines every required upper- and lowercase letter, decimal digit,
 control constant, and named punctuation constant as a genuine lambda-built
 Char. Constants are derived from binary Nat values and unary successor chains;
-production code contains no host numbers or character literals.
+core computation contains no host numbers or character literals. These
+constants remain internal. Public ASCII Char literals use the existing reader
+and `language-char-expression` during mechanical expansion; the facade
+rejects non-ASCII Char literals and exports no named Char constants.
 
 `readers/char.rkt` converts a completed Char payload to a host integer or
 display string. It renders TAB, LF, CR, and printable ASCII directly and uses
@@ -389,12 +435,12 @@ feeds host characters back into production computation.
 
 `core/strings.rkt` represents String as a String-tagged object whose payload is
 the canonical List object containing typed Char elements. `EMPTY-STRING` uses
-`NIL`. `MAKE-STRING` strictly requires a List and recursively checks every
+`NIL`. `make-string` strictly requires a List and recursively checks every
 element's Char tag using lambda computation; a well-typed List containing any
 non-Char element returns the canonical InvalidString Error.
 
-`STRING-EMPTY?`, `STRING-LENGTH`, `STRING-EQ`, `STRING-APPEND`,
-`STRING-HEAD`, `STRING-TAIL`, `STRING-PREFIX?`, and `STRING-CONTAINS?` all use
+`string-empty?`, `string-length`, `string-eq`, `string-append`,
+`string-head`, `string-tail`, `string-prefix?`, and `string-contains?` all use
 the generalized checker. The raw algorithms traverse List structure and
 compare Char binary payloads directly. Length reuses the canonical raw binary
 List counter and returns a whole Rat. Head returns Char; tail returns String; either

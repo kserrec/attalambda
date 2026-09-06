@@ -5,10 +5,10 @@
 (def path = "attalambda-round-trip.txt")
 (def contents = "AttaLambda file round trip.\n")
 
-(let write-result = (write-file path (STRING-TO-BYTES contents))
+(let write-result = (write-file path (string-to-bytes contents))
   (if (is-ok write-result)
       (let read-result = (read-file path)
         (if (is-ok read-result)
-            (stdout (BYTES-TO-STRING (unwrap-ok read-result)))
+            (stdout (bytes-to-string (unwrap-ok read-result)))
             read-result))
       write-result))

@@ -134,7 +134,7 @@
 (check-equal? (object-type-name contract-failure)
               "ERROR")
 (check-equal? (error-value->string contract-failure)
-              "ADD(arg1 expected RAT got BOOL)")
+              "add(arg1 expected RAT got BOOL)")
 
 (define-runtime-path core-directory
   "../core")
@@ -144,6 +144,6 @@
    (production-files-under core-directory)))
 
 (check-equal? (length production-results)
-              22)
+              24)
 (check-equal? (append-map cdr production-results)
               '())

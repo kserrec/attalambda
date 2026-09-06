@@ -353,40 +353,14 @@
 
 (define expected-host-provide '(provide host))
 
-(define character-public-bindings
-  '(MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE
-    A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-    a b c d e f g h i j k l m n o p q r s t u v w x y z
-    DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-    DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-    SPACE TAB CR LF DOT COMMA COLON SEMICOLON
-    SLASH BACKSLASH HYPHEN UNDERSCORE QUESTION EQUAL AMPERSAND
-    PERCENT HASH LEFT-PAREN RIGHT-PAREN LEFT-BRACKET RIGHT-BRACKET
-    LEFT-BRACE RIGHT-BRACE))
-
-(define rat-public-bindings
-  '(SUCC ADD SUB MULT DIV EXP RECIP NEG ABS FLOOR
-    EQ LT LTE GT GTE IS-ZERO IS-WHOLE IS-NONNEGATIVE-WHOLE))
-
-(define string-public-bindings
+(define string-imported-bindings
   '(EMPTY-STRING MAKE-STRING STRING-EMPTY? STRING-LENGTH STRING-EQ
     STRING-APPEND STRING-HEAD STRING-TAIL STRING-PREFIX? STRING-CONTAINS?))
 
 (define language-direct-public-bindings
-  (append
-   '(TRUE FALSE NOT AND OR XOR
-     NIL HEAD TAIL IS-NIL LEN TAKE DROP)
-   rat-public-bindings
-   '(UNIT)
-   '(MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE BYTE-GT BYTE-GTE
-     STRING-TO-BYTES BYTES-TO-STRING)
-   '(SOME NONE IS-SOME IS-NONE OPTION-CASE)
-   '(MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
-     MAP-CONTAINS? MAP-SET MAP-REMOVE)
-   '(make-ok make-err is-ok is-err unwrap-ok unwrap-err)
-   character-public-bindings
-   string-public-bindings
-   '(stdout read-file write-file
+  '(TRUE FALSE NIL UNIT NONE
+     make-ok make-err is-ok is-err unwrap-ok unwrap-err
+     EMPTY-STRING stdout read-file write-file
      tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
      parse-http-request
      HTTP-STATUS-OK
@@ -396,7 +370,7 @@
      render-http-response
      make-http-path-handler
      make-http-serve-one
-     make-http-server)))
+     make-http-server))
 
 (define expected-language-expander-requires
   `((require
@@ -408,13 +382,20 @@
               STRING-TO-BYTES BYTES-TO-STRING)
      (only-in "../core/chars.rkt"
               raw-make-char
-              ,@character-public-bindings)
+              MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE)
      (only-in "../core/int.rkt"
               raw-make-int)
      (only-in "../core/list-nat.rkt"
               (typed-len-rat LEN)
               (typed-take-rat TAKE)
-              (typed-drop-rat DROP))
+              (typed-drop-rat DROP)
+              typed-nth-rat typed-range-rat typed-repeat-rat)
+     (only-in "../core/list-search.rkt"
+              typed-any? typed-all? typed-find typed-find-index typed-contains?
+              typed-take-while typed-drop-while)
+     (only-in "../core/list-transform.rkt"
+              typed-append typed-reverse typed-map typed-filter typed-reduce
+              typed-zip typed-concat typed-flatten)
      (only-in "../core/lists.rkt"
               NIL
               raw-cons
@@ -433,7 +414,7 @@
               make-ok make-err is-ok is-err unwrap-ok unwrap-err)
      (only-in "../core/strings.rkt"
               raw-make-string
-              ,@string-public-bindings)
+              ,@string-imported-bindings)
      (only-in "../core/typed-logic.rkt"
               TRUE FALSE NOT AND OR XOR
               (typed-if language-if))
@@ -498,7 +479,88 @@
      (language-if if)
      (language-cons cons)
      (language-host host)
-     (language-exit exit))
+     (language-exit exit)
+     (HEAD head)
+     (TAIL tail)
+     (IS-NIL is-nil)
+     (LEN len)
+     (TAKE take)
+     (DROP drop)
+     (typed-nth-rat nth)
+     (typed-take-while take-while)
+     (typed-drop-while drop-while)
+     (typed-append append)
+     (typed-reverse reverse)
+     (typed-zip zip)
+     (typed-concat concat)
+     (typed-flatten flatten)
+     (typed-map map)
+     (typed-filter filter)
+     (typed-reduce reduce)
+     (typed-any? any?)
+     (typed-all? all?)
+     (typed-find find)
+     (typed-find-index find-index)
+     (typed-contains? contains?)
+     (typed-range-rat range)
+     (typed-repeat-rat repeat)
+     (NOT not)
+     (AND and)
+     (OR or)
+     (XOR xor)
+     (SUCC succ)
+     (ADD add)
+     (SUB sub)
+     (MULT mult)
+     (DIV div)
+     (EQ eq)
+     (LT lt)
+     (LTE lte)
+     (GT gt)
+     (GTE gte)
+     (IS-ZERO is-zero)
+     (MAKE-CHAR make-char)
+     (CHAR-EQ char-eq)
+     (CHAR-LT char-lt)
+     (CHAR-LTE char-lte)
+     (CHAR-GT char-gt)
+     (CHAR-GTE char-gte)
+     (MAKE-STRING make-string)
+     (STRING-EMPTY? string-empty?)
+     (STRING-LENGTH string-length)
+     (STRING-EQ string-eq)
+     (STRING-APPEND string-append)
+     (STRING-HEAD string-head)
+     (STRING-TAIL string-tail)
+     (STRING-PREFIX? string-prefix?)
+     (STRING-CONTAINS? string-contains?)
+     (EXP exp)
+     (RECIP recip)
+     (NEG neg)
+     (ABS abs)
+     (FLOOR floor)
+     (IS-WHOLE is-whole)
+     (IS-NONNEGATIVE-WHOLE is-nonnegative-whole)
+     (MAKE-BYTE make-byte)
+     (BYTE-VALUE byte-value)
+     (BYTE-EQ byte-eq)
+     (BYTE-LT byte-lt)
+     (BYTE-LTE byte-lte)
+     (BYTE-GT byte-gt)
+     (BYTE-GTE byte-gte)
+     (STRING-TO-BYTES string-to-bytes)
+     (BYTES-TO-STRING bytes-to-string)
+     (SOME some)
+     (IS-SOME is-some)
+     (IS-NONE is-none)
+     (OPTION-CASE option-case)
+     (MAKE-MAP make-map)
+     (MAP-EMPTY? map-empty?)
+     (MAP-SIZE map-size)
+     (MAP-LOOKUP map-lookup)
+     (MAP-CONTAINS? map-contains?)
+     (MAP-SET map-set)
+     (MAP-REMOVE map-remove))
     ,@language-direct-public-bindings))
 
 (define expected-language-runtime-definitions
@@ -532,8 +594,37 @@
   (remove-duplicates
    (append
     language-direct-public-bindings
-    '(#%app #%datum #%module-begin #%top ... = _ and argument body byte
-      bytes->list car cdr char=? cond datum def define-for-syntax
+    '(HEAD TAIL IS-NIL LEN TAKE DROP
+      NOT AND OR XOR SUCC ADD
+      SUB MULT DIV EQ LT LTE
+      GT GTE IS-ZERO MAKE-CHAR CHAR-EQ CHAR-LT
+      CHAR-LTE CHAR-GT CHAR-GTE MAKE-STRING STRING-EMPTY? STRING-LENGTH
+      STRING-EQ STRING-APPEND STRING-HEAD STRING-TAIL STRING-PREFIX? STRING-CONTAINS?
+      EXP RECIP NEG ABS FLOOR IS-WHOLE
+      IS-NONNEGATIVE-WHOLE MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE
+      BYTE-GT BYTE-GTE STRING-TO-BYTES BYTES-TO-STRING SOME IS-SOME
+      IS-NONE OPTION-CASE MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
+      MAP-CONTAINS? MAP-SET MAP-REMOVE
+      head tail is-nil len take drop nth typed-nth-rat
+      take-while drop-while typed-take-while typed-drop-while
+      append reverse map filter typed-append typed-reverse typed-map typed-filter
+      reduce typed-reduce
+      range repeat typed-range-rat typed-repeat-rat
+      zip concat flatten typed-zip typed-concat typed-flatten
+      any? all? find find-index contains?
+      typed-any? typed-all? typed-find typed-find-index typed-contains?
+      not and or xor succ add
+      sub mult div eq lt lte
+      gt gte is-zero make-char char-eq char-lt
+      char-lte char-gt char-gte make-string string-empty? string-length
+      string-eq string-append string-head string-tail string-prefix? string-contains?
+      exp recip neg abs floor is-whole
+      is-nonnegative-whole make-byte byte-value byte-eq byte-lt byte-lte
+      byte-gt byte-gte string-to-bytes bytes-to-string some is-some
+      is-none option-case make-map map-empty? map-size map-lookup
+      map-contains? map-set map-remove
+      #%app #%datum #%module-begin #%top ... = _ and argument body byte
+      bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
       negative? rational? abs
       cons first for-syntax form function host identifier? if lambda
@@ -575,7 +666,8 @@
     (#"0.2.0-rc.1\n" . "0.1.901")
     (#"0.2.0\n" . "0.2")
     (#"0.3.0-dev\n" . "0.2.900")
-    (#"0.3.0\n" . "0.3")))
+    (#"0.3.0\n" . "0.3")
+    (#"0.4.0\n" . "0.4")))
 
 (define runner-forbidden-version-literals
   (append-map

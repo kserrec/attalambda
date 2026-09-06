@@ -14,10 +14,12 @@ assertions. The completed non-core refactor at `f772e8d` passed 38 suites with
 12,301 assertions, all 29 pure production modules, and the complete boundary
 scan.
 
-The current branch adds incremental HTTP request reading, a 21-case
-canonical-empty codec matrix, and explicit program exit. These are source
-changes beyond the published 0.3.0 archive. Phase-by-phase verification is in
-[`PLAN.md`](../PLAN.md); final packaged acceptance is recorded separately below.
+Source beyond the published 0.3.0 archive includes incremental HTTP request
+reading, a 21-case canonical-empty codec matrix, and explicit program exit.
+Their packaged acceptance is recorded separately below. The current public
+API branch adds lowercase callable exports and diagnostic names, ASCII Char
+literals, and the complete 25-function List API. Source verification is recorded
+in [`PLAN.md`](../PLAN.md); its unpublished Linux acceptance is recorded below.
 
 ## Language criteria
 
@@ -25,9 +27,16 @@ changes beyond the published 0.3.0 archive. Phase-by-phase verification is in
 | --- | --- |
 | Production computation expands to variables, unary lambdas, and unary application. | [`check-purity.rkt`](../tooling/check-purity.rkt) expands and inspects every `core/` and `effects/` module; [`purity-test.rkt`](../tests/purity-test.rkt) proves forbidden host forms and non-unary lambdas are rejected. |
 | Public syntax is `lambda`, `def`, `let`, `if`, and the specified `cons`; literals expand mechanically. | [`macros-test.rkt`](../tests/macros-test.rkt) covers hygiene and generated terms; [`language-test.rkt`](../tests/language-test.rkt) covers the installed `#lang attalambda` surface, shadowing, and rejected names/literals. |
+| All 63 renamed callables use lowercase exports and diagnostic names; retired uppercase callable names are unbound. | [`language-test.rkt`](../tests/language-test.rkt) exercises every renamed operation, expands a public module rejecting each old name, and observes public Error frames. Existing diagnostic suites pin encoded names, roots, and propagation details. |
+| ASCII Char literals agree with `make-char` and UTF-8 String bytes; named Char exports are removed. | [`language-test.rkt`](../tests/language-test.rkt) checks all 128 ASCII values through public operations and canonical codec conversion, rejects non-ASCII literals and all retired names, and proves ordinary user definitions. |
 | Values carry closed Church type tags, and one arbitrary-arity checker owns strict runtime typing. | [`tags-test.rkt`](../tests/tags-test.rkt), [`objects-test.rkt`](../tests/objects-test.rkt), [`typecheck-test.rkt`](../tests/typecheck-test.rkt), and [`errors-test.rkt`](../tests/errors-test.rkt) cover tags, positions, partial application, laziness, and early Error absorption. |
 | Bool and strict `if` preserve typed, lazy branch choice. | [`logic-test.rkt`](../tests/logic-test.rkt) and [`typed-logic-test.rkt`](../tests/typed-logic-test.rkt) prove canonical values, wrong-type Errors, chosen-branch forcing, and unchosen-branch laziness. |
 | List uses the Michaelson representation; `NIL` is distinct from false and zero, and every tail is a List. | [`lists-test.rkt`](../tests/lists-test.rkt) and [`errors-test.rkt`](../tests/errors-test.rkt) cover proper construction, operations, contracts, and malformed tails. |
+| List append/reverse preserve order and representation; map/filter enforce callback contracts. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) checks ordering, heterogeneous values, canonical NIL, partial application, wrong types, first/later callback failures, Bool validation, and stopping after Error; public programs exercise all four names. |
+| Left reduction preserves argument/accumulation order; searches short-circuit and return Bool or Option as specified. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) proves left subtraction, NIL identity, Error absorption and stopping; [`list-search-test.rkt`](../tests/list-search-test.rkt) covers all five searches, asymmetric equality, canonical Rat indices, first/later stopping, Bool validation, and preserved diagnostic frames. |
+| nth returns Option and validates whole nonnegative indices; predicate prefixes stop at the first false answer. | [`list-nat-test.rkt`](../tests/list-nat-test.rkt) covers valid, boundary, past-end, invalid, and Error indices; [`list-search-test.rkt`](../tests/list-search-test.rkt) proves prefix order, canonical NIL, suffix retention, callback stopping, and Error propagation. |
+| Zip constructs two-element Lists, concat removes one level, and flatten recursively preserves leaf order. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) covers unequal lengths, canonical NIL, preserved concat nesting, nested empty Lists, heterogeneous leaves, invalid inner Lists, and nested Error propagation without evaluating later leaves. |
+| Range uses signed whole bounds with an exclusive end; repeat validates counts and skips its value at zero. | [`list-nat-test.rkt`](../tests/list-nat-test.rkt) checks signed/cross-zero/equal/reversed ranges, fractional rejection, canonical Rat/List output, repetition counts and mixed values, lazy zero, and Errors/partial application. |
 | Supported empty-producing List/String operations remain codec-compatible without weakening canonicality. | The 21 labeled cases in [`codec-test.rkt`](../tests/codec-test.rkt) assert both empty host conversion and canonical NIL identity across generic Lists, List Byte, Strings, and composition. Forged-terminator rejection remains; no producer or codec repair was needed. |
 | Rat is the only public number; private Nat/Int representations remain canonical. | [`binary-nat-test.rkt`](../tests/binary-nat-test.rkt), [`int-test.rkt`](../tests/int-test.rkt), [`rat-test.rkt`](../tests/rat-test.rkt), and [`typed-rat-test.rkt`](../tests/typed-rat-test.rkt) cover normalized binary magnitude, one signed zero, reduced fractions, exact arithmetic, comparison, division, powers, and strict wrappers. [`language-test.rkt`](../tests/language-test.rkt) proves retired public Nat/Int names do not resolve. |
 | Exact integer and fraction literals become canonical Rats; inexact and complex numbers are rejected. | [`language-test.rkt`](../tests/language-test.rkt) round-trips representative positive, negative, fractional, zero, and large literals through the codec and rejects floating-point, infinity, NaN, and complex forms. |
@@ -64,7 +73,8 @@ build, archive layout, legal bytes, and supported platform. The distribution
 suite checks all build/consumer scripts and the CI workflow. The Linux consumer
 then verifies a real archive in digest-pinned Ubuntu 24.04 without Racket or a
 checkout, including checksum, guide commands, relocation, stdout, file/TCP/HTTP
-behavior, and explicit/default program statuses. Fixed launcher failures are
+behavior, explicit/default program statuses, and the complete public List API
+with Char literals and ordinary identifiers. Fixed launcher failures are
 covered by the source runner suite; they are not claimed as Linux consumer
 cases.
 
@@ -74,6 +84,55 @@ The 0.3.0 publication used release commit `1b51603` and annotated tag
 It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
+
+### Public API and List library acceptance — 2026-09-06
+
+The final Phase 8 source run passed all 41 suites with 14,099 assertions, expanded
+purity for 32 production modules, and the complete boundary/inventory gate.
+Exact export comparison against the baseline and normative inventory found
+105 callables, 10 constants, and seven syntax/module bindings: exactly 63
+lowercase renames, 85 removed named Chars, and 18 new List operations. The API
+reference covers that complete surface. Installed-language tests exercise the
+renamed/new operations and all 128 ASCII literals, reject retired names, and
+prove that ordinary former Char names can be defined.
+
+The complete production diff contains two new pure List modules, extensions
+to the existing numeric List module, encoded diagnostic names, explicit facade
+imports/exports, the small Char literal expansion case, and the runner's
+matching literal diagnostic text. Existing raw List algorithms, generalized
+checker, tags, macros, readers, effects, codec, and host modules are unchanged.
+No new dependency, representation, runtime wrapper, dispatcher, or host
+capability was added. The existing boundary checker changes only its exact
+facade tables/vocabulary; the purity checker is unchanged.
+
+The unchanged Linux builder produced an archive from clean implementation
+commit `17641cc41f53d00e96308846500f8ed65e633203` with Racket CS 9.3 in cached
+image `sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+The source checkout and existing Git executable were mounted read-only;
+external networking was disabled. The manifest records the clean commit.
+Archive SHA-256 is
+`38329c11591b5d724ced243bc3327576dbe2bc3d06b428ae65fbad6b84af3acf`:
+14,016,761 compressed bytes, 59,860,173 unpacked regular-file bytes, 11 files,
+including two runtime files. It remains at
+`/tmp/attalambda-public-api-final-linux/attalambda-0.3.0-linux-x86_64.tar.gz`
+with sibling `SHA256SUMS`. This is unpublished branch evidence; it does not
+replace the published 0.3.0 archive.
+
+The existing Linux consumer ran in
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`,
+with no Racket, raco, checkout, or external network. One additional ordinary
+public-language program exercised all 25 List functions, left reduction,
+one-level concat versus recursive flatten, signed range, lazy zero repeat,
+predicate stopping, Char literals/whitespace, user-defined a/x/n/m, and Map
+alongside List map. It produced exactly 30 success markers. Checksum, guide,
+stdout, file/TCP/HTTP, explicit/default exit statuses, and relocation also
+passed. The final marker was `consumer_acceptance=passed`; first/relocated
+version startup measured 331/311 ms, without a performance guarantee.
+
+The later Phase 8 acceptance commit changes only the consumer program and
+documentation. Its production sources and shipped examples are identical to
+the recorded build commit. Version and legal bytes are unchanged; no pull
+request, merge, tag, or publication is part of this update.
 
 ### HTTP/List/exit milestone acceptance — 2026-09-05
 

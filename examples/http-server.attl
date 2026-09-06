@@ -4,34 +4,34 @@
 ; caller-owned listener, and exit. All number formatting below is ordinary
 ; lambda-language computation.
 (def decimal-digit value =
-  (if (EQ value 0)
-      DIGIT-0
-      (if (EQ value 1)
-          DIGIT-1
-          (if (EQ value 2)
-              DIGIT-2
-              (if (EQ value 3)
-                  DIGIT-3
-                  (if (EQ value 4)
-                      DIGIT-4
-                      (if (EQ value 5)
-                          DIGIT-5
-                          (if (EQ value 6)
-                              DIGIT-6
-                              (if (EQ value 7)
-                                  DIGIT-7
-                                  (if (EQ value 8)
-                                      DIGIT-8
-                                      DIGIT-9))))))))))
+  (if (eq value 0)
+      #\0
+      (if (eq value 1)
+          #\1
+          (if (eq value 2)
+              #\2
+              (if (eq value 3)
+                  #\3
+                  (if (eq value 4)
+                      #\4
+                      (if (eq value 5)
+                          #\5
+                          (if (eq value 6)
+                              #\6
+                              (if (eq value 7)
+                                  #\7
+                                  (if (eq value 8)
+                                      #\8
+                                      #\9))))))))))
 
 (def nat-to-decimal value =
-  (if (LT value 10)
-      (MAKE-STRING (cons (decimal-digit value) NIL))
-      (let quotient = (FLOOR (unwrap-ok (DIV value 10)))
-        (let remainder = (SUB value (MULT quotient 10))
-          (STRING-APPEND
+  (if (lt value 10)
+      (make-string (cons (decimal-digit value) NIL))
+      (let quotient = (floor (unwrap-ok (div value 10)))
+        (let remainder = (sub value (mult quotient 10))
+          (string-append
            (nat-to-decimal quotient)
-           (MAKE-STRING (cons (decimal-digit remainder) NIL)))))))
+           (make-string (cons (decimal-digit remainder) NIL)))))))
 
 (def force-result result continuation =
   (if (is-ok result)
@@ -55,13 +55,13 @@
 (let listen-result = (tcp-listen "127.0.0.1" 0 4)
   (if (is-ok listen-result)
       (let listener-and-port = (unwrap-ok listen-result)
-        (let listener = (HEAD listener-and-port)
-          (let port = (HEAD (TAIL listener-and-port))
+        (let listener = (head listener-and-port)
+          (let port = (head (tail listener-and-port))
             (force-result
              (stdout
-              (STRING-APPEND
+              (string-append
                "Listening on http://127.0.0.1:"
-               (STRING-APPEND (nat-to-decimal port) "/lambda\n")))
+               (string-append (nat-to-decimal port) "/lambda\n")))
              (lambda (announcement-result)
                (if (is-ok announcement-result)
                    (force-result

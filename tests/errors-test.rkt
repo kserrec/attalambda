@@ -193,7 +193,7 @@
 (check-equal? (frame->host first-frame)
               '(1 7))
 (check-equal? (frame-name->host first-frame)
-              "ADD")
+              "add")
 
 (define once-bubbled
   (apply4 raw-bubble-error
@@ -222,9 +222,9 @@
 (check-equal? (error-frame-names->host mismatch)
               '())
 (check-equal? (error-frame-names->host once-bubbled)
-              '("ADD"))
+              '("add"))
 (check-equal? (error-frame-names->host twice-bubbled)
-              '("STRING-LENGTH" "ADD"))
+              '("string-length" "add"))
 
 (define twice-bubbled-details
   (lazy-apply
@@ -285,7 +285,7 @@
    (fourth case)))
 
 (check-equal? (error-frame-names->host head-type-error)
-              '("HEAD"))
+              '("head"))
 (check-equal? (error-frame-names->host cons-tail-type-error)
               '("cons"))
 
@@ -299,7 +299,7 @@
 (check-equal? (error-frames->host nested-empty-error)
               '((1 2) (0 0)))
 (check-equal? (error-frame-names->host nested-empty-error)
-              '("LEN" "HEAD"))
+              '("len" "head"))
 
 (define result-framed-empty-error
   ((lazy-apply raw-add-result-frame invalid-nat-error)
@@ -310,7 +310,7 @@
 (check-equal? (error-frames->host result-framed-empty-error)
               '((0 0)))
 (check-equal? (error-frame-names->host result-framed-empty-error)
-              '("HEAD"))
+              '("head"))
 
 ;; An Error stored as ordinary data is yielded unchanged: only a
 ;; failing algorithm adds a result frame.
@@ -365,11 +365,11 @@
 (check-equal? (error-frame-names->host cons-tail-propagation)
               '("cons"))
 (check-equal? (error-frame-names->host head-propagation)
-              '("HEAD"))
+              '("head"))
 (check-equal? (error-frame-names->host take-count-propagation)
-              '("TAKE"))
+              '("take"))
 (check-equal? (error-frame-names->host take-list-propagation)
-              '("TAKE"))
+              '("take"))
 
 (define lazy-root
   (apply2

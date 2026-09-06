@@ -54,21 +54,21 @@
 ;; Wrong Map arguments and incoming Errors carry the operation's frame.
 (check-equal?
  (error-value->string (apply2 MAP-LOOKUP TRUE (whole-rat-object 1)))
- "MAP-LOOKUP(arg1 expected MAP got BOOL)")
+ "map-lookup(arg1 expected MAP got BOOL)")
 (check-equal?
  (error-value->string
   (apply2 MAP-LOOKUP invalid-nat-error (whole-rat-object 1)))
- "INVALID-NAT\n  -> MAP-LOOKUP(arg1 expected MAP)")
+ "INVALID-NAT\n  -> map-lookup(arg1 expected MAP)")
 (check-equal?
  (error-value->string
   (apply2 MAP-LOOKUP rat-map invalid-nat-error))
- "INVALID-NAT\n  -> MAP-LOOKUP(result)")
+ "INVALID-NAT\n  -> map-lookup(result)")
 (check-equal?
  (error-value->string (lazy-apply MAP-EMPTY? TRUE))
- "MAP-EMPTY?(arg1 expected MAP got BOOL)")
+ "map-empty?(arg1 expected MAP got BOOL)")
 (check-equal?
  (error-value->string (lazy-apply MAP-SIZE TRUE))
- "MAP-SIZE(arg1 expected MAP got BOOL)")
+ "map-size(arg1 expected MAP got BOOL)")
 
 ;; An equality function that answers with a non-Bool is a structured
 ;; Error; one that answers with an Error bubbles. Both need one entry so
@@ -91,7 +91,7 @@
 (check-equal?
  (error-value->string
   (apply2 MAP-LOOKUP wrong-answer-map (whole-rat-object 1)))
- "MAP-LOOKUP(arg1 expected BOOL got RAT)")
+ "map-lookup(arg1 expected BOOL got RAT)")
 
 (define error-answer-map
   (raw-map-with-one-entry
@@ -101,7 +101,7 @@
 (check-equal?
  (error-value->string
   (apply2 MAP-LOOKUP error-answer-map (whole-rat-object 1)))
- "INVALID-NAT\n  -> MAP-LOOKUP(result)")
+ "INVALID-NAT\n  -> map-lookup(result)")
 
 ;; A found entry returns SOME of its stored value under the Map's own
 ;; equality function.
@@ -176,7 +176,7 @@
    (cadr case)))
 (check-equal?
  (error-value->string (apply2 MAP-CONTAINS? TRUE (whole-rat-object 1)))
- "MAP-CONTAINS?(arg1 expected MAP got BOOL)")
+ "map-contains?(arg1 expected MAP got BOOL)")
 
 ;; String, Char, and Byte equality functions drive the same Map machinery,
 ;; and a custom coarse equality produces deliberate collisions.
@@ -230,25 +230,25 @@
 (check-equal?
  (error-value->string
   (set3 map-zero invalid-nat-error (whole-rat-object 1)))
- "INVALID-NAT\n  -> MAP-SET(result)")
+ "INVALID-NAT\n  -> map-set(result)")
 (check-equal?
  (error-value->string
   (set3 map-zero (whole-rat-object 1) invalid-nat-error))
- "INVALID-NAT\n  -> MAP-SET(result)")
+ "INVALID-NAT\n  -> map-set(result)")
 (check-equal?
  (error-value->string
   (apply2 MAP-REMOVE invalid-nat-error (whole-rat-object 1)))
- "INVALID-NAT\n  -> MAP-REMOVE(arg1 expected MAP)")
+ "INVALID-NAT\n  -> map-remove(arg1 expected MAP)")
 (check-equal?
  (error-value->string
   (set3 TRUE (whole-rat-object 1) (whole-rat-object 2)))
- "MAP-SET(arg1 expected MAP got BOOL)")
+ "map-set(arg1 expected MAP got BOOL)")
 
 ;; A failing comparison mid-walk is the whole answer, not a mangled Map.
 (check-equal?
  (error-value->string
   (set3 error-answer-map (whole-rat-object 1) (whole-rat-object 2)))
- "INVALID-NAT\n  -> MAP-SET(result)")
+ "INVALID-NAT\n  -> map-set(result)")
 
 ;; Laziness: a pending update runs no comparison until the new Map is
 ;; demanded — binding it and taking further partial applications forces

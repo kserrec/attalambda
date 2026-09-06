@@ -76,7 +76,7 @@
    (check-command-success (run '("--help")) expected-help)
    (check-command-success
     (run '("--version"))
-    #"AttaLambda 0.3.0\n")
+    #"AttaLambda 0.4.0\n")
 
    (for ([arguments
           (in-list '(()
@@ -130,7 +130,7 @@
                     (command-result-stderr invalid-version-build)
                     #\?))
     (result-diagnostic invalid-version-build))
-   (write-exact-bytes product-version-file #"0.3.0\n")
+   (write-exact-bytes product-version-file #"0.4.0\n")
 
    ;; Validation precedence rejects names and metadata before source content.
    ;; None of the dotenv-spelled paths below is created or opened.
@@ -408,7 +408,7 @@
     65
     (source-diagnostic
      "unsupported-datum.attl"
-     "unsupported literal; only exact Rat and String literals are supported"
+     "unsupported literal; only exact Rat, String, and ASCII Char literals are supported"
      #:line 2
      #:column 0))
 
@@ -496,7 +496,7 @@
    (define pure-result-error-source
      (build-path working-directory "pure-result-error.attl"))
    (write-source pure-result-error-source
-                 "#lang attalambda\n(DIV 1 0)\n")
+                 "#lang attalambda\n(div 1 0)\n")
    (check-command-success
     (run '("pure-result-error.attl"))
     #"")

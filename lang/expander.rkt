@@ -23,26 +23,20 @@
                   CHAR-LT
                   CHAR-LTE
                   CHAR-GT
-                  CHAR-GTE
-                  A B C D E F G H I J K L M
-                  N O P Q R S T U V W X Y Z
-                  a b c d e f g h i j k l m
-                  n o p q r s t u v w x y z
-                  DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-                  DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-                  SPACE TAB CR LF
-                  DOT COMMA COLON SEMICOLON
-                  SLASH BACKSLASH HYPHEN UNDERSCORE
-                  QUESTION EQUAL AMPERSAND PERCENT HASH
-                  LEFT-PAREN RIGHT-PAREN
-                  LEFT-BRACKET RIGHT-BRACKET
-                  LEFT-BRACE RIGHT-BRACE)
+                  CHAR-GTE)
          (only-in "../core/int.rkt"
                   raw-make-int)
          (only-in "../core/list-nat.rkt"
                   [typed-len-rat LEN]
                   [typed-take-rat TAKE]
-                  [typed-drop-rat DROP])
+                  [typed-drop-rat DROP]
+                  typed-nth-rat typed-range-rat typed-repeat-rat)
+         (only-in "../core/list-search.rkt"
+                  typed-any? typed-all? typed-find typed-find-index typed-contains?
+                  typed-take-while typed-drop-while)
+         (only-in "../core/list-transform.rkt"
+                  typed-append typed-reverse typed-map typed-filter typed-reduce
+                  typed-zip typed-concat typed-flatten)
          (only-in "../core/lists.rkt"
                   NIL
                   raw-cons
@@ -160,35 +154,94 @@
                      [language-if if]
                      [language-cons cons]
                      [language-host host]
-                     [language-exit exit])
-         TRUE FALSE NOT AND OR XOR
-         NIL HEAD TAIL IS-NIL LEN TAKE DROP
-         SUCC ADD SUB MULT DIV EXP RECIP NEG ABS FLOOR
-         EQ LT LTE GT GTE IS-ZERO IS-WHOLE IS-NONNEGATIVE-WHOLE
+                     [language-exit exit]
+                     [HEAD head]
+                     [TAIL tail]
+                     [IS-NIL is-nil]
+                     [LEN len]
+                     [TAKE take]
+                     [DROP drop]
+                     [typed-nth-rat nth]
+                     [typed-take-while take-while]
+                     [typed-drop-while drop-while]
+                     [typed-append append]
+                     [typed-reverse reverse]
+                     [typed-zip zip]
+                     [typed-concat concat]
+                     [typed-flatten flatten]
+                     [typed-map map]
+                     [typed-filter filter]
+                     [typed-reduce reduce]
+                     [typed-any? any?]
+                     [typed-all? all?]
+                     [typed-find find]
+                     [typed-find-index find-index]
+                     [typed-contains? contains?]
+                     [typed-range-rat range]
+                     [typed-repeat-rat repeat]
+                     [NOT not]
+                     [AND and]
+                     [OR or]
+                     [XOR xor]
+                     [SUCC succ]
+                     [ADD add]
+                     [SUB sub]
+                     [MULT mult]
+                     [DIV div]
+                     [EQ eq]
+                     [LT lt]
+                     [LTE lte]
+                     [GT gt]
+                     [GTE gte]
+                     [IS-ZERO is-zero]
+                     [MAKE-CHAR make-char]
+                     [CHAR-EQ char-eq]
+                     [CHAR-LT char-lt]
+                     [CHAR-LTE char-lte]
+                     [CHAR-GT char-gt]
+                     [CHAR-GTE char-gte]
+                     [MAKE-STRING make-string]
+                     [STRING-EMPTY? string-empty?]
+                     [STRING-LENGTH string-length]
+                     [STRING-EQ string-eq]
+                     [STRING-APPEND string-append]
+                     [STRING-HEAD string-head]
+                     [STRING-TAIL string-tail]
+                     [STRING-PREFIX? string-prefix?]
+                     [STRING-CONTAINS? string-contains?]
+                     [EXP exp]
+                     [RECIP recip]
+                     [NEG neg]
+                     [ABS abs]
+                     [FLOOR floor]
+                     [IS-WHOLE is-whole]
+                     [IS-NONNEGATIVE-WHOLE is-nonnegative-whole]
+                     [MAKE-BYTE make-byte]
+                     [BYTE-VALUE byte-value]
+                     [BYTE-EQ byte-eq]
+                     [BYTE-LT byte-lt]
+                     [BYTE-LTE byte-lte]
+                     [BYTE-GT byte-gt]
+                     [BYTE-GTE byte-gte]
+                     [STRING-TO-BYTES string-to-bytes]
+                     [BYTES-TO-STRING bytes-to-string]
+                     [SOME some]
+                     [IS-SOME is-some]
+                     [IS-NONE is-none]
+                     [OPTION-CASE option-case]
+                     [MAKE-MAP make-map]
+                     [MAP-EMPTY? map-empty?]
+                     [MAP-SIZE map-size]
+                     [MAP-LOOKUP map-lookup]
+                     [MAP-CONTAINS? map-contains?]
+                     [MAP-SET map-set]
+                     [MAP-REMOVE map-remove])
+         TRUE FALSE
+         NIL
          UNIT
-         MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE BYTE-GT BYTE-GTE
-         STRING-TO-BYTES BYTES-TO-STRING
-         SOME NONE IS-SOME IS-NONE OPTION-CASE
-         MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
-         MAP-CONTAINS? MAP-SET MAP-REMOVE
+         NONE
          make-ok make-err is-ok is-err unwrap-ok unwrap-err
-         MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE
-         A B C D E F G H I J K L M
-         N O P Q R S T U V W X Y Z
-         a b c d e f g h i j k l m
-         n o p q r s t u v w x y z
-         DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-         DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-         SPACE TAB CR LF
-         DOT COMMA COLON SEMICOLON
-         SLASH BACKSLASH HYPHEN UNDERSCORE
-         QUESTION EQUAL AMPERSAND PERCENT HASH
-         LEFT-PAREN RIGHT-PAREN
-         LEFT-BRACKET RIGHT-BRACKET
-         LEFT-BRACE RIGHT-BRACE
-         EMPTY-STRING MAKE-STRING
-         STRING-EMPTY? STRING-LENGTH STRING-EQ STRING-APPEND
-         STRING-HEAD STRING-TAIL STRING-PREFIX? STRING-CONTAINS?
+         EMPTY-STRING
          stdout read-file write-file
          tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
          parse-http-request
@@ -293,8 +346,8 @@
              (bytes->list
               (string->bytes/utf-8 value))))))
 
-;; These are the only source datums. Expansion consumes every host number or
-;; String and emits only references plus unary lambda applications that build
+;; These are the only source datums. Expansion consumes every host number,
+;; String, or Char and emits references plus unary applications that build
 ;; the already-specified canonical representations.
 (define-syntax (language-datum stx)
   (syntax-case stx ()
@@ -305,10 +358,14 @@
           (language-rat-expression datum)]
          [(string? datum)
           (language-string-expression datum)]
+         [(char? datum)
+          (if (<= (char->integer datum) 127)
+              (language-char-expression (char->integer datum))
+              (raise-syntax-error #f "Char literals must be ASCII (0-127)" stx))]
          [else
           (raise-syntax-error
            #f
-           "only exact Rat and String literals are supported"
+           "only exact Rat, String, and ASCII Char literals are supported"
            stx)]))]))
 
 ;; The facade performs only one-time dependency injection. These bindings are
