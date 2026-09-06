@@ -281,29 +281,75 @@
          (only-in "../core/byte.rkt" STRING-TO-BYTES BYTES-TO-STRING)
          (only-in "helpers/values.rkt" whole-rat-object))
 
-(check-equal? (object-string->bytes (lazy-apply MAKE-STRING NIL))
-              #"")
-(check-equal? (object-string->bytes
-               (lazy-apply BYTES-TO-STRING (bytes->object-byte-list #"")))
-              #"")
-(check-equal? (object-byte-list->bytes
-               (lazy-apply STRING-TO-BYTES (bytes->object-string #"")))
-              #"")
-
 (define two-element-list
   (apply2 typed-cons
           (whole-rat-object 1)
           (apply2 typed-cons (whole-rat-object 2) NIL)))
 
-(for ([empty-result
+(for ([case
        (in-list
-        (list (apply2 typed-drop-rat (whole-rat-object 0) NIL)
-              (apply2 typed-drop-rat (whole-rat-object 3) NIL)
-              (apply2 typed-drop-rat (whole-rat-object 2) two-element-list)
-              (apply2 typed-take-rat (whole-rat-object 0) NIL)
-              (apply2 typed-take-rat (whole-rat-object 0) two-element-list)))])
-  (check-equal? (object-list->host-list empty-result)
-                '()))
+        (list
+         (cons "NIL" NIL)
+         (cons "TAIL singleton"
+               (lazy-apply typed-tail
+                           (apply2 typed-cons (whole-rat-object 1) NIL)))
+         (cons "TAKE 0 nonempty"
+               (apply2 typed-take-rat (whole-rat-object 0) two-element-list))
+         (cons "DROP exact length"
+               (apply2 typed-drop-rat (whole-rat-object 2) two-element-list))
+         (cons "DROP beyond length"
+               (apply2 typed-drop-rat (whole-rat-object 3) two-element-list))
+         (cons "TAKE 0 after DROP"
+               (apply2 typed-take-rat (whole-rat-object 0)
+                       (apply2 typed-drop-rat (whole-rat-object 1) two-element-list)))
+         (cons "DROP after TAKE"
+               (apply2 typed-drop-rat (whole-rat-object 1)
+                       (apply2 typed-take-rat (whole-rat-object 1) two-element-list)))
+         (cons "DROP 0 NIL" (apply2 typed-drop-rat (whole-rat-object 0) NIL))
+         (cons "DROP 3 NIL" (apply2 typed-drop-rat (whole-rat-object 3) NIL))
+         (cons "TAKE 0 NIL" (apply2 typed-take-rat (whole-rat-object 0) NIL))))])
+  (check-equal? (object-list->host-list (cdr case)) '() (car case))
+  (check-eq? (force (cdr case)) (force NIL) (car case)))
+
+(define two-byte-list (bytes->object-byte-list #"AB"))
+(define singleton-string (bytes->object-string #"A"))
+(define singleton-string-tail (lazy-apply STRING-TAIL singleton-string))
+
+(for ([case
+       (in-list
+        (list
+         (cons "Byte TAIL singleton"
+               (lazy-apply typed-tail (bytes->object-byte-list #"A")))
+         (cons "Byte TAKE 0"
+               (apply2 typed-take-rat (whole-rat-object 0) two-byte-list))
+         (cons "Byte DROP exact length"
+               (apply2 typed-drop-rat (whole-rat-object 2) two-byte-list))
+         (cons "Byte DROP beyond length"
+               (apply2 typed-drop-rat (whole-rat-object 3) two-byte-list))
+         (cons "STRING-TO-BYTES empty" (lazy-apply STRING-TO-BYTES EMPTY-STRING))
+         (cons "STRING-TO-BYTES singleton tail"
+               (lazy-apply STRING-TO-BYTES singleton-string-tail))
+         (cons "String/Byte/DROP/String/Byte composition"
+               (lazy-apply STRING-TO-BYTES
+                           (lazy-apply BYTES-TO-STRING
+                                       (apply2 typed-drop-rat (whole-rat-object 1)
+                                               (lazy-apply STRING-TO-BYTES
+                                                           singleton-string)))))))])
+  (check-equal? (object-byte-list->bytes (cdr case)) #"" (car case))
+  (check-eq? (force (cdr case)) (force NIL) (car case)))
+
+(for ([case
+       (in-list
+        (list
+         (cons "MAKE-STRING NIL" (lazy-apply MAKE-STRING NIL))
+         (cons "STRING-TAIL singleton" singleton-string-tail)
+         (cons "STRING-APPEND empty empty"
+               (apply2 STRING-APPEND EMPTY-STRING EMPTY-STRING))
+         (cons "BYTES-TO-STRING NIL" (lazy-apply BYTES-TO-STRING NIL))))])
+  (check-equal? (object-string->bytes (cdr case)) #"" (car case))
+  (check-eq? (force (lazy-apply raw-string-value (cdr case)))
+             (force NIL)
+             (car case)))
 
 ;; ---------------------------------------------------------------------------
 ;; Cyclic chains are rejected as forged, never walked forever. The walk uses

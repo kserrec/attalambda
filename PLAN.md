@@ -1,7 +1,7 @@
 # HTTP, empty-List consistency, and explicit exit plan
 
-Status: approved for serial execution on 2026-09-05; Phase 0 complete;
-Phase 1 next.
+Status: approved for serial execution on 2026-09-05; Phases 0–1 complete;
+Phase 2 next.
 Branch: `refactor/non-core-simplification`; no new branch.
 Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
 working tree before this planning edit.
@@ -109,7 +109,7 @@ Phase 0 review found zero confirmed issues. No repairs were needed.
 
 ### Step 1.1 — Persist the codec consistency matrix
 
-- [ ] Extend the canonical-empty section of `tests/codec-test.rkt`. Generic
+- [x] Extend the canonical-empty section of `tests/codec-test.rkt`. Generic
   Lists: `NIL`, singleton `TAIL`, nonempty `TAKE 0`, exact/beyond-length
   `DROP`, `TAKE 0` after another List operation, and empty `DROP` after
   `TAKE`. List Byte: singleton `TAIL`, `TAKE 0`, exact/beyond-length `DROP`.
@@ -119,14 +119,30 @@ Phase 0 review found zero confirmed issues. No repairs were needed.
   BYTES-TO-STRING -> STRING-TO-BYTES -> codec`. Assert empty host List/bytes
   and canonical `NIL` where required, retaining forged-terminator rejection.
 
+Step 1.1 result (2026-09-05): persisted 21 labeled cases, each checking codec
+acceptance and canonical NIL identity, retaining prior empty-input and forged
+terminator/cycle coverage. Test-only change; List producers and codec are
+untouched. Corrected one extra parenthesis in the new table after its reader
+diagnostic. The complete relevant diff and whitespace check passed.
+
 ### Step 1.2 — Verify; repair only a proven producer
 
-- [ ] Run codec, List, and String suites, plus List-count/Byte suites if
+- [x] Run codec, List, and String suites, plus List-count/Byte suites if
   their producers change. If all cases pass, retain only the regression
   tests. Otherwise name the failing producer and repair its smallest pure
   reconstruction path using canonical `NIL`/existing `raw-rebuild-list`.
   No codec loosening or List redesign; stop if the cause is broader. Run
   applicable checkers, full suite, and Phase review before committing.
+
+Step 1.2 result (2026-09-05): all matrix cases passed; no producer failed,
+so no production repair was justified or made. Focused codec/List/String
+suites passed 665 assertions (178/57/430). The full run passed all 38 suites,
+12,335 assertions, expanded purity for 29 production modules, and the source
+inventory/boundary gate. Fresh Phase 1 review found zero confirmed issues;
+its independent codec run passed 178 assertions. Relevant diff checks passed.
+Executable changes: none. Tests: codec consistency matrix only. Documentation:
+this plan's completion record. Core, codec, and forged/cyclic rejection are
+untouched.
 
 ## Phase 2 — Incremental HTTP framing and accumulation (three Steps)
 
