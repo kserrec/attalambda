@@ -24,6 +24,10 @@ includes its own runtime, so you do not need to install Racket.
 
 Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.3.0>
 
+The current `refactor/non-core-simplification` branch adds incremental HTTP
+request accumulation and explicit `exit` below. These changes are not in the
+published 0.3.0 archive; no new release has been published for them.
+
 Download, verify, extract, and run it:
 
 ```sh
@@ -84,9 +88,9 @@ To run the complete test and structural-purity suite:
   literals.
 - Errors are ordinary structured values. Expected computational failures use
   `Result`; contract and representation failures use `Error`.
-- Output, files, and blocking TCP are available through one explicit host
-  boundary. Pure HTTP parsing, response rendering, and routing sit above that
-  boundary as ordinary language computation.
+- Output, files, blocking TCP, and explicit process exit are available through
+  one host boundary. Pure HTTP framing, parsing, response rendering, and
+  routing sit above that boundary as ordinary language computation.
 - Automated structural checks reject host computation, hidden privileged
   imports, non-unary lambdas, and unknown source locations in production
   paths.
@@ -94,6 +98,15 @@ To run the complete test and structural-purity suite:
 The goal is not to hide Racket behind a new syntax. It is to make the boundary
 between lambda-calculus computation and host authority small, visible, and
 testable.
+
+On this branch, `(exit 0)` reports successful completion and `(exit 1)` reports
+unsuccessful completion. Only Rat 0 or 1 is accepted: another type returns
+TypeMismatch Error; another Rat returns InvalidCount Error, without calling
+the host. Pure AttaLambda chooses and validates the status; only the host
+terminates the process. Exit prints nothing automatically and prevents later
+effects. Without an exit call, normal completion remains status 0, even when
+the program produces an Error or Result Err. Launcher failures keep their
+separate statuses.
 
 ## Examples
 
@@ -116,8 +129,9 @@ racket runner/attalambda.rkt examples/hello.attl
 
 AttaLambda does not sandbox programs. A program can use the same relevant
 standard-output, filesystem, and network permissions as the Racket or
-AttaLambda process that launched it. Inspect unfamiliar `.attl` files before
-running them. In particular, `file-round-trip.attl` creates or truncates
+AttaLambda process that launched it, and can terminate its own process with
+status 0 or 1. Inspect unfamiliar `.attl` files before running them. In
+particular, `file-round-trip.attl` creates or truncates
 `attalambda-round-trip.txt` in its current directory.
 
 ## Project status
@@ -134,7 +148,7 @@ intentionally repeats neither.
 | Path | Purpose |
 | --- | --- |
 | [`core/`](core) | Pure representations, raw algorithms, and strict typed operations. |
-| [`effects/`](effects) | Pure requests and wrappers for output, files, TCP, and HTTP. |
+| [`effects/`](effects) | Pure requests and wrappers for output, files, TCP, exit, and HTTP. |
 | [`runtime/codec.rkt`](runtime/codec.rkt) | Deterministic conversion between lambda values and private host data. |
 | [`runtime/host.rkt`](runtime/host.rkt) | The sole privileged `host`; start at `dispatch-request`. |
 | [`lang/expander.rkt`](lang/expander.rkt) | Public exports, literal expansion, currying, and one-time host injection. |

@@ -405,6 +405,7 @@
           "## Known limitations"
           "#lang attalambda"
           "0` | The source loaded and completed"
+          "1` | The program explicitly called `(exit 1)`"
           "64` | The command arguments were invalid"
           "65` | The filename"
           "66` | The source was missing"

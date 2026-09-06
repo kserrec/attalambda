@@ -1,7 +1,7 @@
 # HTTP, empty-List consistency, and explicit exit plan
 
 Status: approved for serial execution on 2026-09-05; Phases 0–3 complete;
-Phase 4 next.
+Phase 4 in progress.
 Branch: `refactor/non-core-simplification`; no new branch.
 Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
 working tree before this planning edit.
@@ -316,7 +316,7 @@ No core, codec, reader, or runner production change was needed or made.
 
 ### Step 4.1 — Synchronize current documentation
 
-- [ ] Update `README.md`, `ARCHITECTURE.md`, `docs/design/host-boundary.md`,
+- [x] Update `README.md`, `ARCHITECTURE.md`, `docs/design/host-boundary.md`,
   and `docs/ACCEPTANCE.md` for ten operations, public exit 0/1, unchanged
   no-exit completion and launcher statuses, and incremental HTTP work.
   Also update the shipped `distribution/GETTING_STARTED.md.in` status table,
@@ -326,13 +326,35 @@ No core, codec, reader, or runner production change was needed or made.
   single-connection limitation; no new timeout/nonblocking claims or old
   milestone narration. Record observed implementation separately from plans.
 
+Step 4.1 result (2026-09-05): synchronized the five existing documents with
+the implemented ten-operation boundary, pure exit choices/validation, exact
+0/1/default completion, unchanged launcher statuses, and incremental HTTP
+work. Removed the resolved repeated-prefix/reparse finding while retaining
+blocking single-connection/no-timeout limits. README explicitly distinguishes
+this branch from the published 0.3.0 archive. Corrected the shipped guide's
+observably stale four-example/first-release wording without changing version,
+artifact policy, or legal bytes. Documentation-only changes; the distribution
+suite passed 207 assertions, and complete relevant diff/whitespace checks
+passed. Final packaged observations remain pending.
+
 ### Step 4.2 — Extend existing Linux consumer checks
 
-- [ ] Extend `tooling/test-linux-distribution.sh` and directly relevant
+- [x] Extend `tooling/test-linux-distribution.sh` and directly relevant
   `tests/distribution-test.rkt` checks to prove packaged exit 0, exit 1,
   and unchanged no-exit status 0, including captured stdout/stderr. Reuse
   existing temporary programs, status capture, and consumer isolation;
   no new distribution framework, artifact policy, version, or release.
+
+Step 4.2 result (2026-09-05): extended the existing isolated Linux consumer
+with five public-only temporary programs for exact 0/1/default statuses and
+fatal/recoverable missing-file Err decisions. Each uses the existing captured
+output checks and a finite 20-second child deadline; expected status 1 is
+captured without weakening shell failure handling. Status evidence is printed
+only after exact status and empty stdout/stderr checks pass. Added the guide's
+status-1 entry to its existing document assertions. Shell syntax checks and
+208 distribution assertions passed; complete relevant diff/whitespace checks
+passed. Test/tooling changes only; actual packaged behavior is still pending
+the clean build and consumer in Step 4.3.
 
 ### Step 4.3 — Final acceptance and fresh review
 
@@ -348,6 +370,26 @@ No core, codec, reader, or runner production change was needed or made.
   results on this branch and stop: no pull request, merge, tag, or release
   without Kyle's explicit approval. Any later evidence-only commit must be
   distinguished from the implementation revision actually tested.
+
+Step 4.3 verification in progress (2026-09-05): isolated copies of the actual
+HTTP framing, exit wrapper, codec, and reader passed before mutation. Native
+`+` in the framing helper was rejected as forbidden-host-identifier by
+expanded purity and unapproved-effect-identifier by the boundary gate. Native
+exit in the pure peer was rejected as unapproved-production-identifier and
+unapproved-effect-identifier; codec and reader native exit were rejected as
+forbidden-codec-capability and forbidden-reader-capability. All four copied
+bodies were restored, SHA-256 matched their working-tree originals, and both
+applicable checks returned no findings again. Working production sources were
+never mutated. Also corrected the acceptance map after source inspection:
+fixed launcher-failure cases belong to the runner suite, not the Linux
+consumer. The final complete run passed all 39 suites with 13,606 assertions,
+expanded purity for 30 production modules, and the boundary/inventory gate.
+Fresh milestone review covered all 28 changed files and direct interactions:
+zero confirmed findings or material test gaps; its independent focused run
+passed 980 assertions. Shell syntax, specification hashes, and complete
+relevant diff/whitespace checks passed. The clean CS 9.3 build and independent
+consumer remain pending; commit the verified implementation first so their
+manifest can identify a clean source revision.
 
 ---
 

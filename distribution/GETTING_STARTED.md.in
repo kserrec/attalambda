@@ -2,7 +2,7 @@
 
 This is the self-contained AttaLambda release archive for the target named
 above. It contains the `attalambda` command, its private Racket CS 9.3 runtime,
-and four example programs. You do not need to install Racket, run `raco`, or
+and five example programs. You do not need to install Racket, run `raco`, or
 register a package.
 
 ## Download, verify, and extract
@@ -68,7 +68,8 @@ The command itself prints no representation of the final lambda value.
 
 | Status | Meaning |
 | ---: | --- |
-| `0` | The source loaded and completed, including when its final value is an AttaLambda Error or Result Err. |
+| `0` | The source loaded and completed normally without calling exit, including when it produced an AttaLambda Error or Result Err; or the program explicitly called `(exit 0)`. |
+| `1` | The program explicitly called `(exit 1)` to report unsuccessful completion. |
 | `64` | The command arguments were invalid. |
 | `65` | The filename, `#lang` declaration, UTF-8 source, or AttaLambda syntax was invalid. |
 | `66` | The source was missing, unreadable, a symbolic link, not a regular file, or refused by the dotenv-file rule. |
@@ -76,6 +77,14 @@ The command itself prints no representation of the final lambda value.
 
 Diagnostics use the `AttaLambda:` prefix on standard error. Run
 `@EXECUTABLE@ --help` for the complete command grammar.
+
+`exit` accepts only Rat 0 or 1. Another type returns TypeMismatch Error; any
+other Rat returns InvalidCount Error, without terminating. An incoming Error
+bubbles normally. Pure AttaLambda decides whether a condition is fatal and
+chooses the status; the host only performs that explicit request. Neither
+Error nor Result Err is automatically printed or translated into process
+failure. A performed exit does not return, so later effects do not run; an
+exit in an unselected branch remains unforced.
 
 ## Authority and safety
 
@@ -88,6 +97,7 @@ process's authority:
   access; AttaLambda does not prompt or make backups.
 - TCP operations can connect to reachable hosts and listen on permitted local
   ports.
+- `exit` can terminate the program's own process with status 0 or 1.
 
 Inspect and trust an `.attl` program before running it. Run unfamiliar programs
 from a directory and operating-system account whose files and network access
@@ -95,12 +105,11 @@ you are willing to expose.
 
 ## Release notes
 
-AttaLambda `@VERSION@` is the first self-contained release. Its native public
-distribution supports Linux x86-64; it provides the direct
+This self-contained distribution supports Linux x86-64; it provides the direct
 `attalambda FILE.attl` command, the canonical `.attl` and `#lang attalambda`
-source contract, and stdout, whole-file, TCP, and minimal HTTP examples backed
-by the single language-visible host boundary. Artifacts produced for other
-targets are internal portability evidence, not supported public downloads.
+source contract, explicit exit 0/1, and stdout, whole-file, TCP, and minimal
+HTTP examples backed by the single language-visible host boundary. Artifacts
+produced for other targets are internal portability evidence, not supported public downloads.
 
 ## Known limitations
 

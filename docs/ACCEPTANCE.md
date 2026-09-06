@@ -14,6 +14,12 @@ assertions. The completed non-core refactor at `f772e8d` passed 38 suites with
 12,301 assertions, all 29 pure production modules, and the complete boundary
 scan.
 
+The current branch adds incremental HTTP request reading, a 21-case
+canonical-empty codec matrix, and explicit program exit. These are source
+changes beyond the published 0.3.0 archive. Phase-by-phase verification is in
+[`PLAN.md`](../PLAN.md); final packaged acceptance is recorded separately below
+when observed.
+
 ## Language criteria
 
 | Criterion | Executable evidence |
@@ -23,14 +29,16 @@ scan.
 | Values carry closed Church type tags, and one arbitrary-arity checker owns strict runtime typing. | [`tags-test.rkt`](../tests/tags-test.rkt), [`objects-test.rkt`](../tests/objects-test.rkt), [`typecheck-test.rkt`](../tests/typecheck-test.rkt), and [`errors-test.rkt`](../tests/errors-test.rkt) cover tags, positions, partial application, laziness, and early Error absorption. |
 | Bool and strict `if` preserve typed, lazy branch choice. | [`logic-test.rkt`](../tests/logic-test.rkt) and [`typed-logic-test.rkt`](../tests/typed-logic-test.rkt) prove canonical values, wrong-type Errors, chosen-branch forcing, and unchosen-branch laziness. |
 | List uses the Michaelson representation; `NIL` is distinct from false and zero, and every tail is a List. | [`lists-test.rkt`](../tests/lists-test.rkt) and [`errors-test.rkt`](../tests/errors-test.rkt) cover proper construction, operations, contracts, and malformed tails. |
+| Supported empty-producing List/String operations remain codec-compatible without weakening canonicality. | The 21 labeled cases in [`codec-test.rkt`](../tests/codec-test.rkt) assert both empty host conversion and canonical NIL identity across generic Lists, List Byte, Strings, and composition. Forged-terminator rejection remains; no producer or codec repair was needed. |
 | Rat is the only public number; private Nat/Int representations remain canonical. | [`binary-nat-test.rkt`](../tests/binary-nat-test.rkt), [`int-test.rkt`](../tests/int-test.rkt), [`rat-test.rkt`](../tests/rat-test.rkt), and [`typed-rat-test.rkt`](../tests/typed-rat-test.rkt) cover normalized binary magnitude, one signed zero, reduced fractions, exact arithmetic, comparison, division, powers, and strict wrappers. [`language-test.rkt`](../tests/language-test.rkt) proves retired public Nat/Int names do not resolve. |
 | Exact integer and fraction literals become canonical Rats; inexact and complex numbers are rejected. | [`language-test.rkt`](../tests/language-test.rkt) round-trips representative positive, negative, fractional, zero, and large literals through the codec and rejects floating-point, infinity, NaN, and complex forms. |
 | Error represents contract/invariant failure; Result Err represents expected computational failure. | [`errors-test.rkt`](../tests/errors-test.rkt) pins distinct kinds and argument positions; arithmetic, file, TCP, and HTTP suites prove the Error/Result boundary. |
 | Char is a byte-valued character, Byte has exactly 256 values, String is `List Char`, and binary payloads are `List Byte`. | [`chars-test.rkt`](../tests/chars-test.rkt), [`byte-test.rkt`](../tests/byte-test.rkt), [`strings-test.rkt`](../tests/strings-test.rkt), [`codec-test.rkt`](../tests/codec-test.rkt), and real file/TCP host tests cover canonical conversion and byte-exact round trips. |
 | Unit carries successful no-value results; Option represents expected absence; Map is persistent and pure. | [`unit-test.rkt`](../tests/unit-test.rkt), [`option-test.rkt`](../tests/option-test.rkt), and [`map-test.rkt`](../tests/map-test.rkt) cover tags, operations, contracts, laziness, persistence, and custom equality. |
-| Effects construct typed requests and invoke only the injected unary host. | [`stdout-test.rkt`](../tests/stdout-test.rkt), [`files-test.rkt`](../tests/files-test.rkt), and [`tcp-test.rkt`](../tests/tcp-test.rkt) use fake-host traces to pin request shape, order, validation precedence, and one invocation. |
-| The host implements exactly stdout, whole-file I/O, and blocking TCP operations. | [`host-test.rkt`](../tests/host-test.rkt), [`file-host-test.rkt`](../tests/file-host-test.rkt), and [`tcp-host-test.rkt`](../tests/tcp-host-test.rkt) exercise all nine routes, native failures, binary data, partial writes, bounds, handles, and cleanup. |
-| Pure HTTP values, parsing/rendering, routing, and the sequential server stay lambda-built. | [`http-test.rkt`](../tests/http-test.rkt) and [`http-server-test.rkt`](../tests/http-server-test.rkt) cover the documented HTTP/1.1 subset, limits, routing, byte conversion, host traces, and real loopback behavior. |
+| Effects construct typed requests and invoke only the injected unary host. | [`stdout-test.rkt`](../tests/stdout-test.rkt), [`files-test.rkt`](../tests/files-test.rkt), [`tcp-test.rkt`](../tests/tcp-test.rkt), and [`exit-test.rkt`](../tests/exit-test.rkt) use fake-host traces to pin request shape, order, validation precedence, and one invocation. |
+| The host implements exactly stdout, whole-file I/O, blocking TCP, and explicit exit. | [`host-test.rkt`](../tests/host-test.rkt), [`file-host-test.rkt`](../tests/file-host-test.rkt), and [`tcp-host-test.rkt`](../tests/tcp-host-test.rkt) exercise all ten routes, native failures, binary data, partial writes, bounds, handles, cleanup, and nonreturning exit in child processes. |
+| Only Rat 0/1 can request exit; pure programs decide fatal versus recoverable failure. | [`exit-test.rkt`](../tests/exit-test.rkt) proves pure validation, Error bubbling, invalid-argument non-dispatch, and fake-host laziness. [`runner-test.rkt`](../tests/runner-test.rkt) proves exact silent OS statuses 0/1, unchanged no-exit Error/Err completion at 0, missing-file Err choices, unselected exit, and before/after effect ordering. |
+| Pure HTTP values, incremental framing/accumulation, parsing/rendering, routing, and the sequential server stay lambda-built. | [`http-test.rkt`](../tests/http-test.rkt) and [`http-server-test.rkt`](../tests/http-server-test.rkt) cover every nonempty two-chunk split, byte-at-a-time input, delimiter overlaps, exact/over-cap requests, EOF, trailing data, failures, cleanup, re-forcing, and real loopback behavior. Source inspection proves no incomplete-chunk full parse or repeated old-prefix append/recount. |
 | A source file runs through the public language without exposing loader machinery. | [`runner-test.rkt`](../tests/runner-test.rkt), [`language-test.rkt`](../tests/language-test.rkt), and [`milestone-two-acceptance-test.rkt`](../tests/milestone-two-acceptance-test.rkt) cover paths, diagnostics, one load, public examples, effects, Error/Err completion, and the foundational values together. |
 
 ## One privileged bridge
@@ -39,9 +47,9 @@ scan.
 | --- | --- | --- |
 | Definition and producer export of `host` | [`runtime/host.rkt`](../runtime/host.rkt) | The boundary checker requires exactly one definition and sole export, locks its imports and vocabulary, and rejects another producer. |
 | Deterministic lambda/host conversion | [`runtime/codec.rkt`](../runtime/codec.rkt), imported in production only by the host | Exact exports and imports are checked; the codec has no effects or registry. Codec tests prove canonical conversion, malformed-value rejection, and cycle handling. |
-| Native stdout, filesystem, DNS, TCP, handle registry, and failure mapping | [`runtime/host.rkt`](../runtime/host.rkt) | Closed imports, host-only primitives, dispatcher vocabulary, and production-wide scans reject the capabilities elsewhere. Real-host suites exercise each route. |
+| Native stdout, filesystem, DNS, TCP, handle registry, failure mapping, and program-requested exit | [`runtime/host.rkt`](../runtime/host.rkt) | Closed imports, host-only primitives, dispatcher vocabulary, and production-wide scans reject the capabilities elsewhere. Real-host suites exercise each route. Runner-native exit has only its separate launcher role. |
 | Request construction and all higher computation | [`effects/`](../effects) | The expanded purity scanner permits only pure core/effect dependencies and application of the injected unary host argument. Fake-host tests pin canonical requests. |
-| Public binding of that host to the nine wrappers | [`lang/expander.rkt`](../lang/expander.rkt) | Exact facade imports/exports and fixed injection definitions allow this module to import and re-export the host without direct operating-system capability. |
+| Public binding of that host to the ten wrappers | [`lang/expander.rkt`](../lang/expander.rkt) | Exact facade imports/exports and fixed injection definitions allow this module to import and re-export the host without direct operating-system capability. The sole public `exit` spelling is pinned to its export; helper/template native uses, including nested syntax-data containers, are rejected. |
 | Process launch and one requested module load | [`runner/attalambda.rkt`](../runner/attalambda.rkt) | The non-exporting runner validates only its requested source, emits fixed diagnostics, imports neither host nor codec, observes no lambda value, and is unreachable from production computation. |
 | Observation, tests, and repository checks | [`readers/`](../readers), [`tests/`](../tests), and [`tooling/`](../tooling) | These nonproduction classes are inventoried separately. Reader capability is constrained, unknown source locations fail closed, and production dependencies on support code are rejected. |
 
@@ -57,7 +65,9 @@ build, archive layout, legal bytes, and supported platform. The distribution
 suite checks all build/consumer scripts and the CI workflow. The Linux consumer
 then verifies a real archive in digest-pinned Ubuntu 24.04 without Racket or a
 checkout, including checksum, guide commands, relocation, stdout, file/TCP/HTTP
-behavior, and fixed launcher failures.
+behavior, and explicit/default program statuses. Fixed launcher failures are
+covered by the source runner suite; they are not claimed as Linux consumer
+cases.
 
 The 0.3.0 publication used release commit `1b51603` and annotated tag
 `v0.3.0`. Its sole binary archive is 13,938,743 bytes with SHA-256
@@ -66,12 +76,12 @@ It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
 
-## Limits and deferred finding
+## Limits
 
 The project does not claim sandboxing or per-program permission prompts. A
 real-host program inherits the launching process's relevant authority. It has
 no program-argument API, general parser, optimizer, compiler, records, JSON,
-environment or process access, directory operations, atomic file replacement,
+environment access or process spawning, directory operations, atomic file replacement,
 TLS, UDP, timeouts, asynchronous server, production concurrency, or general
 HTTP framework. The HTTP server implements only its documented blocking
 HTTP/1.1 subset and serves one connection at a time. Linux x86-64 is the sole
@@ -82,12 +92,12 @@ AttaLambda is an interpreted lazy-lambda tower. Rat arithmetic reduces through
 binary gcd and is orders of magnitude slower than host arithmetic. Map lookup
 walks linearly and calls a lambda-encoded equality at each entry.
 
-**Deferred finding:** request buffering is capped at 8,192 bytes, preventing
-unbounded memory growth, but the pure HTTP parser re-parses the accumulated
-request after each received chunk. One connection can therefore consume
-O(cap²) interpreter work before rejection. Correcting the complexity requires
-an incremental parser redesign rather than a local hardening patch. The fixed
-cap makes the cost bounded; this remains a documented performance limitation.
+HTTP request buffering remains capped at 8,192 bytes. Framing now examines
+only each new chunk plus at most three preceding characters; accumulation
+walks the new chunk, and a private binary running count replaces whole-request
+recounts. The server reconstructs and parses once at header completion or EOF.
+This removes the documented repeated-prefix/reparse work without redesigning
+the semantic parser. The blocking server still has no read deadline.
 
 ## Material corrections before 0.3.0
 

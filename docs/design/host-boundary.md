@@ -111,8 +111,7 @@ exit
 `effects/stdout.rkt`, `effects/files.rkt`, `effects/tcp.rkt`, and
 `effects/exit.rkt` build these wrappers. Each builder accepts a host first,
 which lets tests inject a unary fake. That injection is ordinary lambda
-calculus and does not create another
-privileged primitive.
+calculus and does not create another privileged primitive.
 
 Request construction and validation remain pure. A bad typed argument,
 non-whole count, or non-Byte payload element becomes the specified Error
@@ -194,7 +193,7 @@ does not run object-language arithmetic.
 
 The codec may force validated values and use temporary private Racket data for
 translation. It may not interpret paths, dispatch operations, perform I/O,
-map exceptions, mutate resource state, implement language algorithms, or
+map exceptions, mutate resource state, implement language algorithms,
 format values for people, terminate the process, or decide program success.
 
 ## Bytes, paths, and files
@@ -269,8 +268,7 @@ The real host has the launching process's relevant authority. An AttaLambda
 program can write stdout, read permitted files, create or truncate permitted
 paths including symlink targets, resolve names, connect to permitted remote TCP
 endpoints, bind permitted local ports, and terminate its own process with
-status 0 or 1. Users must inspect and trust a
-program before running it.
+status 0 or 1. Users must inspect and trust a program before running it.
 
 The closed host does not expose environment enumeration, subprocesses, shell
 commands, dynamic loading, evaluation, namespaces, FFI, directory listing or

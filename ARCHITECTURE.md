@@ -24,8 +24,8 @@ tooling. Two runtime files have narrower roles:
   representations and private Racket bytes, integers, lists, and exact
   rationals. It performs no external effect and owns no mutable state.
 - [`runtime/host.rkt`](runtime/host.rkt) alone defines `host`. It may perform
-  the approved standard-output, file, and blocking TCP operations and own the
-  TCP handle registry.
+  the approved standard-output, file, blocking TCP, and explicit process-exit
+  operations and own the TCP handle registry.
 
 Only `runtime/host.rkt` performs the approved native effects, only the language
 facade imports that host, and only the host imports the codec. Readers can
@@ -59,7 +59,7 @@ effects/protocol <- runtime/host
 The diagram shows module dependency, not authority. `effects/` receives the
 host as an ordinary unary argument; it never imports `runtime/`. The language
 facade is the single place that imports the real host and injects it into the
-nine public effect wrappers.
+ten public effect wrappers.
 
 ## One host request
 
@@ -77,12 +77,43 @@ For a call such as `write-file`:
    codec. Expected operating-system failure becomes `Result Err`; a malformed
    direct request becomes a bare contract `Error`.
 
-The other eight operations use the same route. `runtime/host.rkt` keeps
-decoding next to each route and keeps resource acquisition, registration,
-cleanup, and failure mapping in the corresponding `perform-*` helpers. The
+The other eight returning operations use the same route. Explicit exit uses
+the same request boundary but ends at `perform-exit`, without returning a
+Result. `runtime/host.rkt` keeps decoding next to each route and keeps resource
+acquisition, registration, cleanup, and failure mapping in the corresponding
+`perform-*` helpers. The
 exact request shapes, bounds, results, failure codes, byte rules, and lifecycle
 contract live once in
 [`docs/design/host-boundary.md`](docs/design/host-boundary.md).
+
+For `(exit status)`, the pure wrapper in `effects/exit.rkt` uses the generalized
+checker and raw Rat equality to accept only 0 or 1. Wrong types return
+TypeMismatch, other Rats return InvalidCount, and an incoming Error bubbles;
+none calls the host. The public `exit` name is a renamed private
+`language-exit` binding, with the real host injected once. The host defensively
+decodes a canonical whole Rat in range 0..1 and terminates with that exact
+status, without printing or returning `Ok UNIT`. Fake hosts may return normal
+values for tests. Pure code decides whether an Error or Result Err is fatal;
+neither the host nor runner derives a status from an arbitrary final value.
+Without explicit exit, normal completion remains status 0. Unselected exit
+branches stay lazy; performed exit prevents later effects.
+
+## Incremental HTTP request reading
+
+`effects/http-server.rkt` keeps reversed accumulated characters, a running
+private binary Nat count, and at most three preceding characters. Each read
+converts, counts, and reverses only the new chunk, then places its reverse
+before the old accumulation without walking the old prefix. The running count
+enforces the unchanged 8192-byte cap before parsing.
+
+`raw-scan-http-header-end` in `effects/http.rkt` looks for `CR LF CR LF` in only
+that suffix plus the new chunk. Incomplete nonempty reads do not invoke the
+full parser. At completion or EOF, the server reconstructs once and invokes
+the existing semantic parser once; every byte of the completing chunk remains
+present, preserving trailing-data rejection. All of this is pure lambda
+computation. Grammar, errors, cleanup, and blocking reads are unchanged. The
+server still serves one connection at a time, with no timeout or nonblocking
+guarantee.
 
 ## Frontend, runner, and observation
 
@@ -99,7 +130,8 @@ implements `attalambda FILE.attl`, `--help`, and `--version`; validates the
 source name, path policy, regular-file status, exact first line, and UTF-8; and
 loads the source once. It exports nothing, imports no project module, does not
 inspect a completed lambda value, and reports only fixed sanitized
-diagnostics.
+diagnostics. Its native exit calls remain limited to launcher, source-loading,
+and scaffolding failures; program-requested exit belongs only to the host.
 
 Each file in [`readers/`](readers) turns one completed representation into a
 Racket value or display string. Readers may force and inspect values, but they
