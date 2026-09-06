@@ -189,8 +189,11 @@ different syntax, so build tooling checks this closed projection:
 | `0.2.0` | `0.2` |
 | `0.3.0-dev` | `0.2.900` |
 | `0.3.0` | `0.3` |
+| `0.4.0` | `0.4` |
 
-A new version state requires an explicit plan change.
+A new version state requires an explicit plan change. The 2026-09-06 release
+plan authorizes 0.4.0 for the public API/List update; publication evidence is
+recorded separately from version preparation.
 
 ## Build, archive, and consumer contract
 

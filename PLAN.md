@@ -1,7 +1,96 @@
-# Public API and List library update
+# Release 0.4.0
 
-Status: Phases 1–8 complete; verified for Kyle's branch review. No pull request,
-merge, tag, or publication is authorized by this completed plan.
+Status: in progress on `feature/public-api-and-list-library`.
+Kyle explicitly authorized the PR, evaluation of useful actionable review
+comments, merge, and release on 2026-09-06. This authorization supersedes the
+completed implementation plan's stop conditions below. Starting revision is
+clean `65b875cfef5bdc12adc236af158c563a7004cb82`; the existing public release is
+0.3.0 with only its Linux x86-64 archive and checksum manifest.
+
+Release scope: 0.4.0 packages the completed public API/List changes and the
+already merged HTTP/exit/refactor work since 0.3.0. Add exactly the approved
+`0.4.0` → `0.4` version projection to the existing runner, boundary, native
+build, and consumer checks. Preserve historical version states. Modify only
+version metadata, corresponding tests/tables, release documentation, and any
+review finding verified against the specification. No new language feature,
+dependency, host capability, publishing framework, or binary support target.
+
+## Phase 1 — PR and release preparation
+
+### Step 1.1 — Open the verified implementation for review
+
+- [x] Open the PR from the completed feature branch to main with scope and
+  actual verification evidence. PR: https://github.com/kserrec/attalambda/pull/2.
+  Automated code review and existing CI started on `65b875c`.
+
+### Step 1.2 — Prepare the explicit version state
+
+- [x] Set VERSION to `0.4.0` and the Racket package projection to `0.4`;
+  extend the existing exact validation tables and native consumer filename
+  checks. Update the version contract and affected tests without widening
+  accepted future versions. Keep current publication claims factual until
+  publication, and prepare migration/release notes. Run focused checks and
+  the full suite, then commit and push the preparation to the same PR.
+
+Step 1.2 result: added only the explicit 0.4.0 state to existing version
+tables/regular expressions across runner, boundary, builders, and native
+consumers. Historical states remain accepted; no future/pre-release version
+was added. Updated the existing version-projection test and runner fixture
+expectations. Focused tests passed 543 assertions; the full suite passed all
+41 files, 14,100 assertions, 32-module expanded purity, and complete boundaries.
+Shell syntax and the full relevant diff/whitespace checks passed. Draft release
+notes are at `/tmp/attalambda-0.4.0-release-notes.md`; the full log is
+`/tmp/attalambda-0.4.0-preparation-tests.log`. No object-language computation,
+dependency, representation, effect, or publication-support claim changed.
+
+## Phase 2 — Evaluate review and merge
+
+### Step 2.1 — Resolve useful findings and verify the PR
+
+- [ ] Read completed reviews and inline/discussion comments. Accept only
+  findings supported by the code, behavior, and canonical specification;
+  diagnose before fixing and test any repair. Wait for the final PR revision's
+  existing CI jobs to pass. Record the review result and actual tested revision.
+
+Review observed (2026-09-06): the repository's automated Codex review of
+`65b875c` completed at 17:12:36 UTC with a thumbs-up. Both paginated review
+comment/submission endpoints and the unresolved-thread inventory contained
+no findings. No repair is justified by that review. The later version-only
+delta is reviewed locally and awaits its own full suite and final PR CI.
+
+### Step 2.2 — Merge the verified revision
+
+- [ ] Merge with a merge commit, preserving the separate implementation
+  phases. Update local main without overwriting local work and verify the
+  resulting commit/checks. Kyle's instruction already authorizes this merge.
+
+## Phase 3 — Publish and verify 0.4.0
+
+### Step 3.1 — Build and test the exact release inputs
+
+- [ ] From clean merged main, use the existing Racket CS 9.3 Linux builder
+  and isolated Ubuntu consumer. Record source commit, archive/checksum names,
+  exact SHA-256 and sizes, and passing consumer evidence. Stage release notes
+  describing the breaking spellings/Char migration, complete List library,
+  HTTP/exit changes, and unchanged Linux-only support.
+
+### Step 3.2 — Publish the authorized release and verify public bytes
+
+- [ ] Create annotated tag `v0.4.0` at the tested clean build commit. Publish
+  a GitHub release with only `attalambda-0.4.0-linux-x86_64.tar.gz` and
+  `SHA256SUMS`, after checking the staged assets. Preserve older releases.
+  Download the public assets afresh, compare hashes, and verify release/tag
+  metadata. Update current download links, acceptance/release ledger, and
+  handoff to the observed published state; commit/push the documentation and
+  leave main clean. No additional publication approval is needed for this
+  explicitly requested release within the established support boundary.
+
+---
+
+# Completed Public API and List library update
+
+Status: Phases 1–8 complete; the separately authorized release plan above
+controls the subsequent PR, review, merge, and publication.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.

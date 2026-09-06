@@ -128,10 +128,11 @@ design.
   changes the released language lands on one milestone branch (as Milestone 4
   did on `milestone-4-rationals`) and merges to `main` only with Kyle's
   explicit approval.
-- The public API and List library update stays on
-  `feature/public-api-and-list-library`. Push verified Phase commits only
-  to that branch. At final completion, stop; do not create its pull request
-  until Kyle reviews the branch and approves it.
+- Kyle authorized the public API/List PR, review, merge, and 0.4.0 release on
+  2026-09-06. Keep preparation and verified review repairs on
+  `feature/public-api-and-list-library` until that PR merges. Follow the active
+  release plan for the exact tested tag/artifacts; Linux x86-64 remains the
+  only supported binary download. Return to main after the approved merge.
 - Commit and push after each meaningful, verified phase.
 - Keep commits narrow and descriptive.
 - Do not leave generated Racket artifacts in Git.
