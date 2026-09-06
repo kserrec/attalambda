@@ -25,12 +25,10 @@ includes its own runtime, so you do not need to install Racket.
 Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.3.0>
 
 Current source includes incremental HTTP request accumulation and explicit
-`exit`. The `feature/public-api-and-list-library` branch also uses lowercase
-callable names and ASCII Char literals, documented in the [public API reference](docs/API.md).
-These changes are not in the published 0.3.0 archive, which retains its older
-API. The branch also implements List transforms, left reduction, and predicate
-searches, indexing, predicate prefixes, zip, concat, and flatten. Only the List
-generators remain planned.
+`exit`. The `feature/public-api-and-list-library` branch also provides lowercase
+callable names, ASCII Char literals, and the complete 25-function List API,
+documented in the [public API reference](docs/API.md). These changes are not
+in the published 0.3.0 archive, which retains its older API.
 
 Download, verify, extract, and run it:
 

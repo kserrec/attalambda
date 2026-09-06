@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phases 1–6 complete; continuing Phases 7–8 autonomously as authorized.
+Status: Phases 1–7 complete; continuing Phase 8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -483,7 +483,7 @@ specified generators are next under the continuous approval.
 
 ### Step 7.1 — Add the two generators
 
-- [ ] Extend the numeric List module using existing raw Rat comparison,
+- [x] Extend the numeric List module using existing raw Rat comparison,
   whole-number validation, increment, and private binary count operations.
   Implement only `range start end` and `repeat count value`. Test negative
   starts, crossing zero, adjacent/equal/reversed endpoints, fractional
@@ -492,6 +492,24 @@ specified generators are next under the continuous approval.
   heterogeneous repeated values. Zero repetitions return canonical NIL
   without using the value. Add exports, names, unit/public tests, and docs;
   run the Phase completion gate.
+
+Step 7.1 result (2026-09-06): range validates signed whole Rat bounds and
+uses existing comparison/successor operations; repeat validates its count and
+uses private binary countdown. Zero repeat returns canonical NIL before
+examining its value. Focused numeric tests passed 138 assertions, encoded-name
+tests passed 308, and installed-language tests passed 115. Coverage includes
+signed/cross-zero/equal/reversed ranges, fractional rejection, canonical
+Rat/List output, mixed repeated values, Error propagation, remaining unary
+arity, and lazy zero. The full run passed all 41 suites, 14,099 assertions,
+expanded purity for 32 modules, and complete boundaries. The relevant diff
+and whitespace checks passed.
+
+Phase 7 executable changes: the two generators in the existing numeric List
+module, explicit exports, and encoded names. Tests/tooling: focused/public
+cases and exact facade tables. Documentation: the complete API, README,
+architecture, acceptance, and plan. No new module, checker, representation,
+dependency, runtime code, or host capability. All 25 specified List functions
+are implemented; final branch and packaged verification follows in Phase 8.
 
 ## Phase 8 — Complete surface and simplicity verification
 

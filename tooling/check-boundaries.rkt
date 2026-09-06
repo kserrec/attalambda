@@ -389,7 +389,7 @@
               (typed-len-rat LEN)
               (typed-take-rat TAKE)
               (typed-drop-rat DROP)
-              typed-nth-rat)
+              typed-nth-rat typed-range-rat typed-repeat-rat)
      (only-in "../core/list-search.rkt"
               typed-any? typed-all? typed-find typed-find-index typed-contains?
               typed-take-while typed-drop-while)
@@ -502,6 +502,8 @@
      (typed-find find)
      (typed-find-index find-index)
      (typed-contains? contains?)
+     (typed-range-rat range)
+     (typed-repeat-rat repeat)
      (NOT not)
      (AND and)
      (OR or)
@@ -607,6 +609,7 @@
       take-while drop-while typed-take-while typed-drop-while
       append reverse map filter typed-append typed-reverse typed-map typed-filter
       reduce typed-reduce
+      range repeat typed-range-rat typed-repeat-rat
       zip concat flatten typed-zip typed-concat typed-flatten
       any? all? find find-index contains?
       typed-any? typed-all? typed-find typed-find-index typed-contains?

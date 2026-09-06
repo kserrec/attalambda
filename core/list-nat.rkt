@@ -12,9 +12,13 @@
          "typecheck.rkt"
          (only-in "errors.rkt"
                   raw-add-result-frame
+                  argument-position-one
                   invalid-count-error)
          (only-in "rat.rkt"
                   raw-rat-is-nonnegative-whole
+                  raw-rat-is-whole
+                  raw-rat-less
+                  raw-rat-succ
                   raw-rat-magnitude-bits
                   raw-whole-rat))
 
@@ -24,7 +28,9 @@
          typed-len-rat
          typed-take-rat
          typed-drop-rat
-         typed-nth-rat)
+         typed-nth-rat
+         typed-range-rat
+         typed-repeat-rat)
 
 (def raw-list-length-step recur list count =
   (((raw-if
@@ -140,3 +146,45 @@
      nth-function-name)
     rat-list-signature)
    raw-keep-return))
+
+(def raw-list-range-step recur start end =
+  (((raw-if ((raw-rat-less start) end))
+    ((raw-cons ((raw-make-object rat-type) start))
+     ((recur (raw-rat-succ start)) end)))
+   NIL))
+
+(def raw-list-range-rat-values start end =
+  (((raw-if ((raw-and (raw-rat-is-whole start)) (raw-rat-is-whole end)))
+    (((raw-fix raw-list-range-step) start) end))
+   ((raw-add-result-frame invalid-count-error) range-function-name)))
+
+(def typed-range-rat =
+  ((((make-typed-function raw-list-range-rat-values)
+     range-function-name)
+    ((raw-cons rat-type) ((raw-cons rat-type) NIL)))
+   raw-keep-return))
+
+(def raw-list-repeat-step recur count value =
+  (((raw-if (raw-nat-is-zero count))
+    NIL)
+   ((raw-cons value)
+    ((recur ((raw-nat-sub count) raw-one-bits)) value))))
+
+(def typed-repeat-count number value =
+  (((raw-if (raw-rat-is-nonnegative-whole number))
+    (lambda-let count = (raw-rat-magnitude-bits number)
+      (((raw-if (raw-nat-is-zero count))
+        NIL)
+       (((raw-if ((raw-is-type error-type) value))
+         ((raw-add-result-frame value) repeat-function-name))
+        (((raw-fix raw-list-repeat-step) count) value)))))
+   ((raw-add-result-frame invalid-count-error) repeat-function-name)))
+
+(def typed-repeat-rat count value =
+  ((((((raw-check-argument repeat-function-name)
+       argument-position-one)
+      rat-type)
+     raw-keep-return)
+    (lambda (validated)
+      ((typed-repeat-count (raw-object-value validated)) value)))
+   count))

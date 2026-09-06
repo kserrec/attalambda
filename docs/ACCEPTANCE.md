@@ -17,10 +17,9 @@ scan.
 Source beyond the published 0.3.0 archive includes incremental HTTP request
 reading, a 21-case canonical-empty codec matrix, and explicit program exit.
 Their packaged acceptance is recorded separately below. The current public
-API branch adds lowercase callable exports and diagnostic names, and ASCII
-Char literals; its verification is recorded in [`PLAN.md`](../PLAN.md). The
-List transforms, left reduction, predicate searches, indexing, and predicate
-prefixes, zip, concat, and flatten are implemented; generators remain planned.
+API branch adds lowercase callable exports and diagnostic names, ASCII Char
+literals, and the complete 25-function List API. Source verification is recorded
+in [`PLAN.md`](../PLAN.md); final packaged acceptance remains pending.
 
 ## Language criteria
 
@@ -37,6 +36,7 @@ prefixes, zip, concat, and flatten are implemented; generators remain planned.
 | Left reduction preserves argument/accumulation order; searches short-circuit and return Bool or Option as specified. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) proves left subtraction, NIL identity, Error absorption and stopping; [`list-search-test.rkt`](../tests/list-search-test.rkt) covers all five searches, asymmetric equality, canonical Rat indices, first/later stopping, Bool validation, and preserved diagnostic frames. |
 | nth returns Option and validates whole nonnegative indices; predicate prefixes stop at the first false answer. | [`list-nat-test.rkt`](../tests/list-nat-test.rkt) covers valid, boundary, past-end, invalid, and Error indices; [`list-search-test.rkt`](../tests/list-search-test.rkt) proves prefix order, canonical NIL, suffix retention, callback stopping, and Error propagation. |
 | Zip constructs two-element Lists, concat removes one level, and flatten recursively preserves leaf order. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) covers unequal lengths, canonical NIL, preserved concat nesting, nested empty Lists, heterogeneous leaves, invalid inner Lists, and nested Error propagation without evaluating later leaves. |
+| Range uses signed whole bounds with an exclusive end; repeat validates counts and skips its value at zero. | [`list-nat-test.rkt`](../tests/list-nat-test.rkt) checks signed/cross-zero/equal/reversed ranges, fractional rejection, canonical Rat/List output, repetition counts and mixed values, lazy zero, and Errors/partial application. |
 | Supported empty-producing List/String operations remain codec-compatible without weakening canonicality. | The 21 labeled cases in [`codec-test.rkt`](../tests/codec-test.rkt) assert both empty host conversion and canonical NIL identity across generic Lists, List Byte, Strings, and composition. Forged-terminator rejection remains; no producer or codec repair was needed. |
 | Rat is the only public number; private Nat/Int representations remain canonical. | [`binary-nat-test.rkt`](../tests/binary-nat-test.rkt), [`int-test.rkt`](../tests/int-test.rkt), [`rat-test.rkt`](../tests/rat-test.rkt), and [`typed-rat-test.rkt`](../tests/typed-rat-test.rkt) cover normalized binary magnitude, one signed zero, reduced fractions, exact arithmetic, comparison, division, powers, and strict wrappers. [`language-test.rkt`](../tests/language-test.rkt) proves retired public Nat/Int names do not resolve. |
 | Exact integer and fraction literals become canonical Rats; inexact and complex numbers are rejected. | [`language-test.rkt`](../tests/language-test.rkt) round-trips representative positive, negative, fractional, zero, and large literals through the codec and rejects floating-point, infinity, NaN, and complex forms. |

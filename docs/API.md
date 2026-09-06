@@ -1,11 +1,11 @@
 # Public API
 
 This reference describes the source surface on
-`feature/public-api-and-list-library` after Phase 6. The published 0.3.0
+`feature/public-api-and-list-library` after Phase 7. The published 0.3.0
 archive retains its earlier uppercase library names. All callable built-ins
 below are lowercase; their old uppercase aliases are absent from the language.
-Constants keep their names. Further List operations remain planned in
-[PLAN.md](../PLAN.md); the tables below describe the implemented surface.
+Constants keep their names. All 25 specified List operations are implemented;
+final branch and packaged verification is tracked in [PLAN.md](../PLAN.md).
 
 Programs begin with `#lang attalambda`. Every function is curried: supplying
 one argument returns the function awaiting the next. Every lambda has one
@@ -66,6 +66,8 @@ and `function` denote parameters, not an Any or Function runtime type.
 | `find predicate list` | First matching element in Option, otherwise NONE. |
 | `find-index predicate list` | First matching zero-based whole Rat index in Option, otherwise NONE. |
 | `contains? equality value list` | Bool membership; apply curried equality to value, then each element. Stop at the first match; NIL yields FALSE. |
+| `range start end` | Whole Rats, including negatives. Include start, exclude end, increment by one; start >= end yields NIL. Fractional bounds produce InvalidCount. |
+| `repeat count value` | Repeat value a nonnegative whole Rat count of times. Zero yields NIL without using value; negative or fractional counts produce InvalidCount. |
 
 List callbacks are pure unary or curried functions. Predicates must return tagged Bool;
 Error propagates with the List operation's frame, and another tagged answer

@@ -255,6 +255,13 @@ List-tag recursion. Flatten passes the remaining output as a suffix when
 entering a nested List, preserving order without repeated prefix append.
 Encountered Error leaves propagate; Result Err is retained as an ordinary leaf.
 
+The numeric List module completes the library with `range` and `repeat`.
+Range validates whole Rat endpoints and advances with existing raw Rat
+comparison and successor operations; repeat validates a nonnegative whole
+count and counts down with private binary Nat. Zero repetition returns the
+canonical NIL before examining its value. Both preserve the existing
+List/Rat representations and generalized argument checker.
+
 ### Natural numbers (private machinery)
 
 Binary Nat values are private machinery since Milestone 4: no public Nat type

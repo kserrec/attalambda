@@ -275,6 +275,12 @@ PROBE
 (check (eq (reduce add 0 (flatten nested)) 6))
 (check (is-nil (concat (cons NIL NIL))))
 (check (is-nil (flatten (cons (cons NIL NIL) NIL))))
+(check (eq (reduce add 0 (range -2 3)) 0))
+(check (eq (len (range -2 3)) 5))
+(check (is-nil (range 3 3)))
+(check (string-eq (make-string (repeat 3 #\x)) "xxx"))
+(check (is-nil (repeat 0 (loop NIL))))
+(check (is-nil (range 5 2)))
 PROGRAM
      )
     (check-command-success
@@ -282,7 +288,7 @@ PROGRAM
                   racket-executable
                   (list (path->string list-library-program))
                   20)
-     (make-bytes 31 46))
+     (make-bytes 37 46))
 
     ;; Every ASCII literal must agree with make-char and a one-byte String.
     ;; Sending each through the existing String codec also validates its tag,
@@ -376,6 +382,8 @@ PROGRAM
 (def filter-callback-error = (filter (lambda (value) value) (cons 1 NIL)))
 (def reduce-callback-error = (reduce sub TRUE (cons 1 NIL)))
 (def any-callback-error = (any? (lambda (value) value) (cons 1 NIL)))
+(def range-count-error = (range 0 1/2))
+(def repeat-count-error = (repeat -1 TRUE))
 (def saved-host = host)
 PROGRAM
      )
@@ -422,6 +430,8 @@ PROGRAM
 (displayln (error-value->string (target-value 'filter-callback-error)))
 (displayln (error-value->string (target-value 'reduce-callback-error)))
 (displayln (error-value->string (target-value 'any-callback-error)))
+(displayln (error-value->string (target-value 'range-count-error)))
+(displayln (error-value->string (target-value 'repeat-count-error)))
 PROBE
      )
     (check-command-success
@@ -439,7 +449,9 @@ PROBE
       #"add(arg1 expected RAT got BOOL)\n  -> map(result)\n"
       #"filter(arg1 expected BOOL got RAT)\n"
       #"sub(arg1 expected RAT got BOOL)\n  -> reduce(result)\n"
-      #"any?(arg1 expected BOOL got RAT)\n"))
+      #"any?(arg1 expected BOOL got RAT)\n"
+      #"INVALID-COUNT\n  -> range(result)\n"
+      #"INVALID-COUNT\n  -> repeat(result)\n"))
 
     (for ([case
            (in-list

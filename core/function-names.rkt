@@ -29,6 +29,8 @@
          find-function-name
          find-index-function-name
          contains-function-name
+         range-function-name
+         repeat-function-name
          not-function-name
          and-function-name
          or-function-name
@@ -122,6 +124,8 @@
 (define-function-name find-function-name find)
 (define-function-name find-index-function-name find-index)
 (define-function-name contains-function-name contains?)
+(define-function-name range-function-name range)
+(define-function-name repeat-function-name repeat)
 
 (define-function-name not-function-name not)
 (define-function-name and-function-name and)

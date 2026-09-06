@@ -65,6 +65,8 @@
    (list find-function-name "find")
    (list find-index-function-name "find-index")
    (list contains-function-name "contains?")
+   (list range-function-name "range")
+   (list repeat-function-name "repeat")
    (list not-function-name "not")
    (list and-function-name "and")
    (list or-function-name "or")

@@ -11,8 +11,9 @@
          "../core/tags.rkt"
          "../core/rat.rkt"
          (only-in "../core/option.rkt" NONE typed-option-is-some raw-option-value)
+         (only-in "../core/result.rkt" make-err)
          "../readers/error.rkt"
-         (only-in "../runtime/codec.rkt" exact->object-rat object-rat->exact host-list->object-list)
+         (only-in "../runtime/codec.rkt" exact->object-rat object-rat->exact host-list->object-list object-list->host-list bytes->object-string)
          "../readers/bool.rkt"
          "../readers/list.rkt"
          "../readers/rat.rkt"
@@ -314,3 +315,62 @@
                               (lazy-apply typed-nth-rat true-object)
                               (lazy-apply typed-nth-rat incoming-error)))])
   (check-equal? (procedure-arity (lazy-force partial)) 1))
+
+;; range accepts signed whole endpoints and excludes the end.
+(define (read-numbers value)
+  (map object-rat->exact (object-list->host-list value)))
+(for ([endpoints (in-list '((0 3) (-3 -1) (-2 2) (3 4) (2 2) (3 2) (-2 -2)))]
+      [expected (in-list '((0 1 2) (-3 -2) (-2 -1 0 1) (3) () () ()))])
+  (define result
+    (apply2 typed-range-rat
+            (exact->object-rat (car endpoints))
+            (exact->object-rat (cadr endpoints))))
+  (check-equal? (read-numbers result) expected)
+  (check-equal? (object-tag result) 2)
+  (when (null? expected)
+    (check-eq? (lazy-force result) (lazy-force NIL))))
+(for ([endpoints (in-list '((1/2 3) (-1/2 2) (2 1/2) (1/2 1/2)))])
+  (check-equal?
+   (error-value->string
+    (apply2 typed-range-rat
+            (exact->object-rat (car endpoints))
+            (exact->object-rat (cadr endpoints))))
+   "INVALID-COUNT\n  -> range(result)"))
+(check-equal? (error-value->string (apply2 typed-range-rat true-object unused-nth-list))
+              "range(arg1 expected RAT got BOOL)")
+(check-equal? (error-value->string (apply2 typed-range-rat incoming-error unused-nth-list))
+              "INVALID-NAT\n  -> range(arg1 expected RAT)")
+(check-equal? (error-value->string (apply2 typed-range-rat ZERO true-object))
+              "range(arg2 expected RAT got BOOL)")
+(check-equal? (error-value->string (apply2 typed-range-rat ZERO incoming-error))
+              "INVALID-NAT\n  -> range(arg2 expected RAT)")
+
+;; repeat validates counts and never examines its value for zero count.
+(for ([count (in-list '(0 1 3))]
+      [expected (in-list '(() (1) (1 1 1)))])
+  (check-equal? (read-numbers (apply2 typed-repeat-rat (exact->object-rat count) ONE))
+                expected))
+(for ([value (in-list (list unused-nth-list incoming-error))])
+  (define result (apply2 typed-repeat-rat ZERO value))
+  (check-eq? (lazy-force result) (lazy-force NIL))
+  (check-equal? (object-list->host-list result) '()))
+(for ([value (in-list (list true-object ONE NIL (bytes->object-string #"x")
+                            (lazy-apply make-err incoming-error)))])
+  (define repeated (object-list->host-list (apply2 typed-repeat-rat TWO value)))
+  (check-equal? (length repeated) 2)
+  (for ([element (in-list repeated)])
+    (check-eq? (lazy-force element) (lazy-force value))))
+(for ([count (in-list '(-1 -1/2 1/2))])
+  (check-equal?
+   (error-value->string (apply2 typed-repeat-rat (exact->object-rat count) unused-nth-list))
+   "INVALID-COUNT\n  -> repeat(result)"))
+(check-equal? (error-value->string (apply2 typed-repeat-rat true-object unused-nth-list))
+              "repeat(arg1 expected RAT got BOOL)")
+(check-equal? (error-value->string (apply2 typed-repeat-rat incoming-error unused-nth-list))
+              "INVALID-NAT\n  -> repeat(arg1 expected RAT)")
+(check-equal? (error-value->string (apply2 typed-repeat-rat ONE incoming-error))
+              "INVALID-NAT\n  -> repeat(result)")
+(for ([function (in-list (list typed-range-rat typed-repeat-rat))])
+  (check-equal? (procedure-arity (lazy-force function)) 1)
+  (for ([first (in-list (list ZERO incoming-error true-object))])
+    (check-equal? (procedure-arity (lazy-force (lazy-apply function first))) 1)))
