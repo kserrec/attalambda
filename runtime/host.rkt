@@ -1,8 +1,8 @@
 #lang racket/base
 
 ;; The one production bridge to the outside world. The closed dispatcher
-;; contains exactly the stdout, file, and blocking TCP operations approved
-;; through Phase 16.
+;; contains exactly stdout, file, blocking TCP, and explicit exit operations
+;; approved by the host design and the 2026-09-05 exit amendment.
 
 (require (only-in racket/file file->bytes)
          racket/promise
@@ -14,6 +14,7 @@
                   tcp-listen)
          (only-in "../core/strings.rkt" EMPTY-STRING)
          (only-in "../effects/protocol.rkt"
+                  exit-operation
                   invalid-path-code
                   invalid-text-code
                   invalid-handle-code
@@ -235,6 +236,11 @@
     (write-bytes payload output)
     (flush-output output)
     (object-ok object-unit)))
+
+;; The pure caller chose the status; defensive decoding has already accepted
+;; only canonical whole Rat 0 or 1. Successful real exit does not return.
+(define (perform-exit status)
+  (exit status))
 
 (define (decode-utf8 operation payload)
   (with-handlers ([exn:fail:out-of-memory?
@@ -636,6 +642,17 @@
                         (perform-tcp-close handle)
                         handle))
                   (wrong-arity tcp-close-operation))]
+             [(bytes=? operation-bytes #"exit")
+              (if (= argument-count 1)
+                  (let ([status
+                         (decode-bounded-count exit-operation
+                                               (car arguments)
+                                               0
+                                               1)])
+                    (if (exact-nonnegative-integer? status)
+                        (perform-exit status)
+                        status))
+                  (wrong-arity exit-operation))]
              [else
               (invalid-request
                (bytes->object-string operation-bytes)

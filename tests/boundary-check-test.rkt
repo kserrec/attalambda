@@ -384,6 +384,17 @@
     reader-source
     '(module observer racket/base
        (#%module-begin
+        (provide bool->boolean)
+        (define (bool->boolean value) (exit value)))))
+   (check-not-false
+    (member 'forbidden-reader-capability
+            (kinds
+             (file-boundary-violations reader-source 'reader root))))
+
+   (write-datum
+    reader-source
+    '(module observer racket/base
+       (#%module-begin
         (require racket/promise)
         (provide bool->boolean)
         (define (bool->boolean value) (force value)))))
@@ -468,6 +479,15 @@
         (provide use)
         (def use value =
           (string-length value))))
+    '(unapproved-effect-identifier))
+
+   ;; Explicit exit grants no native exit authority to the pure wrapper.
+   (check-effect
+    '(module example "../macros/lazy-with-macros.rkt"
+       (#%module-begin
+        (require "../macros/macros.rkt")
+        (provide use)
+        (def use value = (exit value))))
     '(unapproved-effect-identifier))
 
    (check-effect
@@ -598,6 +618,13 @@
     (kinds (file-boundary-violations codec 'codec root))
     '(forbidden-codec-capability))
 
+   ;; Deterministic conversion must never terminate the process.
+   (write-datum codec
+                (codec-datum '(define leak (exit 0))))
+   (check-equal?
+    (kinds (file-boundary-violations codec 'codec root))
+    '(forbidden-codec-capability))
+
    ;; File conversion remains privileged even after the host gains the
    ;; approved read-file operation.
    (write-datum codec
@@ -638,6 +665,11 @@
 
    (write-datum host-file
                 (host-datum '(provide host) 'request))
+   (check-equal? (file-boundary-violations host-file 'host root)
+                 '())
+
+   (write-datum host-file
+                (host-datum '(provide host) '(exit request)))
    (check-equal? (file-boundary-violations host-file 'host root)
                  '())
 
@@ -975,6 +1007,38 @@
    (check-not-false
     (member 'forbidden-language-capability
             expanded-capability-kinds))
+   (write-datum language-expander clean-language-expander-datum)
+
+   ;; Public exit is an export spelling, never a native capability for the
+   ;; expander. Reject both compile-time calls and generated native calls in
+   ;; existing approved helpers, without relying on an unknown helper name.
+   (for ([replacement
+          (in-list
+           '((define-for-syntax (language-definition-form? form) (exit 1))
+             (define-syntax (language-lambda stx) (syntax (exit 1)))
+             (define-syntax (language-lambda stx)
+               (syntax-case (syntax #&exit) ()
+                 [#&function (syntax (function 1))]))
+             (define-syntax (language-lambda stx)
+               (syntax-case (syntax #s(p exit)) ()
+                 [#s(p function) (syntax (function 1))]))
+             (define-syntax (language-lambda stx)
+               (syntax-case (syntax #(exit)) ()
+                 [#(function) (syntax (function 1))]))
+             (define-syntax (language-lambda stx)
+               (syntax #hash((function . exit))))))])
+     (define original
+       (for/first ([form (in-list (cdr (cadddr clean-language-expander-datum)))]
+                   #:when (equal? (take form 2) (take replacement 2)))
+         form))
+     (unless original
+       (error 'boundary-test "existing language helper was not found"))
+     (write-datum language-expander
+                  (replace-datum original replacement clean-language-expander-datum))
+     (check-not-false
+      (member 'forbidden-language-capability
+              (kinds
+               (file-boundary-violations language-expander 'language-expander root)))))
    (write-datum language-expander clean-language-expander-datum)
 
    (write-datum

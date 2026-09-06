@@ -33,6 +33,7 @@
          tcp-read-function-name
          tcp-write-function-name
          tcp-close-function-name
+         exit-function-name
          stdout-operation
          read-file-operation
          write-file-operation
@@ -42,6 +43,7 @@
          tcp-read-operation
          tcp-write-operation
          tcp-close-operation
+         exit-operation
          unknown-operation-reason
          wrong-arity-reason
          wrong-type-reason
@@ -91,6 +93,7 @@
 (define-function-name tcp-read-function-name tcp-read)
 (define-function-name tcp-write-function-name tcp-write)
 (define-function-name tcp-close-function-name tcp-close)
+(define-function-name exit-function-name exit)
 (define-function-name stdout-operation stdout)
 (define-function-name read-file-operation read-file)
 (define-function-name write-file-operation write-file)
@@ -100,6 +103,7 @@
 (define-function-name tcp-read-operation tcp-read)
 (define-function-name tcp-write-operation tcp-write)
 (define-function-name tcp-close-operation tcp-close)
+(define-function-name exit-operation exit)
 
 (define-function-name unknown-operation-reason unknown-operation)
 (define-function-name wrong-arity-reason wrong-arity)
@@ -210,6 +214,11 @@
    ((raw-nat-less-equal
      (raw-rat-field-magnitude value))
     raw-read-maximum-bits)))
+
+(def raw-exit-argument value =
+  ((raw-nat-less-equal
+    (raw-rat-field-magnitude value))
+   raw-one-bits))
 
 (def raw-bit-representation-valid bit =
   (lambda-let selected =
@@ -375,6 +384,14 @@
     raw-whole-rat-representation-valid)
    raw-read-maximum-argument))
 
+(def raw-exit-rule =
+  (((raw-make-argument-rule rat-type)
+    raw-whole-rat-representation-valid)
+   raw-exit-argument))
+
+(def raw-exit-schema =
+  ((raw-cons raw-exit-rule) NIL))
+
 (def raw-one-string-schema =
   ((raw-cons raw-string-rule) NIL))
 
@@ -488,7 +505,10 @@
           ((raw-cons
             ((raw-make-operation-entry tcp-close-operation)
              raw-tcp-handle-schema))
-           NIL))))))))))
+           ((raw-cons
+             ((raw-make-operation-entry exit-operation)
+              raw-exit-schema))
+            NIL)))))))))))
 
 (def raw-dispatch-known-operation-step recur dispatcher request operation arguments entries =
   (((raw-if

@@ -1,7 +1,7 @@
 # HTTP, empty-List consistency, and explicit exit plan
 
-Status: approved for serial execution on 2026-09-05; Phases 0–2 complete;
-Phase 3 next.
+Status: approved for serial execution on 2026-09-05; Phases 0–3 complete;
+Phase 4 next.
 Branch: `refactor/non-core-simplification`; no new branch.
 Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
 working tree before this planning edit.
@@ -210,7 +210,7 @@ Semantic parser, cleanup implementation, host, codec, and core are untouched.
 
 ### Step 3.1 — Construct and validate the pure exit request
 
-- [ ] Create peer `effects/exit.rkt` and `tests/exit-test.rkt`; extend
+- [x] Create peer `effects/exit.rkt` and `tests/exit-test.rkt`; extend
   `effects/protocol.rkt` with `exit-function-name`, `exit-operation` and
   the closed operation-table entry. Request: List `["exit", Rat(status)]`.
   Reuse the generalized checker, existing raw Rat primitives, and request
@@ -221,9 +221,17 @@ Semantic parser, cleanup implementation, host, codec, and core are untouched.
   protocol requests retain InvalidHostRequest behavior. Change checker
   inventories only as required.
 
+Step 3.1 result (2026-09-05): created the pure exit peer and its tests, and
+added the tenth pure protocol entry. Exit/stdout/TCP suites passed 459
+assertions (167/24/268), including malformed direct requests, exact statuses,
+Error frames, fake returns, and laziness. Both architectural checks passed;
+expanded purity now covers 30 production modules without checker changes.
+Complete relevant diffs and whitespace checks passed. Real host termination
+and the public language binding are still pending the following Steps.
+
 ### Step 3.2 — Perform explicit process termination in the real host
 
-- [ ] Extend `runtime/host.rkt` with the tenth dispatch case and
+- [x] Extend `runtime/host.rkt` with the tenth dispatch case and
   `perform-exit`; reuse `decode-bounded-count` with bounds 0 and 1 for
   defensive canonical whole-Rat decoding. No automatic output, final-value
   inspection, Error mapping, or returning `Ok UNIT` after successful real
@@ -232,23 +240,77 @@ Semantic parser, cleanup implementation, host, codec, and core are untouched.
   calls run only in child processes; malformed requests must not terminate
   tests. Native exit remains forbidden in pure effects, codec, and readers.
 
+Step 3.2 result (2026-09-05): added the real host's bounded exit performer
+and exact checker capability. Host tests passed 81 assertions, including
+isolated children terminating silently with statuses 0 and 1 and surviving
+14 malformed requests across the pure bridge and strict dispatcher. Boundary
+tests passed 119 assertions, including native-exit rejection in effects,
+codec, and readers. Both architectural gates passed (30 pure modules).
+Existing compiled fresh-language setup keeps subprocess checks within their
+unchanged deadlines. Updated the host design contract, distinguishing wrapper,
+bridge, and defensive host validation and documenting existing non-List
+TypeMismatch behavior accurately. Complete relevant diffs and whitespace
+checks passed. Codec, core, runner, and the nine existing performers are
+untouched; public injection follows in Step 3.3.
+
 ### Step 3.3 — Expose the canonical public binding
 
-- [ ] In `lang/expander.rkt`, inject `language-host` once into `make-exit`,
+- [x] In `lang/expander.rkt`, inject `language-host` once into `make-exit`,
   bind internally as `language-exit`, and rename/export as `exit` without
   colliding with native Racket exit. Update language tests and exact
   import/export/injection checks; run boundary/purity suites as applicable.
   Add no other public alias or constant; runner production behavior stays.
 
+Step 3.3 result (2026-09-05): added the single host injection and canonical
+rename from private `language-exit` to public `exit`, with exact checker
+import/export/definition expectations. Language and boundary suites passed
+209 assertions (90/119); both architectural gates passed (30 pure modules).
+Public programs proved ordinary function aliasing and non-terminating invalid
+status behavior. Updated the host design's implementation status and wrapper
+count. Complete relevant diffs and whitespace checks passed. No additional
+public alias, status constant, or runner production change was introduced.
+
 ### Step 3.4 — Prove operating-system statuses and sequencing
 
-- [ ] Extend existing runner/subprocess tests with temporary public-only
+- [x] Extend existing runner/subprocess tests with temporary public-only
   `#lang attalambda` programs: exit 0/1 gives exact status and empty output;
   no exit, including `(DIV 1 0)` and ordinary Error, remains status 0;
   missing-file Err chosen fatal/recoverable gives 1/0; stdout before exit
   appears, stdout afterward does not; an unselected exit branch stays lazy.
   Run exit, host, language, runner suites, both checkers, full suite, and
   Phase review. Pure AttaLambda makes every fatal/recoverable decision.
+
+Step 3.4 verification (2026-09-05): runner tests passed 208 assertions,
+including exact silent 0/1 exits, unchanged no-exit Error/Err completion,
+pure fatal/recoverable missing-file choices, before/after output ordering,
+and an unselected exit. The first full run found the old exact seven-effect
+inventory expectation in `tests/purity-test.rkt`; source inventory proved
+eight with the new exit peer. Updated only that expectation, retained every
+per-module purity assertion, and passed its focused 135 assertions. The
+subsequent full run passed all 39 suites, 13,599 assertions, expanded purity
+for 30 production modules, and the repository boundary/inventory gate.
+Complete relevant diffs and whitespace checks passed. Fresh Phase 3 review
+found one enforcement gap: admitting the public `exit` spelling also admitted
+native exit in an existing language syntax helper or transformer. Both new
+regressions reproduced the bypass. The checker now pins the sole occurrence
+of `exit` to the already-exact public export contract; boundary tests passed
+121 assertions and the repository boundary gate passed. The next full run
+passed all 39 suites (13,601 assertions), expanded purity for 30 modules, and
+the boundary gate. Repair review then proved that the existing datum walkers
+missed boxed and prefab-contained identifiers. Additional regressions also
+reproduced a hash-contained miss; the vector control already passed. Extended
+both existing walkers to inspect boxes, hash keys/values, and prefab fields.
+The invalidated boundary suite and gate were rerun successfully: 125 focused
+assertions passed, including all six language-exit regressions. A fresh
+container-repair review found zero confirmed issues or material gaps, passed
+125 assertions independently, and checked nested-container siblings. The
+125-assertion repair suite supersedes the 121-assertion boundary suite in that
+full run; Phase 4 will run the complete suite again on the final source.
+Complete relevant diffs and whitespace checks passed. Executable changes:
+pure exit wrapper/protocol, sole-host performer/dispatch, and one public
+injection. Tests/tooling: exit, host, language, runner, inventory, and boundary
+regressions/checks. Documentation: host contract and this completion record.
+No core, codec, reader, or runner production change was needed or made.
 
 ## Phase 4 — Documentation, packaged behavior, acceptance (three Steps)
 

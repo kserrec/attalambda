@@ -1,6 +1,8 @@
 # Host boundary design
 
-Status: approved 2026-08-27; updated to the current 0.3.0 representations
+Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05.
+Exit protocol, host, and public wrapper injection are implemented. The 0.3.0
+representation and existing nine operations are behaviorally unchanged.
 
 This document records the exact current contract for AttaLambda's one
 outside-world boundary. The three canonical
@@ -16,9 +18,9 @@ authoritative.
   computation. It receives the host as an ordinary unary argument and never
   imports `runtime/`.
 - `lang/expander.rkt` is the sole production importer of `host`; it injects
-  that value once into the nine public wrappers.
+  that value once into the ten public wrappers.
 - The closed effect set is standard output, whole-file read and replacement,
-  and blocking TCP connect/listen/accept/read/write/close.
+  blocking TCP connect/listen/accept/read/write/close, and explicit process exit.
 - HTTP parsing, rendering, routing, and server decisions stay in `effects/`
   as pure computation over the TCP wrappers.
 - The host inherits the launching process's permissions. It is not a sandbox.
@@ -29,6 +31,9 @@ The shortest implementation path is:
 effects wrapper -> host -> dispatch-request -> perform-* -> codec result
 ```
 
+Explicit exit ends at `perform-exit`: successful real termination has no
+return value to convert.
+
 Start with `dispatch-request` in `runtime/host.rkt` for routing and argument
 decoding. Follow only its selected `perform-*` function for the native effect,
 and open `runtime/codec.rkt` only for the representation conversion it calls.
@@ -38,7 +43,7 @@ and open `runtime/codec.rkt` only for the representation conversion it calls.
 Conceptually:
 
 ```text
-host : List -> Error | Result
+host : List -> Error | Result (or explicit process termination)
 ```
 
 A request is one canonical proper List:
@@ -48,14 +53,18 @@ A request is one canonical proper List:
 ```
 
 `operation` is a typed String containing a closed lowercase ASCII name. Every
-operation has exact arity. The pure wrapper checks the public types and
-numeric bounds before it applies the injected host; the host decodes and
-checks the request again rather than trusting a direct caller.
+operation has exact arity. Pure wrappers check their public argument contracts;
+the pure host bridge checks the complete request rules before dispatch. The
+real host also decodes and defensively checks the request rather than trusting
+a direct caller.
 
 An incoming Error bubbles through the normal strict boundary. A non-List
-argument or malformed request returns a bare InvalidHostRequest `Error`.
-A valid request returns `Result`: `Ok` for success or `Err(HostFailure)` for an
-expected external failure.
+argument returns TypeMismatch; a malformed List request returns
+InvalidHostRequest. Both are bare `Error` values.
+Except for exit, a valid request returns `Result`: `Ok` for success or
+`Err(HostFailure)` for an expected external failure. A valid exit request
+terminates with the requested status, returns nothing, and prints nothing
+automatically.
 
 ## Closed operation table
 
@@ -70,6 +79,7 @@ expected external failure.
 | `tcp-read Rat Rat` | positive whole connection handle; whole maximum 1..65536 | `Ok(List Byte)`, with `NIL` at EOF |
 | `tcp-write Rat (List Byte)` | positive whole connection handle and byte payload | `Ok(UNIT)` after the complete write |
 | `tcp-close Rat` | positive whole listener or connection handle | `Ok(UNIT)` after removal and cleanup |
+| `exit Rat` | canonical whole Rat exactly 0 or 1 | process terminates with that status; does not return |
 
 The table's operation and arguments are List elements, not Racket command
 arguments. Numeric fields remain typed Rat values at the boundary; conversion
@@ -83,7 +93,7 @@ validates the connection and succeeds without a platform write.
 
 ## Pure wrappers
 
-The public wrapper names are:
+The wrapper names in the approved language contract are:
 
 ```text
 stdout
@@ -95,11 +105,13 @@ tcp-accept
 tcp-read
 tcp-write
 tcp-close
+exit
 ```
 
-`effects/stdout.rkt`, `effects/files.rkt`, and `effects/tcp.rkt` build these
-wrappers. Each builder accepts a host first, which lets tests inject a unary
-fake. That injection is ordinary lambda calculus and does not create another
+`effects/stdout.rkt`, `effects/files.rkt`, `effects/tcp.rkt`, and
+`effects/exit.rkt` build these wrappers. Each builder accepts a host first,
+which lets tests inject a unary fake. That injection is ordinary lambda
+calculus and does not create another
 privileged primitive.
 
 Request construction and validation remain pure. A bad typed argument,
@@ -107,6 +119,13 @@ non-whole count, or non-Byte payload element becomes the specified Error
 before the host is called. The pure host bridge rejects an out-of-range whole
 count before its strict dispatcher runs. Early Errors retain exact remaining
 unary arity and normal propagation frames.
+
+For exit, the generalized checker produces TypeMismatch for a non-Rat and
+bubbles an incoming Error with its normal frame. Pure Rat equality admits
+only 0 or 1; every other Rat produces InvalidCount without a host call.
+Malformed direct List requests retain InvalidHostRequest instead. The host
+uses the unchanged codec and bounded-count decoder to defensively require a
+canonical whole Rat 0 or 1. It does not choose a status from any other value.
 
 ## Errors and external failures
 
@@ -176,7 +195,7 @@ does not run object-language arithmetic.
 The codec may force validated values and use temporary private Racket data for
 translation. It may not interpret paths, dispatch operations, perform I/O,
 map exceptions, mutate resource state, implement language algorithms, or
-format values for people.
+format values for people, terminate the process, or decide program success.
 
 ## Bytes, paths, and files
 
@@ -227,17 +246,30 @@ application is forced. A forced promise caches its value, so forcing the same
 bound application again does not repeat the effect; making another host
 application requests another effect.
 
+Successful real exit never returns to be forced again. An injected fake host
+may return an ordinary value; the exit wrapper preserves that value and its
+normal force-once behavior. An exit in an unselected branch remains unforced.
+
 Programs sequence effects through a data dependency: inspect the first Result,
 select an Ok or Err continuation with the strict lazy conditional, and create
 the next host application only in the selected continuation. Binding an unused
 first result does not establish order.
+
+Pure AttaLambda decides whether a failure is fatal and explicitly calls exit
+with 1 (unsuccessful completion) or 0 (successful completion). Error and
+Result Err remain ordinary values; neither the host nor runner automatically
+prints them or derives a status from them. Without an exit call, normal
+program completion remains status 0. A performed exit prevents later effects.
+The runner's separate native exit path remains limited to launcher, source,
+and scaffolding failures; only the host performs program-requested exit.
 
 ## Authority
 
 The real host has the launching process's relevant authority. An AttaLambda
 program can write stdout, read permitted files, create or truncate permitted
 paths including symlink targets, resolve names, connect to permitted remote TCP
-endpoints, and bind permitted local ports. Users must inspect and trust a
+endpoints, bind permitted local ports, and terminate its own process with
+status 0 or 1. Users must inspect and trust a
 program before running it.
 
 The closed host does not expose environment enumeration, subprocesses, shell
@@ -276,3 +308,10 @@ handles with whole Rat values, acknowledgements with Unit, and file/TCP
 payload Strings with `List Byte` as part of the completed 0.3.0 language
 change. The current contract above includes those approved representations;
 the operation set and sole-host authority did not change.
+
+On 2026-09-05 Kyle approved the five-phase HTTP/List/exit plan. Its matching
+amendments to all three normative specifications add exactly the tenth exit
+operation above. The sole-host architecture, deterministic codec role, and
+absolute object-language purity remain in force. No process spawning,
+signals, other exit statuses, or automatic Error/Result status mapping was
+approved.

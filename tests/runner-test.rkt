@@ -507,4 +507,31 @@
                  "#lang attalambda\n(read-file \"absent.txt\")\n")
    (check-command-success
     (run '("host-result-error.attl"))
-    #"")))
+    #"")
+
+   ;; The program, not the runner, chooses fatal versus recoverable failure.
+   ;; Every case is public-only source in the isolated working directory.
+   (for ([case
+          (in-list
+           '(("exit-zero.attl" "(exit 0)\n" 0 #"")
+             ("exit-one.attl" "(exit 1)\n" 1 #"")
+             ("missing-file-fatal.attl"
+              "(def outcome = (read-file \"missing-exit-input.txt\"))\n(if (is-err outcome) (exit 1) (exit 0))\n"
+              1 #"")
+             ("missing-file-recoverable.attl"
+              "(def outcome = (read-file \"missing-exit-input.txt\"))\n(if (is-err outcome) (exit 0) (exit 1))\n"
+              0 #"")
+             ("exit-sequencing.attl"
+              "(stdout \"before\")\n(exit 1)\n(stdout \"after\")\n"
+              1 #"before")
+             ("exit-unselected.attl"
+              "(if FALSE (exit 1) (stdout \"continued\"))\n"
+              0 #"continued")))])
+     (define name (car case))
+     (write-source (build-path working-directory name)
+                   (string-append "#lang attalambda\n" (cadr case)))
+     (define result (run (list name)))
+     (check-false (command-result-timed-out? result) (result-diagnostic result))
+     (check-equal? (command-result-status result) (caddr case) (result-diagnostic result))
+     (check-equal? (command-result-stdout result) (cadddr case) (result-diagnostic result))
+     (check-equal? (command-result-stderr result) #"" (result-diagnostic result)))))

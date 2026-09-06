@@ -53,7 +53,7 @@
     directory-list make-directory make-directory* delete-directory
     delete-directory/files delete-file rename-file-or-directory copy-file
     tcp-connect tcp-listen tcp-accept tcp-close udp-open-socket
-    system system* process process* subprocess shell-execute
+    exit system system* process process* subprocess shell-execute
     eval dynamic-require namespace-require make-base-namespace
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place
@@ -72,10 +72,10 @@
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place))
 
-;; These four names are the facade's pure, already-injected lambda wrappers.
-;; Exact language imports still reject racket/tcp and any direct TCP binding.
+;; These names denote pure, host-injected wrappers at the language boundary.
+;; Exact imports/definitions still reject direct native TCP or exit bindings.
 (define forbidden-language-capabilities
-  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close)
+  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit)
            forbidden-codec-capabilities))
 
 ;; The runner is trusted only to decide whether and how the host process loads
@@ -272,6 +272,7 @@
     decoded decoded-request define define-values discard-entry!
     dispatch-one-string dispatch-request else end eof-object? entry
     eq? errno errno-in? exact-nonnegative-integer? exact-positive-integer?
+    exit exit-operation
     exn:fail:contract? exn:fail:filesystem:errno-errno
     exn:fail:filesystem:errno? exn:fail:network:errno-errno
     exn:fail:network:errno? exn:fail? exn:fail:out-of-memory? expected? failure
@@ -290,13 +291,13 @@
     object-unit object-byte-list->bytes bytes->object-byte-list
     object-string->bytes only-in operation operation-bytes operation-value or
     out-of-range out-of-range-reason output output-failure pair? path
-    path-payload payload perform-read-file perform-stdout perform-tcp-accept
+    path-payload payload perform-exit perform-read-file perform-stdout perform-tcp-accept
     perform-tcp-close perform-tcp-connect perform-tcp-listen perform-tcp-read
     perform-tcp-write perform-write-file performer permission-denied-code port
     posix posix-numbers prior-failure provide quote racket/base racket/file racket/promise
     racket/tcp read-bytes-avail! read-file-operation reason reason->object
     register-entry! remote remote-address remote-payload remote-port request
-    require resource-exhausted-code second set! start stdout-operation string=?
+    require resource-exhausted-code second set! start status stdout-operation string=?
     string? struct subbytes tcp-accept tcp-accept-operation tcp-addresses
     tcp-close tcp-close-operation tcp-connect tcp-connect-operation tcp-listen
     tcp-listen-operation tcp-read-operation tcp-write-operation timed-out-code
@@ -457,6 +458,8 @@
               (typed-rat-is-zero IS-ZERO)
               (typed-rat-is-whole IS-WHOLE)
               (typed-rat-is-nonnegative-whole IS-NONNEGATIVE-WHOLE))
+     (only-in "../effects/exit.rkt"
+              (make-exit language-make-exit))
      (only-in "../effects/files.rkt"
               (make-read-file language-make-read-file)
               (make-write-file language-make-write-file))
@@ -494,7 +497,8 @@
      (language-let let)
      (language-if if)
      (language-cons cons)
-     (language-host host))
+     (language-host host)
+     (language-exit exit))
     ,@language-direct-public-bindings))
 
 (define expected-language-runtime-definitions
@@ -506,7 +510,8 @@
     (def tcp-accept = (language-make-tcp-accept language-host))
     (def tcp-read = (language-make-tcp-read language-host))
     (def tcp-write = (language-make-tcp-write language-host))
-    (def tcp-close = (language-make-tcp-close language-host))))
+    (def tcp-close = (language-make-tcp-close language-host))
+    (def language-exit = (language-make-exit language-host))))
 
 (define expected-language-transformers
   '(language-module-begin
@@ -536,6 +541,7 @@
       language-char-expression language-cons language-datum
       language-definition-form? language-discard language-host
       language-if language-lambda language-let language-list-expression
+      language-exit language-make-exit make-exit exit
       language-make-read-file language-make-stdout
       language-make-tcp-accept language-make-tcp-close
       language-make-tcp-connect language-make-tcp-listen
@@ -959,6 +965,14 @@
              (datum-symbols (cdr datum)))]
     [(vector? datum)
      (append-map datum-symbols (vector->list datum))]
+    [(box? datum) (datum-symbols (unbox datum))]
+    [(hash? datum)
+     (append-map (lambda (entry)
+                   (append (datum-symbols (car entry))
+                           (datum-symbols (cdr entry))))
+                 (hash->list datum))]
+    [(prefab-struct-key datum)
+     (datum-symbols (struct->vector datum))]
     [else '()]))
 
 (define (module-symbols info)
@@ -973,6 +987,13 @@
     [(vector? datum)
      (for/sum ([element (in-vector datum)])
        (datum-occurrence-count target element))]
+    [(box? datum) (datum-occurrence-count target (unbox datum))]
+    [(hash? datum)
+     (for/sum ([(key value) (in-hash datum)])
+       (+ (datum-occurrence-count target key)
+          (datum-occurrence-count target value)))]
+    [(prefab-struct-key datum)
+     (datum-occurrence-count target (struct->vector datum))]
     [else 0]))
 
 (define (call-first-arguments name datum)
@@ -1282,6 +1303,12 @@
                         'invalid-language-runtime-definitions
                         runtime-definitions)))
    (language-expander-form-violations path info)
+   ;; The exact provide form accounts for the sole public spelling `exit`.
+   ;; Any additional occurrence can name native Racket exit in a syntax
+   ;; helper or transformer, outside the approved host boundary.
+   (if (= (datum-occurrence-count 'exit (module-info-forms info)) 1)
+       '()
+       (list (violation path 'forbidden-language-capability 'exit)))
    (symbol-violations path
                       symbols
                       forbidden-language-capabilities
