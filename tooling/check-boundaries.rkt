@@ -389,6 +389,8 @@
               (typed-len-rat LEN)
               (typed-take-rat TAKE)
               (typed-drop-rat DROP))
+     (only-in "../core/list-transform.rkt"
+              typed-append typed-reverse typed-map typed-filter)
      (only-in "../core/lists.rkt"
               NIL
               raw-cons
@@ -479,6 +481,10 @@
      (LEN len)
      (TAKE take)
      (DROP drop)
+     (typed-append append)
+     (typed-reverse reverse)
+     (typed-map map)
+     (typed-filter filter)
      (NOT not)
      (AND and)
      (OR or)
@@ -581,6 +587,7 @@
       IS-NONE OPTION-CASE MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
       MAP-CONTAINS? MAP-SET MAP-REMOVE
       head tail is-nil len take drop
+      append reverse map filter typed-append typed-reverse typed-map typed-filter
       not and or xor succ add
       sub mult div eq lt lte
       gt gte is-zero make-char char-eq char-lt

@@ -225,6 +225,15 @@ generalized checker. `len` returns a tagged whole Rat; `take` and `drop` accept
 a nonnegative whole Rat count and a List. They bubble incoming Errors and
 preserve the one remaining application after a bad first argument.
 
+`core/list-transform.rkt` adds public `append`, `reverse`, `map`, and
+`filter` without changing the foundational raw algorithms. The structural
+wrappers reconstruct canonical List inputs after checker unwrapping. Map
+folds its lazy raw results to propagate an Error as the whole answer; filter
+adapts its existing branch selector to validate Bool results and propagate
+suffix Errors before retaining a node. A small pure predicate-result helper
+uses the same checker and diagnostic convention as Map equality. There is no
+new tag, callback registry, or host computation.
+
 ### Natural numbers (private machinery)
 
 Binary Nat values are private machinery since Milestone 4: no public Nat type

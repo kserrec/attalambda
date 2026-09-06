@@ -13,6 +13,10 @@
          len-function-name
          take-function-name
          drop-function-name
+         append-function-name
+         reverse-function-name
+         map-function-name
+         filter-function-name
          not-function-name
          and-function-name
          or-function-name
@@ -90,6 +94,10 @@
 (define-function-name len-function-name len)
 (define-function-name take-function-name take)
 (define-function-name drop-function-name drop)
+(define-function-name append-function-name append)
+(define-function-name reverse-function-name reverse)
+(define-function-name map-function-name map)
+(define-function-name filter-function-name filter)
 
 (define-function-name not-function-name not)
 (define-function-name and-function-name and)

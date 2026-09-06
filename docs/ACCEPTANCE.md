@@ -19,7 +19,8 @@ reading, a 21-case canonical-empty codec matrix, and explicit program exit.
 Their packaged acceptance is recorded separately below. The current public
 API branch adds lowercase callable exports and diagnostic names, and ASCII
 Char literals; its verification is recorded in [`PLAN.md`](../PLAN.md). The
-expanded List Phases are not implemented yet.
+first List additions (`append`, `reverse`, `map`, `filter`) are implemented;
+the remaining List Phases are planned.
 
 ## Language criteria
 
@@ -32,6 +33,7 @@ expanded List Phases are not implemented yet.
 | Values carry closed Church type tags, and one arbitrary-arity checker owns strict runtime typing. | [`tags-test.rkt`](../tests/tags-test.rkt), [`objects-test.rkt`](../tests/objects-test.rkt), [`typecheck-test.rkt`](../tests/typecheck-test.rkt), and [`errors-test.rkt`](../tests/errors-test.rkt) cover tags, positions, partial application, laziness, and early Error absorption. |
 | Bool and strict `if` preserve typed, lazy branch choice. | [`logic-test.rkt`](../tests/logic-test.rkt) and [`typed-logic-test.rkt`](../tests/typed-logic-test.rkt) prove canonical values, wrong-type Errors, chosen-branch forcing, and unchosen-branch laziness. |
 | List uses the Michaelson representation; `NIL` is distinct from false and zero, and every tail is a List. | [`lists-test.rkt`](../tests/lists-test.rkt) and [`errors-test.rkt`](../tests/errors-test.rkt) cover proper construction, operations, contracts, and malformed tails. |
+| List append/reverse preserve order and representation; map/filter enforce callback contracts. | [`list-transform-test.rkt`](../tests/list-transform-test.rkt) checks ordering, heterogeneous values, canonical NIL, partial application, wrong types, first/later callback failures, Bool validation, and stopping after Error; public programs exercise all four names. |
 | Supported empty-producing List/String operations remain codec-compatible without weakening canonicality. | The 21 labeled cases in [`codec-test.rkt`](../tests/codec-test.rkt) assert both empty host conversion and canonical NIL identity across generic Lists, List Byte, Strings, and composition. Forged-terminator rejection remains; no producer or codec repair was needed. |
 | Rat is the only public number; private Nat/Int representations remain canonical. | [`binary-nat-test.rkt`](../tests/binary-nat-test.rkt), [`int-test.rkt`](../tests/int-test.rkt), [`rat-test.rkt`](../tests/rat-test.rkt), and [`typed-rat-test.rkt`](../tests/typed-rat-test.rkt) cover normalized binary magnitude, one signed zero, reduced fractions, exact arithmetic, comparison, division, powers, and strict wrappers. [`language-test.rkt`](../tests/language-test.rkt) proves retired public Nat/Int names do not resolve. |
 | Exact integer and fraction literals become canonical Rats; inexact and complex numbers are rejected. | [`language-test.rkt`](../tests/language-test.rkt) round-trips representative positive, negative, fractional, zero, and large literals through the codec and rejects floating-point, infinity, NaN, and complex forms. |

@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phases 1–2 complete; continuing Phases 3–8 autonomously as authorized.
+Status: Phases 1–3 complete; continuing Phases 4–8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -295,15 +295,23 @@ capability. Phase 2 is complete; Phase 3 follows under the continuous approval.
 
 ### Step 3.1 — Expose the existing structural algorithms
 
-- [ ] Add small typed `append` and `reverse` wrappers in
+- [x] Add small typed `append` and `reverse` wrappers in
   `core/list-transform.rkt`, reusing `raw-append`/`raw-reverse` and canonical
   reconstruction after checker unwrapping. Add their explicit exports and
   diagnostic names. Cover order, empty sides, singleton/heterogeneous Lists,
   argument Errors/types, partial application, and canonical empty output.
 
+Step 3.1 result (2026-09-06): added the two structural wrappers in the new
+transform peer, canonical reconstruction, explicit public exports, diagnostic
+names, and focused behavior/contract coverage. Eight new test assertions had
+Rat and Result tag numbers reversed; verified the existing closed table and
+corrected only those expectations. Structural behavior and the unchanged
+raw algorithms passed; expanded purity includes the new module (31 total),
+and the exact boundary inventory passes.
+
 ### Step 3.2 — Enforce the callback contracts
 
-- [ ] Add public `map` and `filter`, reusing the existing raw operations with
+- [x] Add public `map` and `filter`, reusing the existing raw operations with
   the necessary pure typed adapters. Enforce whole-operation Error propagation
   and Bool predicate validation without altering the raw helpers or their
   existing callers. Use one small local predicate-result helper where it
@@ -311,6 +319,28 @@ capability. Phase 2 is complete; Phase 3 follows under the continuous approval.
   callback Errors, non-Bool predicates, preserved ordering, no callback on
   NIL, and all common contracts. Add the matching transform suite, public
   cases, and reference entries; run the Phase completion gate.
+
+Step 3.2 result (2026-09-06): map reuses raw-map and a small pure result
+fold; filter supplies a checked keep/skip selector to raw-filter. Both propagate
+callback Errors as the whole answer, preserve frames, stop subsequent callbacks
+after Error, and avoid callbacks on NIL. The shared predicate helper checks Bool
+through raw-check-argument. Focused transform tests passed 64 assertions,
+encoded-name tests passed 280, and installed-language tests passed 115.
+The first full gate exposed the old core-module count in acceptance; the
+focused rerun also exposed its separate directory-path count assertion. Updated
+all three exact assertions from 22 to 23, without changing violation checks.
+Acceptance and purity regressions then passed (21 and 136 assertions).
+The final full run passed all 40 suites, 13,759 assertions, expanded purity for
+31 production modules, and the complete boundary gate. Relevant diff and
+whitespace checks passed.
+
+Phase 3 executable changes: one pure transform module, four public exports,
+and four encoded names. Existing raw List algorithms, generalized checker,
+representations, and runtime are unchanged. Tests/tooling: one focused suite,
+public and diagnostic cases, exact facade tables, and three inventory counts.
+Documentation: current API, README, architecture, acceptance, and plan. No new
+dependency, host capability, callback registry, or intermediate representation.
+Phase 3 is complete; Phase 4 follows under the continuous approval.
 
 ## Phase 4 — Reduce and predicate searches
 

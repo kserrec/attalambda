@@ -232,6 +232,34 @@ PROBE
                   20)
      #"")
 
+    (define list-library-program
+      (build-path temporary-root "list-library.rkt"))
+    (write-source
+     list-library-program
+     #<<PROGRAM
+#lang attalambda
+
+(def check condition = (stdout (if condition "." "!")))
+(def values = (cons 1 (cons 2 (cons 3 NIL))))
+(def loop value = (loop value))
+
+(check (eq (len (append values (cons 4 NIL))) 4))
+(check (eq (head (reverse values)) 3))
+(check (eq (head (map succ values)) 2))
+(check (eq (head (filter (lambda (value) (gt value 1)) values)) 2))
+(check (is-nil (map loop NIL)))
+(check (is-nil (filter loop NIL)))
+(check (is-nil (reverse NIL)))
+(check (is-nil (append NIL NIL)))
+PROGRAM
+     )
+    (check-command-success
+     (run-command isolated-environment
+                  racket-executable
+                  (list (path->string list-library-program))
+                  20)
+     (make-bytes 8 46))
+
     ;; Every ASCII literal must agree with make-char and a one-byte String.
     ;; Sending each through the existing String codec also validates its tag,
     ;; binary payload, and canonical List terminator.
@@ -320,6 +348,8 @@ PROGRAM
 (def string-value = "λ🙂")
 (def string-type-error = (string-append "hello" 3))
 (def nested-type-error = (add (mult TRUE 1) 2))
+(def map-callback-error = (map (lambda (value) (add TRUE value)) (cons 1 NIL)))
+(def filter-callback-error = (filter (lambda (value) value) (cons 1 NIL)))
 (def saved-host = host)
 PROGRAM
      )
@@ -362,6 +392,8 @@ PROGRAM
 (newline)
 (displayln (error-value->string (target-value 'string-type-error)))
 (displayln (error-value->string (target-value 'nested-type-error)))
+(displayln (error-value->string (target-value 'map-callback-error)))
+(displayln (error-value->string (target-value 'filter-callback-error)))
 PROBE
      )
     (check-command-success
@@ -375,7 +407,9 @@ PROBE
       #"(0 1 255 1/2 -7/3 65536)\n"
       (string->bytes/utf-8 "λ🙂\n")
       #"string-append(arg2 expected STRING got RAT)\n"
-      #"mult(arg1 expected RAT got BOOL)\n  -> add(arg1 expected RAT)\n"))
+      #"mult(arg1 expected RAT got BOOL)\n  -> add(arg1 expected RAT)\n"
+      #"add(arg1 expected RAT got BOOL)\n  -> map(result)\n"
+      #"filter(arg1 expected BOOL got RAT)\n"))
 
     (for ([case
            (in-list
