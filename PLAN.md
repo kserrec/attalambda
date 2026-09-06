@@ -472,8 +472,29 @@ before its edit (208 assertions); the post-edit focused run passed all 209,
 including the added guide assertion. The new assertion rejects the previous
 guide wording. Fresh cold review of all four repair files and direct evidence
 found zero confirmed issues, including in the shared guide's macOS and Windows
-manifest claims. No findings are deferred. A clean build/consumer rerun remains
-pending before final branch acceptance and push.
+manifest claims. No findings are deferred.
+
+The unchanged Linux builder then produced a fresh archive from clean reviewed
+commit `441ef63622e63584fe9e70e56c2cc154c45485ec`, verified in the manifest,
+using the same cached Racket CS 9.3 image and read-only Git mount as Phase 4.
+The corrected guide is present in the archive. Local unpublished artifact:
+`/tmp/attalambda-bughunt-build-zp2iZ4/attalambda-0.3.0-linux-x86_64.tar.gz`;
+SHA-256 `997e8bfe1113da9a28547b03427969ea07bcd8b6f49468a69b4bf246bf148946`;
+13,947,823 compressed bytes, 59,765,570 unpacked regular-file bytes, 11 files
+(two runtime files).
+
+The same digest-pinned Ubuntu 24.04 consumer passed without Racket, raco, a
+checkout, or external networking. Checksum, guide workflow, stdout,
+file/TCP/HTTP behavior, and relocation passed. Explicit exit 0/1, default
+completion, and fatal/recoverable missing-file decisions produced statuses
+0/1/0/1/0, each with empty stdout/stderr. First and relocated version startups
+were 369 ms and 374 ms; these are observations, not guarantees. The final
+marker was `consumer_acceptance=passed`. Version and legal bytes are unchanged.
+
+Review and verification are complete. The later evidence-only commit changes
+only this plan, not a shipped input or the built revision above. Commit/push
+that final record on the existing branch, then stop for Kyle's branch review.
+No further refactor, pull request, merge, tag, or release is part of this pass.
 
 ---
 
