@@ -17,8 +17,7 @@ scan.
 The current branch adds incremental HTTP request reading, a 21-case
 canonical-empty codec matrix, and explicit program exit. These are source
 changes beyond the published 0.3.0 archive. Phase-by-phase verification is in
-[`PLAN.md`](../PLAN.md); final packaged acceptance is recorded separately below
-when observed.
+[`PLAN.md`](../PLAN.md); final packaged acceptance is recorded separately below.
 
 ## Language criteria
 
@@ -75,6 +74,51 @@ The 0.3.0 publication used release commit `1b51603` and annotated tag
 It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
+
+### HTTP/List/exit milestone acceptance — 2026-09-05
+
+The final source run passed all 39 suites with 13,606 assertions, expanded
+purity for 30 production modules, and the complete boundary/inventory gate.
+Fresh review of all 28 milestone-delta files and their direct interactions
+found no confirmed defects or material test gaps; its independent focused run
+passed 980 assertions. Isolated mutations proved rejection of native arithmetic
+in HTTP framing and native exit in effects, codec, and readers. The copied
+sources passed before mutation, were rejected after mutation, and passed again
+after restoration with hashes identical to their originals.
+
+The unchanged builder produced the Linux archive from clean implementation
+commit `31138222bd5299d6554ad036c4f44e9c74fe0d4c`, as recorded in its manifest.
+It used Racket CS 9.3 from cached image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`,
+with the existing Git executable mounted read-only for provenance checks.
+The archive has SHA-256
+`cb2eab3a0041b8733467f4839869e9a726b129b362dce9a8e2632218c4c5b981`:
+13,948,353 compressed bytes, 59,765,547 unpacked regular-file bytes, 11 files,
+including two runtime files. It remains only at
+`/tmp/attalambda-http-exit-build-X0sRsh/attalambda-0.3.0-linux-x86_64.tar.gz`;
+this is unpublished acceptance evidence, not a replacement for released 0.3.0.
+
+The independent consumer used
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`,
+with no Racket, raco, checkout, or external network. Checksum, guide workflow,
+stdout, file/TCP/HTTP behavior, and relocation checks all passed. The new
+public-only programs also passed these exact checks, each with empty stdout
+and stderr:
+
+| Program completion decision | Observed OS status |
+| --- | ---: |
+| Explicit `(exit 0)` | 0 |
+| Explicit `(exit 1)` | 1 |
+| No exit, including ordinary Error and Result Err values | 0 |
+| Missing-file Err deliberately treated as fatal | 1 |
+| Missing-file Err deliberately treated as recoverable | 0 |
+
+First and relocated version startup took 461 ms and 409 ms in this run;
+these are observations, not performance guarantees. The final consumer marker
+was `consumer_acceptance=passed`. The later acceptance-record commit changes
+only this document and `PLAN.md`; it is not the built implementation revision.
+Version and legal bytes are unchanged. No pull request, merge, tag, or release
+was created for this milestone.
 
 ## Limits
 

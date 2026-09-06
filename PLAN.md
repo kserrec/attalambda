@@ -1,7 +1,6 @@
 # HTTP, empty-List consistency, and explicit exit plan
 
-Status: approved for serial execution on 2026-09-05; Phases 0–3 complete;
-Phase 4 in progress.
+Status: all five Phases complete on 2026-09-05; verified for Kyle's review.
 Branch: `refactor/non-core-simplification`; no new branch.
 Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
 working tree before this planning edit.
@@ -358,7 +357,7 @@ the clean build and consumer in Step 4.3.
 
 ### Step 4.3 — Final acceptance and fresh review
 
-- [ ] Run the full suite and both checkers; review only this milestone's
+- [x] Run the full suite and both checkers; review only this milestone's
   changes with a fresh agent. In isolated temporary fixtures, prove checker
   rejection of native computation in pure HTTP framing and native exit in
   effects, codec, and a reader; retain no mutations. Resolve proven findings
@@ -371,7 +370,7 @@ the clean build and consumer in Step 4.3.
   without Kyle's explicit approval. Any later evidence-only commit must be
   distinguished from the implementation revision actually tested.
 
-Step 4.3 verification in progress (2026-09-05): isolated copies of the actual
+Step 4.3 result (2026-09-05): isolated copies of the actual
 HTTP framing, exit wrapper, codec, and reader passed before mutation. Native
 `+` in the framing helper was rejected as forbidden-host-identifier by
 expanded purity and unapproved-effect-identifier by the boundary gate. Native
@@ -387,9 +386,33 @@ expanded purity for 30 production modules, and the boundary/inventory gate.
 Fresh milestone review covered all 28 changed files and direct interactions:
 zero confirmed findings or material test gaps; its independent focused run
 passed 980 assertions. Shell syntax, specification hashes, and complete
-relevant diff/whitespace checks passed. The clean CS 9.3 build and independent
-consumer remain pending; commit the verified implementation first so their
-manifest can identify a clean source revision.
+relevant diff/whitespace checks passed.
+
+The unchanged CS 9.3 builder produced an archive from clean implementation
+commit `31138222bd5299d6554ad036c4f44e9c74fe0d4c`, verified in its manifest.
+The cached builder image lacked Git; its prerequisite check stopped before
+building. A read-only mount of the existing Git executable passed the complete
+prerequisite probe and enabled the build without package installation or
+source changes. The independent digest-pinned Ubuntu 24.04 consumer had no
+Racket, raco, or checkout. All guide, file/TCP/HTTP, relocation, and completion
+checks passed. Packaged exit 0/1, no-exit completion, and fatal/recoverable
+missing-file Err choices produced statuses 0/1/0/1/0 with empty stdout/stderr.
+
+Local unpublished archive:
+`/tmp/attalambda-http-exit-build-X0sRsh/attalambda-0.3.0-linux-x86_64.tar.gz`;
+SHA-256 `cb2eab3a0041b8733467f4839869e9a726b129b362dce9a8e2632218c4c5b981`;
+13,948,353 compressed bytes, 59,765,547 unpacked regular-file bytes, 11 files
+(two runtime files). Complete acceptance/provenance is in
+[`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md). This final record and that evidence
+are a later documentation-only commit, not the implementation revision built
+above; no production, test, or shipped-guide bytes changed after acceptance.
+
+Phase 4 executable changes: none. Tests/tooling: five packaged completion
+cases and the shipped-guide assertion. Documentation: synchronized existing
+docs and recorded observed acceptance. Across the milestone, core, codec,
+readers, runner production code, version, legal bytes, and build script are
+untouched. All five Phases are complete. Stop for Kyle's branch review; no
+pull request, merge, tag, or release has been created.
 
 ---
 
