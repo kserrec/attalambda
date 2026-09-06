@@ -405,6 +405,7 @@
           "## Known limitations"
           "#lang attalambda"
           "0` | The source loaded and completed"
+          "1` | The program explicitly called `(exit 1)`"
           "64` | The command arguments were invalid"
           "65` | The filename"
           "66` | The source was missing"
@@ -413,6 +414,7 @@
           "write-file` can create, truncate, or replace files"
           "distribution supports Linux x86-64"
           "internal portability evidence, not supported public downloads"
+          "does not record a tested operating-system version"
           "Linux x86-64 is the only supported public binary target"))])
   (check-not-false (string-contains? getting-started-template required-text)))
 

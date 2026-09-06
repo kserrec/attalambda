@@ -7,12 +7,9 @@
 
 (provide option->string)
 
-(define (lazy-apply function argument)
-  ((force function) argument))
-
 (define (option->string value)
   (if (raw-boolean->boolean
-       (lazy-apply raw-option-is-some
-                   (lazy-apply raw-object-value value)))
+       ((force raw-option-is-some)
+        ((force raw-object-value) value)))
       "SOME"
       "NONE"))

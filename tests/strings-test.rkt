@@ -23,11 +23,6 @@
          "../readers/type-tag.rkt"
          "helpers/lazy.rkt")
 
-(define (apply2 function first second)
-  (lazy-apply
-   (lazy-apply function first)
-   second))
-
 (define (values->list values)
   (foldr
    (lambda (value tail)

@@ -273,6 +273,36 @@ run_inside_consumer() {
   "$attalambda" "$generated_source" >"$stdout_file" 2>"$stderr_file"
   check_captured_output $'Generated after packaging.\n' "generated source"
 
+  local completion_work="$scratch_root/completion-work"
+  mkdir -p -- "$completion_work"
+  check_program_status() {
+    local label="$1"
+    local expected_status="$2"
+    local source_body="$3"
+    local program="$completion_work/$label.attl"
+    local actual_status
+    printf '%s\n' '#lang attalambda' "$source_body" > "$program"
+    if (cd "$completion_work" && timeout 20 "$attalambda" "$program" \
+        >"$stdout_file" 2>"$stderr_file"); then
+      actual_status=0
+    else
+      actual_status=$?
+    fi
+    [[ "$actual_status" -eq "$expected_status" ]] ||
+      die "$label status mismatch: expected $expected_status, got $actual_status"
+    check_captured_output '' "$label"
+    printf '%s=%s\n' "$label" "$actual_status"
+  }
+
+  check_program_status packaged_exit_zero_status 0 '(exit 0)'
+  check_program_status packaged_exit_one_status 1 '(exit 1)'
+  check_program_status packaged_default_status 0 \
+    $'(ADD TRUE 1)\n(DIV 1 0)\n(read-file "absent-exit-input.txt")'
+  check_program_status packaged_missing_file_fatal_status 1 \
+    $'(def outcome = (read-file "absent-exit-input.txt"))\n(if (is-err outcome) (exit 1) (exit 0))'
+  check_program_status packaged_missing_file_recoverable_status 0 \
+    $'(def outcome = (read-file "absent-exit-input.txt"))\n(if (is-err outcome) (exit 0) (exit 1))'
+
   local decoy_root="$scratch_root/decoy-collections"
   mkdir -p -- "$decoy_root/attalambda/lang"
   printf '%s\n' 'this external reader must never be loaded' \

@@ -173,30 +173,29 @@
          (lazy-apply raw-char-value value))
         (codec-failure 'wrong-type))))
 
-(define (first-codec-failure values)
-  (cond
-    [(null? values) #f]
-    [(codec-failure? (car values)) (car values)]
-    [else (first-codec-failure (cdr values))]))
+(define (object-list->immutable-bytes value element->integer)
+  (define elements
+    (object-list->host-list value))
+  (if (codec-failure? elements)
+      elements
+      (let ([integers
+             (for/list ([element (in-list elements)])
+               (element->integer element))])
+        (define failure
+          (for/or ([integer (in-list integers)])
+            (and (codec-failure? integer) integer)))
+        (if failure
+            failure
+            (bytes->immutable-bytes
+             (apply bytes integers))))))
 
 (define (object-string->bytes value)
   (with-handlers ([exn:fail? malformed-value-failure])
     (if (not (object-has-type? string-type value))
         (codec-failure 'wrong-type)
-        (let ([chars
-               (object-list->host-list
-                (lazy-apply raw-string-value value))])
-          (if (codec-failure? chars)
-              chars
-              (let ([decoded
-                     (for/list ([char (in-list chars)])
-                       (object-char->byte char))])
-                (define failure
-                  (first-codec-failure decoded))
-                (if failure
-                    failure
-                    (bytes->immutable-bytes
-                     (apply bytes decoded)))))))))
+        (object-list->immutable-bytes
+         (lazy-apply raw-string-value value)
+         object-char->byte))))
 
 (define (object-byte->integer value)
   (with-handlers ([exn:fail? malformed-value-failure])
@@ -207,18 +206,7 @@
 
 (define (object-byte-list->bytes value)
   (with-handlers ([exn:fail? malformed-value-failure])
-    (let ([elements (object-list->host-list value)])
-      (if (codec-failure? elements)
-          elements
-          (let ([decoded
-                 (for/list ([element (in-list elements)])
-                   (object-byte->integer element))])
-            (define failure
-              (first-codec-failure decoded))
-            (if failure
-                failure
-                (bytes->immutable-bytes
-                 (apply bytes decoded))))))))
+    (object-list->immutable-bytes value object-byte->integer)))
 
 (define (integer->raw-bits integer)
   (define bits

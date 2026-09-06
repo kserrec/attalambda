@@ -82,8 +82,9 @@ design.
 
 ## Implementation discipline
 
-- Follow `PLAN.md` in dependency order and complete one phase as one
-  meaningful unit.
+- Follow `PLAN.md` in dependency order. For the active non-core refactor,
+  complete and record one bounded Step at a time while continuing serially
+  under Kyle's approval; close each Phase as one verified commit.
 - Keep files small, dependency-oriented, and logically nested. Avoid
   abstraction layers without a demonstrated need.
 - Prefer the minimal implementation that satisfies the current phase and its
@@ -127,6 +128,9 @@ design.
   changes the released language lands on one milestone branch (as Milestone 4
   did on `milestone-4-rationals`) and merges to `main` only with Kyle's
   explicit approval.
+- The active non-core refactor stays on `refactor/non-core-simplification`.
+  Push verified Phase commits only to that branch. At final completion, stop;
+  do not create its pull request until Kyle reviews the branch and approves it.
 - Commit and push after each meaningful, verified phase.
 - Keep commits narrow and descriptive.
 - Do not leave generated Racket artifacts in Git.

@@ -27,16 +27,6 @@
          exact->typed-rat
          rat-object->number)
 
-(define (apply2 function first-argument second-argument)
-  (lazy-apply
-   (lazy-apply function first-argument)
-   second-argument))
-
-(define (apply3 function first-argument second-argument third-argument)
-  (lazy-apply
-   (apply2 function first-argument second-argument)
-   third-argument))
-
 (define (typed-value? type value)
   (raw-boolean->boolean
    (apply2 raw-is-type type value)))

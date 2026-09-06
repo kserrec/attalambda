@@ -1,1111 +1,132 @@
-# Plan archive
-
-Completed milestone and phase records moved verbatim from [PLAN.md](PLAN.md).
-This file is the permanent record: entries are appended, never condensed,
-reordered, or rewritten. The one deferred security-audit finding stays in
-PLAN.md itself and is deliberately not duplicated here.
-
-## Phase 0 — Repository foundation
-
-Status: complete (2026-08-24)
-
-- [x] Preserve the three source specifications verbatim.
-- [x] Record the language boundary and planned dependency layers.
-- [x] Establish project-specific implementation rules.
-- [x] Add minimal editor, line-ending, and ignore policy.
-- [x] Define the ordered implementation phases.
-
-## Phase 1 — Raw calculus and mechanical syntax
-
-Status: complete (2026-08-24)
-
-- [x] Add the lazy Racket module shell and expansion-only macro layer.
-- [x] Implement `def` and lambda-based `let` as nested unary-lambda sugar.
-- [x] Implement lambda pairs and raw Boolean operations, including internal
-  `raw-if`.
-- [x] Add focused pair and Boolean tests plus the first purity checks.
-
-Acceptance: macro expansion preserves unary lambdas; pair selection and every
-Boolean truth table pass without host conditionals deciding results.
-
-## Phase 2 — Church tags and typed objects
-
-Status: complete (2026-08-24)
-
-- [x] Implement Church numerals only for tags 0 through 6.
-- [x] Implement the generic lambda-encoded tag/payload object representation.
-- [x] Add raw tag equality and object access operations.
-- [x] Test every tag, payload round trip, and purity invariant.
-
-Acceptance: all seven discriminants are distinct and typed objects contain no
-host data.
-
-## Phase 3 — Michaelson-style List
-
-Status: complete (2026-08-24)
-
-- [x] Implement typed `NIL` and nonempty List cells.
-- [x] Implement raw list structure and strict typed `cons`, head, tail, and
-  nil predicate operations.
-- [x] Add the Nat-independent foundational folds and list helpers required by
-  later phases.
-- [x] Test proper-tail enforcement, NIL distinction, traversal, and errors.
-
-Acceptance: every public List is properly typed and every tail is a List.
-
-## Phase 4 — Binary Nat
-
-Status: complete (2026-08-24)
-
-- [x] Implement binary digits and normalized most-significant-bit-first Nat
-  representation.
-- [x] Implement canonicalization with `[0]` as the only zero.
-- [x] Implement the required raw comparisons and arithmetic directly on binary
-  lists.
-- [x] Complete List `LEN`, `TAKE`, and `DROP` with canonical binary Nat values.
-- [x] Test zero, carries, borrows, normalization, and representative larger
-  values.
-
-Acceptance: public arithmetic never converts through Church numerals or host
-numbers.
-
-## Phase 5 — Structured Error
-
-Status: complete (2026-08-24)
-
-- [x] Implement the Error type, root kinds, and frame representation.
-- [x] Implement creation, frame addition, and bubbling primitives.
-- [x] Replace provisional bootstrap Error payloads with canonical structured
-  roots.
-- [x] Use canonical argument-position and expected-type metadata in frames.
-- [x] Test root preservation and frame order through nested failures.
-
-Acceptance: errors remain ordinary lambda-encoded values and accumulate
-context without losing their root cause.
-
-## Phase 6 — Generalized curried runtime checker
-
-Status: complete (2026-08-24)
-
-- [x] Represent arbitrary signatures as Lists.
-- [x] Implement the single unary, progressive argument-checking mechanism.
-- [x] Support raw-result and already-typed-result functions.
-- [x] Preserve remaining arity after early failure with unary absorbing
-  continuations.
-- [x] Migrate bootstrap List checks onto the generalized checker where
-  appropriate.
-- [x] Test valid partial application, wrong types at every argument position,
-  incoming Error bubbling, and final return validation.
-
-Acceptance: no arity-specific checker exists, and every failure has the same
-remaining application shape as the function it replaces.
-
-## Phase 7 — Strict typed Bool and public `if`
-
-Status: complete (2026-08-24)
-
-- [x] Wrap raw Booleans as tagged Bool values.
-- [x] Implement strict typed Boolean operations through the generalized
-  checker.
-- [x] Implement lazy public `if` with a typed Bool condition.
-- [x] Test strict condition checking and non-evaluation of the unselected
-  branch.
-
-Acceptance: public `if` is canonical, typed, lazy, and distinct from internal
-`raw-if`.
-
-## Phase 8 — Strict typed Nat API
-
-Status: complete (2026-08-24)
-
-- [x] Route every public Nat operation through the generalized checker.
-- [x] Keep raw binary algorithms isolated below the typed layer.
-- [x] Attach canonical function frames to Nat errors.
-- [x] Run raw arithmetic, typed behavior, and propagation tests together.
-
-Acceptance: all public Nat operations enforce signatures uniformly without
-changing binary semantics.
-
-## Phase 9 — Result and safe division
-
-Status: complete (2026-08-24)
-
-- [x] Implement typed Result success and failure variants.
-- [x] Define strict constructors and access operations.
-- [x] Implement safe binary division with expected failure represented as
-  Result Err.
-- [x] Test the Error-versus-Result boundary and division laws.
-
-Acceptance: expected division failure is data, while contract failure remains
-a bubbled Error.
-
-## Phase 10 — Char
-
-Status: complete (2026-08-24)
-
-- [x] Implement Char as a tagged binary Nat constrained to 0 through 255.
-- [x] Add the required character constants and operations.
-- [x] Add a human-facing Char reader outside production computation.
-- [x] Test boundaries, invalid values, comparisons, and reader output.
-
-Acceptance: Char validation is lambda-calculus computation; only presentation
-uses host facilities.
-
-## Phase 11 — String
-
-Status: complete (2026-08-24)
-
-- [x] Implement String as a typed List of Char values.
-- [x] Implement construction and the specified initial String algorithms.
-- [x] Return String length through the specified typed result.
-- [x] Add a human-facing String reader and comprehensive List/Char interaction
-  tests.
-
-Acceptance: String algorithms operate on lambda-encoded List and Char values,
-not host strings.
-
-## Phase 12 — Error frames, documentation, and purity hardening
-
-Status: complete (2026-08-24)
-
-- [x] Complete canonical String-related function names in Error frames.
-- [x] Add the Error reader and finish reader diagnostics.
-- [x] Run repository-wide forbidden-form and unary-lambda validation.
-- [x] Complete specification acceptance tests and synchronize all
-  documentation with the implementation.
-
-Acceptance: every completion criterion in the three specifications is covered
-by an executable test or a documented structural check, and the full suite is
-green.
-
-# Milestone 2 — Effects and standalone language
-
-Status: complete (2026-08-27)
-
-The specifications fix the order and outer boundary of this milestone but do
-not define the `host` request protocol. Phase 13 therefore resolves that
-contract before any privileged implementation begins. It is an explicit
-approval gate: Phase 14 must not start until the resulting design is approved.
-Kyle approved the high-level use of the single `host` boundary in Alone the
-Lambdas and the detailed request, codec, authority, and runtime contract on
-2026-08-27. The gate is satisfied; Phases 14 through 20 and the complete
-effects-and-standalone milestone are complete.
-
-The following constraints apply throughout:
-
-- `host` is the only privileged bridge between lambda values and Racket or the
-  operating system. It is unary, explicit, and closed over a documented
-  request protocol.
-- The 16 completed `core/` modules retain their zero-exception purity rule.
-  Adding `host` must not permit any other host shortcut in ordinary language
-  computation.
-- Requests, successful values, and failures cross the boundary through
-  lambda-encoded project values. Expected external failure uses Result Err;
-  contract or representation failure remains Error.
-- Effect wrappers and HTTP behavior are ordinary lambda computations except
-  for their explicit applications of `host`. Raw Racket ports, paths, socket
-  objects, exceptions, and collections never become object-language values.
-- The initial runtime is synchronous and blocking. Concurrency, async, TLS,
-  a general HTTP framework, JSON, records, static or coercive typing,
-  optimization, compilation, and arbitrary Racket interop remain out of
-  scope.
-
-## Phase 13 — Host contract and trust boundary
-
-Status: complete and approved (revised and approved 2026-08-27)
-
-- [x] Write `docs/design/host-boundary.md` with the exact request and response
-  algebra for `stdout`, file access, and the complete blocking TCP lifecycle.
-- [x] Fix the lambda encodings for operation identity, argument Lists, typed
-  acknowledgements, expected I/O failures, and opaque resource handles.
-- [x] Define handle ownership and cleanup, blocking behavior, path and byte
-  semantics, and the authority granted to a running program.
-- [x] Define the dependency split between pure `effects/`, the sole exported
-  `runtime/host.rkt` bridge, its separately classified `runtime/codec.rkt`,
-  and the future `lang/` surface, including deterministic fake-host testing.
-- [x] Isolate exact object-language-to-Racket and Racket-to-object-language
-  conversion from effects; define canonicality, codec prohibitions, dependency
-  enforcement, and direct round-trip coverage.
-- [x] Specify the purity-checker classifications and the narrow project-rule
-  changes that become valid only after this design is approved.
-- [x] Record which Lazy Racket and macro-shell patterns remain reusable from
-  `all_the_lambdas`; do not import its underscore names, coercive layers, or
-  superseded representations.
-
-Acceptance: every later phase can implement against one unambiguous protocol;
-no production interop code exists yet; the design received explicit approval
-before Phase 14.
-
-High-level `host` direction and detailed contract: approved 2026-08-27. The
-approval is recorded in
-[docs/design/host-boundary.md](docs/design/host-boundary.md).
-
-## Phase 14 — Single `host` bridge and `stdout`
-
-Status: complete (2026-08-27)
-
-- [x] Apply the approved rule and architecture changes without weakening the
-  completed core boundary.
-- [x] Implement `runtime/codec.rkt` with only the exact Char/String/List and
-  Result/Error conversions required by stdout; prove byte round trips,
-  canonical output, malformed-value rejection, and absence of effects.
-- [x] Implement one unary `host` binding and one closed dispatcher in
-  `runtime/host.rkt`, the only production importer of the codec and the only
-  language-visible privileged binding.
-- [x] Implement the pure `stdout` request constructor and wrapper, with typed
-  success and expected-failure results.
-- [x] Add a deterministic fake dispatcher plus real output-capture tests for
-  request validation, result encoding, failure mapping, and laziness.
-- [x] Make the purity tool enforce the distinct codec and effect-module
-  allowlists, reject every unapproved importer or privileged definition, and
-  scan `core/` with no new exceptions.
-
-Acceptance: a lambda String reaches standard output only through the single
-bridge, and repository checks prove no second escape hatch exists.
-
-Completion evidence: 3,151 assertions across 22 test files, the unchanged
-purity scan over 16 `core/` modules, and the separate effects/runtime boundary
-gate all passed on 2026-08-27.
-
-## Phase 15 — File effects
-
-Status: complete (2026-08-27)
-
-- [x] Add pure `read-file` and `write-file` wrappers over the approved request
-  protocol.
-- [x] Encode file contents as String byte values using Char 0 through 255; do
-  not route language computation through the existing human-facing readers.
-- [x] Map missing paths, denied access, invalid path text, and other expected
-  operating-system failures to the approved Result Err representation.
-- [x] Reuse the verified byte-exact String codec without importing the
-  human-facing readers; keep UTF-8 path interpretation in the host operation.
-- [x] Test round trips, empty and non-ASCII byte content, replacement
-  semantics, cleanup, contract Errors, and fake-host request structure in
-  isolated temporary directories.
-
-Acceptance: a lambda program can write and recover identical byte content,
-and all filesystem access is confined to the trusted dispatcher.
-
-Completion evidence: 3,307 assertions across 24 test files, the unchanged
-purity scan over 16 `core/` modules, and the Phase 15 effects/runtime boundary
-gate all passed on 2026-08-27.
-
-Post-completion audit hardening (2026-08-27): function-name macros now lower
-identifier spellings to one Char per UTF-8 byte; the boundary gate pins both
-mechanical macro modules, rejects wrapped second codec/host imports, rejects
-disallowed imports before reading their exports, validates every component of
-the project root and production paths before discovery, rejects symlinks
-without traversing their targets, rejects additional macro modules and all
-premature `lang/` modules, and keeps macro OS/process/environment/dynamic-
-loading/FFI/mutation capabilities closed. CI
-actions, runner family, and Racket are pinned, and CI verifies the bundled
-`lazy` package without live package resolution. The resulting 3,345 assertions
-across 24 test files, unchanged 16-module expanded core scan, and strengthened
-boundary scan all passed. Phase 15 behavior and the approved host authority are
-unchanged.
-
-## Phase 16 — Blocking TCP effects
-
-Status: complete (2026-08-27)
-
-- [x] Add the approved connect, listen, accept, read, write, and close host
-  operations and their pure lambda wrappers.
-- [x] Extend `runtime/codec.rkt` only with canonical Nat/integer conversions
-  and returned List shapes required for port bounds and opaque handles.
-- [x] Keep ports and connections in a runtime-owned handle registry; expose
-  only the approved lambda-encoded opaque handles.
-- [x] Make close behavior and failure cleanup deterministic, including stale
-  handles, peer closure, partial writes, and read bounds.
-- [x] Add fake-host protocol tests and real loopback integration tests with
-  test-only host concurrency where needed.
-
-Acceptance: a loopback client and server exchange lambda String bytes and
-release every resource, with no socket or host collection crossing into the
-object language.
-
-Completion evidence: 3,845 assertions across 26 test files, the unchanged
-expanded purity scan over 16 `core/` modules, and the Phase 16 boundary gate
-all passed on 2026-08-27. The TCP tests use only loopback and ephemeral ports;
-they cover canonical Nat conversion, pure request traces and contracts,
-blocking and bounded reads, complete byte writes, full-duplex transfer, EOF,
-wrong/stale handles, monotonic nonreuse, deterministic failure codes, Racket
-custodian closure, and explicit cleanup. The boundary gate admits exactly the
-host's five imported `racket/tcp` bindings and rejects every second production
-filesystem or TCP importer.
-
-## Phase 17 — Pure HTTP messages
-
-Status: complete (2026-08-27)
-
-- [x] Implement only the String and List helpers demonstrably required for a
-  minimal HTTP/1.1 request and response path.
-- [x] Parse a request line and header terminator into existing lambda values;
-  reject malformed or unsupported input through Result rather than host
-  exceptions.
-- [x] Build status lines, required response headers, byte-accurate content
-  length, and response bodies entirely in lambda computation.
-- [x] Cover fragmented input, CRLF boundaries, empty bodies, malformed
-  requests, and deterministic response formatting with pure focused tests.
-
-Acceptance: representative HTTP bytes parse and render correctly while the
-production purity scan rejects Racket String, regex, arithmetic, and HTTP
-helpers from the implementation.
-
-Completion evidence: 3,995 assertions across 27 test files, the unchanged
-expanded purity scan over all 16 `core/` modules, and the Phase 17 boundary
-gate passed on 2026-08-27. `effects/http.rkt` parses the deliberately small
-HTTP/1.1 subset into an Ok target String: exact `GET`, an origin-form target,
-exact `HTTP/1.1`, CRLF-delimited field lines, exactly one case-insensitive
-`Host` field, one header section, and no body or pipelined bytes. Incomplete,
-malformed, and unsupported requests are distinct Result Err values.
-`effects/http-response.rkt` separately renders only 200, 400, 404, and 500
-responses with canonical
-reason phrases, decimal byte-accurate `Content-Length`, `Connection: close`,
-the empty header terminator, and the exact body bytes; an unsupported status
-is its own Result Err. The 146 focused assertions cover fragmented terminator
-boundaries, valid and invalid header names/values, binary and empty bodies,
-single- and multi-digit lengths, deterministic output, strict contracts,
-Error bubbling, and remaining-arity absorption. Boundary regressions reject
-host String, regex, arithmetic, and `net/http-client` shortcuts from every
-pure effect module.
-
-## Phase 18 — Minimal lambda-built HTTP server
-
-Status: complete (2026-08-27)
-
-- [x] Compose the TCP wrappers and pure HTTP message layer into a blocking,
-  sequential server with an ordinary lambda request handler.
-- [x] Support the minimal useful subset: one request per connection, GET
-  routing by path, explicit status/body output, and connection close.
-- [x] Preserve expected network and parse failures as Result values and close
-  acquired handles on every completed path.
-- [x] Add a real loopback acceptance test driven by a test-side external HTTP
-  client, plus deterministic fake-host traces proving the only effects are the
-  documented TCP requests.
-
-Acceptance: an external client receives the response selected by a lambda
-handler, and neither parsing, routing, nor response construction uses host
-computation.
-
-Completion evidence: 4,136 assertions across 28 test files, the unchanged
-expanded purity scan over all 16 `core/` modules, and the Phase 18 boundary
-gate passed on 2026-08-27. `effects/http-server.rkt` adds a strict pure
-single-path handler factory, a one-connection operation over a caller-owned
-listener, and a blocking sequential loop. The handler maps the parsed target
-String to a Result containing complete response bytes; route comparison,
-status/body selection, and rendering remain lambda computation. Every
-accepted connection is closed after success, parse failure, EOF, handler
-failure, or network failure; an earlier failure remains primary if cleanup
-also fails. The 141 focused assertions cover unary partial application,
-strict contracts, selected-branch laziness, fragmented reads, malformed and
-incomplete requests, accept/read/write/close failures, handler Errors and
-invalid results, force-once serving, exact TCP-only traces, two serial
-connections, and a real ephemeral-loopback request from test-side
-`net/http-client`. Listener ownership remains explicit: the caller that
-obtains a listener through `tcp-listen` closes it after serving.
-
-## Phase 19 — Standalone `#lang` surface
-
-Status: complete (2026-08-27)
-
-- [x] Add the minimal Racket collection, reader, and expander needed for
-  `#lang alone_the_lambdas` while retaining Lisp syntax and lazy evaluation.
-- [x] Export canonical `lambda`, `def`, `let`, strict typed `if`, proper typed
-  `cons`, the completed data API, effect wrappers, and the single explicit
-  `host`; hide internal raw bindings and Racket collision workarounds.
-- [x] Mechanically lower only nonnegative Nat literals and UTF-8 String
-  literals into the existing pure representations, with one Char per encoded
-  byte; reject unsupported datum forms during expansion and add no general
-  parser.
-- [x] Add package metadata and fresh-install tests for canonical names,
-  currying, branch laziness, literals, module isolation, and runnable programs.
-
-Acceptance: the specification's canonical sample shape runs under
-`#lang alone_the_lambdas` with no underscore names or unintended Racket
-bindings, and all literal runtime values are ordinary lambda encodings.
-
-Completion evidence: 4,224 assertions across 29 test files, the unchanged
-expanded purity scan over all 16 `core/` modules, and the Phase 19 boundary
-gate passed on 2026-08-27. `info.rkt`, `lang/reader.rkt`, and
-`lang/expander.rkt` form a fresh-installable single collection. The facade
-exports only the canonical syntax, strict typed data API, host-bound public
-effect wrappers, documented pure HTTP operations, and one explicit `host`;
-multi-operand source calls lower to nested unary applications, while public
-`lambda` itself accepts exactly one argument. The 75 focused language
-assertions install a copy into an isolated Racket user home and prove the
-canonical sample, currying, lazy branch selection, exact UTF-8 output,
-canonical literal representation, unsupported-datum rejection, and absence
-of raw, typed, underscore, and Racket bindings. The boundary suite separately
-pins the reader, package metadata, exact expander imports/exports, fixed
-one-time host injections, source vocabulary, and sole authorized facade
-import/export of `host`.
-
-## Phase 20 — Runnable applications and milestone acceptance
-
-- [x] Add terse standalone examples for stdout, a file round trip, and the
-  minimal HTTP server; every example must run from a fresh repository setup.
-- [x] Extend structural checks across pure core, effect wrappers, trusted
-  runtime, macros, language surface, readers, tests, and tooling with the
-  correct rule for each classification.
-- [x] Add end-to-end acceptance coverage for every second-milestone claim,
-  including proof that only the one trusted bridge performs effects.
-- [x] Synchronize README, architecture, project rules, setup instructions, and
-  acceptance documentation with observed behavior and remaining limits.
-
-Acceptance: a new developer can install the language, run ordinary standalone
-programs, perform the four specified effect families, and serve the minimal
-HTTP response; the full suite and CI are green and the one-bridge claim has an
-explicit evidence map.
-
-Completion evidence: 4,261 assertions across 30 test files, the unchanged
-expanded purity scan over all 16 `core/` modules, and the complete boundary
-gate passed on 2026-08-27. The three exact `examples/` programs ran from a
-copied package installation under an isolated Racket user home: stdout was
-byte-exact, write/read recovered identical bytes in an empty temporary
-directory, and the HTTP program announced an ephemeral loopback URL, served a
-lambda-built 200 response to a test-side external client, closed its listener,
-and exited. The boundary gate now inventories all 76 Racket sources, enforces
-closed-vocabulary, effect-free one-way readers, keeps host-enabled tests and
-tooling outside every production dependency path, requires public-language
-applications, rejects
-unknown source locations, and pins host-exclusive primitives outside the sole
-bridge. `docs/ACCEPTANCE.md` records the final criterion map and explicit
-one-bridge evidence map. Phase 20 added no executable production module and
-changed no operation, authority, representation, or language semantic.
-
-# Milestone 3 — Independent distribution
-
-Status: complete (2026-08-29)
-
-This milestone turns the completed Racket-hosted implementation into a product
-that a programmer can download and use without installing, configuring, or
-knowing Racket. It changes delivery and launch infrastructure, not the
-object-language computational model.
-
-The following constraints apply throughout:
-
-- `.attl` is the canonical public source extension. A source file uses the
-  exact `#lang attalambda` declaration so the verified reader, expander,
-  source locations, and Lisp syntax remain authoritative; users run it
-  through `attalambda`, never through a separately installed `racket` command.
-- The initial public command surface is exactly `attalambda FILE.attl`,
-  `attalambda --help`, and `attalambda --version`. A REPL, compiler command, package manager,
-  formatter, debugger, editor integration, installer, and automatic updater
-  remain outside this milestone unless a later phase proves one necessary.
-- A release artifact bundles the Racket runtime and every language module it
-  needs. It must not consult a system Racket installation, user package
-  registry, source checkout, build directory, or network service at run time.
-- The launcher is trusted module-loading scaffolding, not object-language
-  computation and not another language-visible effect primitive. Its exact
-  dynamic-loading and diagnostic capabilities must be separately classified;
-  no AttaLambda program may import, name, or invoke them.
-- The approved unary `host` remains the sole language-visible bridge for
-  stdout, file, and TCP effects. Packaging must not add parsing, arithmetic,
-  routing, Result control flow, or other ordinary language behavior in the
-  launcher.
-- Real-host programs retain the launching process's documented filesystem and
-  network authority. Distribution adds no implied sandbox, permission prompt,
-  backup, or trust guarantee.
-- Use Racket's included executable-embedding and distribution facilities
-  before considering another dependency. The expected artifact cost is a
-  bundled Racket runtime and its transitive support files; every platform
-  phase must measure compressed size, installed size, startup time, and the
-  included file set.
-- Release builds use one pinned Racket CS toolchain. Start with Racket 9.3,
-  which the existing CI already pins; the Phase 21 proof must record and
-  justify any change instead of silently building artifacts with the local
-  Racket 8.10 installation.
-- Native artifacts are required initially for Linux x86-64, macOS x86-64,
-  macOS arm64, and Windows x86-64. Each artifact is built and tested on its
-  own operating-system family because Racket distributions are platform
-  specific.
-- A public release is blocked until Kyle explicitly approves both the
-  repository license and publication of the release. Planning or building a
-  release candidate is not permission to publish one.
-
-Phases 21 through 26 below preserve the exact names, artifact measurements,
-commands, and URLs observed before the Phase 27 rename. They are historical
-evidence, not the current public naming contract. Phase 27 supersedes those
-names without retroactively relabeling the artifacts that were actually
-built and tested.
-
-## Phase 21 — Distribution contract and feasibility proof
-
-Status: complete and approved (2026-08-27)
-
-- [x] Write `docs/design/standalone-distribution.md` with the exact `.atl`
-  source contract, command grammar, exit-status rules, trusted-launcher
-  boundary, artifact layouts, target matrix, version source, and release
-  authority.
-- [x] Define launcher behavior for missing files, wrong extensions, malformed
-  language declarations, source/expansion failures, unexpected implementation
-  failures, and ordinary lambda-encoded Error or Result values. The launcher
-  must not reinterpret an object-language Error as a host exception or use it
-  to decide later object-language effects.
-- [x] Prove in disposable test space under the pinned Racket 9.3 toolchain
-  that it can load a `.atl` module and that `raco exe` with explicit dynamic
-  `#lang` support plus `raco distribute` can carry the reader, expander, compiler
-  support, language modules, and runtime files needed to run a user-supplied
-  source outside the checkout.
-- [x] Record the observed artifact dependency closure and identify every
-  trusted module-loading capability that later boundary tooling must admit;
-  do not add production launcher code during the proof.
-- [x] Obtain explicit approval of the completed distribution design before
-  Phase 22 changes the language surface or introduces launcher code.
-
-Acceptance: the end-user and trust contracts are unambiguous, the current
-toolchain has demonstrated that arbitrary external `.atl` files can be carried
-by a self-contained distribution, and no new purity exception or public
-capability has been implemented before approval.
-
-## Phase 22 — Canonical `.atl` runner
-
-Status: complete (2026-08-27)
-
-- [x] Implement the minimal `atl` entry point in its own `runner/` layer with
-  the approved `run`, `--help`, and `--version` interface and no third-party
-  dependency.
-- [x] Load exactly the path supplied to `atl run`, require the canonical
-  `.atl` extension and `#lang alone_the_lambdas` declaration, reject every
-  dotenv spelling before content access, preserve source filename/line/column
-  information, and avoid implicit directory, package, network, or source-file
-  discovery.
-- [x] Establish one version source shared by package metadata, the CLI, build
-  scripts, and future artifact names; initialize the public product version as
-  `0.2.0-dev`. Because Racket 9.3 rejects that SemVer spelling in `info.rkt`,
-  mechanically derive and verify the approved `0.1.900` package-metadata
-  projection rather than duplicating version authority.
-- [x] Add an exact runner classification to the structural boundary gate. It
-  may contain only the approved command-line and module-loading scaffolding,
-  must export no object-language binding, and must remain unreachable from
-  core, effects, codec, host, macros, readers, and the language facade.
-- [x] Rename the three public programs to `.atl`, add the minimal `hello.atl`
-  used by the end-user guide, update copied-package and application inventory
-  rules to recognize the official extension, and reject unknown or symlinked
-  application inputs without inspecting their targets.
-- [x] Add focused source-tree tests for help, version, argument validation,
-  paths containing spaces and non-ASCII characters, the hello smoke program,
-  all three canonical applications, and proof that the runner uses the
-  existing language rather than a second parser or evaluator.
-
-Acceptance: from the development checkout, the new entry point runs canonical
-`.atl` programs through the existing language with stable command behavior,
-while structural checks prove the loader is scaffolding rather than a second
-object-language escape hatch.
-
-Completion evidence: `./run-all-tests.sh` passed on 2026-08-27 with 4,412
-assertions across 31 test files, the unchanged expanded purity scan over all
-16 `core/` modules, and a zero-finding structural inventory of all 79
-repository source files. The 126-check runner suite used a copied package
-installation under an isolated Racket user home and proved the exact help,
-version, argument, source-contract, path, symlink, dotenv, existing-expander,
-Error, and Result behavior. The 110-check boundary suite pins the one
-non-exporting loader call, exact runner imports and vocabulary, all three
-version projections, the four canonical `.atl` applications, and every
-forbidden dependency direction. The three real effect applications also ran
-through that copied runner. No core, effect, codec, host, macro, reader, or
-language-facade executable behavior changed.
-
-## Phase 23 — User-facing launch diagnostics
-
-Status: complete (2026-08-28)
-
-- [x] Give command misuse, missing/unreadable source, invalid extension,
-  malformed declaration, read/expansion failure, and unexpected launcher
-  failure concise Alone the Lambdas diagnostics on stderr with documented,
-  stable nonzero exit statuses.
-- [x] Preserve the original `.atl` path and useful source position while
-  removing checkout paths, temporary build paths, host procedure renderings,
-  and irrelevant Racket implementation stack details from normal diagnostics.
-- [x] Keep lambda-encoded Error and Result semantics unchanged: a successfully
-  instantiated module exits successfully unless the program explicitly turns
-  a value into an effect or the approved design establishes a one-way final
-  observation rule that cannot affect object-language computation.
-- [x] Test syntax errors, unbound identifiers, unsupported datums, wrong public
-  names, ordinary contract Errors, Result Err values, real-host failures, and
-  internal launcher failures separately so the CLI never disguises one class
-  as another.
-- [x] Synchronize the architecture and acceptance evidence with the exact
-  distinction between launcher failure, completed language data, and requested
-  host failure.
-
-Acceptance: a user who does not know Racket receives actionable ATL-level
-launch diagnostics without changing Error/Result behavior, effect order, or
-the sole-host claim.
-
-Completion evidence: `./run-all-tests.sh` passed on 2026-08-28 with 4,449
-assertions across 31 test files, the unchanged expanded purity scan over all
-16 `core/` modules, and a zero-finding structural inventory of all 79 source
-files. The 161-check runner suite pins every diagnostic byte and exit status,
-strict UTF-8 rejection, original relative path plus source position, absence
-of temporary/package/raw host detail, and separate contract Error, pure Result
-Err, real-host Result Err, and injected internal-failure behavior. The
-112-check boundary suite pins the exact safe formatter and sole encoding
-preflight in addition to the existing non-exporting one-loader class. No core,
-effect, codec, host, reader, expander, or public-language executable changed.
-
-## Phase 24 — Self-contained Linux distribution
-
-Status: complete (2026-08-28)
-
-- [x] Add one deterministic build entry point that compiles the runner,
-  explicitly embeds dynamic support for `#lang alone_the_lambdas`, assembles
-  its runtime with `raco distribute`, and produces a versioned Linux x86-64
-  archive without modifying the developer's package registry.
-- [x] Keep build outputs outside source control and include only the executable
-  tree plus the provisional runtime notices, getting-started document, build
-  manifest, and `.atl` examples approved for internal testing. Until Phase 27
-  records an approved repository license, label every archive as an
-  unpublished development artifact rather than a releasable download.
-- [x] In a fresh Linux container with no `racket` or `raco` command, no ATL
-  package installation, no source checkout, and no inherited Racket
-  collection path, unpack the archive after transferring it as an opaque
-  artifact and run help, version, stdout, isolated file round trip, and
-  ephemeral-loopback HTTP acceptance.
-- [x] Move the unpacked tree to a second path and repeat a smoke run to prove
-  it contains no absolute build-tree or package-registry dependency.
-- [x] Record compressed size, unpacked size, startup time, runtime file
-  inventory, remaining system-library assumptions, and SHA-256 digest. Do not
-  optimize with demodularization or another tool until this correct baseline
-  exists and measurement demonstrates a need.
-
-Acceptance: the Linux archive runs arbitrary canonical `.atl` source on a
-machine with no Racket installation and performs the completed language's real
-stdout, file, and loopback-network work entirely from the unpacked tree.
-
-Completion evidence: two isolated builds from the same approved uncommitted
-Phase 24 state based on
-`ce55da42a06a4edc5ef37e2d1ca787b5bc1de8fc` produced the same 10-file archive;
-later hardening rebuilds retained SHA-256
-`a5e43c54467fa4afe0bb74aeeda962ae617de26b35c6cf50d65891de81b64cf0`.
-That disposable development archive was `13,679,991` compressed bytes and
-`59,299,555` unpacked regular-file bytes. Its executable tree was exactly
-`bin/atl` (`7,853,237` bytes) plus `lib/plt/racketcs-9.3` (`51,412,696`
-bytes); both retained only the ELF loader, `libc`, `libdl`, `libm`,
-`libpthread`, `librt`, and `libz` as observed system-library assumptions. A
-digest-pinned Ubuntu 24.04 container with no Racket commands, no checkout, no
-package install, a read-only root, an unprivileged user, and no external
-network verified the external checksum; exact help/version/stdout/file/HTTP
-bytes; a source created after packaging; embedded-reader precedence; and a
-move between paths containing spaces. Final runs observed 290–344 ms
-first-process startup and 294–302 ms after relocation. The recorded digest
-belongs only to the
-unpublished validation artifacts, not a release or later clean commit. The
-build added no dependency or demodularization and modified no production
-Racket source, operation, representation, or host authority.
-
-Final completion verification passed 4,492 assertions across all 32 test
-files, the unchanged expanded purity scan over 16 `core/` modules, and the
-complete zero-finding structural inventory of all 80 Racket and `.atl`
-sources. The focused distribution contract suite passed 43 assertions.
-
-## Phase 25 — Native macOS distributions
-
-Status: complete (2026-08-28)
-
-- [x] Add pinned native macOS x86-64 and arm64 build jobs using the same
-  version and audited build contract as Linux; do not treat a launcher tied to
-  a CI Racket installation as a distributable executable.
-- [x] Produce predictably named `.tar.gz` archives that preserve the runtime-
-  relative layout and canonical `atl` entry point on both architectures.
-- [x] Transfer each archive to a separate same-architecture consumer job that
-  does not install Racket, then run the CLI, canonical stdout/file
-  applications, and loopback-network acceptance from a writable temporary
-  directory.
-- [x] Verify archive contents, executable permissions, paths containing spaces,
-  clean stderr, version agreement, checksums, and absence of checkout,
-  package-registry, or build-runner dependencies on both targets.
-- [x] Record the oldest macOS versions actually demonstrated by clean consumer
-  jobs; do not claim an untested release, architecture, signing state, or
-  minimum version.
-
-Acceptance: both macOS architectures provide the same ATL behavior as Linux
-without a preinstalled Racket environment, and each passes its acceptance
-suite after a build-to-consumer job boundary.
-
-Completion evidence: validation commit
-`ed0db7df9ca17d4e7b2ea458069f7861c1207a2d` passed the complete
-[GitHub Actions run](https://github.com/kserrec/alone_the_lambdas/actions/runs/33181962284).
-Native Racket CS 9.3 builds produced the predictably named Intel and Apple
-Silicon archives, and separate same-architecture jobs received only each
-archive, its external `SHA256SUMS`, and the consumer harness. The consumers
-had no `racket` command, `raco` command, or checkout and passed exact
-help/version/source/stdout/file/loopback-HTTP behavior, hostile collection-path
-precedence, paths containing spaces, and relocation.
-
-The demonstrated Apple Silicon consumer was macOS 15.7.7 arm64. Its 9-file
-payload was `13,698,161` compressed bytes and `62,117,801` unpacked
-regular-file bytes, with SHA-256
-`8f428ff16be4acbf4a8ad41ce7241a40a623931ef9b5451c81b83e2fd2aad63f`;
-first and relocated startup observations were 194 ms and 121 ms. The
-demonstrated Intel consumer was macOS 15.7.9 x86_64. Its 9-file payload was
-`13,669,470` compressed bytes and `59,412,300` unpacked regular-file bytes,
-with SHA-256
-`7ac92ca6aa49ce2882e43ab0d318d034932cc06cfe88e9554048b018ec0742ab`;
-first and relocated startup observations were 1,170 ms and 319 ms. Each
-archive contained one Mach-O runtime file and observed only CoreFoundation,
-`libSystem`, `libiconv`, and `libncurses` as system-library assumptions.
-These versions, timings, sizes, and digests are observations for those
-disposable validation artifacts, not compatibility floors, performance
-guarantees, release checksums, signing claims, or public downloads.
-
-Kyle explicitly approved temporary public GitHub Actions transfer for these
-two unpublished artifacts. Both uploads used one-day retention only as a
-cleanup-failure fallback; the final cleanup job deleted them immediately, and
-the run artifact API reported zero remaining artifacts. Phase 25 changed only
-CI, shell packaging/consumer tooling, focused tests, and documentation. It
-changed no production Racket source, language operation, representation, or
-host authority. Completion verification passed 4,541 assertions across all
-32 test files, the unchanged expanded purity scan over 16 `core/` modules,
-and the complete zero-finding structural inventory of all 80 Racket and
-`.atl` sources. The focused distribution contract suite passed 92 assertions.
-
-## Phase 26 — Native Windows distribution
-
-Status: complete (2026-08-28)
-
-- [x] Add a pinned native Windows x86-64 build job using the same version and
-  audited build contract as Linux and macOS, including every DLL and runtime
-  file required by a machine without Racket.
-- [x] Produce a predictably named `.zip` archive with the canonical `atl.exe`
-  entry point and a runtime-relative layout that survives extraction to a
-  different drive and a path containing spaces.
-- [x] Transfer the archive to a separate Windows consumer job that does not
-  install Racket, then run help, version, stdout, isolated file round trip,
-  and ephemeral-loopback HTTP acceptance from the extracted tree.
-- [x] Verify archive contents, exit statuses, clean stderr, version agreement,
-  checksum, absence of checkout/package-registry/build-runner dependencies,
-  and the exact unsigned or signed executable status.
-- [x] Record the oldest Windows version actually demonstrated by a clean
-  consumer environment; do not claim an untested release, architecture,
-  signing state, or installer experience.
-
-Acceptance: the Windows archive runs the same canonical `.atl` programs as
-the Linux and macOS archives with no external Racket installation, survives
-relocation, and passes its independent consumer suite.
-
-Completion evidence: validation commit
-`a9f2bdc7d07a0283871ede548aa0c33cee0a3b78` passed the Windows build,
-independent consumer, and immediate-cleanup jobs in [GitHub Actions run
-33193791101](https://github.com/kserrec/alone_the_lambdas/actions/runs/33193791101).
-The pinned `windows-2025` build used full x86-64 Racket CS 9.3, staged only
-approved nonsymlink production inputs under an isolated user home with
-`--deps fail`, invoked `raco exe --embed-dlls ++lang alone_the_lambdas` and
-`raco distribute`, and produced the predictable
-`alone-the-lambdas-0.2.0-dev-windows-x86_64.zip` plus external
-`SHA256SUMS`.
-
-The separate consumer performed no checkout and installed no Racket. It
-reported absent `racket` and `raco` commands, verified the external checksum
-before extraction, rejected unsafe ZIP paths, checked the exact nine-file
-payload and one x86-64 PE runtime, and matched the build's `dumpbin` system-DLL
-inventory and Authenticode result. It then passed exact help/version/status
-and clean-stderr checks, a source created after packaging, hostile collection-
-path precedence, stdout, isolated file replacement/readback, ephemeral-
-loopback HTTP, and relocation from the runner's `D:` drive to a path containing
-spaces on `C:`.
-
-The demonstrated consumer was Microsoft Windows Server 2025 Datacenter
-10.0.26100, build 26100, x86-64. The disposable nine-file artifact was
-`15,251,225` compressed bytes and `23,875,480` unpacked regular-file bytes,
-with SHA-256
-`32323a72bb4dad11690f5189cdc543fcc49bb6138d1e1abe19e4694c0595b397`.
-Its only PE/runtime file was `bin/atl.exe`; Racket emitted no loose runtime
-files, so `lib/` was empty. The executable was `NotSigned` and observed only
-`KERNEL32.dll`, `msvcrt.dll`, and `USER32.dll` as system-DLL assumptions.
-Startup observations were 282 ms before relocation and 360 ms afterward.
-These are observations for that disposable validation artifact, not a lower
-Windows compatibility floor, performance guarantee, signing promise, release
-checksum, installer, or public download.
-
-Kyle explicitly approved only the temporary public transfer of this one
-unpublished archive, its checksum, and its self-contained harness. The
-workflow reused the existing full-commit-pinned official upload/download
-actions; their Phase 26 cost is one transient artifact and no new package or
-runtime dependency. Retention was one day only as a cleanup-failure fallback;
-the `always()` cleanup deleted the exact artifact immediately, and the run
-artifact API reported zero remaining artifacts.
-
-Phase 26 changed CI, PowerShell build/consumer tooling, focused tests, and
-documentation only. It changed no production Racket source, language
-operation, representation, effect order, or host authority. Completion
-verification passed 4,589 assertions across all 32 test files, the unchanged
-expanded purity scan over 16 `core/` modules, and the complete 80-source
-boundary inventory. The focused distribution contract suite passed 140
-assertions.
-
-## Phase 27 — Apache license and AttaLambda public rename
-
-Status: complete (2026-08-28)
-
-- [x] Select and record Apache License 2.0 after Kyle explicitly approved its
-  legal terms and confirmed Kyle Serrecchia as the 2026 copyright owner.
-- [x] Adopt `AttaLambda` as the public project and language name,
-  `attalambda` as the repository, package, collection, executable, and
-  machine-facing name, and `.attl` as the only public source extension.
-- [x] Make the source declaration exactly `#lang attalambda` and the direct
-  execution grammar exactly `attalambda FILE.attl`, `attalambda --help`, and
-  `attalambda --version`, with no `atl`, `.atl`, old declaration, or `run`
-  compatibility aliases.
-- [x] Synchronize the runner, examples, package metadata, reader, native build
-  and consumer tooling, workflow artifact names, specifications, architecture,
-  acceptance map, and current user/developer documentation with the new
-  identity while preserving pre-rename evidence as explicitly labeled history.
-- [x] Prove the renamed collection from a fresh isolated package install, run
-  every canonical application through the direct command grammar, pass the
-  complete suite and structural inventory, and reject every retired public
-  spelling.
-- [x] Rename the public GitHub repository to `kserrec/attalambda` and update
-  the verified local `origin` to that destination.
-- [x] Push the exact tested commit and verify CI without creating a Git tag,
-  GitHub Release, release-candidate file, signature, or public download. Kyle
-  explicitly authorized only the two renamed unpublished macOS archives and
-  one renamed unpublished Windows archive, their external checksums, and their
-  consumer harnesses as temporary workflow artifacts, with immediate deletion
-  and one-day retention solely as a cleanup-failure fallback.
-
-Acceptance: every current public and machine-facing surface says AttaLambda,
-`attalambda`, or `.attl` according to its role; a fresh user runs
-`attalambda FILE.attl`; retired spellings fail rather than silently aliasing;
-and object-language computation, representations, effects, host authority,
-version `0.2.0-dev`, and release state remain unchanged.
-
-Local evidence: `./run-all-tests.sh` passed on 2026-08-28 with 4,617
-assertions across all 32 test files, the unchanged expanded purity proof over
-16 `core/` modules, and the complete zero-finding structural inventory of all
-80 Racket and `.attl` sources. Focused totals include 181 runner assertions,
-78 fresh-language assertions, 113 boundary assertions, 144 distribution-
-contract assertions, and 22 real-application acceptance assertions. The
-public repository rename and local remote are verified. Validation commit
-`a048550e619499e0fbb3f944ba959ef84c4cc586` passed the complete suite and all
-ten build, clean-consumer, and cleanup jobs in [GitHub Actions run
-33204885605](https://github.com/kserrec/attalambda/actions/runs/33204885605).
-The renamed Linux, macOS arm64, macOS x86-64, and Windows x86-64 archives all
-passed their no-Racket consumer checks and relocation. Both macOS artifacts
-and the Windows artifact were deleted immediately; the completed run's
-artifact API reported `total_count: 0`. Public `main` resolves to that exact
-commit. Product version remains `0.2.0-dev`, and no Git tag, GitHub Release,
-release-candidate file, signature, binary release, or public download was
-created.
-
-## Post-Phase 27 maintenance — seam refactor, bug hunt, and test audit
-
-Status: complete (2026-08-28)
-
-- [x] Simplify the deterministic codec, readers, structural gates, and native
-  consumer helpers without changing language behavior or boundary authority.
-- [x] Correct the pure HTTP parser's origin-target grammar and request-body
-  framing validation, including zero-only `Content-Length` and rejection of
-  `Transfer-Encoding` in the bodyless request subset.
-- [x] Reject forged noncanonical List terminators in deterministic codec
-  conversion instead of silently truncating them as `NIL`.
-- [x] Audit the complete test suite, prove representative tests by temporary
-  mutation, and close the four confirmed gaps: exact stdout Error frames,
-  inherited `PLTCOLLECTS`, automatic CI triggers, and external completion
-  attestation for the source suite and native artifact consumers.
-
-Completion evidence: commits `706acee79392f011e056b94418d63b998a15e261`,
-`a9da8b72ea58ef8a4b3c4dc4bad15847b3d2c0ef`, and
-`505a46bba37d68efb4f3ffcb17048c03d85fb767` contain the refactor, three
-correctness fixes, and test-audit hardening respectively. The final local
-verification passed 4,687 assertions across all 32 test files, the expanded
-purity scan over all 16 `core/` modules, and the complete repository boundary
-and source-inventory gate. A fresh read-only cold review found no remaining
-test-audit issue. No release artifact, tag, signature, version change, or new
-language/host capability was created.
-
-## Post-Phase 27 security audit — HTTP request bound
-
-Status: complete (2026-08-28)
-
-- [x] Full ship-readiness security audit of the repository (runner, host
-  boundary, codec, lang/macros, effects/HTTP protocol code, tooling and
-  distribution, CI, repo hygiene, and the structural purity/boundary gates).
-  One confirmed finding; everything else examined and cleared.
-- [x] **F1 — unbounded HTTP request buffering (fixed).** `effects/http-server.rkt`
-  accumulated a connection's bytes with no size limit while waiting for a
-  complete request header, so a hostile peer that streams bytes never forming
-  `\r\n\r\n` (and never closing) could exhaust process memory. The read loop now
-  caps the accumulated request at 8192 bytes and checks the size *before* each
-  parse, rejecting an over-limit request as the existing malformed-request
-  Result (kind 10); the connection is then closed on the normal cleanup path.
-  Regression tests in `tests/http-server-test.rkt` prove the loop terminates on
-  a single oversized read, on sub-cap chunks that accumulate past the cap, and
-  through the whole-server loop; removing the guard fails the suite.
-
-(The deferred-hardening note from this audit remains live in PLAN.md.)
-
-## Phase 28 — Downloadable release candidate and novice documentation
-
-Status: complete (2026-08-29)
-
-The pinned Racket CS 9.3 inventory produced a 100,029-byte exact notice file
-with SHA-256
-`1343f218ba484a79fbef498d4e8fb02e202763a19e46c5e610a8bfe900bcbefd`.
-Kyle reviewed and approved those exact bytes, then separately approved the
-Phase 28 implementation scope and the temporary transfer of only the two
-macOS and one Windows unpublished candidates, checksums, and consumer
-harnesses. The full approval text and boundaries are recorded in
-`docs/design/standalone-distribution.md`. No approval authorizes a tag, GitHub
-Release, signing operation, public download, or publication.
-
-- [x] Prepare and present the exact bundled Racket runtime notices, obtain
-  approval only after Kyle has seen those terms, then include the approved
-  notices and the repository license in every release-candidate artifact.
-- [x] Separate contributor setup from end-user setup. The primary getting-
-  started path must begin with downloading the correct platform archive,
-  extracting it, and running `attalambda hello.attl`; it must not instruct an
-  end user to install Racket, use `raco`, or register a package.
-- [x] Document `.attl` syntax, the required `#lang attalambda` declaration,
-  executable location, supported platforms, exit statuses, archive
-  verification, and the real host's unsandboxed stdout/filesystem/network
-  authority in plain language.
-- [x] Promote the single version source to `0.2.0-rc.1`, rebuild and stage the
-  four archives with the approved license, one checksum manifest, source
-  commit, dependency/runtime inventory, release notes, and exact known
-  limitations as an unpublished release candidate.
-- [x] Have clean consumer jobs execute every command printed in the end-user
-  guide and verify the downloaded-artifact workflow independently of the
-  source-tree tests.
-
-Acceptance: a person with no Racket installation or knowledge can follow the
-release-candidate documentation verbatim, verify the archive, and run a real
-`.attl` program; the candidate remains unpublished pending explicit approval.
-
-Completion evidence: candidate source commit
-`91ba3a9a8d57f0f19f4e8620317a85cb781148df` passed 4,745 assertions
-across all 32 test files, the unchanged 16-module purity proof, the complete
-boundary inventory, all four native builders, and all four independent
-no-Racket consumers in [GitHub Actions run
-33258685537](https://github.com/kserrec/attalambda/actions/runs/33258685537).
-Every consumer reported `guide_workflow=passed` and relocation success. The
-two macOS and one Windows transfer artifacts were deleted immediately; the
-completed run's artifact API reported `total_count: 0`.
-
-The four exact disposable CI archive hashes are recorded in
-`docs/design/standalone-distribution.md` and were assembled into one local
-four-entry `SHA256SUMS` staging record. They are unpublished validation
-checksums, not public downloads or Phase 29 release checksums. Phase 28
-created no tag, GitHub Release, signature, or public download. It changed no
-object-language computation or host authority; the intended executable-visible
-change is the runner's version projection from `0.2.0-dev` to `0.2.0-rc.1`.
-
-## Phase 29 — First independent release
-
-Status: complete (2026-08-29)
-
-Kyle separately approved the exact final-version implementation scope and the
-one-time temporary transfer of only the two macOS and one Windows final-but-
-unpublished archives, their one-entry checksums, and their self-contained
-consumer harnesses. That transfer is complete: all consumers passed, Codex
-downloaded and verified the exact tested bytes into local staging, deleted the
-three exact GitHub artifacts through the API, and verified that the run now
-has zero artifacts. Linux remained within one job, and ordinary `always()`
-cleanup is restored. Neither approval authorizes paid GitHub usage, a tag,
-GitHub Release, signing, release-asset upload, public-download claim, or
-publication. Kyle later gave a separate exact publication approval; its
-literal text and the resulting public evidence are recorded in
-`docs/design/standalone-distribution.md`.
-
-- [x] Set `0.2.0` as the single release version, make the CLI, package
-  metadata, artifact names, documentation, and release notes derive from it,
-  and reject mismatches in CI.
-- [x] Run the complete source suite, expanded core purity proof, repository
-  boundary inventory, four native artifact builds, and four no-Racket consumer
-  suites from the exact commit proposed for release.
-- [x] Present the final license, public Git tag, GitHub Release, artifact
-  names, checksums, platform support, unsigned/signing status, and any user
-  warnings to Kyle, then obtain explicit permission to publish that exact
-  release. State any account, credential, monetary, or irreversible
-  consequence literally before requesting it.
-- [x] After approval, create the annotated Git tag (cryptographically signed
-  only if separately approved signing credentials are available) and public
-  GitHub Release, attach only the verified artifacts and checksum manifest,
-  then download and reverify each published artifact rather than trusting the
-  upload step.
-- [x] Confirm the public instructions resolve from a clean browser-visible
-  release URL, `attalambda --version` reports `0.2.0`, all checksums match, and
-  `main` remains clean and synchronized with its verified remote.
-
-Completion evidence: source commit
-`42ff0a7810ebeced445ab23561433a2dc423e433` passed 4,751 assertions across
-all 32 test files, the unchanged 16-module purity proof, the complete
-zero-finding source inventory, all four native builds, and all four clean
-consumers in [GitHub Actions run
-33262922610](https://github.com/kserrec/attalambda/actions/runs/33262922610).
-The exact published archives have SHA-256 values
-`86f980d696b45b42c251b78e6a66b9cd875f649217bfb09731cf6b47c66b00ac`
-(Linux x86-64),
-`5791ca3c28717972409d0d3503e135f685bcb7011ec24e6e4f9e70c7e5426b2b`
-(macOS arm64),
-`72f56f4d95665a3ca802160175c4082ce42b08054a35b963a10b0597b9d91fdc`
-(macOS x86-64), and
-`0ffcf7cd7218459efe1de1de87c7ff650328d01b16caa253deb6aa621188015a`
-(Windows x86-64). Their 410-byte combined `SHA256SUMS` has SHA-256
-`7786bf553caac0087ab22f3636d546a1fe00f89a446611c1516cc58f411f6f7f`;
-all four entries verify. The unsigned annotated tag `v0.2.0` peels to that
-exact source commit and carries annotation `AttaLambda 0.2.0`. The public
-latest non-prerelease [AttaLambda 0.2.0
-Release](https://github.com/kserrec/attalambda/releases/tag/v0.2.0) contains
-only those four manually uploaded archives and the combined manifest, in
-addition to GitHub's automatic source-code links. An authenticated draft
-download and a subsequent anonymous public download both matched all five
-staging files byte-for-byte. The anonymous Linux archive then passed the full
-digest-pinned, no-Racket Ubuntu 24.04 consumer again. The public API and HTML
-show the exact title, tag, non-prerelease/latest state, asset names, sizes,
-digests, notes, signing warnings, and public URLs; the anonymous latest URL
-resolves successfully. Publication used no signing or notarization operation,
-paid GitHub feature, purchase, or GitHub Actions run.
-
-Acceptance: AttaLambda has a verified public `0.2.0` release whose users
-download a platform archive, write `.attl`, and run `attalambda` without
-installing or learning Racket, while the language's lambda purity and single
-explicit host boundary remain unchanged.
-
-## Phase 30 — Withdraw unsupported desktop release assets
-
-Status: complete (2026-08-29)
-
-A real public-download attempt demonstrated that Gatekeeper blocks the
-unsigned, unnotarized macOS artifacts. The Windows artifact is verified
-Authenticode `NotSigned`; Microsoft's current SmartScreen documentation says
-unsigned downloads receive the “Windows protected your PC” warning and may be
-non-bypassable under enterprise policy, while Windows 11 Smart App Control can
-block unsigned apps outright. The previous native consumer jobs proved
-portable execution after internal artifact transfer, not the browser-download
-security path a user actually encounters. Kyle therefore authorized removing
-macOS and, after that Windows evidence was established, Windows from the
-documentation and public Release.
-
-- [x] Resolve the exact three public asset IDs and reverify byte-identical
-  local recovery copies before deletion.
-- [x] Make Linux x86-64 the sole supported public binary target throughout
-  current user documentation while preserving literal Phase 21 through 29
-  history and the internal macOS/Windows portability harnesses.
-- [x] Keep the original 410-byte `SHA256SUMS` unchanged as an immutable
-  publication record; label its removed-platform entries as historical rather
-  than replacing bytes under the same public filename.
-- [x] Delete only macOS asset IDs `535549609` and `535549602` and Windows asset
-  ID `535549611`; retain Linux asset ID `535549598`, manifest asset ID
-  `535549605`, Release ID `379061612`, tag `v0.2.0`, and GitHub's automatic
-  source archives.
-- [x] Rewrite the Release notes for the current Linux-only surface and verify
-  the resulting public API state and withdrawn download URLs.
-- [x] Re-run the focused documentation/distribution tests and complete source
-  suite without changing production behavior.
-
-Completion evidence: immediately before withdrawal, all three public assets
-matched the exact locally staged SHA-256 values recorded in Phase 29. A fresh
-Ubuntu 24.04 Docker userspace on x86-64 downloaded the retained public Linux
-archive and manifest, reported the archive checksum `OK`, confirmed Racket was
-absent, printed `AttaLambda 0.2.0`, and ran the bundled hello program to print
-`Hello from AttaLambda.`. The revised public Release exposes only the retained
-Linux archive and original historical manifest as manual assets. Exact
-deletion and post-edit verification are preserved in
-`docs/design/standalone-distribution.md` and `HANDOFF.md`.
-
-Acceptance: a reasonable visitor sees one supported public binary target,
-Linux x86-64, and receives no instruction to bypass macOS or Windows security
-controls. Historical evidence remains literal. No language, runner, runtime,
-effect, reader, macro, expander, build harness, CI job, legal notice, Linux
-binary, tag, or version behavior changes.
+# Completed milestone ledger
+
+This file records what the completed milestones established. It is historical
+evidence, not authority to begin or extend work. [`PLAN.md`](PLAN.md) controls
+current work; the [language specifications](docs/specifications/README.md)
+control behavior; [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md) maps the current
+implementation to executable evidence. Git history retains the former
+step-by-step plans.
+
+Historical commits before Phase 27 may use the former `all_the_lambdas`,
+`#lang alone_the_lambdas`, `.atl`, and `atl run` names. Phase 27 replaced those
+with AttaLambda, `#lang attalambda`, `.attl`, and the direct `attalambda`
+command. Historical public Nat references were superseded by Milestone 4.
+
+## Milestone 1 — Pure language foundation
+
+**Completed 2026-08-24; Phases 0–12.**
+
+The repository established:
+
+- a lazy unary-lambda core and mechanical `lambda`, `def`, and `let` syntax;
+- closed Church type tags and a strict generalized curried checker;
+- Michaelson-style List, structured Error, Bool and strict typed `if`;
+- normalized binary Nat arithmetic, Result and safe division, Char, and
+  UTF-8-backed String;
+- framed Errors with deterministic argument positions;
+- structural purity checks, exact public-surface checks, classified source
+  locations, and a complete dependency inventory.
+
+Nat was the public number during this milestone. Milestone 4 deliberately
+retired that surface while preserving binary Nat as a private foundation.
+
+## Milestone 2 — Effects and standalone language
+
+**Completed 2026-08-27; Phases 13–20. Completion commit `aa980d2`.**
+
+The milestone specified and implemented the one-bridge model:
+
+- [`runtime/host.rkt`](runtime/host.rkt) became the sole native authority and
+  sole producer of `host`;
+- [`runtime/codec.rkt`](runtime/codec.rkt) became the deterministic conversion
+  exception, imported in production only by the host;
+- pure effect wrappers added stdout, whole-file operations, and blocking TCP;
+- pure HTTP values, parser/renderer, routing, and a single-connection server
+  were built from lambdas;
+- the public `#lang` facade injected the same host into nine fixed wrappers;
+- runnable examples and end-to-end tests proved fake-host traces and real
+  stdout, filesystem, TCP, and loopback HTTP behavior.
+
+The milestone did not claim sandboxing. A real-host program inherits the
+launching process's relevant authority.
+
+## Milestone 3 — Independent distribution
+
+**Completed 2026-08-29; Phases 21–30.**
+
+The milestone established the current source-launch and distribution shape:
+
+- a strict `.attl` source contract, one-file trusted runner, fixed diagnostics,
+  and statuses 0/64/65/66/70;
+- a self-contained Racket CS 9.3 archive built in isolation with `raco exe`
+  and `raco distribute`;
+- independent Linux, macOS, and Windows build/consumer harnesses, relocation,
+  legal-file pinning, manifest inventory, and external checksums;
+- the Apache-2.0 license and AttaLambda public rename;
+- novice download instructions and the first public release.
+
+AttaLambda 0.2.0 was published from commit `42ff0a7` under annotated tag
+`v0.2.0`. After a consumer Mac demonstrated a Gatekeeper block and the Windows
+download path remained unsigned and untested on a client system, Kyle withdrew
+the two macOS assets and Windows asset. Linux x86-64 became the sole supported
+public binary. Exact original assets, hashes, IDs, retained files, and the
+withdrawal record are preserved in the
+[release ledger](docs/design/standalone-distribution.md#attalambda-020--2026-08-29).
+
+### Maintenance and security corrections
+
+The post-Phase 27 seam review removed duplicated trusted-boundary plumbing and
+fixed concrete framing, canonical decoding, test-isolation, and coverage gaps
+(`706acee`, `a9da8b7`, `505a46b`). A security audit then proved that a hostile
+HTTP peer could cause unbounded request buffering; `be1fd1a` imposed the
+current 8,192-byte cap.
+
+One related performance finding remains intentionally deferred: the pure HTTP
+parser re-parses the accumulated request after each chunk, so one connection
+can consume O(cap²) interpreter work before rejection. Fixing it requires an
+incremental-parser design rather than a local hardening patch. The bounded
+limitation remains visible in [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md).
+
+## Milestone 4 — Exact rationals and foundational values
+
+**Completed 2026-09-01; Phases 31–40. Acceptance commits `a1f125b` and
+`f2ccf69`.**
+
+The milestone amended the specifications first, then changed the language in
+dependency order:
+
+- binary Nat became a normalized private magnitude layer with quotient,
+  remainder, gcd, lcm, parity, halving, and squaring exponentiation;
+- private Int added sign and magnitude with one zero;
+- private Rat added canonical reduction, exact arithmetic, division, and
+  whole-exponent powers;
+- strict tagged Rat became the only public number, with exact integer and
+  fraction literals; public Nat/Int names and tag 3 were retired;
+- all whole-number consumers and host fields moved to Rat;
+- Unit replaced empty-List acknowledgements;
+- Byte became distinct from Char, and file/TCP payloads became `List Byte`;
+- Option and persistent Map completed the foundational values;
+- the expanded purity proof grew to all 29 core and effects modules.
+
+An adversarial pre-release review found ten concrete issues. Commits
+`fb96dea`, `af6572a`, and `3254354` fixed them and received an independent cold
+review. Durable corrections include distinct Error kinds 14/15/16, canonical
+`NIL` from empty `MAKE-STRING`/`DROP`, linear Floyd cycle detection in codec
+List decoding, canonical cached Byte/Char objects, effects-layer purity
+coverage, and a raw TCP test peer that avoids cross-thread lazy-promise entry.
+
+## AttaLambda 0.3.0 release
+
+**Published 2026-09-02 from commit `1b51603`, annotated tag `v0.3.0`.**
+
+The exact Linux x86-64 archive passed the clean Racket CS 9.3 build and the
+independent digest-pinned Ubuntu 24.04 no-Racket consumer, then matched a fresh
+public download. The release source passed 38 suites with 12,298 assertions,
+the 29-module purity proof, and the complete boundary inventory. Exact archive
+size, SHA-256, layout, and URL are in the
+[release ledger](docs/design/standalone-distribution.md#attalambda-030--2026-09-02).
+
+Two later CI-only repairs did not change shipped bytes: `a1a81bc` added 0.3.x
+forms to the Windows archive-name check, and `cb3e226` raised the full-suite
+workflow timeout from 10 to 20 minutes after logs proved cancellation rather
+than a test failure. Run 33674071955 was fully green on that main-line tip.

@@ -497,3 +497,29 @@ Internal machinery keeps describing its layer, per Sections B and K:
 private binary Nat and private Int operations use internal semantic names
 (for example `raw-nat-*`, `raw-int-*`, `raw-rat-*` where ambiguity would
 otherwise exist) and are never exported by the language surface.
+
+---
+
+# Explicit Exit Amendment (2026-09-05)
+
+This amendment supplements the matching main-specification and purity
+amendments. It overrides earlier naming examples only for the new public
+effect, whose exact spelling and application are:
+
+```lisp
+(exit status)
+```
+
+The argument contract is Rat 0 or 1, as defined in the main amendment.
+Expose the pure wrapper under the public name `exit`; do not expose Racket's
+native exit procedure or add public aliases or status constants. Resolve the
+host-name collision through module imports and a private binding such as
+`language-exit`, renamed on export. The language supplies the existing host
+to the wrapper once, following stdout/files/TCP. `host` remains the sole
+privileged binding; `exit` is an ordinary lambda wrapper around that boundary.
+
+Internal pure names `exit-function-name` and `exit-operation` denote the
+lambda-encoded String `"exit"`. A peer `effects/exit.rkt` owns pure request
+construction and validation, while `runtime/host.rkt` owns the native effect.
+Runner-native exit continues to describe launcher/source/scaffolding status;
+host exit describes explicit AttaLambda-program-chosen status.

@@ -6,9 +6,6 @@
 
 (provide unit->string)
 
-(define (lazy-apply function argument)
-  ((force function) argument))
-
 (define (unit->string value)
   (type-tag->string
-   (lazy-apply raw-object-type value)))
+   ((force raw-object-type) value)))

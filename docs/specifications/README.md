@@ -6,7 +6,9 @@ only the superseded project identity from the original brief. Step 31.1
 for the exact-rational-numbers-and-foundational-values milestone; each
 amendment states that it wins over the earlier sections of its own file, and
 the pre-amendment text remains the literal historical contract for the
-completed milestones.
+completed milestones. The Explicit Exit Amendments (2026-09-05) add the
+program-chosen exit 0/1 contract, preserve absolute object-language purity,
+and specify the public name and existing host boundary before implementation.
 
 Read them in this precedence order:
 
@@ -24,15 +26,17 @@ Read them in this precedence order:
 
 Later documents override earlier documents only where they explicitly refine
 or replace a decision. Within each document, its Milestone 4 Amendment
-overrides that document's earlier sections wherever they conflict.
+overrides that document's earlier sections wherever they conflict. Each
+Explicit Exit Amendment takes precedence over that document's earlier text
+only for its explicitly stated scope; all other contracts remain in force.
 
 ## Provenance
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `d4bdd84bb85f8ac0edba2bb993c5bdfb8efeeb33642f423ef3cfd1b66c6a5d20` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `34b7caf70674979421c794460a8b33d89bc16fe93f8da7c78632cd21814381f7` |
-| `03-canonical-public-naming-and-host-isolation.md` | `d9830bfc16612ba88c1ab485720ea65ecafdb4c5c851f140be95452e2aaaf29d` |
+| `01-greenfield-core-language.md` | `6d03e5cb9181ef250c9e23ecabe2cf9e2774bf203a9be831e57e8035569e8fa4` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `5561e0acb4ba2eb5399ffdb9fa0f5f4aa8cfd955b2b656aa93573c74ed4864df` |
+| `03-canonical-public-naming-and-host-isolation.md` | `216457319c579eaf3ad506550f2467e3071117399f04242a418aee6f391c66fe` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -45,3 +49,10 @@ Hash history: the pre-amendment copies preserved verbatim since Phase 0
 respectively. The 2026-09-01 change appended the three Milestone 4
 Amendments authorized by the approved Milestone 4 plan (Step 31.1) and
 changed nothing above the amendment markers.
+
+Before the 2026-09-05 Explicit Exit Amendments, the respective hashes were
+`d4bdd84bb85f8ac0edba2bb993c5bdfb8efeeb33642f423ef3cfd1b66c6a5d20`,
+`34b7caf70674979421c794460a8b33d89bc16fe93f8da7c78632cd21814381f7`, and
+`d9830bfc16612ba88c1ab485720ea65ecafdb4c5c851f140be95452e2aaaf29d`.
+Phase 0 of the approved HTTP/List/exit plan appended the new amendments,
+preserving every byte of the preceding contract.

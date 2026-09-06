@@ -15,11 +15,6 @@
          "../runtime/codec.rkt"
          "helpers/lazy.rkt")
 
-(define (apply2 function first-argument second-argument)
-  (lazy-apply
-   (lazy-apply function first-argument)
-   second-argument))
-
 (define (typed-value? type value)
   (raw-boolean->boolean
    (apply2 raw-is-type type value)))

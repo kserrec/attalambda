@@ -121,6 +121,8 @@
                   [typed-rat-is-zero IS-ZERO]
                   [typed-rat-is-whole IS-WHOLE]
                   [typed-rat-is-nonnegative-whole IS-NONNEGATIVE-WHOLE])
+         (only-in "../effects/exit.rkt"
+                  [make-exit language-make-exit])
          (only-in "../effects/files.rkt"
                   [make-read-file language-make-read-file]
                   [make-write-file language-make-write-file])
@@ -157,7 +159,8 @@
                      [language-let let]
                      [language-if if]
                      [language-cons cons]
-                     [language-host host])
+                     [language-host host]
+                     [language-exit exit])
          TRUE FALSE NOT AND OR XOR
          NIL HEAD TAIL IS-NIL LEN TAKE DROP
          SUCC ADD SUB MULT DIV EXP RECIP NEG ABS FLOOR
@@ -336,3 +339,6 @@
 
 (def tcp-close =
   (language-make-tcp-close language-host))
+
+(def language-exit =
+  (language-make-exit language-host))

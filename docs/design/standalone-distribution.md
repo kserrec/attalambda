@@ -1,144 +1,43 @@
-# Standalone distribution design
+# Standalone distribution
 
-Status: original contract approved 2026-08-27; Phases 22 through 28
-implemented; Phase 29 final implementation, native verification, and exact
-public `0.2.0` publication completed 2026-08-29; Phase 30 later withdrew the
-macOS and Windows public assets, leaving Linux x86-64 as the sole supported
-binary target
+This document records the current launcher and binary-distribution contract,
+then preserves the evidence for the two public releases. The language itself
+is defined by the [specifications](../specifications/README.md); the
+[host-boundary design](host-boundary.md) defines the effects available to a
+running program.
 
-Date: 2026-08-27
+The current source contract below includes explicit program exit, added after
+the published 0.3.0 archive. The release ledger remains historical evidence;
+these branch changes have not been published.
 
-This document fixes the current contract for distributing AttaLambda as an
-independently runnable language. It is subordinate to the three canonical
-[specifications](../specifications/README.md) and to the already approved
-[host boundary](host-boundary.md). Approval authorized the implementation
-work that began in Phase 22. The separate exact public-release approval and
-its execution are recorded below.
+## Current public support
 
-## Current public-target override
-
-The original four-target design and Phase 21 through 29 records below remain
-literal historical evidence of what was built, tested, approved, and first
-published. They no longer define the current public platform surface. The
-[Phase 30 withdrawal record](#phase-30-public-platform-withdrawal-record)
-supersedes only public binary availability: Linux x86-64 is the sole supported
-public binary target. The macOS and Windows tooling remains internal
-portability evidence and creates no support or download claim.
-
-## Verified starting state
-
-This section and the Phase 21 through 26 implementation records preserve the
-literal pre-rename names because they describe what existed and what was
-actually tested at those times. The Phase 27 record supersedes those names for
-every current public surface.
-
-The following facts were observed before this design was written:
-
-- `lang/reader.rkt` already delegates `#lang alone_the_lambdas` to the one
-  canonical expander in `lang/expander.rkt`.
-- That expander already provides the complete public language and injects the
-  sole real `host` into the nine pure effect wrappers once.
-- The three runnable applications exist only as Racket-named source files in
-  `examples/`. A repository search found no `runner/` directory, `atl`
-  executable, or public `.atl` source.
-- `info.rkt` is the single-collection package metadata and currently records
-  package version `0.1`.
-- The local development installation is Racket CS 8.10. The pinned CI
-  toolchain is full Racket CS 9.3.
-- Racket 9.3 has now demonstrated the required standalone-loading path in
-  disposable space. The evidence and its limits are recorded below.
-
-This phase creates this design document and updates `PLAN.md`. It creates no
-production launcher, changes no language export, renames no application, and
-changes no object-language or host behavior.
-
-## Product contract
-
-A supported release is a native archive that a user can download, extract,
-and run without installing or knowing Racket. The primary workflow is:
+Linux x86-64 is the sole supported public binary target. The supported
+workflow is to download the archive and its sibling `SHA256SUMS`, verify it,
+extract it, and run:
 
 ```text
 attalambda FILE.attl
 ```
 
-The archive carries the Racket runtime, reader, expander, compiler support,
-all AttaLambda production modules, and every non-system runtime file
-needed to load an external source file. At run time it must not require:
+The archive includes its private Racket CS runtime. Running it requires no
+Racket installation, package registry, AttaLambda checkout, build directory,
+or network service. This is a distribution promise, not a sandbox promise: a
+program using the real host receives the launching process's documented
+stdout, filesystem, DNS, connection, and listening authority.
+The current source also permits a program to terminate its own process through
+explicit `exit`; it grants no process-spawning or signal capability.
 
-- a `racket` or `raco` command;
-- an installed AttaLambda package;
-- a Racket user package registry or collection tree;
-- this repository or another source checkout;
-- the build directory or its absolute paths;
-- a network service.
+The macOS and Windows builders and consumers remain portability checks in CI.
+They do not make those systems supported public targets. Public macOS binaries
+would require a normal downloaded-user Gatekeeper path, including appropriate
+signing and notarization. No Windows client machine is available to establish
+the corresponding downloaded-user path.
 
-This is a distribution promise, not a sandbox promise. A program run with the
-real host has the launching process's already documented stdout, filesystem,
-name-resolution, connection, and listening authority.
+## Source and command contract
 
-## `.attl` source contract
-
-`.attl` is the canonical public source extension. It changes the public file
-name, not the language grammar or evaluator.
-
-A runnable source must satisfy all of these rules:
-
-- The supplied final path component ends in the exact lowercase bytes `.attl`.
-  The check is case-sensitive on every platform, including Windows. `.ATTL`,
-  `.Attl`, and a missing suffix are invalid.
-- The source is a regular file. Directories, devices, FIFOs, and other special
-  inputs are not source files.
-- The first logical line is exactly `#lang attalambda`, with no byte
-  order mark, leading whitespace, trailing whitespace, shebang, alternate
-  spelling, or version suffix. It may end with LF, CRLF, or end of file.
-- The remaining source is read by the existing `lang/reader.rkt` and expanded
-  by the existing `lang/expander.rkt`. The launcher does not contain a second
-  AttaLambda tokenizer, parser, expander, evaluator, or literal implementation.
-- Source text follows Racket's UTF-8 source convention. Invalid source bytes
-  are a source-read failure. AttaLambda String literals continue to lower
-  mechanically to their UTF-8 bytes exactly as the existing expander defines.
-- Paths containing spaces and non-ASCII characters are supported. Relative
-  source paths resolve from the caller's current working directory; absolute
-  paths are supported. The launcher does not change that directory.
-- The supplied source entry itself is not a symbolic link. A reported symlink
-  is refused without inspecting its target. Normal operating-system resolution
-  still applies to parent directories; the dotenv rule below is applied to
-  both the supplied components and the resolved parent path before content.
-- The launcher loads only the one explicitly supplied file. It performs no
-  directory walk, project discovery, import discovery, package lookup, or
-  network retrieval on the user's behalf.
-
-The dotenv rule is intentionally stricter than the extension rule. A path
-component is forbidden, case-insensitively, when its name matches
-`(^|\.)env($|\.)`. This rejects `.env`, `service.env`, `.env.local`,
-`service.env.local`, `program.env.attl`, and equivalent spellings before file
-content is accessed. Metadata needed to reject or resolve the path may be
-observed; content may not.
-
-The original command-line spelling of the source path is the public diagnostic
-name. Resolution may use a complete host path internally, but diagnostics must
-not replace the user's spelling with a resolved parent path, checkout path,
-package path, or temporary build path.
-
-Validation precedence is fixed so overlapping failures behave identically on
-every platform:
-
-1. reject command misuse;
-2. reject a dotenv spelling in the supplied path without content access;
-3. reject a non-lowercase `.attl` extension without content access;
-4. reject a symlinked source entry without target access;
-5. resolve parent directories and reject a dotenv spelling in that resolved
-   parent path;
-6. reject a missing, non-regular, or unreadable source;
-7. validate the declaration, then read, expand, and instantiate the source.
-
-Relative paths used later by the program's `read-file` and `write-file`
-operations continue to resolve from the caller's unchanged working directory,
-as the approved host design already specifies.
-
-## Command grammar
-
-The complete initial command grammar is:
+[`runner/attalambda.rkt`](../../runner/attalambda.rkt) implements the complete
+command surface:
 
 ```text
 attalambda FILE.attl
@@ -146,13 +45,42 @@ attalambda --help
 attalambda --version
 ```
 
-On Windows, `attalambda` in this grammar names `attalambda.exe`. There are no
-aliases, combined flags, short flags, retired `run` subcommand, program arguments, REPL mode,
-stdin-source mode, compiler mode, or package-manager mode in this milestone.
-A path beginning with `-` is supplied with an explicit directory component,
-such as `./-example.attl`.
+There are no aliases, short flags, program arguments, REPL, stdin-source,
+compiler, or package-manager modes. A source path beginning with `-` must use
+an explicit directory component such as `./-example.attl`.
 
-`attalambda --help` writes exactly this text to stdout and exits successfully:
+A runnable source has these properties:
+
+- Its supplied final component ends in exact lowercase `.attl` bytes.
+- It is a regular file rather than a directory, device, FIFO, or symbolic-link
+  entry.
+- Its first logical line is exactly `#lang attalambda`, followed by LF, CRLF,
+  or end of file.
+- Its remaining bytes are valid UTF-8 and are read and expanded by the
+  existing language reader and expander. The launcher has no second parser,
+  evaluator, or literal implementation.
+- Relative and absolute paths, spaces, and non-ASCII path characters are
+  supported. The launcher leaves the caller's working directory unchanged.
+- The launcher loads exactly the supplied source once. It performs no project,
+  import, package, directory, or network discovery.
+
+A path component is refused, case-insensitively, when its name matches
+`(^|\.)env($|\.)`. The launcher checks both supplied components and resolved
+parent components before reading source content. It may inspect only the path
+metadata needed to make that decision. The original command-line spelling is
+always the public diagnostic name.
+
+Validation has one fixed order:
+
+1. command shape;
+2. forbidden supplied path spelling;
+3. lowercase `.attl` suffix;
+4. symbolic-link source entry;
+5. resolved parent path and its forbidden components;
+6. existence, regular-file status, and readability;
+7. declaration, encoding, read, expansion, and one module instantiation.
+
+`--help` prints exactly:
 
 ```text
 Usage:
@@ -161,60 +89,46 @@ Usage:
   attalambda --version
 ```
 
-`attalambda --version` writes `AttaLambda VERSION` followed by one newline,
-where `VERSION` is the exact canonical product version described below. The
-initial development output is therefore:
+`--version` prints `AttaLambda VERSION` and one newline. Both commands write
+only stdout and inspect no source. Successful source execution reserves stdout
+for effects explicitly requested by the program; launcher diagnostics use
+stderr.
 
-```text
-AttaLambda 0.2.0-dev
-```
+### Completion and diagnostics
 
-Help and version write nothing to stderr and do not inspect a user source
-path. Successful source execution reserves stdout for effects explicitly requested by
-the AttaLambda program. Launcher diagnostics use stderr only.
-
-## Completion and exit statuses
-
-Launcher-controlled completion uses this closed status table on every target:
+Launcher-controlled completion uses this table:
 
 | Status | Meaning | Conditions |
-| --- | --- | --- |
-| `0` | successful command | help/version completed, or the source module instantiated without an uncaught host-level failure |
-| `64` | command misuse | missing command, unknown command/flag, missing source argument, or extra argument |
-| `65` | invalid AttaLambda source | wrong extension, malformed language declaration, invalid source encoding, reader failure, syntax failure, or expansion failure |
-| `66` | unavailable or refused input | dotenv path, symlinked source, missing path, non-regular input, inaccessible path, or source-open/read permission failure |
-| `70` | unexpected implementation failure | a catchable Racket failure outside the command, source-read, syntax, expansion, and approved host Result paths |
+| ---: | --- | --- |
+| `0` | success | help/version completed, or the source instantiated without an uncaught host failure |
+| `64` | command misuse | missing, unknown, or extra command arguments |
+| `65` | invalid source | suffix, declaration, encoding, read, syntax, or expansion failure |
+| `66` | unavailable/refused input | forbidden path, symlink, missing path, nonregular input, or inspection/read failure |
+| `70` | unexpected launcher failure | a catchable Racket failure outside the preceding classes and approved host Results |
 
-The launcher validates command shape and path metadata before source content.
-For a syntactically valid source, it dynamically instantiates the module once.
-It imposes no timeout: a deliberately nonterminating computation or blocking
-host operation remains running until the user or operating system stops it.
-External termination, signals, forced process kills, and failures too severe
-for the runtime to catch may produce operating-system statuses outside this
-table; the launcher does not disguise them.
+The launcher imposes no execution timeout. External signals, forced process
+termination, or failures too severe for Racket to catch may produce another
+operating-system status.
 
-The object-language distinction is exact:
+An object-language Error, `Result Err`, or `Result Ok` is ordinary completed
+lambda data. The module wrapper forces each top-level expression for requested
+effects and discards its value; the launcher never decodes that value or bases
+its exit status on it. Without a performed explicit exit, normal completion
+remains status `0`, including when an expression produces Error or Err. An
+operating-system failure from a valid returning host request becomes the
+specified `Result Err`, not status `70`.
 
-- a lambda-encoded Error is a completed AttaLambda value, not a Racket exception;
-- `Result Err` is a completed expected-failure value, not a launcher failure;
-- `Result Ok` is likewise ordinary completed data;
-- the existing module wrapper forces each top-level expression for its
-  requested effects and discards the resulting lambda value;
-- the launcher never decodes, renders, branches on, or changes its exit status
-  from any of those values.
+Separately from launcher-controlled completion, `(exit 0)` and `(exit 1)`
+request those exact operating-system statuses. Pure AttaLambda code decides
+whether a condition is fatal and validates the status; only the real host
+terminates the process, without returning a value or printing a diagnostic.
+Wrong types yield TypeMismatch Error, other Rats yield InvalidCount Error, and
+incoming Errors bubble without dispatch. An unselected exit remains lazy; a
+performed exit prevents later expressions from running. The
+[host-boundary contract](host-boundary.md) defines this tenth operation.
 
-Consequently, a module that completes with Error or Result Err exits `0`
-unless it separately encounters a launcher-level failure. A schema-valid real
-host request that the operating system rejects still returns Result Err under
-the approved host contract; it does not become status `70`.
-
-Normal diagnostics name AttaLambda, the user's source spelling, and an
-actionable reason. They do not expose raw host procedures, exception object
-renderings, Racket stack traces, package registry paths, source-checkout
-paths, or build paths. Phase 23 freezes the exact templates below without
-changing the status classifications above.
-
-The three output shapes are:
+Diagnostics use one of these shapes, where `SOURCE` is the safely quoted
+original spelling, line numbers are one-based, and columns are zero-based:
 
 ```text
 AttaLambda: REASON
@@ -222,857 +136,163 @@ AttaLambda: "SOURCE": REASON
 AttaLambda: "SOURCE":LINE:COLUMN: REASON
 ```
 
-`SOURCE` is the original command-line spelling. It is quoted, with control
-characters, quotes, and backslashes escaped, so one diagnostic remains one
-line. The canonical reader supplies one-based lines and zero-based columns.
-No resolved source location is used. The exact reasons are:
+The exact reasons are:
 
-| Class | Status | Exact reason |
+| Class | Status | Reason |
 | --- | ---: | --- |
 | command misuse | 64 | `expected attalambda FILE.attl, attalambda --help, or attalambda --version` |
-| supplied or resolved dotenv path | 66 | `refused source path because dotenv files are never read` |
+| forbidden path | 66 | `refused source path because dotenv files are never read` |
 | wrong extension | 65 | `source file name must end in lowercase .attl` |
-| source-entry symlink | 66 | `refused symbolic-link source; choose a regular .attl file` |
-| uninspectable path metadata | 66 | `source path could not be inspected` |
+| source symlink | 66 | `refused symbolic-link source; choose a regular .attl file` |
+| uninspectable metadata | 66 | `source path could not be inspected` |
 | missing source | 66 | `source file was not found` |
 | nonregular source | 66 | `source path is not a regular file` |
 | unreadable source | 66 | `source file could not be read` |
 | malformed declaration | 65 | `line 1 must be exactly #lang attalambda` |
-| invalid byte encoding | 65 | `source is not valid UTF-8` |
+| invalid encoding | 65 | `source is not valid UTF-8` |
 | reader failure | 65 | `source could not be read; check delimiters and UTF-8 encoding` |
 | unavailable identifier | 65 | `unknown AttaLambda name: IDENTIFIER` |
-| unsupported datum | 65 | `unsupported literal; only nonnegative Nat and String literals are supported` |
+| unsupported datum | 65 | `unsupported literal; only exact Rat and String literals are supported` |
 | other expansion failure | 65 | `source has invalid syntax` |
-| unexpected launcher failure | 70 | `unexpected launcher failure; verify the AttaLambda installation` |
+| unexpected failure | 70 | `unexpected launcher failure; verify the AttaLambda installation` |
 
-`IDENTIFIER` is written as a safely escaped source symbol. A missing internal
-language module is an unexpected launcher failure; a missing requested source
-remains unavailable input. No exception message is copied into a diagnostic.
+No exception message, stack trace, package path, checkout path, or build path
+is copied into a diagnostic.
 
 ## Trusted launcher boundary
 
-The launcher is module-loading scaffolding, which the specifications permit
-separately from object-language computation. Loading a language necessarily
-reads and expands the one source file the user asked to run. That launch-time
-read is not a second effect function callable by AttaLambda code.
+The runner is process-loading scaffolding, separate from object-language
+computation. It may inspect its command-line arguments, write the fixed output
+above, set the process exit status, validate the one requested path and source,
+load that source once, classify failures, and read embedded product-version
+metadata.
 
-The `runner/` class may use host facilities only for these closed
-purposes:
-
-- observe its own command-line argument vector;
-- emit the fixed help/version text and fixed stderr diagnostics;
-- set its process exit status;
-- perform lexical path, suffix, and dotenv-name checks;
-- resolve and inspect metadata for the one supplied source path;
-- read the exact language declaration and validate the remaining source bytes
-  only as strict UTF-8, without tokenizing or interpreting them;
-- dynamically load that same source path once;
-- categorize reader, syntax, expansion, input, and unexpected implementation
-  exceptions for the exit table;
-- access the canonical product version as build/module metadata.
-
-This allows the narrowly required Racket command-line, path, file-metadata,
-byte/header, exception, and `dynamic-require` machinery. Host Strings,
-Booleans, lists, regex matching, conditionals, and exit codes used inside this
-class decide only whether and how the host process loads a requested module.
-They never become object-language values and never determine an AttaLambda
-computational result.
-
-The class must satisfy all of these isolation rules:
-
-- it exports no object-language binding, host callback, loader, namespace,
-  source port, parsed syntax, or conversion function;
-- no `core/`, `effects/`, `runtime/`, `codec`, macro, reader, expander, or
-  language-facade module may import it;
-- AttaLambda source cannot name, require, or invoke it;
-- it cannot import a reader, test, tooling, application, or object-value codec
-  to interpret a completed value;
-- it cannot implement AttaLambda parsing, type checks, arithmetic, routing, Result
-  control flow, or another effect operation;
-- it cannot enumerate environment variables, run a process, invoke a shell,
-  use FFI, contact a network service, scan a directory, or discover another
-  source file;
-- it cannot broaden the real host operation set or bypass `host` for an
-  effect requested by AttaLambda code.
-
-Phase 22 added an exact structural classification for this path and fails
-closed on unknown files or capabilities. The existing production ban on
-dynamic loading remains in every other class. The sole-language-visible-host
-proof therefore stays literally true.
+It exports no binding. Production modules cannot import it, and AttaLambda
+source cannot name or invoke it. It imports neither the host nor the codec,
+does not observe a completed lambda value, and cannot add an object-language
+effect. It may not enumerate environment variables, launch another process,
+use a shell or FFI, contact a network service, or discover another source.
+[`tooling/check-boundaries.rkt`](../../tooling/check-boundaries.rkt) enforces
+this class and rejects unknown Racket source locations.
 
 ## Version authority
 
-Phase 22 created a root `VERSION` text file as the only manually edited product
-version source. It contains exactly one supported semantic version followed
-by one LF and no whitespace or comment. This milestone has exactly three
-planned states:
+Root [`VERSION`](../../VERSION) is the sole manually edited product version.
+It contains one approved value and one LF. The CLI, archive names, guide,
+manifest, and release naming derive from it. Racket package metadata needs a
+different syntax, so build tooling checks this closed projection:
 
-```text
-0.2.0-dev
-0.2.0-rc.1
-0.2.0
-```
-
-The CLI text, archive names, getting-started guide, release notes, build
-manifest, and tag derive from that file. Tests reject a duplicated or
-mismatched public version literal.
-
-Racket package metadata cannot use these strings directly. Under Racket 9.3,
-its version predicate rejects hyphenated prereleases and a final zero patch
-component. The build/tooling layer therefore owns this closed, mechanically
-checked projection:
-
-| Product `VERSION` | Racket `info.rkt` version |
+| Product version | `info.rkt` version |
 | --- | --- |
 | `0.2.0-dev` | `0.1.900` |
 | `0.2.0-rc.1` | `0.1.901` |
 | `0.2.0` | `0.2` |
+| `0.3.0-dev` | `0.2.900` |
+| `0.3.0` | `0.3` |
 
-The two prerelease metadata values satisfy Racket's alpha-version convention
-and order before `0.2`. `info.rkt` is a generated/verified consumer, not a
-second version authority. A build fails before compilation if `VERSION`,
-package metadata, CLI output, or artifact naming disagrees. Adding another
-version state requires an explicit plan change rather than an inferred
-mapping.
+A new version state requires an explicit plan change.
 
-## Build and runtime closure
+## Build, archive, and consumer contract
 
-Release builds use full Racket CS 9.3 on the target operating-system family.
-The build must verify the exact version and variant before compiling. The
-implementation path is:
+[`tooling/build-linux-distribution.sh`](../../tooling/build-linux-distribution.sh)
+builds with exactly full Racket CS 9.3:
 
-1. install or expose a sanitized package-source copy in an isolated temporary
-   Racket user home;
-2. compile the trusted runner with `raco exe`, retaining the default `-U`
-   embedded flag and adding `++lang attalambda` explicitly;
-3. assemble the native runtime with `raco distribute`;
-4. inventory, archive, and test the resulting tree after a build-to-consumer
-   transfer boundary.
+1. copy package sources into an isolated temporary package home;
+2. compile the runner with `raco exe` using the default `-U` isolation and
+   explicit `++lang attalambda` language embedding;
+3. assemble the private runtime with `raco distribute`;
+4. inventory and archive the result outside the checkout;
+5. write the archive digest to an external sibling `SHA256SUMS`.
 
-`-U` prevents user-specific collection and package paths from participating.
-The explicit `++lang` is mandatory because Racket does not automatically
-embed reader and module dependencies reached only by a dynamically loaded
-`#lang`. The build must prove that the embedded language wins even when an
-external collection path tries to provide the same reader name.
+The build refuses an output inside the checkout, an existing destination,
+wrong version metadata, the wrong Racket variant/version, symlinks, unsafe
+archive paths, missing runtime files, unresolved native libraries, legal-byte
+changes, or absolute build-path leakage. A release build also requires a clean
+source tree; `--allow-dirty` exists only for internal testing and records that
+state in the manifest. Runtime closure must not depend on a Racket command,
+user package registry, checkout, build directory, or network service.
 
-No new third-party dependency is approved. `raco exe` and `raco distribute`
-are part of the pinned Racket toolchain. Their cost is the embedded Racket CS
-runtime and transitive reader/compiler support; the observed Linux baseline is
-recorded below. Adding demodularization, an installer framework, archive
-library, argument parser, or updater requires a measured need and a separate
-dependency decision.
-
-The distributed tree may depend on ordinary documented operating-system
-libraries for its target. Every target phase must inventory those dynamic
-links, demonstrate them on the claimed consumer systems, and avoid claiming a
-minimum operating-system version that has not been tested.
-
-## Artifact names and layouts
-
-The four initial target identifiers and archive formats are fixed:
-
-| Target identifier | Native target | Archive |
-| --- | --- | --- |
-| `linux-x86_64` | Linux x86-64 | `.tar.gz` |
-| `macos-x86_64` | macOS Intel 64-bit | `.tar.gz` |
-| `macos-arm64` | macOS Apple Silicon | `.tar.gz` |
-| `windows-x86_64` | Windows x86-64 | `.zip` |
-
-An archive is named:
+The archive root is `attalambda-VERSION-linux-x86_64/` and contains exactly
+these top-level entries:
 
 ```text
-attalambda-VERSION-TARGET.EXTENSION
+bin/
+lib/
+examples/
+BUILD-MANIFEST.txt
+GETTING_STARTED.md
+LICENSE
+THIRD_PARTY_NOTICES.md
 ```
 
-It contains one root directory named `attalambda-VERSION-TARGET` and
-this logical layout:
-
-```text
-attalambda-VERSION-TARGET/
-  bin/
-    attalambda                 Unix
-    attalambda.exe             Windows instead of attalambda
-  lib/                  runtime support files, empty when none are required
-  examples/
-    hello.attl
-    stdout.attl
-    file-round-trip.attl
-    http-server.attl
-  GETTING_STARTED.md
-  BUILD-MANIFEST.txt
-  LICENSE
-  THIRD_PARTY_NOTICES.md
-```
-
-The finished archive is accompanied by one external `SHA256SUMS` file. Keeping
-the archive digest outside the bytes it authenticates avoids an impossible
-self-referential checksum and lets a user verify the download before
-extraction. Kyle approved this correction on 2026-08-28.
-
-Only the platform's one executable spelling is present. The internal `lib/`
-contents may differ by platform because `raco distribute` is authoritative;
-the directory remains present for a stable archive shape and is empty when
-Racket emits no separate support files. The executable must resolve any
-support files relative to the relocated archive root.
-
-The repository has an approved Apache License 2.0, and Kyle approved the exact
-Phase 28 bundled-runtime notices after reviewing their complete text. Release-
-candidate and final release archives therefore carry the root `LICENSE` and
-the exact version-specific approved `THIRD_PARTY_NOTICES.md`; they do not
-carry the transitional `UNPUBLISHED-DEVELOPMENT-ARTIFACT.txt`. Building a
-candidate or final archive does not authorize its publication.
-
-`BUILD-MANIFEST.txt` records at least the product version, source commit,
-target identifier, Racket version/variant, artifact file inventory, and
-dynamic system-library assumptions. The sibling `SHA256SUMS` records the final
-archive SHA-256 and filename. Neither file contains a secret, absolute checkout
-path, temporary path, user name, package registry, or nondeterministic local
-timestamp.
-
-## Release authority
-
-Building and testing development, release-candidate, or final archives does
-not grant permission to publish them. Publication remains blocked until all
-of these are true:
-
-- Kyle has explicitly approved the repository license, and later explicitly
-  approves the bundled-runtime notices after seeing their exact terms;
-- all four native build and no-Racket consumer jobs pass for one source
-  commit;
-- the complete source purity, boundary, behavior, and acceptance suites pass;
-- the final artifact names, sizes, checksums, supported systems, known limits,
-  and signed/unsigned status have been presented literally;
-- Kyle explicitly authorizes the exact public tag, GitHub Release, and files.
-
-Any cross-job GitHub Actions artifact transfer is itself a temporary public
-upload and requires phase-specific explicit approval even when the cleanup job
-deletes it immediately.
-
-Approval of this document authorizes only Phase 22 implementation. It does not
-authorize a tag, release, upload, license choice, signing operation, account
-use, purchase, or public claim.
-
-## Racket 9.3 feasibility evidence
-
-The disposable proof ran on 2026-08-27 on Linux x86-64. It used the official
-full Racket CS 9.3 Linux installer, whose observed SHA-256 matched the published
-value exactly:
-
-```text
-30dc59d9b5af083eacf793253d35782c5231e8bfb7a7331fe32ccd9a41fd792f
-```
-
-The proof used no production launcher file. Its temporary loader converted
-one command-line source string to a complete path and called
-`dynamic-require` once. The package-source staging walk rejected symlinks and
-excluded all dotenv, VCS, and compiled entries before copying.
-
-Observed sequence:
-
-1. An isolated copied package installed successfully with full Racket CS 9.3
-   and `--deps fail`.
-2. Racket 9.3 dynamically loaded an external `hello.atl` through the existing
-   reader and printed the expected host output.
-3. `raco exe ++lang alone_the_lambdas` embedded the loader and dynamic
-   language closure.
-4. `raco distribute` produced a movable Linux tree.
-5. A stock `ubuntu:24.04` container with no `racket` or `raco` command and no
-   checkout mounted ran the external source successfully.
-6. A second `.atl` program was created only after packaging. The unchanged
-   distribution was mounted at a different path in another clean container,
-   dynamically loaded that new source, printed its distinct expected output,
-   and exited `0`.
-7. A separate collection path containing a conflicting
-   `alone_the_lambdas/lang/reader.rkt` could not replace the embedded reader;
-   the packaged language still ran the canonical program.
-8. A binary-string probe found no proof-directory or repository-checkout path
-   in either distributed file.
-
-The verbose executable build observed all 29 current ATL production modules
-enter the embedded closure: both macros, all core modules, all effect modules,
-the codec, the host, the reader, and the expander. The closure also included
-the existing Lazy Racket implementation, its transitive stepper syntax support,
-Racket base/command-line/path/file/TCP support, `syntax/module-reader`, and the
-Racket reader/expansion support selected by `++lang`.
-
-The baseline Linux distribution contained exactly two loose files:
-
-| File | Bytes | Purpose |
-| --- | ---: | --- |
-| `bin/atl-proof` | `3,946,887` | executable with runner and embedded module closure |
-| `lib/plt/racketcs-9.3` | `51,412,696` | Racket CS runtime image |
-| total | `55,359,583` | installed proof tree |
-
-A disposable gzip archive was `11,292,764` bytes. These are feasibility
-measurements, not release-size promises or optimization targets.
-
-Both distributed ELF files dynamically resolved the same ordinary Linux
-system set in this environment: the ELF loader, `libc`, `libdl`, `libm`,
-`libpthread`, `librt`, and `libz`. No claim about another Linux distribution
-or minimum kernel follows from this one observation.
-
-The proof is consistent with Racket's official documentation:
-
-- [`raco exe`](https://docs.racket-lang.org/raco/exe.html) embeds statically
-  required modules, requires explicit `++lang` for a dynamically loaded
-  `#lang`, and does not automatically include arbitrary dynamic modules.
-- [`raco distribute`](https://docs.racket-lang.org/raco/exe-dist.html) gathers
-  the executable's shared libraries and runtime files into a movable
-  same-platform directory.
-
-## What remains unproven
-
-The Phase 21 proof did not by itself claim that the product was downloadable
-at that point. It had not implemented or tested the approved command
-parser, dotenv rejection, declaration preflight, stable diagnostics, version
-derivation, canonical artifact layout, reproducible build, macOS artifacts,
-Windows artifact, license notices, signing, or public download workflow. It
-used a temporary proof executable named `atl-proof`, not the Phase 22 `atl`
-runner recorded below.
-
-Phase 24 now supplies the Linux archive manifest, reproducible build, startup
-measurement, canonical application/effect checks, hostile collection-path
-probe, and relocation automation described below. Its consumer evidence is
-limited to one digest-pinned Ubuntu 24.04 image; it establishes no older Linux
-floor. Phase 25 supplies native macOS x86_64 and arm64 artifacts plus clean
-same-architecture consumer proof on macOS 15.7.9 and 15.7.7 respectively; it
-establishes no older macOS floor. Phase 26 supplies a native Windows x86-64
-artifact plus clean cross-drive consumer proof on Microsoft Windows Server
-2025 Datacenter 10.0.26100, build 26100; it establishes no older Windows floor
-or Windows client-edition support. Lower compatibility floors, the final legal
-inventory, a signed artifact, installer behavior, and publication remained
-unproven at the end of those phases. Phases 27 through 29 later supplied the
-legal inventory and exact public release; lower compatibility floors,
-Windows client-edition support, identity-backed signing, and installer
-behavior remain unproven.
-
-## Phase 22 implementation record
-
-Phase 22 implemented the approved development surface on 2026-08-27. Root
-`VERSION` now owns `0.2.0-dev`; `info.rkt` carries the verified `0.1.900`
-projection; `runner/atl.rkt` implements the exact three-command grammar and
-embeds the root-derived CLI version during expansion/build, contains no copied
-public version literal, and performs one validated module load; `examples/`
-contains exactly the four canonical `.atl` files. The complete suite passed
-4,412 assertions across 31 test files,
-the unchanged 16-module expanded purity scan, and the 79-source boundary
-inventory. At that historical boundary, Phase 23 still owned the final
-user-facing templates and path/source-position sanitization. Phases 24 through
-27 still own native artifacts, clean consumer proof, novice documentation,
-license approval, and release-candidate work; nothing in Phase 22 authorizes
-publication.
-
-## Phase 23 implementation record
-
-Phase 23 implemented the diagnostic contract on 2026-08-28. The runner now
-emits only the exact ATL templates above, quotes the original source spelling,
-uses canonical reader line/column metadata without printing its resolved
-source path, distinguishes requested-source loss from a missing internal
-language module, and never renders an exception object or message.
-
-An implementation probe established that Racket's ordinary source port
-replaces malformed UTF-8 bytes with `U+FFFD` instead of raising a read failure.
-`source-preflight-result` therefore validates the bytes after the already
-exact ASCII declaration with strict `bytes->string/utf-8` before the existing
-reader runs. This is encoding validation, not a tokenizer, parser, expander,
-or evaluator. It reads no path other than the one already supplied and does
-not retain or expose the temporary host String. The implementation adds one
-direct `racket/port` standard-library import for `port->bytes`, no third-party
-package, and no package-metadata dependency. Phase 24 measured the resulting
-complete runner/runtime closure; it does not attribute a marginal size to this
-one transitive import.
-
-Focused tests pin every diagnostic byte and status, preserve relative and
-Unicode path spelling, reject invalid encoding, and keep contract Error, pure
-Result Err, and real-host Result Err completion at status 0. A disposable
-runner copy injects raw host detail at the sole loader call and proves the
-status-70 handler emits none of it. The boundary gate separately pins the
-formatter, strict encoding operation, imports, definitions, vocabulary, one
-loader call, no exports, and every forbidden dependency direction. Phase 23
-changes no core/effect/runtime/language executable, object representation,
-effect order, or host authority.
-
-Completion verification passed 4,449 assertions across all 31 test files, the
-unchanged expanded purity scan over 16 `core/` modules, and the complete
-79-source boundary inventory. The focused runner suite passed 161 assertions;
-the adversarial boundary suite passed 112.
-
-## Phase 24 implementation record
-
-Phase 24 implemented `tooling/build-linux-distribution.sh` as the one Linux
-x86-64 build entry point. It verifies the exact full Racket CS 9.3 toolchain,
-the product/package version projection, architecture, clean-source state by
-default, nonsymlink source inputs, and an output directory outside the
-checkout. It copies only production package sources into disposable storage,
-installs them under an isolated Racket user home with dependency downloads
-forbidden, calls `raco exe ++lang alone_the_lambdas`, then calls
-`raco distribute`. Normalized file metadata, sorted POSIX tar entries, and
-gzip's timestamp-free mode make identical inputs byte reproducible. The build
-refuses to replace output files and emits one external `SHA256SUMS` beside the
-archive.
-
-The development payload contains 10 files. Its runtime inventory is
-`bin/atl` (`7,853,237` bytes) and `lib/plt/racketcs-9.3` (`51,412,696` bytes);
-the other eight files are the four canonical examples plus the manifest,
-guide, unpublished warning, and generated provisional Racket notices. The
-unoptimized archive measured `13,679,991` compressed bytes and `59,299,555`
-unpacked regular-file bytes. Both ELF files observed the same seven system
-assumptions as the feasibility proof: the ELF loader, `libc`, `libdl`, `libm`,
-`libpthread`, `librt`, and `libz`.
-
-Two disposable builds from different temporary paths over the same approved
-uncommitted Phase 24 source state based on commit
-`ce55da42a06a4edc5ef37e2d1ca787b5bc1de8fc` were byte-identical. Later
-rebuilds after output, permission, and dotenv-pruning hardening retained SHA-256
-`a5e43c54467fa4afe0bb74aeeda962ae617de26b35c6cf50d65891de81b64cf0`.
-That digest describes only those internal validation artifacts; it is not a
-release checksum or a claim about a later clean commit.
-
-`tooling/test-linux-distribution.sh` copied only the archive, checksum, and
-consumer harness into
-`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`.
-The container ran as an unprivileged user with a read-only root, no
-capabilities, no `racket`/`raco`, and no external Docker network. It verified
-the digest before extraction; exact layout, file inventory, permissions,
-help/version bytes, and clean stderr; a source created after packaging;
-embedded-language precedence over a conflicting collection path; stdout,
-isolated file, and ephemeral-loopback HTTP behavior; and a second run after
-moving the tree between paths containing spaces. Final runs observed
-290–344 ms for the first process and 294–302 ms after relocation. These are
-observations, not
-startup guarantees or a Linux compatibility floor.
-
-Phase 24 adds no Racket production source, object-language operation,
-representation, host capability, package dependency, demodularization step,
-license choice, public artifact, tag, upload, or release authority.
-
-Completion verification passed 4,492 assertions across all 32 test files, the
-unchanged expanded purity scan over 16 `core/` modules, and the complete
-80-source boundary inventory. The focused distribution contract suite passed
-43 assertions, and the no-Racket consumer harness passed independently.
-
-## Phase 25 implementation record
-
-Phase 25 implemented `tooling/build-macos-distribution.sh` for exact native
-`macos-x86_64` and `macos-arm64` targets. It requires Darwin, matching native
-hardware, and full Racket CS 9.3; verifies the same version projection,
-clean-source, nonsymlink-input, isolated-registry, and no-dependency-download
-contracts as the Linux builder; invokes the same `raco exe ++lang
-alone_the_lambdas` and `raco distribute` path; and emits a predictably named
-`.tar.gz` plus external `SHA256SUMS`. It additionally validates every Mach-O
-file with `file`, `lipo`, and `otool`; rejects unexpected architecture and
-non-system absolute dependencies; normalizes tar/gzip metadata; and scans all
-payload bytes for checkout, temporary-build, package-home, and nonstandard
-toolchain paths.
-
-The first native run observed that Racket CS 9.3 returned success and produced
-`bin/atl` on both architectures but no `lib/`. Racket documents that support
-directories contain the separate files needed by the executable, and the
-later clean consumers proved these executables needed none. The builder had
-incorrectly required Racket itself to create that directory. The corrected
-builder rejects an existing symlink or non-directory and otherwise creates an
-empty mode-0755 `lib/`, preserving the approved stable archive layout without
-inventing a runtime dependency. A focused regression assertion pins that
-normalization.
-
-`tooling/test-macos-distribution.sh` is self-contained so a consumer job needs
-no checkout. It verifies no `racket` or `raco` command is present, validates
-the external checksum before extraction, rejects unsafe paths and symlinks,
-checks the exact layout/manifest/permissions and native dependency inventory,
-and exercises exact help/version bytes with clean stderr. It then runs a source
-created after packaging, proves a hostile external collection path cannot
-replace the embedded language, performs the canonical stdout, isolated-file,
-and ephemeral-loopback HTTP effects, moves the tree between paths containing
-spaces, and repeats version plus generated-source runs.
-
-Validation commit `ed0db7df9ca17d4e7b2ea458069f7861c1207a2d`
-passed all jobs in [GitHub Actions run
-33181962284](https://github.com/kserrec/alone_the_lambdas/actions/runs/33181962284):
-
-| Observation | macOS Apple Silicon | macOS Intel |
-| --- | --- | --- |
-| Target | `macos-arm64` | `macos-x86_64` |
-| Clean consumer | macOS 15.7.7 arm64 | macOS 15.7.9 x86_64 |
-| Regular files | 9 | 9 |
-| Mach-O runtime files | 1 (`bin/atl`) | 1 (`bin/atl`) |
-| Compressed bytes | `13,698,161` | `13,669,470` |
-| Unpacked regular-file bytes | `62,117,801` | `59,412,300` |
-| SHA-256 | `8f428ff16be4acbf4a8ad41ce7241a40a623931ef9b5451c81b83e2fd2aad63f` | `7ac92ca6aa49ce2882e43ab0d318d034932cc06cfe88e9554048b018ec0742ab` |
-| First startup | 194 ms | 1,170 ms |
-| Relocated startup | 121 ms | 319 ms |
-
-Both executables observed only CoreFoundation, `libSystem`, `libiconv`, and
-`libncurses` as dynamic system-library assumptions. Both consumers reported no
-`racket` command, no `raco` command, no checkout, passed relocation, and passed
-all acceptance checks. These two exact operating-system versions are the oldest
-and only macOS versions demonstrated. The sizes, hashes, libraries, and timings
-describe only the disposable artifacts from the named validation commit; they
-are not minimum-version claims, performance guarantees, signing claims,
-release checksums, or public downloads.
-
-The workflow uses the existing pinned setup/checkout actions plus two narrowly
-justified CI-only transfer dependencies: official `actions/upload-artifact`
-v7.0.1 and `actions/download-artifact` v8.0.1, each pinned by full commit. Their
-cost is transient GitHub artifact storage and two action implementations in
-the CI dependency surface; they add no package or runtime dependency. Kyle's
-explicit approval permits only these temporary unpublished transfers. The
-workflow sets one-day retention as a cleanup-failure fallback, then an
-`always()` job with `actions: write` and `contents: none` deletes both exact
-artifact names and verifies no matching artifact ID remains. The successful
-run's artifact API reported zero artifacts immediately after cleanup.
-
-Phase 25 changed CI, shell build/consumer tooling, focused tests, and
-documentation. It changed no production Racket source, object-language
-operation, representation, effect order, or host authority. Completion
-verification passed 4,541 assertions across all 32 test files, the unchanged
-expanded purity scan over 16 `core/` modules, and the complete 80-source
-boundary inventory. The focused distribution contract suite passed 92
-assertions, and both independent no-Racket macOS consumer jobs passed.
-
-## Phase 26 implementation record
-
-Phase 26 implemented `tooling/build-windows-distribution.ps1` for the exact
-native `windows-x86_64` target. It requires x86-64 Windows and full Racket CS
-9.3; verifies the closed version projection and clean nonsymlink inputs; copies
-only the approved production package into a disposable tree; isolates
-`PLTUSERHOME` and temporary directories; and installs with `--deps fail`.
-The workflow installs Racket before checkout so setup-action residue cannot
-make the checked-out source tree appear dirty. The builder invokes `raco exe
---embed-dlls ++lang alone_the_lambdas` followed by `raco distribute` and
-accepts exactly one resulting runtime file, `bin/atl.exe`.
-
-The builder creates a stable empty `lib/` because Racket CS 9.3 embedded the
-required DLLs and emitted no loose support file on the demonstrated target. It
-generates the approved guide, provisional notices, four examples, and build
-manifest; fixes ZIP entry timestamps at 1980-01-01; orders entries
-deterministically; and writes the archive digest only to external
-`SHA256SUMS`. It parses the executable's PE header and requires machine value
-`0x8664`, inventories DLL dependencies with native `dumpbin`, records the
-exact Authenticode status, and scans every payload file for complete known
-checkout, isolated-user-home, package-source, temporary-build, and
-nonstandard-toolchain paths.
-
-An observed Windows executable retained the isolated user home's directory
-basename, `racket-user`, without retaining the complete disposable path. That
-retained fragment is not an operational runtime dependency: the builder still
-rejects the complete known path, and the clean consumer subsequently ran after
-cross-drive relocation with neither Racket nor the registry available. The
-consumer therefore retains precise checkout,
-runner-temporary, runner-profile, build-root, and package-source byte scans,
-while the exact builder-side scan plus independent relocation own the
-package-registry dependency proof.
-
-`tooling/test-windows-distribution.ps1` is self-contained and receives only
-the archive, external checksum, and itself. It requires no source checkout or
-Racket installation; validates the checksum before extraction; rejects unsafe
-ZIP names; checks the exact layout, manifest, PE machine, DLL inventory, and
-Authenticode status; and exercises exact help/version/status and clean-stderr
-behavior. It runs a canonical source created after packaging, proves a hostile
-external collection cannot replace the embedded language, performs stdout,
-isolated file replacement/readback, and ephemeral-loopback HTTP effects, then
-copies the extracted tree from the runner's `D:` drive to a path containing
-spaces on `C:`, deletes the first tree, and repeats version and generated-source
-runs.
-
-Validation commit `a9f2bdc7d07a0283871ede548aa0c33cee0a3b78`
-passed the Windows build, independent consumer, and cleanup jobs in [GitHub
-Actions run
-33193791101](https://github.com/kserrec/alone_the_lambdas/actions/runs/33193791101).
-The clean consumer was Microsoft Windows Server 2025 Datacenter 10.0.26100,
-build 26100, x86-64. It reported no `racket` command, no `raco` command, and no
-checkout. Builder and consumer agreed on a 9-file payload, `15,251,225`
-compressed bytes, `23,875,480` unpacked regular-file bytes, and SHA-256
-`32323a72bb4dad11690f5189cdc543fcc49bb6138d1e1abe19e4694c0595b397`.
-The payload had one PE/runtime file, `bin/atl.exe`, with observed system-DLL
-assumptions `KERNEL32.dll`, `msvcrt.dll`, and `USER32.dll`; its Authenticode
-status was exactly `NotSigned`. Startup observations were 282 ms initially and
-360 ms after cross-drive relocation.
-
-These operating-system, size, hash, dependency, signing, and timing values
-describe only that disposable validation artifact. They are not a lower
-Windows compatibility floor, client-Windows claim, performance guarantee,
-signing promise, release checksum, installer, or public download.
-
-The workflow reused the existing full-commit-pinned official
-`actions/upload-artifact` v7.0.1 and `actions/download-artifact` v8.0.1
-dependencies. Their Phase 26 cost is one transient workflow artifact and two
-existing CI action implementations; they add no package or runtime dependency.
-Kyle's narrow approval covered only this unpublished archive, checksum, and
-harness. The upload used one-day retention solely as a cleanup-failure
-fallback; an `always()` job with `actions: write` and `contents: none` deleted
-the exact artifact immediately and verified it was absent. The completed run's
-artifact API reported zero artifacts.
-
-Phase 26 changed CI, PowerShell build/consumer tooling, focused tests, and
-documentation. It changed no production Racket source, object-language
-operation, representation, effect order, or host authority. Completion
-verification passed 4,589 assertions across all 32 test files, the unchanged
-expanded purity scan over 16 `core/` modules, and the complete 80-source
-boundary inventory. The focused distribution contract suite passed 140
-assertions, and the independent no-Racket Windows consumer passed.
-
-## Phase 27 implementation record
-
-Phase 27 adopts `AttaLambda` for the public project and language name;
-`attalambda` for the repository, Racket package and collection, executable,
-runner, artifact roots, and workflow artifacts; `.attl` for source files; and
-exact `#lang attalambda` declarations. Execution is direct:
-`attalambda FILE.attl`. The old `atl`, `.atl`, `#lang alone_the_lambdas`, and
-`run` subcommand spellings are rejected rather than retained as aliases.
-
-The implementation renames the runner and four examples; changes collection
-resolution in `info.rkt` and `lang/reader.rkt`; synchronizes build and consumer
-tooling for Linux, macOS, and Windows; updates workflow artifact and cleanup
-names; and updates current specifications, architecture, acceptance evidence,
-and guides. The structural scanner uses an in-memory collection link from
-`attalambda` to its already validated project root, so source inspection does
-not depend on the private checkout directory name or mutate a Racket package
-registry. Historical Phase 21 through 26 artifact names, measurements, run
-URLs, and verbatim approvals remain literal records of the pre-rename work.
-
-Local completion verification passed 4,617 assertions across all 32 test
-files, the unchanged expanded purity proof over 16 `core/` modules, and the
-complete zero-finding 80-source boundary inventory. Focused runner,
-fresh-language, boundary, distribution-contract, and real-application suites
-passed 181, 78, 113, 144, and 22 assertions respectively. The public GitHub
-repository has now been renamed to `kserrec/attalambda`, and the verified local
-`origin` points to that destination. Validation commit
-`a048550e619499e0fbb3f944ba959ef84c4cc586` repeated the complete suite and
-passed every native build, clean-consumer, and cleanup job in [GitHub Actions
-run 33204885605](https://github.com/kserrec/attalambda/actions/runs/33204885605).
-
-That run produced and consumed these exact disposable renamed archives:
-
-| Target | Exact consumer | Compressed bytes | Unpacked regular-file bytes | SHA-256 | Startup before / after relocation |
-| --- | --- | ---: | ---: | --- | ---: |
-| `linux-x86_64` | digest-pinned Ubuntu 24.04 container | `13,679,896` | `59,297,302` | `3708c56c8bcdf91d158b2d2c1e674a37d2b7bb61b4908805ad1c4a247e7c2ab7` | 176 ms / 172 ms |
-| `macos-arm64` | macOS 15.7.7 arm64 | `13,697,971` | `62,117,764` | `1baa39170ba33233cbb1ff638bd713d2785957c6dcca3542523ed3c0262a1b4a` | 229 ms / 176 ms |
-| `macos-x86_64` | macOS 15.7.9 x86-64 | `13,669,228` | `59,412,256` | `e779b2c5b6a069fa56c95f92daaf52b0c2517ba964472f05c57ee34472164f5b` | 311 ms / 312 ms |
-| `windows-x86_64` | Microsoft Windows Server 2025 Datacenter 10.0.26100 x86-64 | `15,250,871` | `23,871,340` | `fdc4597628dbc1ba954c53700491cf9109c189f47129b78091dd62b05fbfe686` | 241 ms / 489 ms |
-
-The Linux archive contained 10 regular files and two runtime files. Each
-macOS archive contained nine regular files and one Mach-O runtime file,
-`bin/attalambda`; both observed only CoreFoundation, `libSystem`, `libiconv`,
-and `libncurses` as dynamic system-library assumptions. The Windows archive
-contained nine regular files and one PE/runtime file, `bin/attalambda.exe`;
-it observed `KERNEL32.dll`, `msvcrt.dll`, and `USER32.dll`, and its exact
-Authenticode state was `NotSigned`. Every clean consumer reported no `racket`
-command, no `raco` command, and no checkout, then passed the direct command,
-effects, embedded-reader, and relocation checks.
-
-Linux stayed within one job and did not use GitHub artifact storage. The two
-macOS archives and one Windows archive crossed only the explicitly approved
-temporary transfer boundary with one-day retention as a cleanup-failure
-fallback. Their consumer and `always()` cleanup jobs all passed, and the
-completed run's artifact API reported `total_count: 0`. These measurements
-describe only deleted development artifacts; they are not release checksums,
-performance guarantees, compatibility floors, or public downloads.
-
-No core, effect, runtime, macro, or expander executable changed. The reader
-changes only its collection target; the runner intentionally changes its
-public launch contract; the examples intentionally change their declaration,
-branding bytes, and round-trip filename. Product version remains
-`0.2.0-dev`. This work creates no release candidate, binary release, tag,
-GitHub Release, signature, or public download.
-
-## Phase 28 implementation record
-
-Phase 28 promotes the single product version to `0.2.0-rc.1`, with Racket
-package projection `0.1.901`, and restructures the primary documentation for
-an archive user rather than a contributor. Each platform guide starts with
-the archive plus its sibling `SHA256SUMS`; gives exact target-specific
-verification, extraction, version, hello, and custom-program commands; and
-explains exit statuses and the unsandboxed stdout, filesystem, and TCP
-authority. The root README retains a separate contributor setup path.
-
-Every candidate replaces the historical unpublished-development marker with
-the repository `LICENSE` and the exact approved 100,029-byte Racket CS 9.3
-notice payload. The builders fail closed unless the notice SHA-256 is
-`1343f218ba484a79fbef498d4e8fb02e202763a19e46c5e610a8bfe900bcbefd`;
-the packaged Apache License 2.0 bytes have SHA-256
-`cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`.
-Build manifests record both digests, the clean source commit, target and
-toolchain, exact payload inventory, dependency assumptions, and the literal
-status `unpublished release candidate`.
-
-Candidate source commit
-`91ba3a9a8d57f0f19f4e8620317a85cb781148df` passed the full suite and every
-native build, independent consumer, and cleanup job in [GitHub Actions run
-33258685537](https://github.com/kserrec/attalambda/actions/runs/33258685537).
-The exact same-run archive observations were:
-
-| Target | Exact consumer | Compressed bytes | Unpacked regular-file bytes | SHA-256 | Startup before / after relocation |
-| --- | --- | ---: | ---: | --- | ---: |
-| `linux-x86_64` | digest-pinned Ubuntu 24.04 container | `13,728,710` | `59,409,490` | `2b1c197cad3cd1995bbc10c3a0c2d57382a9fd38c28161411ff71bd7531f6215` | 175 ms / 174 ms |
-| `macos-arm64` | macOS 15.7.7 arm64 | `13,743,083` | `62,220,755` | `628221124008e49cda963cbda256eaef2abb8de1edf12e283cf9f808672ce521` | 282 ms / 153 ms |
-| `macos-x86_64` | macOS 15.7.9 x86-64 | `13,714,718` | `59,523,315` | `ffd4a097f465dc714163b05753bb7ee9c412ccca0e87bf070d5a7ccd529c490d` | 690 ms / 495 ms |
-| `windows-x86_64` | Microsoft Windows Server 2025 Datacenter 10.0.26100 x86-64 | `15,296,942` | `23,986,858` | `e1181ae82c7388829a0db81e67b5652da64fb922ed2a68d94ea18cb58247db4f` | 261 ms / 377 ms |
-
-Those four hashes were assembled into one four-entry `SHA256SUMS` staging
-record. Linux contained 10 regular files and two runtime files. Each macOS
-candidate contained nine regular files and one Mach-O runtime file,
-`bin/attalambda`; both observed CoreFoundation, `libSystem`, `libiconv`, and
-`libncurses`. Windows contained nine regular files and one PE/runtime file,
-`bin/attalambda.exe`; it observed `KERNEL32.dll`, `msvcrt.dll`, and
-`USER32.dll`, and its exact Authenticode state was `NotSigned`.
-
-Every consumer reported no `racket` command, no `raco` command, and no source
-checkout. Each independently executed the novice checksum, extraction,
-directory-entry, packaged-version, hello, and custom-program workflow and
-reported `guide_workflow=passed`, then passed effects, embedded-reader, and
-relocation acceptance. Local and CI completion gates passed 4,745 assertions
-across all 32 test files, the unchanged 16-module expanded purity proof, and
-the complete zero-finding source-boundary inventory.
-
-Linux remained inside one job. Only the two macOS candidates and one Windows
-candidate, their one-entry checksums, and self-contained consumer harnesses
-crossed the explicitly approved temporary workflow-artifact boundary. One-day
-retention was only a cleanup-failure fallback: the Windows and macOS cleanup
-jobs passed, and the completed run's artifact API reported `total_count: 0`.
-The four hashes and measurements describe deleted unpublished candidates,
-not public downloads, compatibility floors, performance guarantees, or Phase
-29 release checksums.
-
-Phase 28 changed package/version metadata, distribution tooling and payloads,
-tests, CI labels, and documentation. It changed no core, effect, runtime,
-reader, macro, expander, or runner source. The runner's intended visible
-version output is now `AttaLambda 0.2.0-rc.1`; object-language computation and
-host authority are unchanged. No tag, GitHub Release, signing operation,
-public download, or publication was created or authorized.
-
-## Phase 29 prepublication implementation contract
-
-Phase 29 promotes root `VERSION` from `0.2.0-rc.1` to final `0.2.0` and the
-mechanical Racket package projection from `0.1.901` to `0.2`. Runner source is
-unchanged and embeds the new value from `VERSION`; the intended
-executable-visible result is `AttaLambda 0.2.0`. Current guides, release notes,
-build manifests, native builder and consumer wording, static assertions, CI
-staging labels, and current documentation move from candidate to final-release
-language. Historical Phase 21 through 28 records retain their literal prior
-states.
-
-The Phase 29 notice payload changes only the AttaLambda-specific heading from
-`0.2.0-rc.1` to `0.2.0`. The resulting file is exactly 100,024 bytes with
+`bin/` contains only `attalambda`. `examples/` contains `hello.attl`,
+`stdout.attl`, `file-round-trip.attl`, `http-server.attl`, and
+`foundations.attl`. `BUILD-MANIFEST.txt` records the product version, source
+commit and tree state, target, Racket version/variant, exact file inventory,
+legal hashes, checksum arrangement, and observed native-library assumptions.
+It records no user name, secret, timestamp, package registry, checkout path,
+or temporary path.
+
+The shipped Apache-2.0 [`LICENSE`](../../LICENSE) is exactly 11,358 bytes with
 SHA-256
-`516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad`.
-Every bundled component entry, preserved notice, and license term below that
-heading is byte-for-byte unchanged. The repository Apache License 2.0 remains
-exactly 11,358 bytes with SHA-256
 `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`.
+The approved Racket CS 9.3
+[`THIRD_PARTY_NOTICES.md.in`](../../distribution/THIRD_PARTY_NOTICES.md.in) is
+exactly 100,024 bytes with SHA-256
+`516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad`.
+The build copies these bytes unchanged.
 
-The final archive names are mechanically fixed as:
+[`tooling/test-linux-distribution.sh`](../../tooling/test-linux-distribution.sh)
+crosses a build-to-consumer transfer boundary into
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`.
+The consumer has no Racket command or source checkout and receives the archive,
+checksum, and self-contained consumer harness. It verifies the checksum,
+layout, permissions, manifest, legal bytes, guide commands, version/help,
+stdout, byte-exact file-example round-trip, TCP/HTTP loopback behavior, and
+relocation. The current consumer also checks explicit/default program statuses
+and both fatal and recoverable missing-file decisions. The foundations example
+is inventoried but not executed by this consumer. Fixed launcher-failure
+statuses and sanitized diagnostics are covered by `tests/runner-test.rkt`;
+foundations execution is covered by `tests/milestone-two-acceptance-test.rkt`.
+Those are source-suite checks, not packaged-consumer results. External
+networking is disabled; only ephemeral loopback service is used.
 
-```text
-attalambda-0.2.0-linux-x86_64.tar.gz
-attalambda-0.2.0-macos-x86_64.tar.gz
-attalambda-0.2.0-macos-arm64.tar.gz
-attalambda-0.2.0-windows-x86_64.zip
-SHA256SUMS
-```
+Building or verifying an archive does not authorize a tag, Release, upload,
+signing or notarization operation, paid account use, purchase, or publication.
+Each publication needs Kyle's explicit approval for the exact commit, tag,
+files, checksums, support claims, and public action.
 
-The one approved staging workflow kept Linux build and no-Racket consumption
-within one job. Only the two macOS archives and one Windows archive, each with
-its one-entry checksum and self-contained consumer, crossed jobs. After all
-three consumers passed, Codex downloaded and verified the exact tested bytes
-into local staging, deleted the exact artifact identifiers through the GitHub
-API, and verified zero remained. One-day retention was only the automatic
-fallback. The workflow excludes tag pushes so a later tag cannot repeat the
-transfer, and ordinary `always()` cleanup is restored for every future branch
-or pull-request run.
+## Public release ledger
 
-The Phase 29 implementation and transfer approvals alone did not authorize
-paid GitHub usage, a tag, GitHub Release, signing operation, release-asset
-upload, public-download claim, or publication. Those external mutations
-remained blocked until the
-exact tested source commit, four archive checksums and measurements, one
-combined manifest, demonstrated platforms, unsigned/signing state, known
-limitations, and public consequences are presented literally and Kyle
-approved that exact proposal. The later publication approval is recorded
-below.
+### AttaLambda 0.3.0 — 2026-09-02
 
-Local Racket CS 9.3 verification of the release-preparation commit passed
-4,751 assertions across all 32 test files, the unchanged expanded purity proof
-over 16 `core/` modules, and the complete zero-finding repository boundary and
-source inventory.
+The current release was built from clean commit
+`1b51603671e87bcc524e2413491c94ad1ea7d763` with full Racket CS 9.3 in
+`racket/racket:9.3-full`. Annotated tag `v0.3.0` peels to that commit. The
+independent no-Racket Ubuntu 24.04 consumer passed checksum, guide, relocation,
+and loopback networking with a 362 ms first startup. Linux x86-64 was the only
+published binary target.
 
-## Phase 29 staging record
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.3.0-linux-x86_64.tar.gz` | `13,938,743` | `7adc7343720b0a1d6ed86af47059f031f571ab93649a314303c56d6b8a3d7870` |
+| `SHA256SUMS` | `103` | single-entry manifest for that archive |
 
-Final source commit
-`42ff0a7810ebeced445ab23561433a2dc423e433` passed the full source suite,
-every native build, and all four independent clean consumers in [GitHub
-Actions run
-33262922610](https://github.com/kserrec/attalambda/actions/runs/33262922610).
-The source job and local completion gate each passed 4,751 assertions across
-32 test files, the unchanged 16-module expanded purity proof, and the complete
-zero-finding source-boundary inventory. Each consumer reported absent Racket
-and `raco` commands, no source checkout where applicable,
-`guide_workflow=passed`, relocation success, and final acceptance.
+Both [public download URLs](https://github.com/kserrec/attalambda/releases/tag/v0.3.0)
+were downloaded again after publication. Their byte counts matched and the
+manifest verified the archive. The archive contains 11 files totaling
+59,742,960 unpacked bytes, including two runtime files. The release source
+passed 38 suites with 12,298 assertions, the 29-module expanded purity proof,
+and the complete boundary inventory.
 
-The exact archive observations before publication were:
+### AttaLambda 0.2.0 — 2026-08-29
 
-| Target | Exact consumer | Compressed bytes | Unpacked regular-file bytes | SHA-256 | Startup before / after relocation |
-| --- | --- | ---: | ---: | --- | ---: |
-| `linux-x86_64` | digest-pinned Ubuntu 24.04 container | `13,728,716` | `59,409,479` | `86f980d696b45b42c251b78e6a66b9cd875f649217bfb09731cf6b47c66b00ac` | 175 ms / 169 ms |
-| `macos-arm64` | macOS 15.7.7 arm64 | `13,743,188` | `62,220,750` | `5791ca3c28717972409d0d3503e135f685bcb7011ec24e6e4f9e70c7e5426b2b` | 236 ms / 141 ms |
-| `macos-x86_64` | macOS 15.7.9 x86-64 | `13,714,720` | `59,523,310` | `72f56f4d95665a3ca802160175c4082ce42b08054a35b963a10b0597b9d91fdc` | 523 ms / 321 ms |
-| `windows-x86_64` | Microsoft Windows Server 2025 Datacenter 10.0.26100 x86-64 | `15,296,844` | `23,986,848` | `0ffcf7cd7218459efe1de1de87c7ff650328d01b16caa253deb6aa621188015a` | 251 ms / 346 ms |
+The first release's unsigned annotated tag `v0.2.0` has tag-object SHA
+`5537cf8b4dc1db31f8855e10118729ac78bc0dd0` and peels to tested commit
+`42ff0a7810ebeced445ab23561433a2dc423e433`. GitHub Release ID `379061612`
+was originally published with these manually uploaded assets:
 
-Those four hashes form one exact 410-byte `SHA256SUMS`; its own SHA-256 is
-`7786bf553caac0087ab22f3636d546a1fe00f89a446611c1516cc58f411f6f7f`,
-and all four entries pass a fresh local checksum verification. The five files
-were staged together outside the repository as publication inputs before the
-separate public-release approval.
-
-Linux stayed inside one workflow job. The CI log preserved its exact digest
-and measurements but not a cross-job copy, so local staging rebuilt it from
-the same source commit and official Racket CS 9.3 installer. Two unchanged
-builds under the existing nonstandard `/tmp` Racket layout were byte-identical
-to each other but differed from CI only in `bin/attalambda`, which was 29 bytes
-larger. An isolated Ubuntu 24.04 build with the CI `/usr` Racket layout then
-reproduced the CI archive byte-for-byte and passed the digest-pinned no-Racket
-consumer again. That exact CI-matching archive is the staged Linux input.
-
-Linux contains 10 regular files and two runtime files, with observed system
-dependencies `ld-linux-x86-64.so.2`, `libc.so.6`, `libdl.so.2`, `libm.so.6`,
-`libpthread.so.0`, `librt.so.1`, and `libz.so.1`. Each macOS archive contains
-nine regular files and one Mach-O runtime file; both observed CoreFoundation,
-`libSystem`, `libiconv`, and `libncurses`. Windows contains nine regular files
-and observes `KERNEL32.dll`, `msvcrt.dll`, and `USER32.dll`.
-
-No identity-backed signing, detached signing, or notarization operation was
-performed. The Windows consumer explicitly reported Authenticode `NotSigned`.
-Direct inspection of the staged Mach-O bytes found the arm64 toolchain's
-automatic ad-hoc linker signature (`CS_ADHOC`, flags `0x00020002`, one
-CodeDirectory, no CMS identity-signature blob) and no `LC_CODE_SIGNATURE` on
-x86-64. No detached cryptographic signature accompanies an archive or the
-combined manifest.
-
-The transferred macOS arm64, macOS x86-64, and Windows workflow artifacts had
-IDs `9717803836`, `9717807355`, and `9717796683`. Their downloaded contents
-matched their one-entry manifests and the hashes above. Codex deleted those
-three exact IDs through the GitHub API; a follow-up query for run 33262922610
-returned `total_count: 0`. The ordinary two `always()` cleanup jobs are now
-restored. At the end of staging, no tag, GitHub Release, release asset,
-signing operation, public download, purchase, paid usage, or publication had
-yet been created or authorized.
-
-## Phase 29 publication record
-
-Kyle separately authorized the exact public release on 2026-08-29 after the
-source commit, five files, hashes, native evidence, signing state, limitations,
-account use, cost, and public consequences were presented literally. The
-unsigned annotated tag `v0.2.0` was created with annotation
-`AttaLambda 0.2.0` and pushed alone. Its public tag-object SHA is
-`5537cf8b4dc1db31f8855e10118729ac78bc0dd0`; it peels to exact tested source
-commit `42ff0a7810ebeced445ab23561433a2dc423e433`. The unauthenticated public tag
-API reports `verified: false`, reason `unsigned`, and no signature or signed
-payload. No tag-triggered GitHub Actions run exists.
-
-GitHub Release ID `379061612` was created first as a draft, titled exactly
-`AttaLambda 0.2.0`, associated with `v0.2.0`, marked non-prerelease, and
-manually given only these five assets:
-
-| Asset | Bytes | GitHub asset ID | SHA-256 |
+| Asset | Bytes | Asset ID | SHA-256 |
 | --- | ---: | ---: | --- |
 | `attalambda-0.2.0-linux-x86_64.tar.gz` | `13,728,716` | `535549598` | `86f980d696b45b42c251b78e6a66b9cd875f649217bfb09731cf6b47c66b00ac` |
 | `attalambda-0.2.0-macos-arm64.tar.gz` | `13,743,188` | `535549609` | `5791ca3c28717972409d0d3503e135f685bcb7011ec24e6e4f9e70c7e5426b2b` |
@@ -1080,296 +300,20 @@ manually given only these five assets:
 | `attalambda-0.2.0-windows-x86_64.zip` | `15,296,844` | `535549611` | `0ffcf7cd7218459efe1de1de87c7ff650328d01b16caa253deb6aa621188015a` |
 | `SHA256SUMS` | `410` | `535549605` | `7786bf553caac0087ab22f3636d546a1fe00f89a446611c1516cc58f411f6f7f` |
 
-Authenticated draft downloads matched all five staging files byte-for-byte.
-The verified draft was then published as the latest non-prerelease Release at
-<https://github.com/kserrec/attalambda/releases/tag/v0.2.0>. GitHub supplies
-its automatic source-code ZIP and tarball links in addition to the five
-manual assets; no other file was manually uploaded.
+All four consumers passed in [Actions run 33262922610](https://github.com/kserrec/attalambda/actions/runs/33262922610),
+and the public downloads matched the staged bytes. The macOS executables were
+unsigned/unnotarized for the normal downloaded-user path; a consumer Mac then
+showed a Gatekeeper malware-verification block. The Windows executable was
+Authenticode `NotSigned`, and its only consumer evidence came from Windows
+Server 2025 rather than a client system. Kyle therefore authorized withdrawing
+both macOS archives and the Windows archive.
 
-All five public asset URLs were then downloaded with an anonymous client.
-Their names and byte counts were exact, every entry in the public combined
-manifest verified, the manifest's own SHA-256 matched, and every downloaded
-file compared byte-for-byte with staging. The anonymous Linux archive also
-passed the complete digest-pinned Ubuntu 24.04 no-Racket consumer: no
-`racket` or `raco`, no external network other than loopback, exact archive and
-payload inventory, printed guide workflow, relocation, and final consumer
-acceptance all passed. Its observed startup measurements in that post-release
-run were 286 ms before and 295 ms after relocation.
-
-Unauthenticated public API and HTML checks confirmed the exact title, tag,
-published non-prerelease state, latest designation, five manual asset names,
-sizes, GitHub SHA-256 digests and URLs, release notes, checksum text, and
-signing warnings. The anonymous `/releases/latest` endpoint resolves to the
-release and returns HTTP 200. Publication used no identity-backed or detached
-signing, notarization, paid GitHub feature, purchase, or GitHub Actions run.
-No invalid-draft or failed-publication rollback was needed, and the tag was
-not deleted.
-
-## Phase 30 public-platform withdrawal record
-
-After publication, Kyle downloaded and launched an AttaLambda macOS artifact
-on a consumer Mac. Gatekeeper reported that it could not verify the program
-was free of malware and offered only moving it to Trash or dismissing the
-dialog. That is direct evidence that the unsigned, unnotarized public artifact
-failed the normal downloaded-user path. The native Phase 29 consumer had
-proved execution after a GitHub Actions artifact transfer; inspection of
-`tooling/test-macos-distribution.sh` confirms that it neither attached browser
-quarantine metadata nor performed a Gatekeeper assessment. Those two facts
-are compatible: executable behavior passed while public first-run acceptance
-was never tested.
-
-The Windows public path was withdrawn at the same time. Its exact final
-executable was already observed as Authenticode `NotSigned`, and the only
-demonstrated consumer was Windows Server 2025 rather than a client edition.
-Microsoft's current SmartScreen developer guidance states that an unsigned
-download receives the “Windows protected your PC” warning, requires the user
-to choose “Run anyway,” and can be made non-bypassable by enterprise policy:
-<https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/smartscreen-reputation>.
-Microsoft's Windows 11 Smart App Control guidance further states that when its
-cloud service cannot confidently establish safety, an unsigned app is treated
-as untrusted and blocked:
-<https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions>.
-No downloaded-user Windows client test had contradicted those documented
-paths.
-
-Kyle authorized updating the documentation and public Release to remove
-macOS, and to remove Windows if it presented the same issue, by saying:
-
-```text
-let's update our documentation and releases page to not include mac and if we think this will run into the same issue for windows, let's remove that too.
-```
-
-Before deletion, all three exact targets were resolved against the public API
-and byte-identical local recovery copies were reverified against their
-published SHA-256 values. Release ID `379061612` was then revised to present
-Linux x86-64 as its sole supported binary target; the revised Release body's
-exact bytes have SHA-256
-`c25dca80acc2d53564be8a88f211d925e0d5fb79ef67f1ea251fd8d7db204db5`. These
-exact assets were deleted:
-
-| Withdrawn asset | GitHub asset ID | SHA-256 |
-| --- | ---: | --- |
-| `attalambda-0.2.0-macos-arm64.tar.gz` | `535549609` | `5791ca3c28717972409d0d3503e135f685bcb7011ec24e6e4f9e70c7e5426b2b` |
-| `attalambda-0.2.0-macos-x86_64.tar.gz` | `535549602` | `72f56f4d95665a3ca802160175c4082ce42b08054a35b963a10b0597b9d91fdc` |
-| `attalambda-0.2.0-windows-x86_64.zip` | `535549611` | `0ffcf7cd7218459efe1de1de87c7ff650328d01b16caa253deb6aa621188015a` |
-
-The Release retains exact Linux asset ID `535549598`, unchanged SHA-256
-`86f980d696b45b42c251b78e6a66b9cd875f649217bfb09731cf6b47c66b00ac`,
-and exact original manifest asset ID `535549605`. The manifest remains 410
-bytes with SHA-256
-`7786bf553caac0087ab22f3636d546a1fe00f89a446611c1516cc58f411f6f7f`;
-its withdrawn-platform lines are an immutable record of the original release,
-not current availability. The tag, Release ID/title/latest status, source
-commit, GitHub-generated source archives, Linux binary bytes, internal
-builders/consumers, and legal notices were not replaced. Re-uploading a
-withdrawn asset requires a new explicit decision.
-
-The supported Linux path was then exercised manually from the public URLs in
-a fresh Ubuntu 24.04 Docker userspace on x86-64. The archive checksum reported
-`OK`; Racket was absent; `attalambda --version` printed `AttaLambda 0.2.0`; and
-the bundled hello program printed `Hello from AttaLambda.`. This is direct
-public-download evidence for the one retained target, not a broader Linux
-compatibility floor. No production or executable file changed in Phase 30.
-The focused distribution suite passed 207 assertions; the complete suite
-passed 4,755 assertions across all 32 test files, the unchanged expanded
-purity proof over 16 `core/` modules, and the zero-finding boundary/source
-inventory.
-
-## Approval record
-
-The original Phase 21 approval accepted the pre-rename `.atl`, `atl run`, and
-`#lang alone_the_lambdas` spellings alongside the completion and exit-status
-distinction, trusted-loader capability, version projection, native targets,
-unsandboxed real-host authority, and release gates. Phase 27 supersedes only
-those public names and the direct command shape; the other approved contracts
-remain in force.
-
-Kyle explicitly approved this design and authorized Phase 22 on 2026-08-27 by
-replying:
-
-```text
-Approve the Phase 21 standalone-distribution design.
-```
-
-Kyle explicitly approved moving the archive checksum out of the internal
-manifest on 2026-08-28 by replying:
-
-```text
-Approve the Phase 24 external checksum manifest correction.
-```
-
-Kyle explicitly approved the temporary Phase 25 GitHub Actions transfer on
-2026-08-28 by replying:
-
-```text
-Approve temporary public GitHub Actions artifact transfer and immediate deletion for Phase 25.
-```
-
-That approval permits only the two unpublished macOS development archives and
-their consumer harnesses to exist as workflow artifacts long enough for the
-separate native consumer jobs to finish. The workflow must delete both
-artifacts immediately afterward and set one-day retention only as a cleanup-
-failure fallback.
-
-Kyle explicitly approved the temporary Phase 26 GitHub Actions transfer on
-2026-08-28 by replying:
-
-```text
-Approve temporary public GitHub Actions artifact transfer and immediate deletion for Phase 26.
-```
-
-That approval permits only the one unpublished Windows x86-64 development
-archive, its external checksum, and its self-contained consumer harness to
-exist as a workflow artifact long enough for the separate Windows consumer
-job to finish. The workflow must delete that exact artifact immediately
-afterward and set one-day retention only as a cleanup-failure fallback.
-
-This approval does not authorize a public release, license selection, tag,
-upload, signing operation, or publication claim. Those later gates remain in
-force exactly as specified above; the one narrow CI-transfer upload is the
-only added authority.
-
-Kyle explicitly approved Apache License 2.0 for Alone the Lambdas and
-confirmed Kyle Serrecchia as the 2026 copyright owner on 2026-08-28 by
-replying:
-
-```text
-Approve Apache License 2.0 for Alone the Lambdas, with Kyle Serrecchia as the 2026 copyright owner. This authorizes adding and pushing the license for Phase 27, but does not authorize any binary release, Git tag, GitHub Release, artifact transfer, signing operation, or publication of release-candidate files.
-```
-
-That approval authorizes the root `LICENSE`, the `Apache-2.0` Racket package
-metadata, the copyright and approval records, and pushing those source changes
-to the existing repository. It does not approve the final bundled-runtime
-notices or authorize any release-candidate build, workflow artifact, tag,
-GitHub Release, signing operation, or binary publication. Those Phase 28 and
-Phase 29 gates remain in force.
-
-Kyle then selected `AttaLambda` as the public name, `attalambda` as the
-machine-facing and command name, `.attl` as the source extension, and direct
-`attalambda FILE.attl` execution without compatibility aliases. After that
-teaching and naming discussion, Kyle explicitly authorized implementation on
-2026-08-28 by replying:
-
-```text
-let's do the name change now
-```
-
-That authorization covers renaming the current source, package, collection,
-runner, examples, tooling, documentation, workflow names, and GitHub
-repository. It does not broaden the earlier license authorization into a
-binary release, Git tag, GitHub Release, release-candidate publication,
-signing operation, or cross-job artifact transfer. The temporary Phase 27
-transfer was therefore approved separately below.
-
-Kyle explicitly approved the temporary Phase 27 GitHub Actions transfer on
-2026-08-28 by replying:
-
-```text
-Approve temporary public GitHub Actions artifact transfer and immediate deletion for Phase 27.
-```
-
-This approval permits only the two renamed unpublished macOS development
-archives and one renamed unpublished Windows x86-64 development archive,
-their external checksums, and their self-contained consumer harnesses to exist
-as workflow artifacts long enough for the separate clean consumer jobs. The
-workflow must delete all three artifacts immediately afterward; one-day
-retention is only a cleanup-failure fallback. This approval does not authorize
-a release candidate, binary release, Git tag, GitHub Release, signing
-operation, or public download.
-
-For Phase 28, a read-only inventory of the pinned Racket CS 9.3 executable
-closure and native runtime inputs produced the complete proposed
-`THIRD_PARTY_NOTICES.md`. The reviewed file was 100,029 bytes, had SHA-256
-`1343f218ba484a79fbef498d4e8fb02e202763a19e46c5e610a8bfe900bcbefd`,
-and reproduced 22 pinned notice or license blocks exactly. Kyle approved only
-those exact notice bytes on 2026-08-29 by replying:
-
-```text
-Approve the exact bundled Racket CS 9.3 runtime notices presented for Phase 28.
-```
-
-Kyle then approved the Phase 28 repository, documentation, version, and four-
-target unpublished candidate scope by replying:
-
-```text
-Approve the Phase 28 implementation scope (docs restructure, VERSION → 0.2.0-rc.1, build/stage the four unpublished RC archives). This does not authorize a tag, GitHub Release, upload, or public download.
-```
-
-Finally, Kyle separately approved the only required upload boundary by
-replying:
-
-```text
-Approve the temporary Phase 28 GitHub Actions transfer of the two unpublished macOS RC archives and one unpublished Windows RC archive, their checksums, and their consumer harnesses, with one-day fallback retention and immediate deletion after testing.
-```
-
-That final approval applies only to the three named build-to-consumer workflow
-artifacts in `kserrec/attalambda`. It does not authorize a Git tag, GitHub
-Release, signing operation, public download, or publication. The Linux archive
-remains local to one job, and all three transferred artifacts must be deleted
-immediately after their consumer checks.
-
-For Phase 29, Kyle approved the exact final-version source, documentation,
-notice-heading, tooling, test, CI-staging, and four-target unpublished build
-scope on 2026-08-29 by replying:
-
-```text
-Approve Phase 29 implementation in kserrec/attalambda: change VERSION from 0.2.0-rc.1 to 0.2.0 and info.rkt from 0.1.901 to 0.2; update the current release documentation, tests, build and consumer tooling, and CI staging for final 0.2.0; change THIRD_PARTY_NOTICES.md.in only in its AttaLambda version heading, producing exactly 100,024 bytes with SHA-256 516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad while leaving every bundled legal term unchanged; create and stage the four final but unpublished native archives and one combined SHA256SUMS from one exact commit; and commit and push those source changes to public main. This does not authorize any cross-job GitHub Actions artifact transfer, Git tag, GitHub Release, signing operation, release-asset upload, public download, publication, purchase, or paid GitHub usage.
-```
-
-Kyle separately approved only the required Phase 29 build-to-consumer and
-local-staging transfer boundary by replying:
-
-```text
-Approve the temporary Phase 29 GitHub Actions transfer in the public kserrec/attalambda repository of the two final-but-unpublished macOS 0.2.0 archives and one final-but-unpublished Windows 0.2.0 archive, their one-entry checksums, and their self-contained consumer harnesses. After all three consumer tests pass, keep the artifacts only long enough for Codex to download and verify the exact tested bytes into local staging, then delete them immediately through the GitHub API; one-day retention is only the automatic fallback. Linux must remain within one job. This does not authorize paid GitHub usage, a Git tag, GitHub Release, signing operation, release-asset upload, public download claim, or publication.
-```
-
-Those two approvals permitted commits and pushes to public `main`, exactly one
-set of three temporary cross-job artifacts for the final staging run, local
-staging of the four verified archives and combined checksum manifest, and
-immediate API deletion after download. By themselves they granted no authority
-to create or push a tag, create a GitHub Release, sign anything, upload a
-release asset, call the files public downloads, spend money, or publish
-AttaLambda `0.2.0`.
-
-After the exact publication proposal was presented, Kyle separately approved
-the public release on 2026-08-29 by replying:
-
-```text
-Approve publishing AttaLambda 0.2.0 in the public kserrec/attalambda repository exactly as proposed: create
-  and push the unsigned annotated tag v0.2.0 at commit 42ff0a7810ebeced445ab23561433a2dc423e433 with
-  annotation AttaLambda 0.2.0; create the public latest non-prerelease GitHub Release titled AttaLambda 0.2.0;
-  manually upload only the four named native archives and SHA256SUMS with the listed hashes; accept GitHub’s
-  automatic source-code ZIP and tarball links; use no identity-backed or detached signing, notarization, paid
-  GitHub feature, purchase, or GitHub Actions run; verify the draft and every anonymous public download as
-  stated; delete only an invalid draft or return a failed public Release to draft; and never delete the tag
-  without new approval.
-```
-
-That approval authorized only the named unsigned annotated tag at the exact
-tested commit, the named latest non-prerelease public Release, the five exact
-manual assets, GitHub's automatic source links, and the stated verification
-and conditional rollback. It prohibited the listed signing, notarization,
-paid, purchase, and Actions operations and withheld authority to delete the
-tag. The publication record above confirms that this authority was exercised
-without invoking either rollback path.
-
-## AttaLambda 0.3.0 publication (2026-09-02)
-
-The second public release was built under the pinned Racket CS 9.3 toolchain
-in Docker (`racket/racket:9.3-full`) from a clean clone of release commit
-`1b51603671e87bcc524e2413491c94ad1ea7d763` (tag `v0.3.0`, annotated). The
-independent consumer harness passed in a fresh no-Racket Ubuntu 24.04
-container using only the transferred archive and manifest: checksum
-verification, the complete getting-started workflow, relocation, and
-loopback-only networking, with a 362 ms first startup. Linux x86-64 is the
-sole supported binary target, continuing the Phase 30 decision; no macOS or
-Windows asset was built for publication.
-
-| Asset | Bytes | SHA-256 |
-| --- | ---: | --- |
-| `attalambda-0.3.0-linux-x86_64.tar.gz` | `13,938,743` | `7adc7343720b0a1d6ed86af47059f031f571ab93649a314303c56d6b8a3d7870` |
-| `SHA256SUMS` | `103` | (single-entry manifest for the Linux archive) |
-
-Both public download URLs were re-downloaded fresh after publication; byte
-counts matched exactly and `sha256sum -c SHA256SUMS` printed OK. The archive
-holds 11 files totaling 59,742,960 unpacked bytes with 2 runtime files.
+Before deletion, recovery copies matched the published hashes. Release
+`379061612` now presents Linux x86-64 as its sole supported binary; its revised
+body has SHA-256
+`c25dca80acc2d53564be8a88f211d925e0d5fb79ef67f1ea251fd8d7db204db5`.
+The Linux asset and original combined manifest remain byte-identical. The
+manifest still lists the withdrawn files as an immutable record of the
+original release. Re-uploading any withdrawn asset requires a new explicit
+decision. The tag, source commit, Linux bytes, legal notices, and GitHub source
+archives were not changed.

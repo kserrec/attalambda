@@ -1,398 +1,142 @@
 # Architecture
 
-This document records both the target architecture and the verified current
-state. Phase 1 implements the lazy host shell, mechanical syntax, lambda pairs,
-and raw Boolean logic. Phase 2 adds the seven Church tags, the generic
-lambda-encoded typed-object shape, external observation, and a structural
-purity gate that rejects host computation and host data. Phase 3 adds explicit
-Michaelson-style Lists, strict bootstrap primitives, and raw recursive List
-algorithms. Phase 4 adds normalized binary Nat values, direct raw binary
-arithmetic and comparison, and the Nat-dependent List operations. Phase 5
-replaces provisional failures with structured Error roots and propagation
-frames. Phase 6 adds the single generalized curried runtime checker, its
-signature-driven Error absorbers and return policies, and migrates every
-eligible bootstrap List operation onto it. Phase 7 adds tagged Bool values,
-strict checker-backed Boolean operations, and the canonical lazy typed
-conditional. Phase 8 adds the strict checker-backed Nat API without changing
-the raw binary algorithms. Phase 9 adds lambda-encoded Result values, strict
-Result operations, raw binary long division, and safe typed `DIV`. Phase 10
-adds bounded binary Char values, strict construction, lambda-built constants,
-and a one-way host reader. Phase 11 adds Char-List-backed String values,
-recursive invariant validation, the initial strict String algorithms, and a
-one-way String reader. Phase 12 adds pure canonical String names to every
-strict Error boundary, renders structured diagnostics at the one-way reader
-boundary, hardens the production purity gate, and closes the milestone with
-criterion-level acceptance coverage. Phase 13 fixes the approved host request
-protocol, trust boundary, module split, and future purity classifications in a
-design document. Phase 14 implements the first approved slice: deterministic
-String-byte conversion, pure stdout request construction, one unary `host`,
-raw stdout output, and structural enforcement of the new boundary classes.
-Phase 15 extends that same closed boundary with pure `read-file` and
-`write-file` wrappers, UTF-8 path interpretation inside the host, byte-exact
-whole-file reads and replacement writes, and closed external-failure mapping.
-Phase 16 adds pure blocking TCP request wrappers, canonical Nat/host-integer
-conversion, a private monotonic listener/connection registry, complete writes,
-bounded reads, explicit close, and loopback-only integration coverage. Phase
-17 adds a pure minimal HTTP/1.1 request parser, lambda-computed response
-rendering, byte-accurate decimal content lengths, and focused protocol/purity
-coverage without extending the host. Phase 18 composes those message functions
-with the injected-host TCP wrappers into one-connection serving and a blocking
-sequential loop, with routing and status/body selection performed by an
-ordinary unary lambda handler.
-Phase 19 adds the single-collection `#lang attalambda` reader and
-facade, canonical public syntax, one-time real-host injection for the nine
-effect wrappers, mechanical currying of multi-operand source applications,
-and canonical Nat/String literal expansion. Phase 20 adds three exact runnable
-applications, executes all four specified effect families from a copied fresh
-installation, inventories every Racket source class, strengthens reader and
-support-code dependency rules, and closes the milestone evidence map without
-changing production semantics or host authority. Phase 21 fixes and approves
-the independent-distribution contract and proves Racket 9.3 can embed the
-dynamic language closure. Phase 22 adds one exact development runner, the
-canonical `.attl` application names, and a single version source now promoted
-to final `0.2.0`;
-the runner delegates to the existing reader/expander and remains outside every
-object-language dependency path. Phase 23 freezes AttaLambda-level launch diagnostics,
-strict UTF-8 preflight, source-position sanitization, and the distinction among
-launcher failure, completed language data, and requested host failure without
-changing the object language or its effect boundary. Phase 24 adds one
-deterministic Linux x86-64 build entry point, a self-contained Racket CS 9.3
-runtime tree, an external checksum manifest, provisional internal notices, and
-a locked-down no-Racket consumer/relocation proof without adding a production
-module or language capability. Phase 25 adds isolated native macOS x86_64 and
-arm64 builds, separate same-architecture no-Racket consumer jobs, Mach-O and
-system-library verification, and immediately deleted workflow-artifact
-transfer without changing the product's runtime authority.
+AttaLambda keeps ordinary production computation inside pure untyped lambda
+calculus. The three documents in
+[`docs/specifications/`](docs/specifications/README.md) define the language;
+this file explains how the current implementation is arranged.
 
 ## Computational boundary
 
-The object language is pure untyped lambda calculus:
+After mechanical expansion, object-language computation contains only:
 
 1. variables;
-2. exactly unary `lambda`;
+2. unary `lambda`;
 3. application.
 
-Every ordinary computationally meaningful production term must contain only
-those forms after mechanical macro expansion. Multi-argument functions are
-nested unary lambdas, and partial application is ordinary application. The
-single deliberate exception is the explicit unary `host` value in
-`runtime/host.rkt`; no other host-computation escape hatch exists.
+This rule covers `core/`, the request and HTTP computation in `effects/`, and
+the terms emitted by the frontend. Multiple arguments are nested unary
+lambdas, so partial application is ordinary application.
 
-Racket supplies the enclosing module system, lazy evaluation, syntactic sugar,
-readers, tests, development tooling, deterministic private conversion in
-`runtime/codec.rkt`, the approved effects in `runtime/host.rkt`, and the
-separately classified command/path/module-loading scaffolding in
-`runner/attalambda.rkt`. It must not decide ordinary object-language results or
-become an object-language representation.
+Racket provides modules, lazy evaluation, mechanical expansion, tests, and
+tooling. Two runtime files have narrower roles:
 
-> AttaLambda does not merely avoid using host libraries for major
-> algorithms. Its production computational terms are built exclusively from
-> unary lambda abstraction and application. Every multi-argument function is
-> represented by nested one-argument lambdas. Racket is used only to
-> host/evaluate the terms, provide mechanical syntactic sugar and module
-> tooling, test them, and observe completed values for humans. The explicitly
-> introduced unary `host` is the sole privileged boundary; no other
-> computational escape hatch exists.
+- [`runtime/codec.rkt`](runtime/codec.rkt) converts between validated lambda
+  representations and private Racket bytes, integers, lists, and exact
+  rationals. It performs no external effect and owns no mutable state.
+- [`runtime/host.rkt`](runtime/host.rkt) alone defines `host`. It may perform
+  the approved standard-output, file, blocking TCP, and explicit process-exit
+  operations and own the TCP handle registry.
 
-## Layers
+Only `runtime/host.rkt` performs the approved native effects, only the language
+facade imports that host, and only the host imports the codec. Readers can
+observe completed values for people and tests, but production never depends
+on them.
 
-| Layer | Responsibility |
-| --- | --- |
-| Host shell | Racket modules, `#lang lazy`, exports, test and reader plumbing |
-| Mechanical syntax | `def`, lambda-based `let`, and other expansion-only sugar |
-| Raw calculus | Pairs, raw Boolean selectors, tags, and untyped algorithms |
-| Typed objects | Uniform tag/payload representation and strict validation |
-| Public data | List, Rat, Unit, Byte, Option, Map, Error, Result, Char, and String |
-| Pure effects | Lambda request validation, protocol computation, and wrappers over an injected unary host |
-| Boundary codec | Exact private representation conversion; no operating-system effects |
-| Privileged host | Sole `host` export and operations approved through the current phase |
-| Public language | Canonical exports such as `lambda`, `def`, `let`, `if`, and `cons` |
-| Runner scaffolding | Exact command, path/header/UTF-8 validation, sanitized AttaLambda diagnostics, version display, and one existing-language module instantiation; no exports or object values |
-| Runnable applications | Public-language hello/stdout, isolated file round trip, and one-request ephemeral-loopback HTTP server |
-| Distribution tooling | Isolated native build, deterministic archive assembly, external checksum, and no-Racket consumer verification; never a production dependency |
-| Human boundary | Readers and test diagnostics; never object-language computation |
+## Where to start
 
-Dependencies point downward only. Typed operations may use raw operations; raw
-operations must not depend on typed wrappers. Readers may inspect values but
-production code must never depend on readers.
+Read only the row for the work you are doing:
 
-## Implemented foundation
+| Task | Start here | What follows |
+| --- | --- | --- |
+| Pure value or algorithm | the relevant file in [`core/`](core) | raw dependencies below it, then its strict wrapper |
+| Effect request or HTTP behavior | the relevant file in [`effects/`](effects) | `protocol.rkt` for request/Error data; no runtime import |
+| Native effect behavior | `dispatch-request` in [`runtime/host.rkt`](runtime/host.rkt) | one local decoder path and one `perform-*` function |
+| Representation conversion | the matching exported function in [`runtime/codec.rkt`](runtime/codec.rkt) | raw constructors/accessors imported from `core/` |
+| Source syntax or public exports | [`lang/expander.rkt`](lang/expander.rkt) | [`lang/reader.rkt`](lang/reader.rkt) and [`macros/`](macros) only as needed |
+| Command-line launch | `main` in [`runner/attalambda.rkt`](runner/attalambda.rkt) | `validate-source`, then `run-source` |
+| Human-readable observation | the matching file in [`readers/`](readers) | one-way conversion only |
+| Structural enforcement | [`tooling/check-purity.rkt`](tooling/check-purity.rkt) and [`tooling/check-boundaries.rkt`](tooling/check-boundaries.rkt) | focused rejection fixtures in `tests/` |
 
-The implemented dependency path is deliberately short. The lazy module shell
-sits under the mechanical macro layer. Pair and logic depend on that
-foundation; tags depend on raw logic; typed objects depend on pairs and tags.
-Fixed-point recursion ties canonical `NIL` and its canonical empty-List Error
-inside `core/errors.rkt`; Lists then depend on that lower representation knot.
-Readers are test-only, and no production module depends on them. Binary Nat
-depends on the raw List representation; `core/list-nat.rkt` sits above both
-modules so Nat-dependent List operations do not create a dependency cycle.
-The checker reads its List signatures through the lower object and pair
-representation instead of importing `core/lists.rkt`; this lets the ordinary
-typed List operations depend on the checker without a cycle. Typed logic sits
-above raw logic, objects, Lists, and the checker; this keeps its List-encoded
-signatures and strict wrappers out of the raw Boolean layer.
-`core/typed-rat.rkt` similarly sits above the private rationals, Lists,
-tags, objects, and the checker. It owns the entire public strict number
-surface while leaving every binary algorithm in `core/binary-nat.rkt` and
-every signed and rational algorithm in `core/int.rkt` and `core/rat.rkt` raw
-and reusable.
-`core/unit.rkt` defines the public Unit type: exactly one value, `UNIT`
-(tag 8), carrying one fixed internal payload. Successful stdout, file-write,
-TCP-write, and TCP-close acknowledgements are `Ok(UNIT)`, so `NIL` means
-only an actual empty List. There is no Unit predicate: the exact-tag checker
-validates Unit positionally, and no polymorphic mechanism exists to support
-one. `readers/unit.rkt` renders the value's type name for humans.
-`core/byte.rkt` defines public Byte (tag 9): exactly 256 valid values
-backed by private normalized binary magnitudes. `MAKE-BYTE` accepts a
-nonnegative whole Rat from 0 through 255 and rejects every other value as
-the InvalidByte Error (kind 16); `BYTE-VALUE` converts back to a whole Rat;
-`BYTE-EQ` through `BYTE-GTE` compare payload magnitudes and return Bool.
-Byte is data, not a second number type: ordinary Rat arithmetic rejects it
-through the unchanged exact-tag checker, and a byte sequence is `List Byte`
-with no separate Bytes type: `STRING-TO-BYTES` maps one Byte per Char, and
-`BYTES-TO-STRING` validates every element before converting, rejecting any
-non-Byte element as InvalidByte rather than assuming a List is a byte
-sequence. Since Step 37.3 file contents cross the host boundary as
-`List Byte`: `read-file` returns `Ok(List Byte)`, and `write-file` accepts a
-byte List validated purely before the request exists, with the codec's
-byte-list conversions doing only deterministic translation. Rebuilding a
-List object from a checker-unwrapped payload restores the one canonical
-`NIL` for the empty case, since the codec deliberately rejects any other
-terminator as forged. Since Step 37.4 network payloads are explicit byte
-Lists too: `tcp-read` returns `Ok(List Byte)` (EOF is the empty List),
-`tcp-write` accepts a purely validated `List Byte`, and the HTTP layer stays
-text-oriented by converting explicitly at the TCP boundary — received bytes
-become Chars one-to-one before parsing, and the rendered response String
-becomes bytes one-to-one before writing, so binary bodies survive exactly.
-`readers/byte.rkt` renders payloads as host integers
-one way.
-`core/option.rkt` defines public Option (tag 10) mirroring the Result
-shape: `SOME value` holds any non-Error object-language value (an Error
-argument bubbles rather than hiding inside Some) and `NONE` is the
-singleton absent form, distinct from failure, false, zero, NIL, and Unit.
-`IS-SOME` and `IS-NONE` are strict Bool checks, and `OPTION-CASE` is the
-lazy polymorphic eliminator: strict on its Option, selecting one branch
-without evaluating the other, exactly as `IF` treats its branches.
-`readers/option.rkt` renders the constructor name one way.
+Dependencies point toward the pure center:
 
-`core/map.rkt` defines persistent public Map (tag 11): a user-supplied pure
-key-equality function paired with a private object-language List of
-key/value Pairs — never a Racket collection or Racket equality. `MAKE-MAP`
-fixes the equality function exactly as supplied — probing an arbitrary
-function with a tag check is undefined under the closed strict convention,
-so the Bool contract is enforced at every comparison instead. `MAP-LOOKUP`
-returns Option with NONE for expected absence; `MAP-EMPTY?` and `MAP-SIZE`
-(a whole Rat) use the checker directly; `MAP-CONTAINS?` answers Bool;
-`MAP-SET` replaces a matched key in place with no duplicate entry or
-prepends an absent one; `MAP-REMOVE` of an absent key is an equivalent
-Map; and every update returns a new Map while the old one keeps its old
-answers. A comparison failure mid-walk becomes the whole answer rather
-than hiding inside a rebuilt List. The equality contract is
-`key -> key -> Bool`: an Error answer bubbles with the operation's frame,
-and any other non-Bool answer is a structured mismatch expecting BOOL.
-Mixed-strictness operations validate their Map argument manually, exactly
-as `IF` and `OPTION-CASE` handle polymorphic positions, because keys and
-values carry no tag contract. `readers/map.rkt` renders the entry count one
-way.
-`core/result.rkt` sits above Errors, Lists, objects, and the checker. The
-strict Rat layer depends on Result only for `DIV`, `EXP`, and `RECIP`, so
-Result itself remains independent of the number surface and available to
-later data types.
-`core/chars.rkt` sits above raw binary Nat, the tagged Nat layer, Errors,
-Lists, objects, and the checker. Its reader depends on Char and Nat
-observation, while no production module depends on that reader. `core/strings.rkt` sits above Char, List, raw
-List length, Errors, objects, and the checker. It reuses those raw layers
-directly, while `readers/string.rkt` remains outside the production dependency
-graph.
+```text
+macros <- core
+core <- effects <- lang
+core <- runtime/codec <- runtime/host <- lang
+effects/protocol <- runtime/host
+```
 
-`effects/protocol.rkt`, `effects/stdout.rkt`, `effects/files.rkt`,
-`effects/tcp.rkt`, `effects/http.rkt`, `effects/http-response.rkt`, and
-`effects/http-server.rkt` remain ordinary lambda computation. The host
-protocol validates
-canonical flat requests, exact arity, types, and TCP bounds before invoking
-its injected strict dispatcher; the wrapper modules construct only the closed
-stdout, whole-file, and six-operation blocking TCP request algebra. The HTTP
-message modules instead parse and render lambda Strings directly: the strict
-parser returns the origin-form target for exact GET/HTTP/1.1 requests with one
-Host field, while the separately analyzable renderer owns the four supported
-status phrases,
-`Content-Length`, `Connection: close`, CRLF framing, and body concatenation.
-These line and framing choices follow
-[RFC 9112](https://www.rfc-editor.org/rfc/rfc9112.html); methods, target forms,
-versions, bodies, pipelining, and statuses outside the deliberately stated
-subset return Result Err rather than expanding into a general HTTP framework.
-The server accepts a caller-owned listener handle, accumulates bounded TCP
-reads until the parser resolves a request, passes the target String to a unary
-handler, writes only a validated Ok response String, and closes every accepted
-connection. Its single-path handler factory compares targets and selects the
-explicit status/body branch in the lambda layer; `make-http-serve-one` handles
-one connection and `make-http-server` repeats successful connections
-sequentially until a Result Err or Error. The listener remains caller-owned so
-ephemeral bound-port discovery and explicit lifetime management stay visible.
-None imports `runtime/`. The trusted `runtime/codec.rkt` converts exact
-List/Char/String/Nat shapes to private immutable bytes and integers and
-constructs canonical response values without effects or mutation. Since
-Step 35.2 it also translates exact Racket rationals to canonical tagged Rat
-values and back: construction relies on Racket's already-reduced
-positive-denominator exact form so no object-language arithmetic runs, and
-decoding rejects wrong tags, unreduced parts, negative or non-1/1 zeros,
-zero denominators, and non-normalized bits. Inexact and non-real numbers
-are rejected before construction rather than approximated.
-`runtime/host.rkt` alone imports that codec and alone defines the privileged
-`host`; it is the direct producer export, and the standalone facade re-exports
-that same binding once. Its Phase 16 dispatcher writes and flushes raw bytes to the current
-stdout port, interprets path and network-name bytes as UTF-8, performs complete
-file reads and truncating replacement writes, and owns blocking TCP resources
-behind monotonically increasing Nat handles. Expected external failures become
-Result Err HostFailure values with closed codes, while malformed direct
-requests remain bare InvalidHostRequest Error values.
+The diagram shows module dependency, not authority. `effects/` receives the
+host as an ordinary unary argument; it never imports `runtime/`. The language
+facade is the single place that imports the real host and injects it into the
+ten public effect wrappers.
 
-Named Error frames would create a cycle if Errors depended on the full String
-module. `core/errors.rkt` therefore owns the raw List cell constructor
-`raw-cons` alongside `NIL`; `core/lists.rkt` re-exports it, and
-`core/function-names.rkt` builds its String constants from that constructor
-plus the lower object, tag, and raw-logic layers. The `define-function-name`
-macro translates an identifier spelling to UTF-8 bytes and generates one Char
-per byte using those pure constructors. Racket computes syntax during
-mechanical expansion; every generated runtime value is still a tagged String
-containing a proper List of tagged Chars limited to 0 through 255. Strict
-modules depend on these name constants, while Errors remain below String
-algorithms.
+## One host request
 
-`def` mechanically builds any requested arity as nested unary lambdas.
-`lambda-let` expands one binding into one unary-lambda application; the
-standalone facade exports that binding as canonical `let`. `raw-if` is an
-ordinary curried selector function, not a host conditional. The reader forces
-and formats raw Booleans only from outside production computation. The strict
-conditional remains internally named `typed-if`; `core/typed-logic.rkt` also
-exports that binding under canonical `if` without changing internal raw names.
+For a call such as `write-file`:
 
-`lang/reader.rkt` delegates ordinary Lisp reading to
-`syntax/module-reader` and selects `lang/expander.rkt`; there is no separate
-parser. The expander exposes only canonical language syntax, strict typed data
-operations, the pure HTTP API, the nine host-bound effect names, and the one
-explicit `host`. Its public `#%app` mechanically rewrites every multi-operand
-source call into nested unary applications, while public `lambda` accepts
-exactly one formal. Its `#%datum` consumes only exact nonnegative integers and
-source Strings at expansion time, generating canonical binary Nat or
-List-of-Char String construction with one Char per UTF-8 byte. No host number
-or host String becomes an object-language value. A custom module wrapper
-forces top-level effects but discards their lambda-encoded Results so Racket
-does not print host procedure representations. `info.rkt` supplies the
-single-collection package metadata used by fresh installs and declares the
-repository's approved `Apache-2.0` SPDX license identifier. Root `VERSION` is
-the sole product-version source; the current `0.3.0-dev` state projects
-mechanically to Racket package version `0.2.900` (a released `0.3.0` would
-project to `0.3`).
+1. `lang/expander.rkt` exposes the wrapper already bound to the one real
+   `host` value.
+2. `effects/files.rkt` checks the String path and proper `List Byte` payload
+   using lambda computation, then constructs a proper List request.
+3. The `host` value built by `make-host-bridge` in `effects/protocol.rkt`
+   applies its strict dispatcher only after pure request validation succeeds.
+4. `dispatch-request` in `runtime/host.rkt` decodes the operation and arguments
+   through `runtime/codec.rkt`, then calls `perform-write-file`.
+5. The performer does the replacement write and returns `Ok(UNIT)` through the
+   codec. Expected operating-system failure becomes `Result Err`; a malformed
+   direct request becomes a bare contract `Error`.
 
-`runner/attalambda.rkt` is host launch scaffolding, not an effect primitive. It
-accepts only direct `.attl` execution, `--help`, and `--version`; validates the one supplied path,
-exact `.attl` suffix, dotenv exclusions, final-entry symlink rule, resolved
-parent, regular-file metadata, exact declaration, and strict UTF-8 bytes; then
-invokes `dynamic-require` once on that source. Launcher failures use fixed
-AttaLambda-only stderr templates with the quoted original path and canonical reader
-position. Raw exception messages, resolved paths, stack details, and host
-procedure renderings never enter those templates. It exports nothing, imports
-no project module, observes no completed lambda value, and has no environment,
-process, directory-scan, network, namespace, evaluator, codec, or reader
-import. Its sole new Phase 23 import is standard-library `racket/port` for
-`port->bytes`; no package dependency was added.
+The other eight returning operations use the same route. Explicit exit uses
+the same request boundary but ends at `perform-exit`, without returning a
+Result. `runtime/host.rkt` keeps decoding next to each route and keeps resource
+acquisition, registration, cleanup, and failure mapping in the corresponding
+`perform-*` helpers. The
+exact request shapes, bounds, results, failure codes, byte rules, and lifecycle
+contract live once in
+[`docs/design/host-boundary.md`](docs/design/host-boundary.md).
 
-The four files under `examples/` import nothing and run only through that
-public language. `hello.attl` and `stdout.attl` each emit one String.
-`file-round-trip.attl` makes
-write-before-read sequencing explicit by inspecting the first Result; tests
-run it only in an empty temporary directory because `write-file` deliberately
-truncates its target. `http-server.attl` listens on loopback port zero, formats
-the returned bound Nat as decimal using public lambda operations, announces
-the exact URL, serves one request through `make-http-serve-one`, explicitly
-closes the caller-owned listener, and exits. No example adds a production
-module, primitive, wrapper, or authority.
+For `(exit status)`, the pure wrapper in `effects/exit.rkt` uses the generalized
+checker and raw Rat equality to accept only 0 or 1. Wrong types return
+TypeMismatch, other Rats return InvalidCount, and an incoming Error bubbles;
+none calls the host. The public `exit` name is a renamed private
+`language-exit` binding, with the real host injected once. The host defensively
+decodes a canonical whole Rat in range 0..1 and terminates with that exact
+status, without printing or returning `Ok UNIT`. Fake hosts may return normal
+values for tests. Pure code decides whether an Error or Result Err is fatal;
+neither the host nor runner derives a status from an arbitrary final value.
+Without explicit exit, normal completion remains status 0. Unselected exit
+branches stay lazy; performed exit prevents later effects.
 
-`tooling/build-linux-distribution.sh` is host-only build infrastructure. It
-requires full Racket CS 9.3, copies only nonsymlink production sources into a
-temporary package, installs that copy under an isolated `PLTUSERHOME`, invokes
-`raco exe ++lang attalambda` and `raco distribute`, and normalizes the
-resulting tar/gzip metadata. Its output directory must resolve outside the
-checkout, and it never uses the developer's Racket package registry. The
-archive contains only `bin/attalambda`, its private runtime, the canonical
-examples, the novice guide, a path-free build manifest, the repository
-`LICENSE`, and the exact approved bundled-runtime notices. Its final digest
-lives in a sibling `SHA256SUMS`, because a file inside an archive cannot
-authenticate the archive bytes that contain that file.
+## Incremental HTTP request reading
 
-`tooling/test-linux-distribution.sh` copies only the archive, checksum, and
-consumer harness across a temporary transfer boundary. A digest-pinned Ubuntu
-24.04 container runs as an unprivileged user with a read-only root, no
-`racket`/`raco`, no checkout or package install, and Docker networking disabled
-except its own loopback device. It verifies exact artifact inventory and
-output bytes; creates and runs a canonical source after packaging; proves an
-external same-named reader cannot replace the embedded language; performs
-stdout, isolated file, and one-request loopback HTTP effects; then moves the
-tree to a path with spaces and reruns it. This harness constrains the test, not
-the authority of an ordinary distributed AttaLambda process.
+`effects/http-server.rkt` keeps reversed accumulated characters, a running
+private binary Nat count, and at most three preceding characters. Each read
+converts, counts, and reverses only the new chunk, then places its reverse
+before the old accumulation without walking the old prefix. The running count
+enforces the unchanged 8192-byte cap before parsing.
 
-`tooling/build-macos-distribution.sh` is the corresponding native macOS build
-boundary for exact `macos-x86_64` and `macos-arm64` targets. It requires the
-matching native hardware and full Racket CS 9.3, uses the same copied-package
-and isolated-registry discipline, and emits one predictably named `.tar.gz`
-plus external `SHA256SUMS`. It rejects symlinks and unexpected layout,
-normalizes an empty `lib/` when `raco distribute` needs no separate support
-files, inventories every Mach-O file and architecture, accepts only relative
-or macOS system dynamic dependencies, strips nondeterministic archive
-metadata, and scans every payload file for private build paths.
+`raw-scan-http-header-end` in `effects/http.rkt` looks for `CR LF CR LF` in only
+that suffix plus the new chunk. Incomplete nonempty reads do not invoke the
+full parser. At completion or EOF, the server reconstructs once and invokes
+the existing semantic parser once; every byte of the completing chunk remains
+present, preserving trailing-data rejection. All of this is pure lambda
+computation. Grammar, errors, cleanup, and blocking reads are unchanged. The
+server still serves one connection at a time, with no timeout or nonblocking
+guarantee.
 
-`tooling/test-macos-distribution.sh` contains no repository dependency and is
-transferred alongside one archive and checksum to a separate native consumer
-job. That job performs no checkout and installs no Racket. The harness verifies
-the checksum before extraction, exact layout/manifest/permissions, native
-Mach-O architecture and dependencies, help/version bytes and clean stderr, a
-source created after packaging, hostile collection-path precedence,
-stdout/file/loopback HTTP effects, and a move between paths containing spaces.
-The workflow transfer is not a release channel: it uses commit-pinned GitHub
-upload/download actions and one-day fallback retention. For the one explicitly
-approved Phase 29 staging run, each tested artifact remained only until its
-exact bytes were downloaded to local staging; Codex then deleted the exact
-GitHub artifact through the API and verified its absence. The workflow's
-ordinary `always()` immediate-cleanup contract is restored for future runs.
+## Frontend, runner, and observation
 
-`tooling/build-windows-distribution.ps1` and
-`tooling/test-windows-distribution.ps1` apply the corresponding isolated
-Racket CS 9.3 contract to native Windows x86-64. The builder embeds required
-DLLs, emits one `bin/attalambda.exe`, records PE architecture, system-DLL, and
-Authenticode evidence, and creates a deterministic `.zip` with an external
-checksum. The no-checkout consumer validates safe extraction and the exact
-payload, runs the direct command grammar and all approved effects, then copies
-the tree from the runner's temporary drive to a path containing spaces on a
-different drive before repeating smoke checks. Its one explicitly approved
-Phase 29 artifact followed the same local-staging download, one-day fallback,
-and immediate API-deletion contract; ordinary cleanup is restored.
+[`lang/reader.rkt`](lang/reader.rkt) delegates Lisp reading to
+`syntax/module-reader`. [`lang/expander.rkt`](lang/expander.rkt) owns the public
+surface. Its application transformer curries source calls, its `lambda`
+transformer permits one parameter, and its datum transformer turns only exact
+Rat and String literals into canonical lambda terms. The two files in
+[`macros/`](macros) provide the smaller expansion machinery used by production
+modules. Their different lexical contexts are deliberate.
 
-The native Phase 24 through 26 measurements in the plan and distribution
-design belong to disposable pre-rename `atl`/`.atl` artifacts. Phase 27
-separately proved the renamed development archives. Phase 28 completed the
-same native isolation contract for the `0.2.0-rc.1` candidate, with the
-approved license/notices and novice guide replacing the transitional
-development payload. Phase 29 changed the delivery state to final `0.2.0`,
-updated the version-specific notice heading and release wording, and staged
-the exact native archives. A separate approval then authorized the unsigned
-annotated `v0.2.0` tag and public latest non-prerelease GitHub Release with
-only those four archives and `SHA256SUMS`; every public file was anonymously
-downloaded and matched staging byte-for-byte. All four native no-Racket
-consumers execute the printed download, checksum, extraction, version, hello,
-and custom-program workflow, and the anonymously downloaded Linux archive
-passed that full consumer again after publication. This changes delivery
-metadata and intended version output, not object-language computation or the
-host boundary.
+[`runner/attalambda.rkt`](runner/attalambda.rkt) is process scaffolding. It
+implements `attalambda FILE.attl`, `--help`, and `--version`; validates the
+source name, path policy, regular-file status, exact first line, and UTF-8; and
+loads the source once. It exports nothing, imports no project module, does not
+inspect a completed lambda value, and reports only fixed sanitized
+diagnostics. Its native exit calls remain limited to launcher, source-loading,
+and scaffolding failures; program-requested exit belongs only to the host.
 
-`core/tags.rkt` defines Church zero through six for Error, Bool, List, Nat,
-Result, Char, and String. The same tiny Church values may serve in separate
-metadata namespaces such as Error kinds and argument positions. Its private
-predecessor and subtraction terms exist only to implement `raw-tag-equal`;
-they are not a public arithmetic system. `core/objects.rkt` represents a typed
-object as a lambda pair of tag and payload. `raw-object-type`,
-`raw-object-value`, and `raw-is-type` operate only on canonical project
-objects, not arbitrary untyped lambda terms.
+Each file in [`readers/`](readers) turns one completed representation into a
+Racket value or display string. Readers may force and inspect values, but they
+perform no external effect, own no registry, and never enter a production
+dependency path.
 
 ## Representation contracts
 
@@ -471,8 +215,9 @@ fold callback receives the head followed by the folded tail.
 available. Length returns canonical raw Nat bits. Take and drop accept raw Nat
 bits first and a List second; taking beyond the end returns the complete List,
 while dropping beyond the end returns `NIL`. The strict wrappers now use the
-generalized checker. They accept tagged Nat and List values, bubble incoming
-Errors, and preserve the one remaining application after a bad first argument.
+generalized checker. `LEN` returns a tagged whole Rat; `TAKE` and `DROP` accept
+a nonnegative whole Rat count and a List. They bubble incoming Errors and
+preserve the one remaining application after a bad first argument.
 
 ### Natural numbers (private machinery)
 
@@ -624,8 +369,9 @@ Result until a caller explicitly unwraps and uses its Error payload.
 `core/chars.rkt` represents Char as a Char-tagged object containing normalized
 raw Nat bits rather than a nested Nat object. Its pure upper bound is computed
 as `(16 × 16) − 1` with raw binary operations. `MAKE-CHAR` uses the generalized
-checker for its Nat argument, returns Char for values 0 through 255, and returns
-the canonical InvalidChar Error above that range.
+checker for its Rat argument, requires a nonnegative whole value, returns Char
+for values 0 through 255, and returns the canonical InvalidChar Error above
+that range.
 
 `CHAR-EQ`, `CHAR-LT`, `CHAR-LTE`, `CHAR-GT`, and `CHAR-GTE` use two-Char
 signatures through the same checker. They reuse raw binary Nat comparisons on
@@ -651,7 +397,7 @@ non-Char element returns the canonical InvalidString Error.
 `STRING-HEAD`, `STRING-TAIL`, `STRING-PREFIX?`, and `STRING-CONTAINS?` all use
 the generalized checker. The raw algorithms traverse List structure and
 compare Char binary payloads directly. Length reuses the canonical raw binary
-List counter and returns Nat. Head returns Char; tail returns String; either
+List counter and returns a whole Rat. Head returns Char; tail returns String; either
 partial operation returns EmptyList Error on the empty String. Prefix and
 contains take the searched String first and the candidate prefix or substring
 second; an empty candidate succeeds.
@@ -706,307 +452,42 @@ boundaries through renaming and selective export.
 
 ## Repository layout
 
-```text
-macros/
-  lazy-with-macros.rkt
-  macros.rkt
-core/
-  pair.rkt
-  logic.rkt
-  tags.rkt
-  objects.rkt
-  fix.rkt
-  errors.rkt
-  function-names.rkt
-  lists.rkt
-  binary-nat.rkt
-  int.rkt
-  rat.rkt
-  typed-rat.rkt
-  unit.rkt
-  byte.rkt
-  option.rkt
-  map.rkt
-  result.rkt
-  chars.rkt
-  list-nat.rkt
-  typecheck.rkt
-  typed-logic.rkt
-  strings.rkt
-effects/
-  protocol.rkt
-  stdout.rkt
-  files.rkt
-  tcp.rkt
-  http.rkt
-  http-response.rkt
-  http-server.rkt
-runtime/
-  codec.rkt
-  host.rkt
-lang/
-  reader.rkt
-  expander.rkt
-runner/
-  attalambda.rkt
-readers/
-  raw-boolean.rkt
-  bool.rkt
-  type-tag.rkt
-  list.rkt
-  nat.rkt
-  int.rkt
-  rat.rkt
-  unit.rkt
-  byte.rkt
-  option.rkt
-  map.rkt
-  char.rkt
-  string.rkt
-  error.rkt
-examples/
-  hello.attl
-  stdout.attl
-  file-round-trip.attl
-  http-server.attl
-distribution/
-  GETTING_STARTED.md.in
-  THIRD_PARTY_NOTICES.md.in
-  UNPUBLISHED-DEVELOPMENT-ARTIFACT.txt  historical pre-RC input, not packaged
-tests/
-tooling/
-  build-linux-distribution.sh
-  build-macos-distribution.sh
-  check-purity.rkt
-  check-boundaries.rkt
-  test-linux-distribution.sh
-  test-macos-distribution.sh
-VERSION
-info.rkt
-run-all-tests.sh
-```
+| Path | Responsibility |
+| --- | --- |
+| [`macros/`](macros) | Mechanical expansion used by production modules. |
+| [`core/`](core) | Pure representations, raw algorithms, and strict typed operations. |
+| [`effects/`](effects) | Pure requests, wrappers, HTTP messages, routing, and sequential serving. |
+| [`runtime/`](runtime) | Deterministic conversion and the sole privileged host. |
+| [`lang/`](lang) | The public `#lang attalambda` reader and expander. |
+| [`runner/`](runner) | The non-exporting command-line loader. |
+| [`readers/`](readers) | One-way observation outside production computation. |
+| [`examples/`](examples) | Programs using only the public language. |
+| [`tests/`](tests) | Behavioral and adversarial verification. |
+| [`tooling/`](tooling) | Structural gates and distribution build/consumer scripts. |
+| [`distribution/`](distribution) | Text and notices placed in standalone archives. |
 
-Sixteen zero-exception production modules remain under `core/`. The completed
-milestone has seven pure effect modules, two separately pinned mechanical
-macro modules, two separately classified runtime boundary modules, the exact
-reader/expander pair, pinned package metadata, eight one-way value readers,
-one exact non-exporting runner, four public-language applications, and
-separately classified tests/tooling. All 80 Racket and `.attl` sources are
-inventoried. New abstraction layers require a concrete need.
+`VERSION` is the single product-version source. `info.rkt` contains the Racket
+package metadata. New source locations fail the boundary inventory until they
+receive an explicit class.
 
 ## Verification boundary
 
-The test suite checks macro currying and hygiene, pair selection, every raw
-Boolean truth-table row, and lazy non-evaluation of rejected pair fields and
-`raw-if` branches. It also proves all 49 pairwise tag comparisons, every tag
-and payload round trip, object/accessor currying, and accessor laziness. The
-List suite covers NIL identity, proper tails, nested traversal, strict
-failures, Error bubbling, laziness, and every implemented raw helper. Binary
-Nat tests cover normalization, the typed constants, carries, borrows,
-saturating subtraction, multiplication, long division, quotient laws,
-comparisons, larger bit widths, currying, and applicable laziness.
-Nat-dependent List tests cover length, take, drop, boundary counts, proper
-tails, strict failures, Error absorption, currying, and lazy base cases.
-Structured Error tests cover every kind, root
-metadata, the `NIL`/empty-Error knot, frame order, result frames, nested root
-preservation, unframed Error-as-data pass-through, canonical function-name
-Strings, List failures, currying, and lazy field access. The Error reader
-suite exercises the 43 named strict boundaries of the completed core
-milestones, every raw-failure boundary's result frame, every rendered type
-tag, every current root kind, and nested causal output; the Milestone 4
-boundaries (Byte, Option, Map, and the Rat family) have their rendered
-frames pinned in their own type suites.
-The generalized
-checker suite covers lambda List signatures and zero-, one-, two-, three-, and
-five-argument functions; valid partial application; every five-argument
-mismatch position; incoming Error framing; raw and already-typed return
-policies; exact remaining-arity absorption; and ignored-argument laziness. The
-typed-logic suite covers both tagged Bool constants, every strict operation
-truth-table row, mismatch and incoming-Error propagation at each applicable
-position, curried shape, typed `IS-NIL`, polymorphic branch results, canonical
-exports, and divergent unselected branches. The typed Nat suite covers all
-constants and public operations, representative large values, arithmetic and
-comparison semantics, every applicable mismatch and incoming-Error position,
-root preservation, exact absorber arity, ignored-argument laziness, currying,
-and canonical exports. The Result suite covers Ok and Err representation,
-strict constructors and accessors, wrong-variant unwrap failures, Error
-encapsulation, mismatch and incoming Error behavior, safe division results, quotient laws, exact absorber arity,
-zero-divisor laziness, explicit post-unwrap propagation, currying, and public
-exports. The Char suite covers every required constant, normalized raw-bit
-payloads, 0 and 255 acceptance, 256 rejection, InvalidChar roots, mismatch and
-incoming-Error behavior, reader output and fallbacks, currying, and reader
-isolation. The String suite covers representation, recursive Char validation,
-InvalidString roots, raw and strict operations, canonical binary length,
-empty partial-operation errors, List/Char interaction, prefix and substring
-boundaries, mismatch and incoming-Error propagation, exact binary-operation
-absorbers, laziness, currying, and reader output. The milestone acceptance
-suite composes Bool, List, Nat, Result, Char, String, and Error behavior in one
-strict typed flow and runs the same structural scan over the complete core.
+`tooling/check-purity.rkt` expands every `core/` and `effects/` module and
+accepts only the trusted shapes of unary lambda and unary application. It also
+checks production imports, exports, names, and module forms. The macro shell is
+the trusted expansion base.
 
-The structural purity tool judges what Racket compiles. It reads each of the
-29 production modules — the complete core and the complete effects layer —
-with its source intact, expands it in a fresh namespace
-exactly as `raco make` would, and walks the fully expanded module. A reference
-term, `(lambda (f) (lambda (x) (f x)))`, is expanded under the same trusted
-shell so that Lazy Racket's own encodings of a unary `lambda` and a unary
-application become the only two admissible expression templates; every
-production lambda and application must be alpha-equivalent to one of them,
-and every identifier must be lambda-bound, defined in the module, or imported
-from a project module that passes the same scan. The tool pins the shell file
-itself, restricts imports to phase-0 project modules (same directory, or one
-sibling directory away and still resolving inside the repository — never a
-sibling spelling into `macros/`), restricts exports to
-plain or renamed project bindings, and rejects host forms, host literals,
-multi-argument or zero-argument applications, strict kernel lambdas,
-compile-time definitions, submodules, module-level expressions, and the
-reserved and arity-specific names. Because the scan sees the same expansion
-the compiler produces, a macro cannot hand the checker a different term than
-the compiler by inspecting its input. The two files under `macros/` and the
-Racket installation are the trusted base: `macros.rkt` is judged only through
-what its macros expand to, and, like `raco make`, the scan runs the read-time
-and compile-time code of the modules it examines rather than sandboxing them.
-The purity gate therefore trusts macro semantics. The separate boundary gate
-pins both macro paths, their languages, imports, exports, and source
-vocabulary; rejects operating-system, process, environment, dynamic-loading,
-FFI, and mutation capabilities there; rejects additional macro modules; and
-admits only the exact reader, expander, and package metadata. The
-expander's imports, exports, runtime wrapper definitions, transformer/helper
-set, and source vocabulary are closed; only it may import and re-export the
-production `host`. A contributor who can edit both a
-trusted file and its checker remains outside this accidental-impurity model.
-Focused tests pin each boundary. The
-complete evidence map is
-[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
+`tooling/check-boundaries.rkt` inventories every Racket and `.attl` source and
+enforces the roles described above: one host producer, one production codec
+importer, closed frontend and runner surfaces, effect-free readers, no upward
+production dependency, and no unknown source location. Its rules include
+closed imports and vocabularies so renamed or implicit host capabilities do not
+slip through a shorter blacklist.
 
-The separate boundary gate allowlists every effect import and identifier,
-rejects non-unary effect source forms, admits no codec I/O, mutation, registry,
-reader, or runtime dependency, pins the host's imports and sole export, sees
-through classified require wrappers, fails closed on unclassified wrappers,
-authorizes imports before discovering their exports, validates every component
-of the project root and each production path before discovery, rejects
-symlinks without traversing their targets, and rejects every second codec
-importer, host importer, filesystem/TCP importer, or `host` definition/export.
-It also inventories every Racket or `.attl` source, rejects unknown locations,
-pins the root/package/CLI version projection and the one exact runner, pins
-its quoted diagnostic formatter and one strict UTF-8 preflight, rejects runner
-exports, extra loader modules, altered input/loader targets, raw diagnostic
-rendering, and process/environment/evaluator capabilities; constrains readers
-to an exact effect-free observation vocabulary with core/reader imports;
-rejects every
-production import of readers/tests/tooling/applications/runner, admits normal
-host authority only in the test/tooling support classes, and requires the
-exact four `.attl` examples to use the public standalone language. Dedicated
-rejection fixtures prove each new direction and the host-exclusive primitive
-vocabulary.
-Codec tests cover all 256 byte values, canonical and malformed String and Nat
-representations, private copying, acknowledgements, and Err encoding. Stdout
-tests prove exact fake-host
-requests, strict argument rejection, Result propagation, and force-once
-laziness. Real-host tests prove byte-exact output and flushing completion,
-malformed request rejection before effects, canonical success, stable failure
-mapping, unselected-branch laziness, and cached forcing. File-wrapper tests
-prove exact request shapes, strict curried contracts, early-Error absorption,
-fake-host isolation, and force-once dispatch. Isolated real-file tests prove
-empty and arbitrary-byte round trips, relative and absolute UTF-8 paths,
-truncating replacement, symlink preservation without delete authority,
-cleanup, cached writes, and the approved missing, permission, invalid-text,
-invalid-path, resource, timeout, and fallback codes.
-TCP wrapper tests prove all six exact requests, strict curried contracts,
-early-Error absorption, fake-host isolation, branch laziness, unchanged Result
-propagation, and force-once dispatch. Loopback-only real-host tests prove
-ephemeral listen-port discovery; monotonic nonreused listener and connection
-handles; blocking, bounded, and fragmented reads; complete full-duplex binary
-writes; valid empty writes; EOF; wrong, fabricated, and stale handles; closed
-failure codes; Racket custodian closure; and explicit cleanup. Production TCP
-remains blocking and contains no thread or async surface; concurrency appears
-only in the test harness where a peer must act during a blocking call.
-HTTP message tests prove incremental incomplete Results across split CRLF
-boundaries; exact GET, origin-form, HTTP/1.1, header, and case-insensitive Host
-validation; distinct malformed and unsupported Results; strict contract Error
-behavior; four fixed status lines; empty, text, and arbitrary-byte bodies;
-single- and multi-digit decimal content lengths; connection-close framing; and
-deterministic byte output. The separate boundary suite proves that host String,
-regex, arithmetic, and HTTP-library helpers remain unavailable to this pure
-module class. HTTP server tests add exact TCP-only fake traces across success,
-fragmentation, failures, cleanup, and two serial connections. A test-side
-external HTTP client reaches the real loopback listener and receives the
-lambda handler's selected response; production imports no HTTP client or
-threading facility.
-The standalone-language suite copies and installs the package under an
-isolated Racket user home, then runs the specification's canonical shape,
-curried definitions and applications, unary `lambda`, pure `let`, divergent
-unselected branches, Nat/String literals, and exact UTF-8 stdout. Test-only
-namespace observation sends literal values through the codec to prove
-canonical representations. Unsupported Racket datum families, raw and typed
-implementation names, underscore workarounds, and ordinary Racket forms are
-all rejected during expansion.
-
-The second-milestone acceptance suite reuses the same dotenv-excluding,
-symlink-rejecting copied-package installer. It runs the exact three effect
-applications outside the installed collection through the copied Phase 22
-runner: exact stdout bytes; a
-write/read byte round trip in an empty temporary directory; and a one-request
-HTTP server on an ephemeral loopback port reached by a test-side external
-client. The server test checks its announced URL, status, headers, body,
-process exit, empty stderr, and listener cleanup. Together with the focused
-TCP lifecycle suites and the zero-finding boundary inventory, this covers the
-specified `stdout`, `read-file`, `write-file`, and TCP effect families while
-retaining the one-bridge proof.
-
-The runner suite uses that same copied-package installation for focused exact
-checks. It proves help/version output, command misuse, all three version states,
-validation precedence, exact lowercase extension and declaration terminators,
-strict source encoding, supplied and resolved-parent dotenv rejection, final
-symlink rejection, missing/nonregular/unreadable distinctions, paths with
-spaces and non-ASCII characters, and the checked-in hello program. Its
-diagnostic cases pin byte-exact status-64/65/66/70 stderr; preserve only the
-original relative source spelling and reader line/column; distinguish reader
-syntax, unsupported datums, unbound names, and wrong public names; and prove a
-deliberately injected internal exception cannot expose raw detail. Separate
-successful runs prove ordinary contract Error, pure Result Err, and real-host
-Result Err values all remain unobserved completed language data. The
-structural suite independently proves the runner is one non-exporting loader
-rather than a parser, evaluator, codec, effect bridge, or object-language
-dependency.
-
-The Linux distribution suite separately checks the build and transfer
-boundary. Phase 24 first produced byte-identical development archives from
-two isolated builds under different temporary paths. The current consumer
-harness verifies the external SHA-256 before extraction and runs from only the
-transferred files in a pinned Ubuntu 24.04 image with no Racket command. It
-checks the exact logical layout and manifest inventory, clean stderr and exact
-stdout bytes, a source created after packaging, hostile collection-path
-precedence, isolated file replacement/readback, loopback HTTP with external
-networking disabled, and execution after relocation.
-
-The macOS distribution suite applies that contract independently on native
-x86_64 and arm64 runners, then crosses a workflow-job boundary to consumers
-with neither a checkout nor Racket commands. Windows uses the corresponding
-native PowerShell builder and an independent no-checkout, no-Racket consumer
-with different-drive relocation. Final-but-unpublished commit `42ff0a7`
-passed all four native paths in GitHub Actions run 33262922610 on Ubuntu
-24.04, macOS 15.7.9 x86-64, macOS 15.7.7 arm64, and Windows Server 2025
-10.0.26100. Every consumer reported `guide_workflow=passed`; Codex downloaded
-and verified the three approved transfers, deleted their exact artifact IDs,
-and confirmed the run's artifact API returned zero. Ordinary `always()`
-cleanup is restored. Those exact systems are demonstrated observations, not
-minimum-version or public-release claims.
-
-That Phase 27 completion suite passed 4,751 assertions across 32 test files
-with the then-16-module expanded core proof and a zero-finding inventory of
-all 80 sources. The current Milestone 4 suite passes 12,297 assertions across
-38 test files, the expanded purity proof covers all 29 core and effects
-modules, and the boundary inventory of every source reports zero findings.
-
-## Completed milestone boundary
-
-The completed core still contains no `host` form. Phases 13 through 20 in
-[PLAN.md](PLAN.md) approved and implemented exactly one explicit boundary plus
-ordinary lambda wrappers for stdout, whole-file access, blocking TCP, and a
-pure HTTP message and sequential-server layer, followed by the standalone
-language surface and runnable applications. The final acceptance sweep changed
-no production semantic, representation, operation, or authority. The approved
-protocol and its full process-level filesystem/network authority are recorded
-in [docs/design/host-boundary.md](docs/design/host-boundary.md); the complete
-claim-to-test and one-bridge evidence maps are recorded in
-[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
+Focused suites exercise representations, strict typing, errors, laziness,
+request precedence, codec canonicality, native failure mapping, TCP cleanup,
+frontend hygiene, runner diagnostics, and hostile boundary mutations. Real
+file tests use temporary directories and real network tests use ephemeral
+loopback ports. `./run-all-tests.sh` runs every behavioral suite followed by
+both structural gates. [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md) maps the
+released promises to their evidence.

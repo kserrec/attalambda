@@ -566,3 +566,32 @@ The purity checker and structural boundary gates must classify and scan
 every new production module under these same rules, and the repository must
 fail if a public or production typed Nat surface is reintroduced after the
 public switch.
+
+---
+
+# Explicit Exit Amendment (2026-09-05)
+
+This amendment supplements the main specification's Explicit Exit Amendment.
+It overrides earlier sections of this document only to permit explicit
+process termination through the existing sole host boundary. No other purity
+rule or classified module role is relaxed.
+
+Exit argument typing, exact Rat 0/1 validation, Error construction and
+propagation, request construction, and the decision to call exit are all
+object-language computation. After macro expansion they must contain only
+variables, unary lambda abstraction, and application. The pure wrapper may
+apply only its injected unary host argument for the external effect.
+
+Only `runtime/host.rkt` may carry out program-requested process exit. The
+codec remains a deterministic conversion exception and may not terminate
+processes or decide whether a program succeeded. Host defensive validation
+only checks the decoded canonical status; it never chooses a status from an
+Error, Result, or arbitrary final lambda value. Runner-native exit remains
+limited to launcher/source/scaffolding failures. Native exit is forbidden
+in pure effects, codec, readers, and other production modules.
+
+HTTP delimiter detection, suffix tracking, counting, accumulation, reversal,
+and parsing remain pure unary lambda computation under the existing rules.
+Neither the HTTP change nor explicit exit permits native Racket arithmetic,
+conditionals, strings, buffers, collections, or mutation in object-language
+computation. Both architectural checkers must enforce these boundaries.

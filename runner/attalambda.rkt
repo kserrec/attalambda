@@ -39,7 +39,7 @@
   (datum->syntax stx
                  (bytes->string/utf-8 (cadr matched))))
 
-(define (stop status source line column reason)
+(define (stop status source reason [line #f] [column #f])
   (cond
     [(and source line column)
      (eprintf "AttaLambda: ~s:~a:~a: ~a\n"
@@ -116,49 +116,49 @@
   (with-handlers
       ([exn:fail?
         (lambda (failure)
-          (stop unavailable-source-status source-name #f #f
+          (stop unavailable-source-status source-name
                 "source path could not be inspected"))])
     (define supplied-path (string->path source-name))
     (when (dotenv-path? supplied-path)
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "refused source path because dotenv files are never read"))
     (unless (equal? (path-get-extension supplied-path) #".attl")
-      (stop invalid-source-status source-name #f #f
+      (stop invalid-source-status source-name
             "source file name must end in lowercase .attl"))
     (define complete-path (path->complete-path supplied-path))
     (when (link-exists? complete-path)
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "refused symbolic-link source; choose a regular .attl file"))
     (define-values (parent name directory?)
       (split-path complete-path))
     (define resolved-parent (resolve-parent-path parent))
     (unless resolved-parent
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "source path could not be inspected"))
     (when (dotenv-path? resolved-parent)
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "refused source path because dotenv files are never read"))
     (define resolved-source (build-path resolved-parent name))
     (unless (or (file-exists? resolved-source)
                 (directory-exists? resolved-source))
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "source file was not found"))
     (unless (regular-file? resolved-source)
-      (stop unavailable-source-status source-name #f #f
+      (stop unavailable-source-status source-name
             "source path is not a regular file"))
     (define preflight-result
       (with-handlers
         ([exn:fail?
           (lambda (failure)
-            (stop unavailable-source-status source-name #f #f
+            (stop unavailable-source-status source-name
                   "source file could not be read"))])
         (source-preflight-result resolved-source)))
     (cond
       [(eq? preflight-result 'invalid-declaration)
-       (stop invalid-source-status source-name #f #f
+       (stop invalid-source-status source-name
              "line 1 must be exactly #lang attalambda")]
       [(eq? preflight-result 'invalid-encoding)
-       (stop invalid-source-status source-name #f #f
+       (stop invalid-source-status source-name
              "source is not valid UTF-8")])
     supplied-path))
 
@@ -180,7 +180,7 @@
     [(and expression (identifier? expression))
      (format "unknown AttaLambda name: ~s" (syntax-e expression))]
     [(datum-failure-expression? expression)
-     "unsupported literal; only nonnegative Nat and String literals are supported"]
+     "unsupported literal; only exact Rat and String literals are supported"]
     [else
      "source has invalid syntax"]))
 
@@ -202,31 +202,31 @@
           (define location
             (and (pair? locations) (car locations)))
           (stop invalid-source-status source-name
+                "source could not be read; check delimiters and UTF-8 encoding"
                 (and location (srcloc-line location))
-                (and location (srcloc-column location))
-                "source could not be read; check delimiters and UTF-8 encoding"))]
+                (and location (srcloc-column location))))]
        [exn:fail:syntax?
         (lambda (failure)
           (define expression
             (syntax-failure-expression failure))
           (stop invalid-source-status source-name
+                (syntax-failure-reason expression)
                 (and expression (syntax-line expression))
-                (and expression (syntax-column expression))
-                (syntax-failure-reason expression)))]
+                (and expression (syntax-column expression))))]
        [exn:fail:filesystem:missing-module?
         (lambda (failure)
           (if (requested-source-missing? failure source-path)
-              (stop unavailable-source-status source-name #f #f
+              (stop unavailable-source-status source-name
                     "source file was not found")
-              (stop unexpected-failure-status source-name #f #f
+              (stop unexpected-failure-status source-name
                     "unexpected launcher failure; verify the AttaLambda installation")))]
        [exn:fail:filesystem?
         (lambda (failure)
-          (stop unavailable-source-status source-name #f #f
+          (stop unavailable-source-status source-name
                 "source file could not be read"))]
        [exn:fail?
         (lambda (failure)
-          (stop unexpected-failure-status source-name #f #f
+          (stop unexpected-failure-status source-name
                 "unexpected launcher failure; verify the AttaLambda installation"))])
     (dynamic-require source-path #f)))
 
@@ -245,7 +245,7 @@
           (not (regexp-match? #px"^-" (car arguments))))
      (run-source (car arguments))]
     [else
-     (stop command-misuse-status #f #f #f
+     (stop command-misuse-status #f
            "expected attalambda FILE.attl, attalambda --help, or attalambda --version")]))
 
 (main)

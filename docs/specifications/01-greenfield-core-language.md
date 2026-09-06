@@ -2316,3 +2316,42 @@ INVALID-BYTE         contract Error from MAKE-BYTE outside 0..255
 `DIVIDE-BY-ZERO` is reused for `DIV` by zero, `RECIP` of zero, and zero
 raised to a negative exponent. A zero Rat denominator is an internal
 invariant failure, not a public error value.
+
+---
+
+# Explicit Exit Amendment (2026-09-05)
+
+This amendment adds explicit program completion to the existing effects
+boundary. Where it conflicts with earlier sections of this document,
+including the Milestone 4 Amendment, this amendment wins only for the exit
+contract below. All other contracts remain in force.
+
+The public unary effect is `(exit status)`. Its argument must be a Rat whose
+value is exactly 0 or 1. The existing generalized type checker returns an
+ordinary TypeMismatch Error for a non-Rat argument and bubbles an incoming
+Error with the normal propagation frame. Any other Rat, including negative
+values, 2, and 1/2, produces the existing InvalidCount Error. Neither failure
+calls the host.
+
+Pure AttaLambda validates the status and constructs the ordinary List request
+containing the String `"exit"` and the Rat status. This adds a tenth operation
+to the closed host protocol. The real host uses the existing deterministic
+codec to decode a canonical whole Rat, defensively requires native integer
+0 or 1, and performs process termination with that operating-system status.
+Successful real exit does not return, does not return `Ok UNIT`, and prints
+nothing automatically. An injected fake host may return normally for tests;
+the wrapper preserves its result and ordinary lazy evaluation behavior.
+
+Status 0 means successful completion; status 1 means unsuccessful completion.
+Pure AttaLambda decides whether a condition is fatal. Error and Result Err
+remain ordinary values: neither the host nor the runner inspects an arbitrary
+final value or automatically maps an Error kind or Result to an exit status.
+A program that never calls exit retains normal status-0 completion. An exit
+in an unselected branch remains unforced; a performed exit prevents later
+program effects.
+
+The runner may continue using native exit for launcher, source-loading, and
+scaffolding failures. Only `runtime/host.rkt` performs explicit
+AttaLambda-program-requested process termination. This amendment introduces
+no other exit codes, automatic Error output, stderr effect, process spawning,
+signals, or exception-style object-language errors.

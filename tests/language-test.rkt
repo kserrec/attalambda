@@ -109,6 +109,24 @@ PROGRAM
                   20)
      #"lazy")
 
+    ;; Public exit is an ordinary unary value, so a definition can alias it.
+    ;; Invalid Rat statuses remain ordinary Errors and do not call native exit.
+    (for ([case (in-list
+                 '(("exit-alias.rkt"
+                    "(def quit = exit)\n(quit 0)\n(stdout \"after\")\n"
+                    #"")
+                   ("invalid-exit.rkt"
+                    "(exit 2)\n(stdout \"continued\")\n"
+                    #"continued")))])
+      (define program (build-path temporary-root (car case)))
+      (write-source program (string-append "#lang attalambda\n" (cadr case)))
+      (check-command-success
+       (run-command isolated-environment
+                    racket-executable
+                    (list (path->string program))
+                    20)
+       (caddr case)))
+
     ;; Test tooling crosses the module boundary only to prove that expansion
     ;; produced canonical lambda values. None of this observation API is
     ;; exported by the object language.

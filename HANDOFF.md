@@ -1,50 +1,44 @@
 # Session handoff
 
-Status recorded: 2026-09-02, immediately after the AttaLambda 0.3.0 public
-release.
+Status recorded 2026-09-05: the refactor is complete, verified, pushed, and
+awaiting Kyle's review. This handoff becomes stale if the branch changes after
+the final wrapup commit, a pull request or merge is created, or `main` or the
+public release changes.
 
-This handoff becomes stale if `main`, tag `v0.3.0`, or the `v0.3.0` GitHub
-Release changes.
+The completed non-core simplification is on branch
+`refactor/non-core-simplification`, based on
+`578f1acc00566c17c18786a393cfa0b496c531ba`. Kyle authorized unattended
+execution on 2026-09-05. [`PLAN.md`](PLAN.md) records the completed procedure
+and evidence; [`docs/design/non-core-refactor.md`](docs/design/non-core-refactor.md)
+defines the preserved behavior and reduction goal.
 
-## Exact current public state
+Phases 1 through 3 are committed and pushed:
 
-- The released source is commit `1b51603671e87bcc524e2413491c94ad1ea7d763`
-  on `main`, carrying root `VERSION` `0.3.0`, `info.rkt` version `0.3`, and
-  runner output `AttaLambda 0.3.0`. The annotated tag `v0.3.0` peels to that
-  commit.
-- The public Release `AttaLambda 0.3.0` at
-  <https://github.com/kserrec/attalambda/releases/tag/v0.3.0> carries two
-  assets: `attalambda-0.3.0-linux-x86_64.tar.gz` (13,938,743 bytes, SHA-256
-  `7adc7343720b0a1d6ed86af47059f031f571ab93649a314303c56d6b8a3d7870`) and its
-  single-entry `SHA256SUMS` (103 bytes). Both URLs were re-downloaded fresh
-  after publication and checksum-verified.
-- Linux x86-64 is the sole supported binary target, per Kyle's standing
-  decision (no Windows machine; no paid Apple signing). The 0.2.0 Release
-  and its withdrawal history remain untouched; do not re-upload a withdrawn
-  0.2.0 asset or alter `v0.2.0` without new explicit authorization.
-- Verification at the release commit: 12,298 assertions across all 38 test
-  files, the expanded purity proof over all 29 core and effects modules, the
-  zero-finding boundary inventory, and an independent no-Racket Ubuntu 24.04
-  consumer acceptance of the exact published archive
-  (`consumer_acceptance=passed`, 362 ms first startup).
+- `1f08b78` — simplify the codec and native host dispatch;
+- `2ee5205` — simplify runner call sites, readers, and shared test helpers;
+- `b0081ab` — reduce redundant checker/test locks and historical documentation.
 
-## Post-release CI repairs (2026-09-02, after publication)
+Phase 3 passed 12,297 assertions, the 29-module purity proof, and the complete
+boundary inventory before its commit. Phase 4's independent review found no
+production correctness or authority regression; its four bounded test/doc
+findings were repaired, independently re-reviewed, and committed as `f772e8d`.
+That exact revision passed all 38 suites and 12,301 assertions, both structural
+gates, the clean Racket CS 9.3 Linux build, and the isolated no-Racket Ubuntu
+consumer. [`PLAN.md`](PLAN.md) records the complete comparison and artifact
+evidence. No confirmed finding remains.
 
-Two CI-scaffolding commits landed on `main` after the tag; neither touches a
-production or shipped file, so the published artifact is unaffected and no
-rebuild or re-release is needed. `a1a81bc` taught
-`tooling/test-windows-distribution.ps1`'s archive-filename check the 0.3.x
-version forms (its 0.2.0-only pattern had failed the internal Windows
-consumer job on every 0.3.x push), and `cb3e226` raised the suite job's
-workflow cap from 10 to 20 minutes (the grown 12,298-assertion suite was
-being canceled mid-run by the cap, not failing; the pre-milestone Aug 30–31
-red runs died the same way). The `tests` workflow is fully green on `main`
-tip `cb3e226` (run 33674071955; suite 11m54s).
+The refactor is complete. Its final evidence commit changes only planning and
+acceptance documentation outside the shipped package/archive inputs. Stop
+here: do not open a pull request, merge, release, tag, or start later work
+without Kyle's separate explicit request.
 
-## Work remaining
+The current public release remains AttaLambda 0.3.0 at commit `1b51603` and tag
+`v0.3.0`. Linux x86-64 is the sole supported binary target. Exact release and
+withdrawal evidence is in the
+[standalone-distribution ledger](docs/design/standalone-distribution.md).
 
-- Nothing is in flight. The plan's release phase is complete; a future
-  milestone needs a new plan before any code work starts.
-- `VERSION` stays `0.3.0` on `main` until the next milestone begins (the
-  0.2.0 precedent: the dev version arrives with the next milestone's
-  branch).
+Two post-release CI-only fixes on `main` do not affect published bytes:
+`a1a81bc` accepts 0.3.x version forms in the Windows harness, and `cb3e226`
+raises the suite workflow cap to 20 minutes. Main-tip run
+[33674071955](https://github.com/kserrec/attalambda/actions/runs/33674071955)
+was fully green.

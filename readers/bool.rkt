@@ -6,9 +6,6 @@
 
 (provide bool->boolean)
 
-(define (lazy-apply function argument)
-  ((force function) argument))
-
 (define (bool->boolean value)
   (raw-boolean->boolean
-   (lazy-apply raw-object-value value)))
+   ((force raw-object-value) value)))

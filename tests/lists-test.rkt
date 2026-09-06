@@ -29,16 +29,6 @@
   ((raw-or (raw-object-value object))
    accumulated))
 
-(define (apply2 function first second)
-  (lazy-apply
-   (lazy-apply function first)
-   second))
-
-(define (apply3 function first second third)
-  (lazy-apply
-   (apply2 function first second)
-   third))
-
 (define (list-value? value)
   (raw-boolean->boolean
    (apply2 raw-is-type list-type value)))

@@ -6,12 +6,9 @@
 
 (provide map->string)
 
-(define (lazy-apply function argument)
-  ((force function) argument))
-
 (define (map->string value)
   (format "MAP:~a"
           (length
            (list->host-list
-            (lazy-apply raw-map-entries value)
-            (lambda (entry) entry)))))
+            ((force raw-map-entries) value)
+            values))))

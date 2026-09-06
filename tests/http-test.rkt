@@ -4,6 +4,7 @@
          racket/promise
          "../core/errors.rkt"
          "../core/objects.rkt"
+         (only-in "../core/pair.rkt" raw-first raw-second)
          "../core/result.rkt"
          "../core/strings.rkt"
          "../core/tags.rkt"
@@ -16,11 +17,6 @@
          "../readers/type-tag.rkt"
          "../runtime/codec.rkt"
          "helpers/lazy.rkt")
-
-(define (apply2 function first second)
-  (lazy-apply
-   (lazy-apply function first)
-   second))
 
 (define (typed-value? type value)
   (raw-boolean->boolean
@@ -117,8 +113,8 @@
                #"/tokens")))])
   (check-parse-ok (car case) (cadr case)))
 
-;; Fragmented TCP reads can be appended as Strings and reparsed. Every prefix
-;; before the final LF is the distinct, expected incomplete outcome.
+;; The parser still accepts complete or partial Strings independently of the
+;; server's framing loop. Every prefix before the final LF is incomplete.
 (define fragmented-one
   (bytes->object-string
    #"GET /fragmented HTTP/1.1\r\nHost: localhost"))
@@ -156,6 +152,57 @@
  (object-string->bytes
   (lazy-apply unwrap-ok fragmented-result))
  #"/fragmented")
+
+;; Compare each incremental decision against an independent host-byte oracle.
+;; Stop when framing completes, just as the server does; the helper need not
+;; remember completion across later calls. Empty helper chunks are harmless
+;; (an empty TCP read, in contrast, means EOF to the server).
+(define (check-scans chunks)
+  (let loop ([remaining chunks] [suffix NIL] [received #""])
+    (unless (null? remaining)
+      (define combined (bytes-append received (car remaining)))
+      (define scan
+        (apply2 raw-scan-http-header-end suffix
+                (lazy-apply raw-string-value
+                            (bytes->object-string (car remaining)))))
+      (define found
+        (raw-boolean->boolean (lazy-apply raw-first scan)))
+      (define next-suffix (lazy-apply raw-second scan))
+      (define label (format "chunks ~s, received ~s" chunks combined))
+      (check-equal? found (regexp-match? #rx#"\r\n\r\n" combined) label)
+      (if found
+          (check-eq? (force next-suffix) (force NIL) label)
+          (let ([suffix-bytes
+                 (object-string->bytes (lazy-apply raw-make-string next-suffix))])
+            (check-equal? suffix-bytes
+                          (subbytes combined (max 0 (- (bytes-length combined) 3)))
+                          label)
+            (loop (cdr remaining) next-suffix combined))))))
+
+(for ([chunks
+       (in-list
+        (list
+         (list #"\r\n\r\n")
+         (list #"\r" #"\n\r\n")
+         (list #"\r\n" #"\r\n")
+         (list #"\r\n\r" #"\n")
+         (list #"\r" #"\n" #"\r" #"\n")
+         (list #"\r\r" #"\n\r" #"\n")
+         (list #"\r\nx" #"\r\r\n" #"\r" #"\n")
+         (list #"" #"\r" #"" #"\n\r" #"" #"\n")
+         (list #"plain" #"\r\nx" #"\r\r" #"")
+         (list #"\r\n\r\ntrailing")))])
+  (check-scans chunks))
+
+(define framing-request #"GET /split HTTP/1.1\r\nHost: localhost\r\n\r\n")
+(for ([split (in-range (add1 (bytes-length framing-request)))])
+  (check-scans (list (subbytes framing-request 0 split)
+                     (subbytes framing-request split))))
+(check-scans (for/list ([byte (in-bytes framing-request)]) (bytes byte)))
+(check-equal? (procedure-arity (lazy-force raw-scan-http-header-end)) 1)
+(check-equal? (procedure-arity
+               (lazy-force (lazy-apply raw-scan-http-header-end NIL)))
+              1)
 
 (for ([incomplete
        (in-list

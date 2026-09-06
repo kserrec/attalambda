@@ -1,1082 +1,958 @@
-# Plan
-
-This plan implements the specification milestones in dependency order. Phases
-0 through 12 complete the pure core. Phases 13 through 20 build the explicitly
-deferred effects and standalone-language milestone. Completed Phases 0 through
-30 use one Phase as one coherent `$next` unit. Milestone 4 is intentionally
-larger: each explicitly numbered Step is one coherent `$next` unit, and each
-Phase groups related Steps. Every `$next` unit implements all of its listed
-work, adds focused tests, runs the full suite, updates relevant documentation,
-then commits and pushes `main`.
-
-The three files under [docs/specifications](docs/specifications/README.md) are
-the authority. The purity addendum overrides weaker purity examples, and the
-naming addendum overrides earlier naming examples.
-
-Completed phase records preserve the literal public spellings and artifact
-names that were true when their evidence was collected. Phase 27 supersedes
-those spellings for current work without rewriting history.
-
-# Completed milestones (archived)
-
-Full phase records, evidence, and measurements are preserved verbatim in
-[PLAN-ARCHIVE.md](PLAN-ARCHIVE.md).
-
-- Milestone 1 — Pure core, Phases 0 through 12 (repository foundation, raw
-  calculus, tags and objects, List, binary Nat, structured Error, the
-  generalized checker, typed Bool/Nat/Result/Char/String, and purity
-  hardening) — complete → archived in PLAN-ARCHIVE.md.
-- Milestone 2 — Effects and standalone language, Phases 13 through 20 (host
-  contract, sole bridge and stdout, files, TCP, pure HTTP, HTTP server,
-  `#lang` surface, runnable applications) — complete 2026-08-27 → archived
-  in PLAN-ARCHIVE.md.
-- Milestone 3 — Independent distribution, Phases 21 through 30 plus the
-  post-Phase 27 maintenance pass and security audit (distribution contract,
-  runner, diagnostics, Linux/macOS/Windows builds, Apache license and the
-  AttaLambda rename, release candidate, first public release 0.2.0,
-  withdrawal of the unsupported desktop assets) — complete 2026-08-29 →
-  archived in PLAN-ARCHIVE.md.
-
-## Durable distribution constraints (from Milestone 3, still binding)
-
-The following constraints apply throughout:
-
-- `.attl` is the canonical public source extension. A source file uses the
-  exact `#lang attalambda` declaration so the verified reader, expander,
-  source locations, and Lisp syntax remain authoritative; users run it
-  through `attalambda`, never through a separately installed `racket` command.
-- The initial public command surface is exactly `attalambda FILE.attl`,
-  `attalambda --help`, and `attalambda --version`. A REPL, compiler command, package manager,
-  formatter, debugger, editor integration, installer, and automatic updater
-  remain outside this milestone unless a later phase proves one necessary.
-- A release artifact bundles the Racket runtime and every language module it
-  needs. It must not consult a system Racket installation, user package
-  registry, source checkout, build directory, or network service at run time.
-- The launcher is trusted module-loading scaffolding, not object-language
-  computation and not another language-visible effect primitive. Its exact
-  dynamic-loading and diagnostic capabilities must be separately classified;
-  no AttaLambda program may import, name, or invoke them.
-- The approved unary `host` remains the sole language-visible bridge for
-  stdout, file, and TCP effects. Packaging must not add parsing, arithmetic,
-  routing, Result control flow, or other ordinary language behavior in the
-  launcher.
-- Real-host programs retain the launching process's documented filesystem and
-  network authority. Distribution adds no implied sandbox, permission prompt,
-  backup, or trust guarantee.
-- Use Racket's included executable-embedding and distribution facilities
-  before considering another dependency. The expected artifact cost is a
-  bundled Racket runtime and its transitive support files; every platform
-  phase must measure compressed size, installed size, startup time, and the
-  included file set.
-- Release builds use one pinned Racket CS toolchain. Start with Racket 9.3,
-  which the existing CI already pins; the Phase 21 proof must record and
-  justify any change instead of silently building artifacts with the local
-  Racket 8.10 installation.
-- Native artifacts are required initially for Linux x86-64, macOS x86-64,
-  macOS arm64, and Windows x86-64. Each artifact is built and tested on its
-  own operating-system family because Racket distributions are platform
-  specific.
-- A public release is blocked until Kyle explicitly approves both the
-  repository license and publication of the release. Planning or building a
-  release candidate is not permission to publish one.
-
-Supersession note: the four-platform bullet above is the literal Milestone 3
-contract. Phase 30 (2026-08-29) withdrew the macOS and Windows public
-assets, and Kyle confirmed on 2026-09-02 that releases remain Linux x86-64
-only (no Windows machine; no paid Apple signing).
-
-## Deferred findings
-
-Deferred hardening (named reason — redesign, not a spot fix):
-
-- **HTTP re-parse cost within the cap.** Within the 8192-byte bound the whole
-  buffer is still re-parsed after every partial read, so a peer dribbling tiny
-  chunks pays O(cap^2) interpreter work on its one connection before rejection.
-  Memory and termination are now bounded, and this grants no capability beyond
-  the deliberately blocking single-connection server's already-documented "one
-  client can tie it up" property (a peer that simply stalls already blocks the
-  no-timeout `tcp-read`). Fully removing the quadratic cost requires an
-  incremental HTTP parser — scanning only the newly-read region for the
-  terminator instead of re-scanning the buffer — which is a redesign of the
-  read/parse loop with terminator-boundary and trailing-byte correctness risk,
-  beyond an afternoon and beyond this minimal server's contract. Revisit if the
-  HTTP server graduates from a minimal demonstration to a supported surface.
-
-# Milestone 4 — Exact rational numbers and foundational values
-
-Status: complete (2026-09-01)
-
-Kyle directed (2026-09-01) that the entire Milestone 4 update lands on the
-single branch `milestone-4-rationals`. Every Milestone 4 `$next` unit commits
-and pushes that branch instead of `main`; `main` receives the milestone only
-when it is complete and Kyle merges or approves the merge.
-
-## Controlling rule — absolute object-language purity
-
-Every new object-language value and every computation involving private Nat,
-private Int, public Rat, Unit, Byte, Option, or Map must be implemented
-entirely with variables, unary `lambda`, and application after macro
-expansion. This governs representations, constructors, normalization,
-arithmetic, comparison, powers, conversions between object-language types,
-type and value checks, error decisions, Option selection, and every Map
-operation.
-
-Racket must not calculate or decide an AttaLambda program's result. In
-particular, Rat and Int operations may not use Racket arithmetic, Map may not
-use a Racket hash table or other host collection, and no new type may use
-Racket conditionals, pattern matching, equality, loops, mutation, exceptions,
-or data access for object-language computation.
-
-The existing classified seams remain unchanged in purpose:
-
-- macros may mechanically expand source into pure unary lambda terms;
-- `runtime/codec.rkt` may deterministically translate validated values across
-  the Racket/AttaLambda boundary, but may not perform object-language
-  arithmetic or decide object-language results;
-- `runtime/host.rkt` may perform only the explicitly approved external effects
-  and conversions at its existing narrow boundary; and
-- readers, tests, and tooling may observe or verify values but may not enter a
-  production computation path.
-
-`all_the_lambdas` is an algorithmic ancestor and source of test cases, not an
-authority over AttaLambda's purity rules. Every borrowed idea must be rebuilt
-as pure untyped lambda calculus and rejected or changed if it cannot satisfy
-this rule. If any planned feature appears to require a broader Racket role,
-implementation stops and the conflict is surfaced instead of weakening the
-purity promise.
-
-## Settled design
-
-- Rat becomes the only number type users see.
-- Binary Nat remains private machinery for magnitudes, counting, characters,
-  bytes, ports, and similar whole-number work.
-- Int remains private machinery: a sign plus a binary Nat magnitude.
-- Rat contains an Int numerator and a positive Nat denominator.
-- Int zero has only one representation: positive zero.
-- Rat zero has only one representation: positive `0/1`.
-- Every Rat is reduced to its simplest equivalent fraction.
-- A zero denominator is invalid. It never means zero.
-- `DIV` by zero returns `Result Err`.
-- `EXP` accepts only whole-number exponents. Every fractional exponent is
-  rejected, even when that particular power would happen to have a rational
-  answer.
-- Negative whole exponents use the reciprocal. Zero raised to a negative
-  exponent returns `Result Err`.
-- `0^0` remains `1`, following `all_the_lambdas`.
-- Exponentiation uses repeated squaring rather than decrementing the exponent
-  one by one.
-- Wrong argument types produce Error. Expected arithmetic failures produce
-  `Result Err`.
-- The existing generalized exact-tag checker remains. There is no numeric
-  hierarchy, automatic promotion system, generic arithmetic dispatcher, or
-  arity-specific checker.
-- Unit, Byte, Option, and Map become public types.
-- Byte is data, not a second number type. Rat arithmetic rejects Byte.
-- A byte sequence is `List Byte`; there is no separate Bytes type.
-- Map receives a pure object-language equality function for comparing keys.
-  The central type checker gains no special Map mechanism.
-- Map lookup returns Option.
-- Unit replaces uses of `NIL` that currently mean “the operation succeeded but
-  has no useful answer.”
-- Pair remains. Tuples remain nested Pairs. A Set can later be represented by
-  a Map whose values are Unit.
-- No public Nat, public Int, floating point, approximate decimal arithmetic,
-  logarithms, trigonometry, irrational constants, Tuple type, Bytes type, or
-  Set type is added in this milestone.
-
-## Phase 31 — Make the new language contract authoritative
-
-This Phase changes the specifications before executable work begins. The
-three specifications remain the authority over every later Step.
-
-### Step 31.1 — Amend the specifications
-
-Status: complete (2026-09-01)
-
-- [x] Update all three specification documents together so they state the final
-  public type set and exact public operation names.
-- [x] Specify the private Nat and Int representations and the canonical Rat
-  representation.
-- [x] Specify rational construction, normalization, arithmetic, comparison,
-  floor, division, reciprocal, and exponent behavior.
-- [x] Specify accepted exact integer and fraction literals and rejection of
-  inexact Racket numbers.
-- [x] Specify Unit, Byte, Option, and Map representations and operations.
-- [x] Specify every new contract, invariant, and expected-computation error.
-- [x] Specify the pure equality-function contract used by Map.
-- [x] Preserve the existing host, codec, reader, type-checker, and absolute-purity
-  boundaries without expanding their authority.
-- [x] Retire the Nat tag without renumbering existing non-Nat tags.
-- [x] Change no production module, test behavior, or executable behavior in this
-  Step.
-
-Acceptance: all three specifications agree on the new language, their stated
-precedence remains unambiguous, and every later Step has an authoritative
-contract rather than making a language-design decision during implementation.
-
-Completion evidence: each specification received an explicitly dated,
-append-only "Milestone 4 Amendment (2026-09-01)" section that wins over its
-own earlier sections; pre-amendment bytes are unchanged above the amendment
-markers. The main specification's amendment fixes the eleven-type public set,
-private Nat/Int machinery, canonical reduced Rat with sole positive zero and
-nonzero denominator, the exact Rat operation set (`SUCC ADD SUB MULT DIV EXP
-RECIP NEG ABS FLOOR EQ LT LTE GT GTE IS-ZERO IS-WHOLE IS-NONNEGATIVE-WHOLE`),
-exact-literal acceptance and inexact rejection, Unit, Byte with `List Byte`
-sequences, Option, persistent Map with its pure key-equality contract, the
-post-milestone effect signatures, and the new `NON-WHOLE-EXPONENT`,
-`INVALID-COUNT`, and `INVALID-BYTE` kinds. The purity addendum's amendment
-retires tag 3 permanently unassigned, assigns 7 RAT, 8 UNIT, 9 BYTE,
-10 OPTION, 11 MAP, and extends absolute purity verbatim to every new type
-without widening the macro/codec/host/reader seams. The naming addendum's
-amendment fixes retained, new, and retired public spellings. The
-specifications README records the new provenance hashes with the prior hashes
-preserved as history. No production module, test, or executable behavior
-changed; the full suite passed unchanged after the edit.
-
-## Phase 32 — Turn binary Nat into a clean private arithmetic foundation
-
-### Step 32.1 — Separate raw Nat arithmetic from the public Nat object
-
-Status: complete (2026-09-01)
-
-- [x] Make `core/binary-nat.rkt` contain only normalized binary-list values and
-  raw binary Nat operations.
-- [x] Move the current tagged Nat construction and public constants into the
-  existing typed Nat layer as temporary compatibility code.
-- [x] Preserve every current public result while this separation is made.
-- [x] Set the single development version to `0.3.0-dev` and keep every projection
-  of that version synchronized.
-- [x] Add structural tests proving that private binary Nat arithmetic does not
-  depend on tags, objects, typed functions, effects, the codec, or the host.
-
-Acceptance: current programs behave identically, while the raw Nat foundation
-can support Int and Rat without carrying a public Nat object into them.
-
-Completion evidence: `core/binary-nat.rkt` now requires exactly the macro
-layer, `fix.rkt`, `lists.rkt`, and `logic.rkt`, exports only `raw-` bindings
-(including the newly exported `raw-zero-bits` and `raw-one-bits`), and
-contains no tag, object, typed-function, effect, codec, or host reference.
-`raw-make-nat`, `raw-nat-value`, and `ZERO` through `TEN` moved into
-`core/typed-nat.rkt` as explicitly commented temporary compatibility code;
-every production importer (chars, list-nat, the five effect modules, the
-codec, the two Nat-observing readers, and the expander) now takes the tagged
-bindings from the typed layer, and the boundary gate's pinned expander
-require form tracks the move. New structural tests in
-`tests/binary-nat-test.rkt` read the raw module's source and fail on any
-non-raw export, any forbidden require, or any tagged/privileged symbol.
-The single version source is `0.3.0-dev` with the `0.2.900` package
-projection synchronized across `info.rkt`, the runner's approved-state
-regex, the boundary gate and its test, the runner test, and all four native
-build/consumer scripts. The full suite passed 5,978 assertions across all
-32 test files (the growth over Phase 30's 4,755 is dominated by the new
-per-symbol structural scan of the raw module), with the unchanged 16-module
-purity proof and the zero-finding boundary inventory, on 2026-09-01; no
-public operation, representation, or host authority changed.
-
-### Step 32.2 — Add quotient with remainder, remainder, greatest common divisor, and least common multiple
-
-Status: complete (2026-09-01)
-
-- [x] Extend AttaLambda's current binary long-division traversal so one pure
-  calculation produces both quotient and remainder.
-- [x] Keep the existing raw division operation as selection of the quotient from
-  that result, preserving its current answers.
-- [x] Build remainder, greatest common divisor, and least common multiple from
-  that pure result.
-- [x] Do not replace AttaLambda's current division with the older
-  `all_the_lambdas` implementation.
-- [x] Test normalization, a smaller dividend, exact division, nonzero remainder,
-  zero dividend, large binary values, and the internal zero-divisor guard.
-
-Acceptance: Rat reduction and floor have the private division information they
-need, with no host arithmetic and no change to existing Nat division results.
-
-Completion evidence: the existing MSB-first long-division loop now returns a
-raw pair of quotient and remainder (`raw-nat-div-rem`); `raw-nat-div` selects
-the quotient from that pair with unchanged answers, `raw-nat-rem` selects the
-remainder, `raw-nat-gcd` iterates Euclid's algorithm on the remainder with
-its zero test guarding the recursive division, and `raw-nat-lcm` divides the
-product by the greatest common divisor behind an explicit either-operand-zero
-guard, so no zero divisor reaches the division loop (the `lcm 0 0` test fails
-without it). `core/binary-nat.rkt` additionally requires only `pair.rkt`,
-which the structural require pin now reflects. Focused tests cover the
-quotient/remainder pair across all previous division cases, smaller
-dividends, exact division, nonzero remainders, zero dividends,
-non-normalized operands, nine-digit values, gcd/lcm identities and large
-values, and unary arity. The full suite passed 6,296 assertions across all
-32 test files with the unchanged 16-module purity proof and zero-finding
-boundary inventory on 2026-09-01.
-
-### Step 32.3 — Add the helpers needed for powers
-
-Status: complete (2026-09-01)
-
-- [x] Add pure binary Nat even, odd, halving, and exponentiation-by-squaring
-  operations.
-- [x] Keep these as private raw operations.
-- [x] Test zero and one exponents, odd and even exponents, zero and negative-case
-  prerequisites, and values large enough to prove that the implementation is
-  not decrementing the exponent once per multiplication.
-
-Acceptance: private Nat supplies every magnitude operation required by Int and
-Rat powers while remaining pure unary lambda computation.
-
-Completion evidence: `raw-nat-odd` reads the last bit of the normalized
-value, `raw-nat-even` negates it, `raw-nat-half` drops the last bit and
-renormalizes, and `raw-nat-exp` recurses on the halved exponent with one
-squaring per exponent bit, so `raw-nat-exp 2 4096` produces the exact
-4097-bit result in interpreted lazy evaluation — practical only because the
-recursion performs twelve squarings rather than 4,095 multiplications. All
-four remain private raw exports of `core/binary-nat.rkt` under the pinned
-require set. Tests cover parity across boundaries and non-normalized input,
-halving including zero and one, zero/one bases and exponents (`0^0 = 1`
-groundwork), odd and even exponents, host-exponentiation agreement through
-`7^13`, the 2^4096 magnitude proof, and unary arity.
-
-## Phase 33 — Add private Int
-
-### Step 33.1 — Add the representation and enforce one zero
-
-Status: complete (2026-09-01)
-
-- [x] Add a private Int representation consisting of a Bool sign and normalized
-  binary Nat magnitude.
-- [x] Route every construction through one pure function that turns any attempted
-  signed zero into positive zero.
-- [x] Add private sign, magnitude, zero, negation, and absolute-value operations.
-- [x] Add an Int reader for tests and human inspection only.
-- [x] Add no Int type tag, public Int constructor, Int literal, typed Int layer, or
-  `#lang attalambda` export.
-
-Acceptance: negative zero cannot be constructed through any supported private
-Int operation, and Int remains pure untagged machinery unavailable to users.
-
-Completion evidence: `core/int.rkt` represents an Int as a raw untagged pair
-of raw Boolean sign (true means nonnegative) and normalized binary
-magnitude; `raw-make-int` normalizes the magnitude and forces every zero —
-including non-normalized and empty zero spellings — to positive zero, and
-negation and absolute value route through it. `readers/int.rkt` renders a
-completed Int as a signed host integer for tests only; the boundary gate's
-reader vocabulary gained exactly `int->integer`, `raw-int-sign`,
-`raw-int-magnitude`, and `-`. The purity scan now proves 17 core modules
-(the purity-test and acceptance-test pins updated), and the boundary
-classification counts nine readers. No tag, typed layer, literal, or
-language export was added; the expander's pinned imports and exports are
-unchanged. The full suite passed 6,663 assertions across all 33 test files.
-`tests/int-test.rkt` covers sign/magnitude/reader round trips, all
-negative-zero construction attempts, non-normalized magnitudes, constants,
-zero testing, negation/absolute-value including zero results, and unary
-arity.
-
-### Step 33.2 — Add signed arithmetic and comparison
-
-Status: complete (2026-09-01)
-
-- [x] Adapt the useful `all_the_lambdas` Int algorithms for successor,
-  predecessor, addition, subtraction, multiplication, equality, ordering,
-  absolute value, and parity.
-- [x] Route every result through the canonical Int constructor.
-- [x] Test every combination of positive, negative, and zero operands, including
-  operations whose mathematical result is zero.
-- [x] Do not copy `all_the_lambdas`'s separate negative zero, division-by-zero-as-
-  zero, or negative-integer-power-as-zero conventions.
-- [x] Add only the private Int operations that Rat actually uses; do not create an
-  unused public or typed Int library.
-
-Acceptance: Rat has a complete signed numerator foundation, and every Int
-answer is produced solely by pure untyped lambdas in one standard form.
-
-Completion evidence: `core/int.rkt` adds succ, pred, add, sub, mult, equal,
-the four orderings, odd, and even as raw curried operations. Same-sign
-addition adds magnitudes; mixed-sign addition subtracts the smaller
-magnitude from the larger under the larger operand's sign; subtraction adds
-the negation; multiplication compares signs; ordering places negatives below
-nonnegatives and reverses magnitude comparison between negatives; parity
-reads the magnitude. Every arithmetic result routes through the canonical
-constructor, and the 13×13 signed operand matrix in `tests/int-test.rkt`
-verifies add/sub/mult/all comparisons against host integers, that every
-zero-valued result carries the positive sign, successor and predecessor
-across zero, sign-independent parity, nine-digit magnitudes, and unary
-arity. The full suite passed 8,128 assertions across all 33 test files with the 17-module purity proof and zero-finding boundary inventory. No public or typed Int surface exists.
-
-## Phase 34 — Add private canonical Rat arithmetic
-
-### Step 34.1 — Add Rat construction and reduction
-
-Status: complete (2026-09-01)
-
-- [x] Add a private Rat representation consisting of an Int numerator and a
-  positive binary Nat denominator.
-- [x] Reject denominator zero as an invariant failure.
-- [x] Reduce numerator and denominator by their greatest common divisor.
-- [x] Force every zero result to positive `0/1`.
-- [x] Add private selectors, constants, and a Rat reader for tests and human
-  inspection.
-- [x] Route every supported Rat construction through the same canonical
-  constructor.
-
-Acceptance: equal rational values have one stored representation, denominator
-zero is never a value, and neither positive nor negative noncanonical zero can
-escape construction.
-
-Completion evidence: `core/rat.rkt` stores a raw pair of Int numerator and
-positive normalized denominator; `raw-make-rat` normalizes the denominator,
-divides both parts by their greatest common divisor, and routes the reduced
-numerator through the canonical Int constructor, which automatically forces
-every zero numerator to positive zero over denominator one. A zero
-denominator is documented as an internal invariant failure exactly like a
-zero raw-division divisor: it is never a value, and every supported entry
-path must guard it before construction. `readers/rat.rkt` renders a
-completed Rat as an exact host rational for tests only (reader vocabulary
-extended by `rat->number`, the two selectors, and `/`; reader count now 10;
-purity pins now 18 core modules). `tests/rat-test.rkt` checks the 13×9
-construction grid against Racket's exact rationals with stored-part
-verification, every zero spelling including negative and non-normalized
-zeros, non-normalized denominators, the two constants, and unary arity. The full suite passed 8,507 assertions across all 34 test files with the 18-module purity proof and zero-finding boundary inventory.
-
-### Step 34.2 — Add ordinary rational operations
-
-Status: complete (2026-09-01)
-
-- [x] Add pure negation, absolute value, addition, subtraction, and
-  multiplication.
-- [x] Add pure equality and ordering.
-- [x] Add zero, whole-number, and nonnegative-whole-number checks.
-- [x] Add floor with correct behavior for negative fractions and negative whole
-  values.
-- [x] Route every Rat result through canonical construction.
-- [x] Reuse sound `all_the_lambdas` algorithms and test cases, but retain
-  AttaLambda's existing binary arithmetic where it is already clearer or more
-  efficient.
-
-Acceptance: ordinary Rat operations are exact, reduced, have only positive
-zero, and contain no Racket computation in their implementation path.
-
-Completion evidence: `core/rat.rkt` adds negate, abs, add (cross-multiplied
-over the product denominator), sub (add of negation), mult, equal (canonical
-part comparison), the four orderings (signed cross-multiplication), is-zero,
-is-whole (denominator one), is-nonnegative-whole, and floor (magnitude
-division with a predecessor step for negative fractions carrying a nonzero
-remainder); every Rat result routes through the canonical constructor. The
-16×16 rational operand matrix in `tests/rat-test.rkt` — spanning negative
-and positive fractions, wholes, zero, and 123456/7 — matches Racket's exact
-rational arithmetic for all eight binary operations through the one-way
-reader, with unary operations, floor denominators, canonical positive-zero
-results, stored-part reduction checks, and unary arity all verified. The full suite passed 10,709 assertions across all 34 test files with the 18-module purity proof and zero-finding boundary inventory.
-
-### Step 34.3 — Add rational division and powers
-
-Status: complete (2026-09-01)
-
-- [x] Add reciprocal and exact division with explicit zero checks.
-- [x] Add whole-exponent rational powers using the private binary
-  exponentiation-by-squaring operation.
-- [x] Reject every fractional exponent rather than flooring it or attempting
-  special perfect-root detection.
-- [x] Support negative whole exponents through reciprocal.
-- [x] Preserve `0^0 = 1`; reject zero raised to a negative exponent.
-- [x] Test division by zero, reciprocal of zero, positive and negative exponents,
-  odd and even powers of negative bases, fractional exponents that would and
-  would not happen to yield rationals, and large exponents.
-
-Acceptance: division and exponent failure are explicit, no operation silently
-changes its mathematical question, and every successful answer is a canonical
-Rat produced by pure lambdas.
-
-Completion evidence: `raw-rat-recip` and `raw-rat-div` guard zero and return
-raw Result values whose expected failure is the canonical DivideByZero
-Error; `raw-rat-exp` rejects every non-whole exponent with the new
-NonWholeExponent kind (13, numbered after the host-protocol and HTTP
-kinds, added to errors and the error reader without renumbering), powers magnitudes through the private squaring
-exponentiation, flips for negative whole exponents, keeps `0^0 = 1`, and
-maps zero to a negative exponent to DivideByZero. The 16×16 division grid
-and reciprocal sweep match Racket's exact division with kind-3 failures on
-zero; power cases cover positive/negative/zero/fractional bases, odd and
-even powers of negative bases, negative exponents through reciprocal,
-(4/9)^(1/2) and (8/27)^(1/3) rejected despite having rational answers, and
-exact large results including 2^200 and (3/2)^64. `tests/rat-test.rkt`
-passes 3,184 assertions; the full suite passed 11,313 assertions across all 34 test files with the 18-module purity proof and zero-finding boundary inventory.
-
-## Phase 35 — Replace the public Nat surface with Rat
-
-Rat may exist privately during the early Steps in this Phase, but Nat and Rat
-must never both be presented as public number types.
-
-### Step 35.1 — Add the tagged Rat layer
-
-Status: complete (2026-09-01)
-
-- [x] Add the Rat type tag without changing the numeric identities of existing
-  non-Nat tags.
-- [x] Add strict Rat functions using the existing generalized checker unchanged.
-- [x] Provide Rat implementations for `SUCC`, `ADD`, `SUB`, `MULT`, `DIV`, `EXP`,
-  `EQ`, `LT`, `LTE`, `GT`, `GTE`, and `IS-ZERO`.
-- [x] Add the approved public operations for negation, absolute value, reciprocal,
-  floor, whole-number checking, and nonnegative-whole-number checking.
-- [x] Make division, reciprocal, and exponentiation return `Result` where their
-  expected arithmetic failures require it; keep wrong argument types as
-  Error.
-- [x] Keep this tagged Rat layer out of the `#lang attalambda` exports until the
-  complete public switch.
-
-Acceptance: the exact-tag checker handles Rat exactly as it handles every
-other tag, with no numeric hierarchy, promotion logic, dispatcher, or new
-checker form.
-
-Completion evidence: `rat-type` is church-seven, leaving tags 0 through 6
-untouched, and `readers/type-tag.rkt` renders it as `RAT`.
-`core/typed-rat.rkt` builds all eighteen strict operations
-(`typed-rat-succ` through `typed-rat-is-nonnegative-whole`) on the
-unchanged generalized checker with the canonical function names `EXP`,
-`RECIP`, `NEG`, `ABS`, `FLOOR`, `IS-WHOLE`, and `IS-NONNEGATIVE-WHOLE`
-added to `core/function-names.rkt`; `DIV`, `EXP`, and `RECIP` keep their
-already-typed Result, re-wrapping a successful raw payload as a tagged Rat.
-`raw-rat-succ` joined the raw layer. Nothing is exported through the
-language facade; the expander's pinned imports and exports are unchanged.
-`tests/typed-rat-test.rkt` passes 690 assertions covering tagged results
-across a 6×6 rational grid, all unary operations and checks, Ok and Err
-Results for division/reciprocal/powers, exact `RAT` error frames on every
-argument position, Error bubbling with appended frames, remaining-arity
-absorption, and unary arity. Purity pins now prove 19 core modules; the full suite passed 12,004 assertions across all 35 test files with the zero-finding boundary inventory.
-
-### Step 35.2 — Add Rat conversion and literal construction
-
-Status: complete (2026-09-01)
-
-- [x] Extend `runtime/codec.rkt` to translate exact Racket integers and fractions
-  into canonical Rat values and translate Rat values back for approved host or
-  reader use.
-- [x] Add the production-free Rat reader support needed for human-readable tests
-  and errors.
-- [x] Reject inexact numbers rather than converting an approximate binary
-  floating-point value into a surprising fraction.
-- [x] Keep every arithmetic operation on an existing Rat inside the pure
-  object-language modules. Racket may only decompose or construct the
-  corresponding boundary representation deterministically.
-- [x] Add boundary tests proving that no other production module imports or
-  recreates these conversions.
-
-Acceptance: exact source and boundary numbers can enter and leave AttaLambda
-deterministically without granting Racket any role in Rat computation.
-
-Completion evidence: `exact->object-rat` accepts only exact Racket rationals
-(raising the standard contract error for `1.5`, `-0.0`, `1e3`, infinities,
-NaN, and complex numbers) and builds the stored representation directly from
-Racket's canonical reduced positive-denominator form, running no
-object-language arithmetic; `object-rat->exact` validates the tag,
-sign, magnitude, and denominator, rejecting forged unreduced parts, negative
-or non-`0/1` zeros, zero denominators, and non-normalized bits as codec
-failures before producing the exact host rational. The boundary gate's
-pinned codec provide form and closed codec vocabulary were extended in the
-same change, so any second production module recreating or importing these
-conversions still fails the sole-importer and vocabulary rules; the
-`readers/rat.rkt` observation support from Step 34.1 needed no production
-change. Codec tests round-trip integers, fractions, negatives, zero, and a
-2^200-magnitude value, and prove every rejection path. The full suite passed 12,061 assertions across all 35 test files with the 19-module purity proof and zero-finding boundary inventory.
-
-### Step 35.3 — Prepare Rat-based List, String, and Char operations
-
-Status: complete (2026-09-01)
-
-- [x] Prepare `LEN` and `STRING-LENGTH` to return whole-valued Rat objects.
-- [x] Prepare `TAKE`, `DROP`, and `MAKE-CHAR` to accept Rat and verify that it
-  represents an allowed nonnegative whole number.
-- [x] Keep their actual counting and indexing work on private binary Nat values.
-- [x] Return clear Errors for negative or fractional counts and out-of-range Char
-  values.
-- [x] Keep the existing public Nat behavior active until the single public switch.
-
-Acceptance: every core consumer of the current public Nat surface has a tested
-Rat replacement ready without temporarily exposing two public number types.
-
-Completion evidence: `typed-len-rat`, `typed-take-rat`, and `typed-drop-rat`
-in `core/list-nat.rkt`, `typed-make-char-rat` in `core/chars.rkt`, and
-`typed-string-length-rat` in `core/strings.rkt` are strict prepared variants
-kept off the language surface. Lengths convert the existing raw binary List
-counter to a whole Rat through the new `raw-whole-rat` helper; counts and
-character codes validate `IS-NONNEGATIVE-WHOLE` in pure lambda computation
-and then reuse the unchanged raw binary take/drop/range machinery through
-`raw-rat-magnitude-bits`. A negative or fractional count is the new
-INVALID-COUNT contract Error (kind 15, added to errors and the error
-reader), rendered as `INVALID-COUNT\n  -> TAKE(result)` style
-frames; an out-of-range code above 255 remains INVALID-CHAR. Focused tests
-cover whole-Rat lengths for Lists and Strings, take/drop across zero,
-partial, full, and beyond-length counts, all rejection paths, and unchanged
-wrong-type mismatches, while every existing public Nat test still passes. The full suite passed 12,087 assertions across all 35 test files with the 19-module purity proof and zero-finding boundary inventory.
-
-### Step 35.4 — Prepare Rat-based effect and host fields
-
-Status: complete (2026-09-01)
-
-- [x] Prepare ports, handles, backlog sizes, read limits, and other ordinary
-  numeric fields to use Rat objects representing nonnegative whole numbers.
-- [x] Check whole-number and range requirements in pure object-language code
-  before an effect request reaches the host.
-- [x] Convert validated Rat values at the existing deterministic codec boundary.
-- [x] Keep tiny type tags, error kinds, host-operation codes, and argument
-  positions as their separately allowed fixed Church numerals.
-- [x] Keep existing public Nat requests active until the single public switch.
-
-Acceptance: every runtime and effect dependency on public Nat has a tested Rat
-replacement, while host authority and the codec exception remain no broader
-than before.
-
-Completion evidence: `effects/tcp.rkt` gains the six prepared `-rat` request
-constructors and six prepared `-rat` wrapper factories. Ports, backlog
-sizes, read limits, and opaque handles arrive as Rat objects; pure lambda
-computation verifies `IS-NONNEGATIVE-WHOLE` before any request value
-exists, so a negative or fractional field is an INVALID-COUNT Error carrying
-the operation's function name and — proven by fake-host call counting — the
-host is never applied. Valid requests carry tagged Rat numeric fields that
-the Step 35.2 codec conversions decode deterministically at the boundary;
-operation codes, error kinds, and argument positions remain fixed Church
-numerals, and stdout/file wrappers have no numeric fields. The current
-public Nat wrappers, the real host dispatcher, and the sole-bridge authority
-are unchanged until the single switch (the real host's Rat decode/encode
-swap is part of Step 35.5's prepared-path switch). The extended TCP suite
-verifies exact decoded request shapes for all six operations, Ok
-passthrough, force-once dispatch, INVALID-COUNT bubbling with zero host
-calls, and ordinary strict RAT mismatches, passing 266 assertions. The full suite passed 12,161 assertions across all 35 test files with the 19-module purity proof and zero-finding boundary inventory.
-
-### Step 35.5 — Perform the public switch
-
-Status: complete (2026-09-01)
-
-- [x] Change every accepted exact number literal to construct Rat.
-- [x] Export the Rat operations through `#lang attalambda`.
-- [x] Switch the prepared List, String, Char, effect, codec, and host paths to Rat.
-- [x] Remove public Nat constants, typed functions, type tag, reader, language
-  exports, and obsolete tests.
-- [x] Retain and test only the private raw binary Nat machinery.
-- [x] Update all current examples and documentation together without rewriting
-  completed historical records.
-- [x] Add a repository-wide check that fails if a public or production typed Nat
-  surface is reintroduced.
-
-Acceptance: users see exactly one number type, Rat; every existing numeric
-consumer has its defined Rat behavior; and private Nat remains pure internal
-machinery rather than a second public number system.
-
-Completion evidence: the expander lowers every exact integer and fraction
-datum (including negatives) to the canonical stored Rat representation and
-rejects inexact and non-real datums with "only exact Rat and String literals
-are supported"; the facade exports the eighteen Rat operations and no Nat
-name. `core/typed-nat.rkt`, `readers/nat.rkt`, and `tests/typed-nat-test.rkt`
-are deleted; tag 3 is retired from `core/tags.rkt` and renders as `TYPE:3`;
-`ZERO` through `TEN` are gone (chars, list-nat, and the HTTP modules build
-their private magnitudes from raw bits). The prepared paths switched
-together: LEN/TAKE/DROP/MAKE-CHAR/STRING-LENGTH are the Rat variants, the
-six TCP wrappers are the Rat versions carrying tagged Rat request fields,
-`effects/protocol.rkt` validates canonical nonnegative-whole Rat fields
-purely, HTTP statuses are whole Rats with a Rat renderer signature, the
-codec dropped its Nat conversions, and the host decodes bounded counts with
-`object-rat->exact` and returns handles via `exact->object-rat`. During the
-switch a latent kind collision was found and fixed: the Step 34.3/35.3 kinds
-had reused Church 7 and 8, which already belong to the host protocol, so
-NON-WHOLE-EXPONENT and INVALID-COUNT are now kinds 14 and 15, numbered after
-the host, HTTP, and HTTP-server kinds (a second miscount — starting them at
-13, which the HTTP server already owned — was found by the pre-release
-branch review and fixed in commit fb96dea). The boundary gate gained
-`reintroduced-nat-surface`, a repository-wide scan that fails if any
-production source mentions a retired Nat spelling, and its pinned expander
-forms, codec provide, and codec/host/reader/expander vocabularies moved with
-the switch. `examples/http-server.attl` now floors its decimal-digit
-quotients under exact division. Twenty-two test files were updated
-(canonical literal representation, `expected RAT` frames, tag 7
-expectations, exact-division semantics, forged-Rat host defenses); the full
-suite passed 11,705 assertions across all 34 test files with the 18-module
-purity proof and the zero-finding boundary inventory including the new
-reintroduction check.
-
-## Phase 36 — Add Unit
-
-### Step 36.1 — Add Unit and use it where “nothing” is the answer
-
-Status: complete (2026-09-01)
-
-- [x] Add one Unit type with exactly one value, `UNIT`.
-- [x] Add its reader and public export.
-- [x] Change successful stdout, file-write, TCP-write, TCP-close, and related
-  server operations from `Ok NIL` to `Ok UNIT`.
-- [x] Preserve `NIL` wherever an actual empty List is the answer.
-- [x] Implement Unit construction, checking, propagation, and effect use entirely
-  with pure object-language lambdas; the host may only return its encoded
-  value through the existing codec boundary.
-- [x] Add effect, host, reader, error, laziness, purity, and boundary tests.
-
-Acceptance: Unit carries successful no-value results, NIL means only an empty
-List, and neither the type nor its effect integration broadens host authority.
-
-Completion evidence: `core/unit.rkt` defines `UNIT` as the single
-`unit-type` (church-eight, tag 8) value over one fixed raw payload, exported
-through the facade; the codec exposes the same canonical value as
-`object-unit`, and the host's four no-value acknowledgements (stdout,
-file write, TCP write, TCP close) return `Ok(UNIT)` instead of `Ok(NIL)`
-with the host's `NIL` import removed entirely. `readers/unit.rkt` renders
-the type name one way. The pinned expander forms, codec provide, and
-codec/host/reader vocabularies, the reintroduction-safe boundary gate, the
-19-module purity pins, and the ten-reader classification all moved in the
-same change. `tests/unit-test.rkt` proves the tag, distinctness from NIL,
-false, zero, and every other public type, the reader, the codec value, the
-Ok(UNIT) acknowledgement shape, NIL's List meaning, and lazy payload
-handling, while the stdout, files, host, TCP-host, TCP, and HTTP-server
-suites now assert tag-8 payloads for every successful no-value result. The
-full suite passed 11,720 assertions across all 35 test files with the
-zero-finding boundary inventory.
-
-## Phase 37 — Add Byte and distinguish binary data from text
-
-### Step 37.1 — Add Byte
-
-Status: complete (2026-09-01)
-
-- [x] Add Byte values from 0 through 255, internally backed by private binary Nat
-  magnitudes.
-- [x] Add construction from a nonnegative whole Rat, conversion back to Rat,
-  equality, and ordering.
-- [x] Reject negative, fractional, and over-255 inputs.
-- [x] Ensure ordinary Rat arithmetic rejects Byte.
-- [x] Add Byte reader, type, invariant, error, purity, and public-language tests.
-
-Acceptance: Byte is a distinct pure data type with exactly 256 valid values,
-not a second numeric type or a host byte hidden inside an object.
-
-Completion evidence: `core/byte.rkt` defines Byte as tag 9 (church-nine)
-over private normalized magnitudes. `MAKE-BYTE : Rat -> Byte` validates
-`IS-NONNEGATIVE-WHOLE` and the 255 bound purely, rejecting every other
-value as the new InvalidByte Error (kind 16, rendered `INVALID-BYTE`);
-`BYTE-VALUE : Byte -> Rat` returns the whole Rat; `BYTE-EQ` through
-`BYTE-GTE` compare magnitudes through the unchanged checker. All seven
-operations are facade exports with pinned forms, vocabularies, 20-module
-purity pins, and the eleven-reader classification updated together.
-`tests/byte-test.rkt` passes 210 assertions covering boundary construction,
-round trips, every rejection class, Rat arithmetic rejecting Byte with
-`ADD(arg1 expected RAT got BYTE)`, host-agreement of all comparisons, and
-unary arity. This step also root-caused and fixed a concurrency defect the
-Rat/Unit work exposed: `tests/tcp-host-test.rkt` forced Lazy Racket values
-from two threads at once (a worker blocked mid-force in a wrapper read while
-the main thread forced wrapper writes), and Racket promises are not
-thread-safe, so runs failed intermittently with "force: reentrant promise" —
-about half the time after the switch widened the forcing windows, versus a
-stable pre-switch baseline reproduced 6/6 in a worktree. The suite now keeps
-every lambda force on one thread and drives concurrency through a raw
-Racket loopback peer socket (the pattern the HTTP suites already use for
-test-side clients); ten consecutive runs pass. The full suite passed 11,860
-assertions across all 36 test files with the zero-finding boundary
-inventory.
-
-### Step 37.2 — Add pure String and byte-sequence conversion
-
-Status: complete (2026-09-01)
-
-- [x] Represent a byte sequence as `List Byte`; add no Bytes tag or host-backed
-  byte collection.
-- [x] Add pure conversions between String and `List Byte`.
-- [x] Validate every List element rather than assuming that any List is a byte
-  sequence.
-- [x] Implement traversal, validation, and element conversion entirely with
-  object-language lambdas.
-- [x] Test empty, ordinary text, every boundary byte, embedded zero, invalid List
-  elements, laziness, and Error propagation.
-
-Acceptance: AttaLambda can explicitly cross between text and binary data
-without using Racket to walk, validate, or transform an object-language List.
-
-Completion evidence: `STRING-TO-BYTES : String -> List` maps one Byte per
-Char with the existing pure `raw-map`, and `BYTES-TO-STRING : List ->
-String` walks the List validating each element's Byte tag before any
-conversion, rejecting a non-Byte element as
-`INVALID-BYTE\n  -> BYTES-TO-STRING(result)`. Both are strict facade
-exports built on the unchanged checker with pinned forms updated. Tests
-cover ABC text, empty values in both directions, the boundary bytes
-0/1/127/128/255 with an embedded zero round-tripping byte-exactly,
-non-Byte and Char elements rejected, wrong argument types, incoming Error
-bubbling, unary arity, and validation stopping at the first bad element
-without examining a divergent later element. The full suite passed 11,875 assertions across all 36 test files with the 20-module purity proof and zero-finding boundary inventory.
-
-### Step 37.3 — Move file contents to `List Byte`
-
-Status: complete (2026-09-01)
-
-- [x] Keep filesystem paths as String.
-- [x] Make file reads return `Result Ok(List Byte)`.
-- [x] Make file writes accept `List Byte` and return `Result Ok(Unit)`.
-- [x] Extend only the deterministic codec conversions and existing host operation
-  needed to exchange external bytes.
-- [x] Keep all object-language List and Byte validation in pure lambdas before the
-  host call.
-- [x] Update file examples, fake hosts, real-host tests, failures, purity checks,
-  and boundary checks together.
-
-Acceptance: arbitrary file bytes round-trip exactly, text and binary data are
-no longer conflated, and the host gains no object-language computation.
-
-Completion evidence: `write-file : String -> List -> Result` validates the
-byte List purely (`raw-byte-list-valid?`) before any request value exists,
-so a non-Byte element is an INVALID-BYTE Error with no host call; the
-protocol schema's second write field is a byte-List rule validating each
-element's tag and canonical bit payload; the codec gained only
-`object-byte-list->bytes` and `bytes->object-byte-list`; and the host's
-read path returns `Ok(List Byte)` while its write dispatch decodes the
-byte List deterministically. Rebuilding a List object from a
-checker-unwrapped payload now restores the one canonical `NIL` for the
-empty case — found when an empty write crashed because the codec's
-forged-terminator hardening correctly rejected a structurally-empty but
-non-canonical rebuilt terminator. `examples/file-round-trip.attl` converts
-explicitly with `STRING-TO-BYTES`/`BYTES-TO-STRING`. Fake-host traces,
-real-host round trips (binary, empty, replacement, UTF-8 relative paths,
-symlink truncation, denied and synthetic failures), the four-field arity
-probe, and the design-document amendment moved together. The full suite passed 11,877 assertions across all 36 test files with the 20-module purity proof and zero-finding boundary inventory.
-
-### Step 37.4 — Move TCP and HTTP boundaries to `List Byte`
-
-Status: complete (2026-09-01)
-
-- [x] Make TCP read and write use `List Byte` and make successful writes return
-  `Result Ok(Unit)`.
-- [x] Keep pure HTTP parsing and rendering text-oriented by converting explicitly
-  at the TCP boundary.
-- [x] Preserve binary HTTP bodies without treating arbitrary bytes as text.
-- [x] Update the HTTP server, protocol validation, host conversion, fake hosts,
-  real loopback tests, examples, purity checks, and boundary checks together.
-
-Acceptance: network payloads are explicit byte lists, HTTP remains pure, and
-no Racket string, byte sequence, parser, or branch decides an object-language
-HTTP result.
-
-Completion evidence: `tcp-write` takes a `List Byte` validated purely
-(canonical-NIL rebuild included) before any request exists, with the
-protocol's write schema on the shared byte-List rule; `tcp-read` returns
-`Ok(List Byte)` with EOF as the empty List; successful writes were already
-`Ok(UNIT)`. The HTTP server converts exactly at the boundary — received
-bytes become Chars one-to-one before the pure parser runs, and the rendered
-response String becomes bytes one-to-one before `tcp-write` — so parsing,
-routing, and rendering remain text-oriented lambda computation and binary
-bodies survive byte-exactly. Fake-host scripts, trace decoders, the raw-peer
-loopback suite, and the real end-to-end HTTP example all moved together;
-the milestone-two acceptance run serves the example over the byte-List
-boundary. The full suite passed 11,877 assertions across all 36 test files
-with the 20-module purity proof and zero-finding boundary inventory.
-
-## Phase 38 — Add Option
-
-### Step 38.1 — Add Some and None
-
-Status: complete (2026-09-01)
-
-- [x] Add `SOME value` and the singleton `NONE` as the two Option forms.
-- [x] Add checks for Some and None and a lazy pure operation that chooses what to
-  do in either case.
-- [x] Let Some contain any non-Error object-language value without adding an
-  `Any` tag or changing the generalized checker.
-- [x] Propagate an early Error rather than hiding it inside Some.
-- [x] Keep Option distinct from Result: None means expected absence, while
-  `Result Err` means a computation failed.
-- [x] Add reader, representation, branch-laziness, Error-propagation, purity, and
-  public-language tests.
-
-Acceptance: expected absence has a small pure representation and cannot be
-confused with failure, false, zero, NIL, or Unit.
-
-Completion evidence: `core/option.rkt` mirrors the Result shape at tag 10
-(church-ten). `SOME` accepts any non-Error value and bubbles an Error
-argument; `NONE` is the singleton; `IS-SOME`/`IS-NONE` are strict Bool
-checks on the unchanged checker; `OPTION-CASE option some-function
-none-value` is the lazy polymorphic eliminator, strict on its Option with
-`OPTION-CASE(arg1 expected OPTION ...)` frames and no evaluation of the
-unselected branch. All five names are facade exports with pinned forms,
-vocabularies, 21-module purity pins, and the twelve-reader classification
-updated together; `readers/option.rkt` renders SOME/NONE one way. Tests
-cover representation tags for Some over Rat/Bool/NIL/nested-Option values,
-strict checks, distinctness from Bool/List/Rat/Error/Unit, Error
-propagation, both laziness directions, mismatch and bubbling frames, and
-unary arity. The full suite passed 11,911 assertions across all 37 test
-files with the zero-finding boundary inventory.
-
-## Phase 39 — Add persistent Map
-
-A persistent Map returns a new Map after setting or removing an entry and
-never alters the old Map.
-
-### Step 39.1 — Add Map representation and lookup
-
-Status: complete (2026-09-01)
-
-- [x] Construct a Map with a user-supplied pure object-language key-equality
-  function.
-- [x] Store entries as a private object-language List of Pairs, never as a Racket
-  list, association list, hash table, dictionary, struct, or mutable value.
-- [x] Add empty, lookup, and reader behavior.
-- [x] Make lookup return `SOME value` or `NONE`.
-- [x] Check that the supplied equality function returns Bool; otherwise return a
-  structured Error.
-- [x] Implement every search and branch with pure unary lambdas.
-
-Acceptance: lookup works for user-defined key equality, expected absence uses
-Option, and no host collection or host equality participates.
-
-Completion evidence: `core/map.rkt` (tag 11, church-eleven) pairs the fixed
-equality function with a raw Pair-entry List. `MAKE-MAP` bubbles Error
-arguments; `MAP-EMPTY?` and `MAP-SIZE` (whole Rat via the raw List counter)
-use the unchanged checker; `MAP-LOOKUP` validates its Map argument manually
-(the `IF`/`OPTION-CASE` polymorphic pattern), bubbles an Error key with a
-result frame, and walks entries with the Map's own equality function,
-returning `SOME value` or `NONE`. A comparison answering an Error bubbles
-with the operation's frame; any other non-Bool answer renders as
-`MAP-LOOKUP(arg1 expected BOOL got …)`. All four names are facade exports
-with pinned forms, vocabularies, 22-module purity pins, and the
-thirteen-reader classification updated together; `readers/map.rkt` renders
-the entry count. Tests cover empty and populated lookup under Rat equality,
-both malformed-equality answers, wrong and Error Map/key arguments, size
-and emptiness, and unary arity. The full suite passed 11,935 assertions
-across all 38 test files with the zero-finding boundary inventory.
-
-### Step 39.2 — Add Map updates and queries
-
-Status: complete (2026-09-01)
-
-- [x] Add pure set, remove, contains, empty, and size operations.
-- [x] Replace an existing key without creating a duplicate entry.
-- [x] Return size as a whole-valued Rat.
-- [x] Accept arbitrary non-Error keys and values without adding an `Any` tag or
-  changing the generalized checker.
-- [x] Prove that an older Map still returns its older answers after a new Map is
-  produced from it.
-- [x] Test Rat, String, Char, and Byte equality functions, collisions under a
-  custom equality function, missing keys, replacement, removal, size, Error
-  propagation, partial application, and laziness.
-
-Acceptance: Map is useful, immutable, and entirely lambda-built; Unit values
-can represent set membership without adding a Set type.
-
-Completion evidence: `MAP-SET` replaces a matched key in place (no
-duplicate entry) or prepends an absent one, `MAP-REMOVE` of an absent key
-returns an equivalent Map, and `MAP-CONTAINS?` answers Bool — all built on
-the shared find/walk machinery whose mid-walk comparison failure becomes
-the whole answer instead of hiding inside a rebuilt List. Error keys and
-values bubble with the operation's frame. During this step MAKE-MAP's
-former Error-bubbling probe was removed as unsound: applying a tag check
-to an arbitrary supplied function is undefined under the closed strict
-convention, so the constructor accepts the function as-is and the Bool
-contract is enforced at every comparison. Tests build a three-entry Rat
-map through replacement and removal while proving every older Map keeps
-its older answers, drive String/Char/Byte equality functions, prove
-deliberate collisions under an always-true equality collapse to one
-entry, and cover contains, Error propagation, wrong-Map mismatches,
-mid-walk failure, unary partial application, and update laziness. The
-full suite passed 11,970 assertions across all 38 test files with the
-22-module purity proof and zero-finding boundary inventory.
-
-## Phase 40 — Milestone acceptance
-
-### Step 40.1 — Prove the complete language together
-
-Status: complete (2026-09-01)
-
-- [x] Add end-to-end standalone examples covering negative fractions, exact
-  division, powers, Unit effect results, binary file and TCP data, Option, and
-  Map.
-- [x] Re-run the complete structural purity proof and boundary inventory so every
-  new production file is classified and checked.
-- [x] Verify mechanically that every production object-language computation
-  expands to variables, unary `lambda`, and application only.
-- [x] Verify that no public Nat or Int type, literal, function, reader, tag, or
-  export remains.
-- [x] Verify that no Racket arithmetic, conditional, collection, mutation, or
-  equality operation decides an Int, Rat, Unit, Byte, Option, or Map result.
-- [x] Run the complete source suite, supported Linux distribution build, and
-  no-Racket Linux consumer test.
-- [x] Update current documentation and examples, distinguish observed behavior
-  from future possibilities, and record honest performance limits.
-- [x] Leave the version at `0.3.0-dev`; release preparation, signing, artifact
-  publication, tagging, and public claims require a later separate plan and
-  explicit approval.
-
-Acceptance: AttaLambda exposes Rat as its sole number type plus Unit, Byte,
-Option, and Map; all underlying definitions and computation remain pure
-untyped lambda calculus; Racket remains confined to the same narrow mechanical
-and external-world seams; and the complete source and supported-distribution
-verification passes.
-
-Completion evidence: `examples/foundations.attl` prints nine deterministic
-`ok` lines through the real runner — negative fractions, exact division,
-whole powers with negative exponents, floor, a Unit stdout acknowledgement,
-byte/text crossing, Option over a Map lookup, and Map persistence — and is
-threaded through the boundary inventory, every build script, and every
-platform consumer contract; the existing file and HTTP examples cover the
-binary file and TCP boundaries. The full suite passed 11,974 assertions
-across all 38 test files with the 22-module expanded purity proof (unary
-lambda and forbidden-form verification over every production module) and
-the zero-finding boundary inventory including the `reintroduced-nat-surface`
-scan; retired spellings fail to resolve in the fresh-install language
-tests. The supported Linux distribution built from a clean clone of commit
-`a1f125b` under the pinned Racket CS 9.3 toolchain in a container:
-`attalambda-0.3.0-dev-linux-x86_64.tar.gz`, SHA-256
-`0261fcc7e05807f220e5c96ea32feea972c4ca895cd02a32bed947de3ce7c860`,
-13,939,568 compressed bytes, 59,742,222 unpacked regular-file bytes, 11
-files, 2 runtime files, with only the ELF loader, `libc`, `libdl`, `libm`,
-`libpthread`, and `librt` as system-library assumptions. The independent
-no-Racket consumer script verified the external checksum, confirmed absent
-`racket`/`raco` commands and loopback-only network, ran the complete
-end-user guide workflow, and passed relocation, reporting
-`consumer_acceptance=passed` with 298 ms first startup and 280 ms after
-relocation. These are internal development observations of an unpublished
-artifact, not a release; `VERSION` remains `0.3.0-dev`, and release
-preparation, tagging, signing, publication, and public claims require a
-later separate plan and Kyle's explicit approval. `docs/ACCEPTANCE.md`
-carries the Milestone 4 criterion map and honest performance limits
-(gcd-reducing interpreted arithmetic, linear Map walks, the documented
-HTTP re-parse bound).
-
-# Release 0.3.0 — AttaLambda's second public release
-
-Status: complete (2026-09-02)
-
-Kyle approved the full release train on 2026-09-02: Linux x86-64 is the only
-binary target (no Windows machine; no paid Apple signing). Publication
-approval for 0.3.0 was given explicitly ("let's commit our work and push and
-go for it").
-
-## Step R.1 — Merge the milestone
-
-- [x] Merge `milestone-4-rationals` into `main` with a no-fast-forward merge
-  commit and push `main`. Merge commit `283c7be` (2026-09-02).
-
-## Step R.2 — Finalize version 0.3.0
-
-- [x] `VERSION` becomes exactly `0.3.0` + LF; `info.rkt` package version
-  becomes `0.3`; the runner's accepted-version pattern gains `0.3.0`; the
-  boundary gate's product-version projection table and its test copy gain
-  `0.3.0 -> 0.3`; the three build scripts and the macOS test harness accept
-  `0.3.0`; `runner-test.rkt` expects `AttaLambda 0.3.0`; fixture restore
-  literals in the boundary and runner tests follow the released state.
-- [x] Full suite, purity, and boundary gates green on `main`: 38 files,
-  12,298 assertions, 29-module purity proof, zero-finding inventory
-  (2026-09-02).
-
-## Step R.3 — Build and independently verify the Linux artifact
-
-- [x] Built `attalambda-0.3.0-linux-x86_64.tar.gz` and `SHA256SUMS` under the
-  pinned Racket CS 9.3 toolchain in Docker from a clean clone of release
-  commit `1b51603`: SHA-256
-  `7adc7343720b0a1d6ed86af47059f031f571ab93649a314303c56d6b8a3d7870`,
-  13,938,743 compressed bytes, 59,742,960 unpacked bytes, 11 files.
-- [x] Consumer acceptance passed in a fresh no-Racket Ubuntu 24.04 container
-  using only the transferred archive and manifest: checksum OK, complete
-  guide workflow, relocation, loopback-only network, 362 ms first startup
-  (`consumer_acceptance=passed`, 2026-09-02).
-
-## Step R.4 — Tag and publish
-
-- [x] Annotated tag `v0.3.0` on release commit `1b51603`, pushed.
-- [x] GitHub Release `AttaLambda 0.3.0` published at
-  <https://github.com/kserrec/attalambda/releases/tag/v0.3.0> with the Linux
-  archive and `SHA256SUMS`, Linux x86-64 named as the sole supported target.
-- [x] Both public download URLs re-downloaded fresh; byte counts exact and
-  `sha256sum -c SHA256SUMS` printed OK (2026-09-02).
-
-## Step R.5 — Record the publication
-
-- [x] README's download section, `docs/design/standalone-distribution.md`,
-  `docs/ACCEPTANCE.md`, `HANDOFF.md`, and this plan record the published
-  artifact's exact bytes and SHA-256.
+# HTTP, empty-List consistency, and explicit exit plan
+
+Status: all five Phases complete on 2026-09-05; verified for Kyle's review.
+Branch: `refactor/non-core-simplification`; no new branch.
+Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
+working tree before this planning edit.
+Source: [Kyle's HTTP/List/exit specification](/home/serrecchia/Downloads/ATTALAMBDA_HTTP_LIST_EXIT_SPEC.md),
+SHA-256 `b57cfc8a694ac9af02b60d50cec950ea66706641b60922c6181aed9912903e1f`.
+The three [language specifications](docs/specifications/README.md) remain
+normative; Phase 0 explicitly amends them before adding the new effect.
+
+## Size and verified starting state
+
+Three bounded changes, with five Phases and thirteen single-pass Steps as
+the supplied specification requires. This is smaller in implementation scope
+than the completed non-core refactor, but not three tiny passes. Empty-List
+consistency is expected to require tests only; HTTP changes two existing
+production modules; exit adds one small effect across existing layers.
+Specification, checker, subprocess, and packaged acceptance work account for
+the remaining Steps. The prior baseline full suite took about 23 minutes;
+five required Phase runs plus the Linux build/consumer make verification a
+material part of the work. That is prior timing, not a new runtime estimate.
+
+- **HTTP exists:** `effects/http-server.rkt:161` implements
+  `raw-read-http-request-step` with `raw-string-append`, whole-List length,
+  and `parse-http-request` after each read. `effects/http.rkt:663` first
+  scans for `CR LF CR LF` and returns incomplete until it is present. The
+  existing parser can therefore remain the sole semantic parser.
+- **Canonical reconstruction exists:** `raw-rebuild-list` in
+  `core/lists.rkt` is already used by `MAKE-STRING` and public `DROP`.
+  `runtime/codec.rkt:105` accepts only the canonical `NIL` terminator.
+  A read-only planning probe passed all 18 requested empty-producing cases,
+  checking both codec conversion and canonical List/String termination.
+  The existing `tests/codec-test.rkt` suite passed 144 tests. The expanded
+  persistent regression matrix has not yet been written.
+- **Public exit is new:** no `effects/exit.rkt`, `tests/exit-test.rkt`,
+  public exit binding, protocol entry, or host performer exists. The protocol
+  and real dispatcher each contain nine operations. Native exit currently
+  appears in the runner's launcher-failure path. Existing bounded Rat
+  decoding and language host injection can be reused.
+
+## Change boundary and execution
+
+The planning turn changed only `PLAN.md`; the completed plan below is retained
+as history. Kyle approved all five Phases on 2026-09-05 after discussing purity
+and the exit boundary. Execute them serially without routine reconfirmation.
+This named work is separate from the previous plan's final stop.
+
+The approved scope modifies the two HTTP modules, protocol, real host, language
+expander, directly affected tests/checkers, normative specifications, current
+documentation, and existing Linux consumer harness named below. Create only
+`effects/exit.rkt` and `tests/exit-test.rkt` as new production/test modules.
+List producers change only if the persistent matrix proves a specific failure;
+the planning probe gives no present reason to modify one.
+
+Behaviorally unchanged: List representation and codec acceptance; existing
+HTTP grammar, 8192-byte cap, trailing-data rejection, error propagation,
+cleanup, and laziness; all nine existing host operations; launcher failure
+statuses; normal status-0 completion without explicit exit. Intended changes
+are incremental HTTP work and the new explicit program-chosen exit effect.
+No dependencies, new runtime layer, generic streaming parser, HTTP bodies,
+concurrency, timeout, TLS, stderr effect, process spawning/signals, exit codes
+2..255, automatic Error printing, or final-value/status inference.
+
+Before each Step, read `AGENTS.md`, all three normative specifications, the
+named production files, and directly relevant tests. Execute and record one
+Step at a time in source order; each numbered Step is one pass. Run focused
+tests while working and both architectural checkers after production edits:
+`racket tooling/check-purity.rkt` and `racket tooling/check-boundaries.rkt`.
+After every Step, inspect `git diff --check` and the complete relevant diff,
+explicitly excluding `.env`, `*.env`, `.env.*`, and `*.env.*` from every
+recursive listing/search/bulk read or diff. Never inspect dotenv contents.
+
+At each Phase boundary, run `./run-all-tests.sh`, then obtain a fresh agent
+review focused only on that Phase's diff and direct interactions. Prove causes
+before repairs; fix serially, at most ten findings per batch, obtain fresh
+review of repairs, and repeat invalidated checks before continuing. Record
+executable, test/tooling, and comment/doc changes separately. Commit and push
+each verified Phase only to this branch. Use isolated temporary filesystem
+fixtures, ephemeral loopback ports, and existing finite test deadlines.
+Stop on a normative conflict, a broad List representation problem, or two
+failed diagnostic hypotheses. No unrelated cleanup or weakened checks.
+
+## Phase 0 — Specify exit (one Step)
+
+### Step 0.1 — Amend the normative contract
+
+- [x] Append dated amendments to the three normative specification files;
+  update precedence/provenance and hashes in `docs/specifications/README.md`.
+  Specify public `(exit status)`: Rat 0/1 only; wrong type yields ordinary
+  TypeMismatch Error, other Rats yield existing InvalidCount Error, and
+  incoming Error bubbles. Pure code validates/chooses; only the real host
+  terminates with the requested OS status and does not return. Fake hosts
+  may return. Runner-native exit remains launcher/source scaffolding;
+  Error/Err values never automatically determine process status. Programs
+  without exit retain normal status 0. No production changes in this Step.
+  Run the full suite, diff checks, and Phase review before committing.
+
+Step 0.1 result (2026-09-05): appended all three amendments, updated the
+index's precedence and SHA-256 provenance, and verified that every original
+byte remains an exact prefix. Executable/test changes: none. Documentation:
+the approved plan and four specification documents. `./run-all-tests.sh`
+passed all 38 suites; expanded purity passed 29 production modules and the
+repository-wide boundary gate passed. Exact-file diff checks passed. Fresh
+Phase 0 review found zero confirmed issues. No repairs were needed.
+
+## Phase 1 — Prove empty-List consistency (two Steps)
+
+### Step 1.1 — Persist the codec consistency matrix
+
+- [x] Extend the canonical-empty section of `tests/codec-test.rkt`. Generic
+  Lists: `NIL`, singleton `TAIL`, nonempty `TAKE 0`, exact/beyond-length
+  `DROP`, `TAKE 0` after another List operation, and empty `DROP` after
+  `TAKE`. List Byte: singleton `TAIL`, `TAKE 0`, exact/beyond-length `DROP`.
+  Strings: `MAKE-STRING NIL`, singleton `STRING-TAIL`, append two empty
+  Strings, and `BYTES-TO-STRING NIL`. Also convert empty String and singleton
+  String tail to bytes; compose `"A" -> STRING-TO-BYTES -> DROP 1 ->
+  BYTES-TO-STRING -> STRING-TO-BYTES -> codec`. Assert empty host List/bytes
+  and canonical `NIL` where required, retaining forged-terminator rejection.
+
+Step 1.1 result (2026-09-05): persisted 21 labeled cases, each checking codec
+acceptance and canonical NIL identity, retaining prior empty-input and forged
+terminator/cycle coverage. Test-only change; List producers and codec are
+untouched. Corrected one extra parenthesis in the new table after its reader
+diagnostic. The complete relevant diff and whitespace check passed.
+
+### Step 1.2 — Verify; repair only a proven producer
+
+- [x] Run codec, List, and String suites, plus List-count/Byte suites if
+  their producers change. If all cases pass, retain only the regression
+  tests. Otherwise name the failing producer and repair its smallest pure
+  reconstruction path using canonical `NIL`/existing `raw-rebuild-list`.
+  No codec loosening or List redesign; stop if the cause is broader. Run
+  applicable checkers, full suite, and Phase review before committing.
+
+Step 1.2 result (2026-09-05): all matrix cases passed; no producer failed,
+so no production repair was justified or made. Focused codec/List/String
+suites passed 665 assertions (178/57/430). The full run passed all 38 suites,
+12,335 assertions, expanded purity for 29 production modules, and the source
+inventory/boundary gate. Fresh Phase 1 review found zero confirmed issues;
+its independent codec run passed 178 assertions. Relevant diff checks passed.
+Executable changes: none. Tests: codec consistency matrix only. Documentation:
+this plan's completion record. Core, codec, and forged/cyclic rejection are
+untouched.
+
+## Phase 2 — Incremental HTTP framing and accumulation (three Steps)
+
+### Step 2.1 — Add the pure delimiter scanner
+
+- [x] Add `raw-scan-http-header-end` in `effects/http.rkt`, returning a raw
+  Pair of found flag and next suffix. Inspect only the new chunk plus at
+  most three preceding characters, using existing pure List/String tools;
+  retain at most the last three characters when incomplete. Extend
+  `tests/http-test.rkt` for a whole delimiter, all three internal delimiter
+  splits, byte-at-a-time input, overlapping CRs, near matches, empty chunks,
+  trailing characters, and every two-chunk split of a complete valid request.
+
+Step 2.1 result (2026-09-05): added the pure suffix/chunk scanner without
+changing semantic parsing. The HTTP suite passed 510 assertions, including
+all delimiter/request splits and suffix bounds. Expanded purity passed all
+29 production modules; the source inventory/boundary gate and complete
+relevant diff/whitespace checks passed.
+
+### Step 2.2 — Replace the server's repeated prefix work
+
+- [x] Change `effects/http-server.rkt` loop state to reversed accumulated
+  characters, running private binary Nat count, and at-most-three-character
+  suffix. Convert/count/reverse only the new chunk; prepend its reverse
+  without walking the old prefix. Check the running count against 8192
+  before parsing. Scan suffix plus chunk; incomplete nonempty reads recur
+  without full parsing. At completion or EOF, reconstruct once and call the
+  existing parser once. Include all bytes from the completing chunk so
+  trailing-data rejection stays intact. Update the loop's obsolete comments;
+  preserve callers, cleanup, EOF and failure behavior. Run both HTTP suites.
+
+Step 2.2 result (2026-09-05): replaced repeated prefix append, recount, and
+parsing with reversed accumulation, a private binary count, and suffix-only
+framing. Parser and cleanup implementations are untouched. Both HTTP suites
+passed 668 assertions; expanded purity (29 modules), boundary/inventory,
+complete relevant diff review, and whitespace checks passed.
+
+### Step 2.3 — Verify server behavior across chunk boundaries
+
+- [x] Extend existing fake-host tests in `tests/http-server-test.rkt` for
+  one chunk, one byte per chunk, every nonempty two-chunk split, and each
+  delimiter split. An empty TCP read remains EOF, not an interior fragment.
+  Pin premature EOF, exactly 8192 and over-cap requests, malformed and
+  unsupported requests, trailing data, read failures, cleanup, read order,
+  and repeated-forcing laziness. Review source to prove no full parse on
+  incomplete chunks, no repeated old-prefix append traversal, and no whole
+  request recount. Run both HTTP suites, checkers, full suite, and review.
+
+Step 2.3 result (2026-09-05): split, byte-at-a-time, EOF, exact/over-cap,
+malformed/unsupported, trailing-data, partial-read failure, cleanup, and
+repeated-forcing regressions passed. Corrected the new padded valid fixture
+to include the parser's required Host header; no production repair was
+needed. Focused HTTP suites passed 1,412 assertions (510/902). The full run
+passed 38 suites, 13,381 assertions, expanded purity for 29 production modules,
+and the inventory/boundary gate. Fresh Phase 2 review found zero confirmed
+issues or material regression gaps; its independent HTTP run also passed
+1,412 assertions. Source review confirms one guarded full parse and no old
+prefix append/recount; tests observe results and effects, not parser calls.
+Complete relevant diff and whitespace checks passed. Executable changes:
+pure scanner and server accumulation only. Tests: two HTTP suites. Comments
+and documentation: accurate buffering/test descriptions and this plan.
+Semantic parser, cleanup implementation, host, codec, and core are untouched.
+
+## Phase 3 — Add public exit 0/1 (four Steps)
+
+### Step 3.1 — Construct and validate the pure exit request
+
+- [x] Create peer `effects/exit.rkt` and `tests/exit-test.rkt`; extend
+  `effects/protocol.rkt` with `exit-function-name`, `exit-operation` and
+  the closed operation-table entry. Request: List `["exit", Rat(status)]`.
+  Reuse the generalized checker, existing raw Rat primitives, and request
+  dispatch/bubbling pattern. Validate 0/1 before calling the injected host.
+  Test both encodings, unary shape, no call before forcing, exactly one call
+  per valid status, TypeMismatch, InvalidCount for `-1`, `2`, and `1/2`,
+  incoming Error, and fake-host return propagation. Verify direct malformed
+  protocol requests retain InvalidHostRequest behavior. Change checker
+  inventories only as required.
+
+Step 3.1 result (2026-09-05): created the pure exit peer and its tests, and
+added the tenth pure protocol entry. Exit/stdout/TCP suites passed 459
+assertions (167/24/268), including malformed direct requests, exact statuses,
+Error frames, fake returns, and laziness. Both architectural checks passed;
+expanded purity now covers 30 production modules without checker changes.
+Complete relevant diffs and whitespace checks passed. Real host termination
+and the public language binding are still pending the following Steps.
+
+### Step 3.2 — Perform explicit process termination in the real host
+
+- [x] Extend `runtime/host.rkt` with the tenth dispatch case and
+  `perform-exit`; reuse `decode-bounded-count` with bounds 0 and 1 for
+  defensive canonical whole-Rat decoding. No automatic output, final-value
+  inspection, Error mapping, or returning `Ok UNIT` after successful real
+  exit. Update `tooling/check-boundaries.rkt`, host tests, and
+  `docs/design/host-boundary.md` for this exact capability. Successful real
+  calls run only in child processes; malformed requests must not terminate
+  tests. Native exit remains forbidden in pure effects, codec, and readers.
+
+Step 3.2 result (2026-09-05): added the real host's bounded exit performer
+and exact checker capability. Host tests passed 81 assertions, including
+isolated children terminating silently with statuses 0 and 1 and surviving
+14 malformed requests across the pure bridge and strict dispatcher. Boundary
+tests passed 119 assertions, including native-exit rejection in effects,
+codec, and readers. Both architectural gates passed (30 pure modules).
+Existing compiled fresh-language setup keeps subprocess checks within their
+unchanged deadlines. Updated the host design contract, distinguishing wrapper,
+bridge, and defensive host validation and documenting existing non-List
+TypeMismatch behavior accurately. Complete relevant diffs and whitespace
+checks passed. Codec, core, runner, and the nine existing performers are
+untouched; public injection follows in Step 3.3.
+
+### Step 3.3 — Expose the canonical public binding
+
+- [x] In `lang/expander.rkt`, inject `language-host` once into `make-exit`,
+  bind internally as `language-exit`, and rename/export as `exit` without
+  colliding with native Racket exit. Update language tests and exact
+  import/export/injection checks; run boundary/purity suites as applicable.
+  Add no other public alias or constant; runner production behavior stays.
+
+Step 3.3 result (2026-09-05): added the single host injection and canonical
+rename from private `language-exit` to public `exit`, with exact checker
+import/export/definition expectations. Language and boundary suites passed
+209 assertions (90/119); both architectural gates passed (30 pure modules).
+Public programs proved ordinary function aliasing and non-terminating invalid
+status behavior. Updated the host design's implementation status and wrapper
+count. Complete relevant diffs and whitespace checks passed. No additional
+public alias, status constant, or runner production change was introduced.
+
+### Step 3.4 — Prove operating-system statuses and sequencing
+
+- [x] Extend existing runner/subprocess tests with temporary public-only
+  `#lang attalambda` programs: exit 0/1 gives exact status and empty output;
+  no exit, including `(DIV 1 0)` and ordinary Error, remains status 0;
+  missing-file Err chosen fatal/recoverable gives 1/0; stdout before exit
+  appears, stdout afterward does not; an unselected exit branch stays lazy.
+  Run exit, host, language, runner suites, both checkers, full suite, and
+  Phase review. Pure AttaLambda makes every fatal/recoverable decision.
+
+Step 3.4 verification (2026-09-05): runner tests passed 208 assertions,
+including exact silent 0/1 exits, unchanged no-exit Error/Err completion,
+pure fatal/recoverable missing-file choices, before/after output ordering,
+and an unselected exit. The first full run found the old exact seven-effect
+inventory expectation in `tests/purity-test.rkt`; source inventory proved
+eight with the new exit peer. Updated only that expectation, retained every
+per-module purity assertion, and passed its focused 135 assertions. The
+subsequent full run passed all 39 suites, 13,599 assertions, expanded purity
+for 30 production modules, and the repository boundary/inventory gate.
+Complete relevant diffs and whitespace checks passed. Fresh Phase 3 review
+found one enforcement gap: admitting the public `exit` spelling also admitted
+native exit in an existing language syntax helper or transformer. Both new
+regressions reproduced the bypass. The checker now pins the sole occurrence
+of `exit` to the already-exact public export contract; boundary tests passed
+121 assertions and the repository boundary gate passed. The next full run
+passed all 39 suites (13,601 assertions), expanded purity for 30 modules, and
+the boundary gate. Repair review then proved that the existing datum walkers
+missed boxed and prefab-contained identifiers. Additional regressions also
+reproduced a hash-contained miss; the vector control already passed. Extended
+both existing walkers to inspect boxes, hash keys/values, and prefab fields.
+The invalidated boundary suite and gate were rerun successfully: 125 focused
+assertions passed, including all six language-exit regressions. A fresh
+container-repair review found zero confirmed issues or material gaps, passed
+125 assertions independently, and checked nested-container siblings. The
+125-assertion repair suite supersedes the 121-assertion boundary suite in that
+full run; Phase 4 will run the complete suite again on the final source.
+Complete relevant diffs and whitespace checks passed. Executable changes:
+pure exit wrapper/protocol, sole-host performer/dispatch, and one public
+injection. Tests/tooling: exit, host, language, runner, inventory, and boundary
+regressions/checks. Documentation: host contract and this completion record.
+No core, codec, reader, or runner production change was needed or made.
+
+## Phase 4 — Documentation, packaged behavior, acceptance (three Steps)
+
+### Step 4.1 — Synchronize current documentation
+
+- [x] Update `README.md`, `ARCHITECTURE.md`, `docs/design/host-boundary.md`,
+  and `docs/ACCEPTANCE.md` for ten operations, public exit 0/1, unchanged
+  no-exit completion and launcher statuses, and incremental HTTP work.
+  Also update the shipped `distribution/GETTING_STARTED.md.in` status table,
+  which currently has no explicit program-exit entries. Remove the
+  deferred quadratic HTTP finding only after both parsing and prefix
+  accumulation/count repetition are eliminated. Preserve the blocking,
+  single-connection limitation; no new timeout/nonblocking claims or old
+  milestone narration. Record observed implementation separately from plans.
+
+Step 4.1 result (2026-09-05): synchronized the five existing documents with
+the implemented ten-operation boundary, pure exit choices/validation, exact
+0/1/default completion, unchanged launcher statuses, and incremental HTTP
+work. Removed the resolved repeated-prefix/reparse finding while retaining
+blocking single-connection/no-timeout limits. README explicitly distinguishes
+this branch from the published 0.3.0 archive. Corrected the shipped guide's
+observably stale four-example/first-release wording without changing version,
+artifact policy, or legal bytes. Documentation-only changes; the distribution
+suite passed 207 assertions, and complete relevant diff/whitespace checks
+passed. Final packaged observations remain pending.
+
+### Step 4.2 — Extend existing Linux consumer checks
+
+- [x] Extend `tooling/test-linux-distribution.sh` and directly relevant
+  `tests/distribution-test.rkt` checks to prove packaged exit 0, exit 1,
+  and unchanged no-exit status 0, including captured stdout/stderr. Reuse
+  existing temporary programs, status capture, and consumer isolation;
+  no new distribution framework, artifact policy, version, or release.
+
+Step 4.2 result (2026-09-05): extended the existing isolated Linux consumer
+with five public-only temporary programs for exact 0/1/default statuses and
+fatal/recoverable missing-file Err decisions. Each uses the existing captured
+output checks and a finite 20-second child deadline; expected status 1 is
+captured without weakening shell failure handling. Status evidence is printed
+only after exact status and empty stdout/stderr checks pass. Added the guide's
+status-1 entry to its existing document assertions. Shell syntax checks and
+208 distribution assertions passed; complete relevant diff/whitespace checks
+passed. Test/tooling changes only; actual packaged behavior is still pending
+the clean build and consumer in Step 4.3.
+
+### Step 4.3 — Final acceptance and fresh review
+
+- [x] Run the full suite and both checkers; review only this milestone's
+  changes with a fresh agent. In isolated temporary fixtures, prove checker
+  rejection of native computation in pure HTTP framing and native exit in
+  effects, codec, and a reader; retain no mutations. Resolve proven findings
+  and rerun invalidated checks. Build a recorded clean implementation commit
+  with the existing Racket CS 9.3 Linux harness and run the independent
+  no-Racket consumer. Record revision, checksum, packaged 0/1/default
+  statuses, and pure program decisions making a missing-file Err fatal or
+  recoverable. Keep acceptance artifacts unpublished. Commit/push verified
+  results on this branch and stop: no pull request, merge, tag, or release
+  without Kyle's explicit approval. Any later evidence-only commit must be
+  distinguished from the implementation revision actually tested.
+
+Step 4.3 result (2026-09-05): isolated copies of the actual
+HTTP framing, exit wrapper, codec, and reader passed before mutation. Native
+`+` in the framing helper was rejected as forbidden-host-identifier by
+expanded purity and unapproved-effect-identifier by the boundary gate. Native
+exit in the pure peer was rejected as unapproved-production-identifier and
+unapproved-effect-identifier; codec and reader native exit were rejected as
+forbidden-codec-capability and forbidden-reader-capability. All four copied
+bodies were restored, SHA-256 matched their working-tree originals, and both
+applicable checks returned no findings again. Working production sources were
+never mutated. Also corrected the acceptance map after source inspection:
+fixed launcher-failure cases belong to the runner suite, not the Linux
+consumer. The final complete run passed all 39 suites with 13,606 assertions,
+expanded purity for 30 production modules, and the boundary/inventory gate.
+Fresh milestone review covered all 28 changed files and direct interactions:
+zero confirmed findings or material test gaps; its independent focused run
+passed 980 assertions. Shell syntax, specification hashes, and complete
+relevant diff/whitespace checks passed.
+
+The unchanged CS 9.3 builder produced an archive from clean implementation
+commit `31138222bd5299d6554ad036c4f44e9c74fe0d4c`, verified in its manifest.
+The cached builder image lacked Git; its prerequisite check stopped before
+building. A read-only mount of the existing Git executable passed the complete
+prerequisite probe and enabled the build without package installation or
+source changes. The independent digest-pinned Ubuntu 24.04 consumer had no
+Racket, raco, or checkout. All guide, file/TCP/HTTP, relocation, and completion
+checks passed. Packaged exit 0/1, no-exit completion, and fatal/recoverable
+missing-file Err choices produced statuses 0/1/0/1/0 with empty stdout/stderr.
+
+Local unpublished archive:
+`/tmp/attalambda-http-exit-build-X0sRsh/attalambda-0.3.0-linux-x86_64.tar.gz`;
+SHA-256 `cb2eab3a0041b8733467f4839869e9a726b129b362dce9a8e2632218c4c5b981`;
+13,948,353 compressed bytes, 59,765,547 unpacked regular-file bytes, 11 files
+(two runtime files). Complete acceptance/provenance is in
+[`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md). This final record and that evidence
+are a later documentation-only commit, not the implementation revision built
+above; no production, test, or shipped-guide bytes changed after acceptance.
+
+Phase 4 executable changes: none. Tests/tooling: five packaged completion
+cases and the shipped-guide assertion. Documentation: synchronized existing
+docs and recorded observed acceptance. Across the milestone, core, codec,
+readers, runner production code, version, legal bytes, and build script are
+untouched. All five Phases are complete. Stop for Kyle's branch review; no
+pull request, merge, tag, or release has been created.
+
+## Final branch bug hunt — 2026-09-05
+
+Kyle separately approved this branch-wide correctness pass after milestone
+completion. Scope: all 57 changed paths from `main` at `578f1ac` through
+`96652c0`, plus their direct interactions. No further refactor is authorized.
+
+Coverage: 40 current files received a close read. The other 17 received a
+close read of the delta with selected direct interactions or a surrounding
+skim: `effects/http.rkt`, `tooling/check-boundaries.rkt`, and the boundary,
+distribution, errors, files, HTTP, language, Lists, purity, runner, stdout,
+Strings, TCP-host, TCP, typecheck, and Unit test suites. No in-scope delta was
+left unexamined. Unchanged core algorithms and unrelated platform machinery
+did not receive a fresh full audit; the complete source suite still exercises
+them. Normative amendments, previous review repairs, codec canonicality,
+dispatch/error precedence, resource cleanup, reader/helper substitutions,
+incremental HTTP, exit injection, and architectural enforcement were traced.
+
+No production correctness defect was confirmed. A deterministic seed-9052026
+scratch probe passed 2,770 assertions over 180 scanner inputs and 45 multi-chunk
+server scenarios, comparing framing with a host-byte oracle and server results
+with the existing semantic parser. It also checked cleanup, unforced effects,
+and repeated forcing. It found no bug; it is not counted as retained regression
+coverage or a replacement for the existing HTTP tests.
+
+Three documentation discrepancies in completed work were confirmed and
+corrected serially:
+
+1. The distribution contract conflated normal completion with explicit program
+   termination. Existing runner cases show missing-file Err can deliberately
+   lead to status 1, while no exit and recoverable choices remain 0. The contract
+   now distinguishes these paths and marks exit as unpublished source behavior.
+2. Consumer evidence had been copied from source-suite evidence. The Linux
+   harness inventories foundations but never executes it and does not exercise
+   fixed launcher failures. Corrected both the current distribution contract
+   and the earlier non-core acceptance paragraph;
+   the earlier acceptance-document correction had missed these sibling claims.
+   `tests/runner-test.rkt` and `tests/milestone-two-acceptance-test.rkt` own
+   those executable checks; the consumer's actual checks remain unchanged.
+3. The shipped guide assumed the manifest records an operating-system version.
+   The actual clean-`3113822` archive manifest and builder record target,
+   toolchain, and native-library assumptions, not that version. Corrected the
+   guide without introducing a compatibility promise; one assertion in the
+   existing guide-contract test pins the corrected claim. It checks the guide's
+   wording, not runtime compatibility. Packaged acceptance must be repeated
+   because the guide is a shipped input.
+
+Production-code changes: none. Tests: one guide-contract assertion; the first two
+prose corrections are verified against existing behavioral tests and the exact
+consumer commands, not new source-string behavior tests. Documentation:
+existing distribution contract, guide, and this plan only. No new module,
+dependency, language behavior, purity exception, release, or permission change.
+Focused exit verification passed 167 assertions. The full run passed all 39
+suites with 13,606 assertions, expanded purity for 30 production modules, and
+the complete boundary/inventory gate. That run reached the distribution suite
+before its edit (208 assertions); the post-edit focused run passed all 209,
+including the added guide assertion. The new assertion rejects the previous
+guide wording. Fresh cold review of all four repair files and direct evidence
+found zero confirmed issues, including in the shared guide's macOS and Windows
+manifest claims. No findings are deferred.
+
+The unchanged Linux builder then produced a fresh archive from clean reviewed
+commit `441ef63622e63584fe9e70e56c2cc154c45485ec`, verified in the manifest,
+using the same cached Racket CS 9.3 image and read-only Git mount as Phase 4.
+The corrected guide is present in the archive. Local unpublished artifact:
+`/tmp/attalambda-bughunt-build-zp2iZ4/attalambda-0.3.0-linux-x86_64.tar.gz`;
+SHA-256 `997e8bfe1113da9a28547b03427969ea07bcd8b6f49468a69b4bf246bf148946`;
+13,947,823 compressed bytes, 59,765,570 unpacked regular-file bytes, 11 files
+(two runtime files).
+
+The same digest-pinned Ubuntu 24.04 consumer passed without Racket, raco, a
+checkout, or external networking. Checksum, guide workflow, stdout,
+file/TCP/HTTP behavior, and relocation passed. Explicit exit 0/1, default
+completion, and fatal/recoverable missing-file decisions produced statuses
+0/1/0/1/0, each with empty stdout/stderr. First and relocated version startups
+were 369 ms and 374 ms; these are observations, not guarantees. The final
+marker was `consumer_acceptance=passed`. Version and legal bytes are unchanged.
+
+Review and verification are complete. The later evidence-only commit changes
+only this plan, not a shipped input or the built revision above. Commit/push
+that final record on the existing branch, then stop for Kyle's branch review.
+No further refactor, pull request, merge, tag, or release is part of this pass.
+
+---
+
+# Completed non-core simplification plan
+
+Status: complete on 2026-09-05; pushed for Kyle's review. The permanent stop
+at the end of Step 4.2 now applies.
+Branch: `refactor/non-core-simplification`.
+Starting commit: `578f1acc00566c17c18786a393cfa0b496c531ba`.
+
+**The result must contain less code, less indirection, and less maintenance.**
+The [refactor specification](docs/design/non-core-refactor.md) defines the
+preserved contracts. The [language specifications](docs/specifications/README.md)
+remain normative. This replaces the rejected 63-step proposal; it is not
+that proposal compressed into fewer headings.
+
+## Scope and execution
+
+Thirteen Steps in four Phases. Each Step is one bounded change or verification;
+prerequisites are completion of the previous Step and its required checks.
+Execute Steps serially without routine permission requests under Kyle's
+approval. Keep each Step bounded and record its result before continuing.
+
+Work in existing modules. No new runtime layer, request types, codec importer,
+prelude, literal module, generic checker, dependency, or review framework.
+Pure lambda computation is protected wherever it occurs, including effects
+and terms generated by macros. No List/sentinel, pathname-policy, process-exit,
+public-language, resource-lifecycle, or distribution-policy redesign.
+The only planned diagnostic correction replaces obsolete Nat wording with Rat.
+
+Before each edit, name the existing code to remove, why the complete result
+will be easier to follow, and the behavior checks. Revise or drop a candidate
+that cannot meet those conditions; keep necessary working code. Do not create
+extra work to make a Step end with a patch. Supporting edits are limited to
+the affected tests, comments/docs, this plan, and the minimum existing checker
+rules needed for the exact change. They cannot weaken authority.
+
+Record concise results under the Step: files changed, removed logic, source
+line difference, checks, and any no-change decision. Count helpers and callers
+together. No whitespace compression, comment stripping, moved-code accounting,
+or deleted safeguards to manufacture a reduction. Test additions need a
+specific regression they catch. Compare implementation, tests/tooling, and
+documentation separately, as well as maintained code overall.
+
+Use focused suites first and both architectural checkers for production edits.
+Run the full suite before each Phase commit; a current unchanged passing run
+also satisfies the pre-commit check. Review each completed diff. At the runtime
+and application Phase boundaries, check the changed paths together for real
+bugs. Prove a cause before fixing it, fix serially, check siblings, and obtain
+fresh review of bug/test repairs before commit under the repository rules.
+At most ten fixes belong in a review batch. Zero findings is a valid result;
+revisit only an actual finding or an evidence-invalidating change.
+
+Never inspect dotenv contents, even synthetic fixtures. Every recursive
+listing/search/bulk read and Git diff excludes `.env`, `*.env`, `.env.*`,
+and `*.env.*`; do not follow links to them. Use isolated temporary fixtures,
+ephemeral loopback ports, and finite test-harness deadlines. No Graphify.
+
+A failed required check, normative conflict, excluded repair, or unavailable
+mandatory environment is a blocker. Diagnose without speculative code edits;
+after two failed hypotheses stop and report. Do not weaken tests, increase
+timeouts to hide failures, or add unplanned rewrites. Adding a new workstream
+requires Kyle's decision; this plan must not grow back into the rejected one.
+
+## Phase 1 — Simplify the existing runtime
+
+### Step 1.1 — Establish the baseline and removal targets
+
+- [x] **Scope:** this plan and the execution/Git paragraphs of `AGENTS.md`.
+  Record the approved branch, serial execution, and final stop; preserve all
+  language and authority rules.
+- **Work:** record source/public-export inventories, source line totals,
+  current tools, and full-suite/checker results. Verify the pinned Racket CS
+  9.3 Linux build/consumer path is available before production edits. Inspect
+  the named candidates below and record concrete removals; no speculative
+  module split. Use this plan for evidence, not another planning document.
+- **Check:** `./run-all-tests.sh` passes, mandatory tools are usable without
+  paid usage or privileged system changes, and no unexplained edits exist.
+  Historical release runs and preliminary 8.10 probes are not this baseline.
+- **Result (2026-09-05):** the unchanged starting commit passed all 38 test
+  files and 12,298 assertions; purity passed for 29 production files and the
+  repository-wide boundary inventory passed. The run used local Racket CS
+  8.10 and took about 23 minutes. Docker already contains the exact full
+  `racket/racket:9.3-full` builder image and digest-pinned Ubuntu consumer;
+  direct probes confirmed Racket CS 9.3 and `main-distribution`, so final
+  acceptance needs no paid or privileged setup.
+- **Inventory:** 29 pure/effect production modules, 7 non-pure production
+  modules, 13 readers, 42 test/support sources (38 suites), 8 tooling sources,
+  and the CI workflow are inventoried. Baseline line totals are 5,510 pure,
+  2,057 non-pure implementation, 13,478 tests/support, and 6,731 tooling/CI:
+  27,776 maintained code lines overall and 22,266 in the refactor comparison
+  surface. The exact public-surface gate passed; in the edited runtime it locks
+  `host` as the sole host export and the existing codec struct/conversion/Result
+  exports. No public export is scheduled to change.
+- **Concrete removals:** replace the two repeated eager List-to-immutable-bytes
+  pipelines and `first-codec-failure` walk with one local concrete operation;
+  replace dispatch length/position plumbing with direct argument cases while
+  retaining each named operation and performer; collapse paired POSIX/Windows
+  membership calls into one closed helper. Later candidates remain conditional:
+  the copied runner diagnostic bodies in the boundary gate have direct behavior
+  coverage, while macro/reader/helper sharing must reduce its complete call
+  path or remain unchanged. All current edits are the approved planning files.
+
+### Step 1.2 — Remove duplicated codec conversion plumbing
+
+- [x] **Scope:** `runtime/codec.rkt`.
+- **Change:** simplify the repeated List decoding, first-failure selection,
+  and immutable-byte construction in `object-string->bytes` and
+  `object-byte-list->bytes`. Share only that concrete repeated operation
+  locally if it shortens both callers. Keep the two-way API and all existing
+  representation, evaluation-order, range, copy, and cycle checks.
+- **Check:** `tests/codec-test.rkt`, then host/file/TCP callers. The complete
+  codec is shorter and easier to trace, or the existing direct code is retained.
+  No new representation acceptance or universal conversion mechanism.
+- **Result (2026-09-05):** `object-list->immutable-bytes` now owns the two
+  identical eager decode/failure/freeze pipelines; `first-codec-failure` and
+  both duplicate blocks are gone. The public codec is unchanged and is 12
+  lines shorter; the vocabulary edit only records the replacement names.
+  Codec tests passed 144 assertions, direct host/file/TCP tests passed 353,
+  and both purity and boundary gates passed.
+
+### Step 1.3 — Shorten native request dispatch
+
+- [x] **Scope:** `dispatch-request`, `dispatch-*`, and
+  `decode-bounded-count` in `runtime/host.rkt`.
+- **Change:** consolidate repeated arity and argument-selection branches into
+  straightforward cases in this module. Keep concrete argument decoding and
+  the existing performers; remove superseded dispatch plumbing. No request
+  structs, schema, generated dispatch, callback framework, or second route.
+- **Check:** `tests/host-test.rkt`, `tests/file-host-test.rkt`, and
+  `tests/tcp-host-test.rkt` preserve all nine operations, left-to-right
+  rejection precedence, malformed requests, ranges, and actual effects.
+- **Result (2026-09-05):** `dispatch-request` now strips and counts arguments
+  once and keeps each operation's arity/decode path beside its route. Seven
+  intermediate dispatch functions are gone; one two-line `wrong-arity` helper
+  serves all routes, and the two genuinely identical one-String operations
+  retain their small shared helper. `host.rkt` is 18 lines shorter. The 353
+  direct host/file/TCP assertions and both architecture gates passed.
+
+### Step 1.4 — Remove repeated host error plumbing
+
+- [x] **Scope:** `errno-in?`, the two native failure mappings, and trivial
+  error wrappers in `runtime/host.rkt`.
+- **Change:** simplify repeated POSIX/Windows membership tests and equivalent
+  error forwarding. Keep every existing code/category and OS mapping, UTF-8
+  handling, and meaningful cleanup helper. Do not redesign handles, write
+  loops, close ordering, or resource registration.
+- **Check:** host/file/TCP suites, including failure cleanup and partial writes.
+  Review the changed host/codec path together for correctness and reading
+  effort; retain only improvements. Run Phase checks, commit, and push.
+- **Result (2026-09-05):** `errno-in?` now selects the existing POSIX or
+  Windows number list itself, removing 13 paired/custom membership branches
+  without moving any number or category. The file/network wrappers remain
+  because they separate mapping from Error construction for multiple callers.
+  This Step removes 11 more host lines; Phase 1 removes 41 runtime lines total.
+  A scoped bughunt close-read both runtime modules and every changed branch,
+  traced all nine pure request shapes, checked the prior codec cycle/canonical
+  fix, and compared every OS mapping. Direct tests and checkers were skimmed
+  for their interactions; unrelated code was outside scope. There were zero
+  confirmed, likely, or latent findings. The full suite passed all 38 files
+  and 12,298 assertions, followed by the 29-file purity proof and complete
+  boundary inventory.
+
+## Phase 2 — Simplify application glue where it earns its place
+
+### Step 2.1 — Simplify runner validation and diagnostics
+
+- [x] **Scope:** `runner/attalambda.rkt`.
+- **Change:** remove repeated preflight or exception plumbing only where
+  existing behavior is demonstrably preserved. Replace custom path work with
+  an ordinary Racket operation only if it preserves the current path policy
+  and diagnostics. Correct the unsupported-literal message from Nat to Rat.
+  Keep current symlink/dotenv restrictions, source loading, and exit behavior.
+- **Check:** `tests/runner-test.rkt` and `tests/language-test.rkt`: paths,
+  links/cycles, unavailable/nonregular inputs, UTF-8/header/syntax, sanitized
+  failures, version/help, and unchanged Error/Err completion. A resolver change
+  that needs a new policy is omitted rather than turned into another project.
+- **Result (2026-09-05):** `stop` now defaults its line and column, removing
+  the repeated `#f #f` plumbing from every locationless caller without adding
+  a helper; the runner remains 251 lines and is 92 bytes shorter. Its stale
+  unsupported-literal diagnostic now says exact Rat and String. A filesystem
+  probe showed that Racket's ordinary path simplifiers do not resolve an
+  intermediate parent link, so the tested custom resolver remains. All 181
+  runner and 82 language assertions passed, as did both architecture gates.
+
+### Step 2.2 — Reduce repeated compile-time emission
+
+- [x] **Scope:** `macros/macros.rkt` and `lang/expander.rkt`.
+- **Change:** share existing bit/List emission only if a small helper in an
+  existing module reduces total code while keeping use-site and definition-site
+  bindings explicit. Otherwise keep the small direct implementations. Preserve
+  the public prelude, one-time host injection, and generated pure terms.
+- **Check:** macro/language/purity suites, public-export comparison, hygiene,
+  shadowing, literal encodings, laziness, and exactly-once effects. No new
+  literal/prelude module, renaming layer, or native object-language computation.
+- **Result (2026-09-05, no code change):** the similar emitters require
+  opposite binding contexts: function-name expansion deliberately creates
+  caller-context identifiers, while language literals capture the expander's
+  imports against user shadowing. Sharing them would require a cross-phase
+  generic context API and increase the complete call path. The existing direct
+  code stays. Macro/language tests passed 94 assertions; the preceding boundary
+  and purity gates preserve exact exports, hygiene, and generated pure terms.
+
+### Step 2.3 — Trim only useful reader and test-helper duplication
+
+- [x] **Scope:** existing `readers/` modules and
+  `tests/helpers/lazy.rkt`, `tests/helpers/values.rkt`, and
+  `tests/helpers/fresh-language.rkt`, with affected callers.
+- **Change:** remove concrete unused or repeated support code only when the
+  whole call path becomes smaller. Keep short local helpers when sharing
+  them would increase reading effort. Preserve reader output, subprocess
+  isolation, staging exclusions, deadlines, cleanup, and real installed tests.
+- **Check:** affected reader tests plus language/runner/distribution suites.
+  Review this Phase's changed paths for hygiene, laziness, unintended effects,
+  and diagnostics. No rendering, mocking, or process framework. Run Phase
+  checks, commit, and push; a justified no-change result needs no extra sweep.
+- **Result (2026-09-05):** ten small readers now show their one to three
+  `force` applications directly, removing ten copied `lazy-apply` definitions
+  and 30 reader lines; the two readers where the helper prevents difficult
+  nesting retain it. `apply2` and `apply3` now live once in the already-imported
+  lazy test helper, replacing 21 identical local definitions across 14 tests
+  and removing 87 test/support lines net. No assertion or import edge changed;
+  broader `typed-value?` sharing was rejected because it would couple unrelated
+  suites to the object-value helper. Focused reader tests passed 6,263
+  assertions. A Phase bughunt close-read every executable/helper change and
+  mechanical removal and skimmed surrounding callers; unrelated test bodies
+  were outside scope. It found zero confirmed, likely, or latent bugs. The
+  Phase full suite passed all 38 files and 12,298 assertions, purity passed 29
+  files, and the complete boundary inventory passed.
+
+## Phase 3 — Reduce maintenance in checks, tests, and documentation
+
+### Step 3.1 — Remove only demonstrably redundant boundary locks — complete
+
+- [x] **Scope:** `tooling/check-boundaries.rkt` and its focused tests.
+- **Change:** start with the copied runner diagnostic bodies and their
+  duplicate checks. For each removal, name the promise, remaining enforcement,
+  and behavioral test. Keep any rule still needed to restrict capability.
+  No new binding-analysis mechanism or replacement of all class rules.
+- **Check:** boundary/runner suites; isolated violations still fail for the
+  intended reason, and an equivalent private change passes each removed lock.
+  Preserve closed imports, implicit/renamed capability restrictions, sole host
+  authority, exact public surfaces, and rejection of unknown source locations.
+  Keep the expanded purity checker; change only mechanical references required
+  by an earlier Step. A smaller blacklist is not equivalent enforcement.
+
+**Result:** Removed the checker's copied `stop` and
+`syntax-failure-reason` bodies and the exact-body comparison, deleting 40
+checker lines. Those copies protected diagnostic behavior, which
+`tests/runner-test.rkt` already verifies through the real command surface.
+The checker still requires the exact runner definition set, imports, exports,
+status definitions, input targets, entry/load shape, closed vocabulary,
+capability restrictions, and repository inventory. An isolated fixture
+reordered the side-effect-free operands of `stop`'s private location condition
+and passed the remaining boundary rules; the old exact-body lock would have
+rejected it. The boundary and runner suites passed 296 assertions, and the
+complete boundary inventory passed.
+
+### Step 3.2 — Remove superseded test machinery without losing protection — complete
+
+- [x] **Scope:** only tests and fixtures affected by Steps 1.2–3.1.
+- **Change:** remove source-copy/private-name assertions superseded by proven
+  behavior or capability checks, and their unused fixtures. Reuse existing
+  coverage. Approval of this plan permits those evidenced replacements;
+  necessary regression tests and sole coverage stay.
+- **Check:** run affected suites and a targeted isolated mutation for each
+  replacement's named promise. A test that fails only from malformed syntax
+  proves nothing about the intended rule. Review repaired tests freshly;
+  no coverage quota, new test tier, or repeated whole-suite audit.
+
+**Result:** Audited the affected host, codec, runner, boundary, reader, and
+shared-helper tests under the project rule that tests need a named failure and
+must preserve behavior, invariants, error propagation, partial application,
+and laziness where applicable. The only redundant machinery was a seven-line
+runner assertion that counted the private loader expression before replacing
+it in a fault-injection fixture. The boundary checker independently enforces
+exactly one `(dynamic-require source-path #f)` call. An isolated duplicate-call
+mutation failed with `invalid-runner-entry-or-loader`, so the private count was
+removed. The fault-injection fixture remains: changing the generic failure
+handler to expose `exn-message` produced exactly two failures in that fixture,
+proving it still catches raw-detail leakage. No other assertion was removed;
+the same-layer candidates protect distinct argument precedence, conversion,
+resource-lifecycle, or representation cases. The restored runner suite passed
+all 180 assertions. A fresh reviewer close-read the affected checker/test diff
+and rules, independently confirmed that the equivalent private `stop` change
+passes while a duplicate loader call fails, and confirmed the diagnostic
+fixture catches raw-detail leakage. It found no blocking defect. The reviewer
+also caught an overbroad test comment: source validation is proven by runner
+behavior, while the structural rule proves that the one loader call uses
+`source-path`; the comment now states that exact division.
+
+### Step 3.3 — Make the current system quick to understand — complete
+
+- [x] **Scope:** the non-pure architecture passages in `ARCHITECTURE.md`,
+  `README.md`'s repository guide, and `docs/design/host-boundary.md`.
+- **Change:** give each role a short explanation and real entry points:
+  host performs effects; codec converts; frontend emits/injects; runner loads;
+  readers observe; checkers enforce. Remove duplicated current descriptions
+  and stale phase narration. Keep pure representation reference material,
+  canonical specifications, and the exact current host contracts.
+- **Check:** trace claims to code. A maintainer can explain a host request and
+  conversion from host/codec alone, following only relevant named functions.
+  Other roles have equally direct entry points. No new documentation framework.
+
+**Result:** Replaced the architecture's milestone-by-milestone narration and
+test catalog with a task-based reading map, the five-step host path, concise
+frontend/runner/reader roles, the current dependency directions, and the two
+actual structural gates. Rewrote the host-boundary document around the current
+Rat, Unit, and `List Byte` contract instead of retaining an obsolete contract
+under a later amendment; all nine operations, bounds, results, failure codes,
+byte/path rules, lifecycle guarantees, authority, and approval remain stated.
+The README repository table now points directly to host, codec, expander, and
+runner entry files. The three documents fell from 1,743 to 903 lines. The pure
+representation/runtime-typing reference remained unchanged in this Step.
+Final review later corrected three pre-existing public Nat sentences to the
+implemented Rat boundary while leaving the private Nat descriptions intact.
+Every local link resolves. Claims were traced to
+`dispatch-request`/`perform-*`, the codec exports, pure request constructors,
+the expander bindings, runner flow, reader exports, and both checker entry
+points.
+
+### Step 3.4 — Remove obsolete process narration
+
+- [x] **Scope:** `HANDOFF.md`, `docs/ACCEPTANCE.md`,
+  `docs/design/standalone-distribution.md`, and the two existing plan archives.
+- **Change:** remove duplicated session instructions and stale active plans;
+  retain unique release evidence, legal text, current platform constraints,
+  and the deferred HTTP-parser finding in a clearly marked existing home.
+  Do not archive the rejected refactor proposals into more repository docs.
+- **Check:** retained facts and local links remain intact; historical records
+  cannot authorize new work. No distribution script, CI workflow, release,
+  support policy, or legal-byte change. Run Phase checks, commit, and push.
+
+**Result:** Replaced repeated phase narratives with one 107-line current
+acceptance map, one 297-line distribution contract/release ledger, one 132-line
+completed-milestone ledger, and a 32-line active handoff. Deleted the second
+plan archive after moving its unique Milestone 4 outcomes, correction record,
+0.3.0 evidence, and deferred HTTP-parser finding into those existing homes.
+These five files fell from 4,043 to 568 lines, removing 3,475 documentation
+lines. Exact 0.2.0/0.3.0 commits, tags, artifact names, sizes, IDs and hashes;
+the desktop withdrawal record; legal hashes; Racket CS 9.3 build/consumer
+contract; Linux-only support; publication authority; and the bounded O(cap²)
+finding remain explicit. All local links resolve, the legal bytes retain their
+approved hashes, and no distribution script, workflow, release, support
+policy, or legal file changed. Phase-focused boundary, runner, and distribution
+tests passed 502 assertions; the full gate passed all 38 suites and 12,297
+assertions, the 29-file purity proof, and the complete boundary inventory.
+
+## Phase 4 — Verify the benefit and stop
+
+### Step 4.1 — Fresh review of the completed changes
+
+- [x] **Scope:** the completed non-pure diff and its direct interactions.
+- **Work:** a fresh agent that did not author the changes reviews correctness,
+  authority, unnecessary abstractions, and reading effort. Require evidence
+  for bugs and a concrete benefit for suggested cleanup. Record close-read,
+  skimmed, and unexamined scope. Zero findings is a valid result.
+- **Check:** repair proven in-scope defects serially in their owning Step,
+  check siblings, and obtain fresh review of repairs. Revisit only affected
+  evidence; do not launch another skill chain or find work to justify a pass.
+
+**Result:** A fresh agent close-read the complete production diff, every
+changed reader/helper caller, runner/boundary changes, all rewritten non-core
+documents, and the approved plan/specification; it skimmed unchanged adjacent
+performers/tests and did not re-audit unrelated pure algorithms or complete
+desktop harnesses. Six focused suites passed 792 assertions, the boundary
+inventory passed, and purity passed all 29 production files. It found no
+production correctness, purity, authority, or API regression, and confirmed
+the code reduction lowers reading effort.
+
+The review proved four bounded omissions: the runner's generic syntax fallback
+lacked behavioral coverage after its body lock was removed; three retained
+Architecture sentences still called public Rat boundaries Nat; the handoff
+predated the Phase 3 commit; and the Linux transfer description omitted the
+consumer harness itself. One invalid two-argument-lambda case now pins status
+65, source location, exact fallback text, empty stdout, and sanitized stderr;
+the runner suite passes 184 assertions. The three public contracts now say Rat,
+the handoff names all pushed phase commits, and the transfer names archive,
+checksum, and harness. A second independent close-read traced each repair to
+the runner, List/Char/String implementations, and Linux transfer commands. It
+found no excess scope or remaining repair finding; `git diff --check` and local
+links pass. Zero confirmed findings remain.
+
+### Step 4.2 — Final acceptance, comparison, and completion
+
+- [x] **Scope:** verification and concise final evidence in this plan.
+- **Work:** run the complete suite and both checkers; build and consume a
+  clean, recorded implementation commit using the existing Racket CS 9.3
+  Linux scripts and an independent consumer without Racket. Record revision,
+  checksum, help/version, stdout, file/TCP/HTTP, relocation, and exit behavior.
+  Preserve isolation, cleanup, notices, and artifact policy; publish nothing.
+- **Check:** compare against the baseline: less non-pure implementation code,
+  less maintained code overall including tests/tooling, fewer unnecessary
+  functions/branches, and easier reading paths. Documentation savings cannot
+  substitute for code reduction. Count new helpers and explain actual removed
+  logic; do not credit formatting or relocation. Required checks pass and no
+  confirmed finding remains. If those conditions fail, report the unmet goal;
+  do not manufacture more changes or declare completion.
+- **Close:** commit/push only the verified refactor branch and leave it clean.
+  Identify any later documentation-only commit separately from the tested
+  implementation commit; if it changes shipped/build inputs, repeat acceptance.
+  Keep a concise completed plan and useful evidence. **Stop here.** No PR until
+  Kyle reviews the completed branch and explicitly approves it. No merge,
+  release, new milestone, or further cleanup, even after a generic `next`
+  or skill invocation. Separate future work needs a separately named request.
+
+**Result:** Exact implementation/test revision
+`f772e8d1f87cf1df7d171476046f9986426192af` passed all 38 suites and 12,301
+assertions, the expanded purity proof over all 29 production files, and the
+complete boundary inventory. This includes the final review repair and the
+real filesystem, TCP, HTTP, runner, language, distribution-contract, and
+mutation suites. No confirmed review finding remains.
+
+The clean revision then built with full Racket CS 9.3 from pinned image
+`racket/racket:9.3-full` (image ID
+`f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`).
+The resulting `attalambda-0.3.0-linux-x86_64.tar.gz` is 13,936,532 bytes with
+SHA-256
+`355cced2e6c7d8954e80404aaa53d2969329319c52446b083f6446b56141ce5c`;
+it contains 11 regular files totaling 59,741,483 bytes, including two runtime
+files. This is an unpublished acceptance artifact in `/tmp`, not a release.
+
+The existing consumer passed in read-only digest-pinned
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`
+with Racket and `raco` absent, no checkout, all capabilities dropped, and
+external networking disabled. Checksum, exact inventory, permissions, legal
+bytes, guide workflow, help/version, stdout, byte-exact file-example round-trip,
+TCP/HTTP loopback, and relocation all passed. Launcher-failure statuses and
+sanitized diagnostics were checked by the source runner suite; foundations
+execution was checked by the source milestone-two acceptance suite, not this
+consumer. First startup was 470 ms and relocated startup was 369 ms.
+
+| Maintained code | Baseline | Final | Change |
+| --- | ---: | ---: | ---: |
+| Pure `core/` + `effects/` | 5,510 | 5,510 | 0 |
+| Non-pure implementation | 2,057 | 1,986 | -71 |
+| Tests/support | 13,478 | 13,398 | -80 |
+| Tooling/CI | 6,731 | 6,689 | -42 |
+| **All maintained code** | **27,776** | **27,583** | **-193** |
+| Refactor surface excluding the pure center | 22,266 | 22,073 | -193 |
+
+The production reduction comes from one codec conversion path replacing two
+pipelines, direct host dispatch replacing seven route helpers, and ten reader
+`lazy-apply` wrappers becoming direct applications. That is 16 fewer private
+production helper definitions. In tests, 21 repeated `apply2`/`apply3`
+definitions became two definitions in the existing lazy helper, for 19 fewer
+test helpers; the one added runner scenario protects a real branch left behind
+by the removed checker body lock. The checker itself loses copied private
+diagnostic bodies while retaining capability, authority, import/export,
+loader, vocabulary, and repository-inventory enforcement. No dependency,
+runtime module, public export, representation, effect, or distribution policy
+was added. The only intentional behavior change is the approved diagnostic
+correction from obsolete Nat wording to exact Rat wording.
+
+The changed planning and explanatory documents fell from 5,899 baseline lines
+to 2,282 lines while adding the 206-line controlling refactor
+specification. The final evidence update touches only `PLAN.md`, `HANDOFF.md`,
+and `docs/ACCEPTANCE.md`, none of which enters the shipped package or Linux
+archive inputs; the accepted implementation artifact therefore does not need
+rebuilding. The branch is complete after that documentation-only commit is
+pushed. No tag, Release, upload, merge, or pull request was created.

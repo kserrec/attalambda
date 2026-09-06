@@ -53,7 +53,7 @@
     directory-list make-directory make-directory* delete-directory
     delete-directory/files delete-file rename-file-or-directory copy-file
     tcp-connect tcp-listen tcp-accept tcp-close udp-open-socket
-    system system* process process* subprocess shell-execute
+    exit system system* process process* subprocess shell-execute
     eval dynamic-require namespace-require make-base-namespace
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place
@@ -72,10 +72,10 @@
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place))
 
-;; These four names are the facade's pure, already-injected lambda wrappers.
-;; Exact language imports still reject racket/tcp and any direct TCP binding.
+;; These names denote pure, host-injected wrappers at the language boundary.
+;; Exact imports/definitions still reject direct native TCP or exit bindings.
 (define forbidden-language-capabilities
-  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close)
+  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit)
            forbidden-codec-capabilities))
 
 ;; The runner is trusted only to decide whether and how the host process loads
@@ -168,28 +168,6 @@
   '((build-path (path-only source) (quote up) "VERSION")
     source))
 
-(define expected-runner-stop-definition
-  '(define (stop status source line column reason)
-     (cond
-       ((and source line column)
-        (eprintf "AttaLambda: ~s:~a:~a: ~a\n"
-                 source line column reason))
-       (source
-        (eprintf "AttaLambda: ~s: ~a\n" source reason))
-       (else
-        (eprintf "AttaLambda: ~a\n" reason)))
-     (exit status)))
-
-(define expected-runner-syntax-reason-definition
-  '(define (syntax-failure-reason expression)
-     (cond
-       ((and expression (identifier? expression))
-        (format "unknown AttaLambda name: ~s" (syntax-e expression)))
-       ((datum-failure-expression? expression)
-        "unsupported literal; only nonnegative Nat and String literals are supported")
-       (else
-        "source has invalid syntax"))))
-
 ;; Readers may turn completed values into host values for tests and people,
 ;; but they are not another effects layer. Host control flow and data are
 ;; allowed there; external I/O, mutation, registries, process/eval/FFI access,
@@ -252,17 +230,17 @@
     define denominator else eq? error-value exact->object-rat exact?
     exn:fail? expected
     failure false-marker first
-    first-codec-failure for/fold for/list force function gcd
+    for/fold for/list for/or force function gcd
     host-list->object-list if in-bytes in-list integer
-    integer->raw-bits
+    integer->raw-bits integers
     lambda lazy-apply lazy-apply2 length let list list-type loop magnitude
     malformed-value-failure map
     module negative? nil? not null? numerator object-char->byte
     object-err
-    object-has-type? object-list->host-list object-ok
+    object-has-type? object-list->host-list object-list->immutable-bytes object-ok
     object-rat->exact object-unit object-byte->integer
     object-byte-list->bytes bytes->object-byte-list integer->object-byte
-    element elements byte-type raw-make-byte raw-byte-value
+    element element->integer elements byte-type raw-make-byte raw-byte-value
     object-string->bytes odd? only-in or ormap
     out-of-range payload provide quote quotient racket/base racket/promise
     raise-argument-error rat-type rational? raw-bit->boolean raw-bits->byte
@@ -282,7 +260,7 @@
 
 (define phase16-host-vocabulary
   '(#%module-begin + < <= = > EMPTY-STRING add1 address-in-use-code amount
-    and argument attempt-close backlog begin bound-port broken-pipe-code buffer
+    and argument argument-count arguments attempt-close backlog begin bound-port broken-pipe-code buffer
     bytes-length bytes->object-string bytes->string/utf-8 bytes=? cadr caddr
     cadddr call-with-output-file car case cdr cleanup-new-connection
     cleanup-new-listener close-entry close-input-port close-output-port
@@ -292,10 +270,9 @@
     connection-reset-code contract-code current-output-port decode-bounded-count
     decode-utf8
     decoded decoded-request define define-values discard-entry!
-    dispatch-one-string dispatch-string-and-byte-list dispatch-request dispatch-tcp-accept dispatch-tcp-close
-    dispatch-tcp-connect dispatch-tcp-listen dispatch-tcp-read
-    dispatch-tcp-write domain else end eof-object? entry
+    dispatch-one-string dispatch-request else end eof-object? entry
     eq? errno errno-in? exact-nonnegative-integer? exact-positive-integer?
+    exit exit-operation
     exn:fail:contract? exn:fail:filesystem:errno-errno
     exn:fail:filesystem:errno? exn:fail:network:errno-errno
     exn:fail:network:errno? exn:fail? exn:fail:out-of-memory? expected? failure
@@ -309,24 +286,24 @@
     make-bytes make-hash make-host-bridge make-host-failure
     make-invalid-host-request maximum memv minimum module
     name-resolution-failed-code network-failure network-failure-code
-    network-unreachable-code next-handle not not-found-code null? numbers
+    network-unreachable-code next-handle not not-found-code null?
     object-err object-list->host-list object-rat->exact object-ok
     object-unit object-byte-list->bytes bytes->object-byte-list
     object-string->bytes only-in operation operation-bytes operation-value or
     out-of-range out-of-range-reason output output-failure pair? path
-    path-payload payload perform-read-file perform-stdout perform-tcp-accept
+    path-payload payload perform-exit perform-read-file perform-stdout perform-tcp-accept
     perform-tcp-close perform-tcp-connect perform-tcp-listen perform-tcp-read
     perform-tcp-write perform-write-file performer permission-denied-code port
-    posix prior-failure provide quote racket/base racket/file racket/promise
+    posix posix-numbers prior-failure provide quote racket/base racket/file racket/promise
     racket/tcp read-bytes-avail! read-file-operation reason reason->object
     register-entry! remote remote-address remote-payload remote-port request
-    require resource-exhausted-code second set! start stdout-operation string=?
+    require resource-exhausted-code second set! start status stdout-operation string=?
     string? struct subbytes tcp-accept tcp-accept-operation tcp-addresses
     tcp-close tcp-close-operation tcp-connect tcp-connect-operation tcp-listen
     tcp-listen-operation tcp-read-operation tcp-write-operation timed-out-code
-    truncate unknown-operation-reason value void when windows with-handlers
+    truncate unknown-operation-reason value void when windows windows-numbers with-handlers
     write-all-bytes write-bytes write-bytes-avail write-file-operation written
-    wrong-arity-reason wrong-handle-kind-code wrong-type-reason zero?))
+    wrong-arity wrong-arity-reason wrong-handle-kind-code wrong-type-reason zero?))
 
 (define macro-vocabulary
   '(... = NIL _ and andmap argument arguments binding bit-expressions body
@@ -481,6 +458,8 @@
               (typed-rat-is-zero IS-ZERO)
               (typed-rat-is-whole IS-WHOLE)
               (typed-rat-is-nonnegative-whole IS-NONNEGATIVE-WHOLE))
+     (only-in "../effects/exit.rkt"
+              (make-exit language-make-exit))
      (only-in "../effects/files.rkt"
               (make-read-file language-make-read-file)
               (make-write-file language-make-write-file))
@@ -518,7 +497,8 @@
      (language-let let)
      (language-if if)
      (language-cons cons)
-     (language-host host))
+     (language-host host)
+     (language-exit exit))
     ,@language-direct-public-bindings))
 
 (define expected-language-runtime-definitions
@@ -530,7 +510,8 @@
     (def tcp-accept = (language-make-tcp-accept language-host))
     (def tcp-read = (language-make-tcp-read language-host))
     (def tcp-write = (language-make-tcp-write language-host))
-    (def tcp-close = (language-make-tcp-close language-host))))
+    (def tcp-close = (language-make-tcp-close language-host))
+    (def language-exit = (language-make-exit language-host))))
 
 (define expected-language-transformers
   '(language-module-begin
@@ -560,6 +541,7 @@
       language-char-expression language-cons language-datum
       language-definition-form? language-discard language-host
       language-if language-lambda language-let language-list-expression
+      language-exit language-make-exit make-exit exit
       language-make-read-file language-make-stdout
       language-make-tcp-accept language-make-tcp-close
       language-make-tcp-connect language-make-tcp-listen
@@ -983,6 +965,14 @@
              (datum-symbols (cdr datum)))]
     [(vector? datum)
      (append-map datum-symbols (vector->list datum))]
+    [(box? datum) (datum-symbols (unbox datum))]
+    [(hash? datum)
+     (append-map (lambda (entry)
+                   (append (datum-symbols (car entry))
+                           (datum-symbols (cdr entry))))
+                 (hash->list datum))]
+    [(prefab-struct-key datum)
+     (datum-symbols (struct->vector datum))]
     [else '()]))
 
 (define (module-symbols info)
@@ -997,6 +987,13 @@
     [(vector? datum)
      (for/sum ([element (in-vector datum)])
        (datum-occurrence-count target element))]
+    [(box? datum) (datum-occurrence-count target (unbox datum))]
+    [(hash? datum)
+     (for/sum ([(key value) (in-hash datum)])
+       (+ (datum-occurrence-count target key)
+          (datum-occurrence-count target value)))]
+    [(prefab-struct-key datum)
+     (datum-occurrence-count target (struct->vector datum))]
     [else 0]))
 
 (define (call-first-arguments name datum)
@@ -1306,6 +1303,12 @@
                         'invalid-language-runtime-definitions
                         runtime-definitions)))
    (language-expander-form-violations path info)
+   ;; The exact provide form accounts for the sole public spelling `exit`.
+   ;; Any additional occurrence can name native Racket exit in a syntax
+   ;; helper or transformer, outside the approved host boundary.
+   (if (= (datum-occurrence-count 'exit (module-info-forms info)) 1)
+       '()
+       (list (violation path 'forbidden-language-capability 'exit)))
    (symbol-violations path
                       symbols
                       forbidden-language-capabilities
@@ -1445,15 +1448,6 @@
                       unavailable-source-status
                       unexpected-failure-status)))
             (module-info-forms info)))
-  (define stop-definition
-    (findf (lambda (form)
-             (eq? (top-level-binding-name form) 'stop))
-           (module-info-forms info)))
-  (define syntax-reason-definition
-    (findf (lambda (form)
-             (eq? (top-level-binding-name form)
-                  'syntax-failure-reason))
-           (module-info-forms info)))
   (append
    (exact-language-violations path
                               info
@@ -1474,15 +1468,6 @@
        (list (violation path
                         'invalid-runner-definition-set
                         definitions)))
-   (if (and (equal? stop-definition
-                    expected-runner-stop-definition)
-            (equal? syntax-reason-definition
-                    expected-runner-syntax-reason-definition))
-       '()
-       (list (violation path
-                        'invalid-runner-diagnostic-formatter
-                        (list stop-definition
-                              syntax-reason-definition))))
    (if (equal? status-definitions expected-runner-status-definitions)
        '()
        (list (violation path

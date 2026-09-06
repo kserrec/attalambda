@@ -3,6 +3,7 @@
 (require rackunit
          (only-in "../core/unit.rkt" UNIT)
          racket/promise
+         racket/runtime-path
          "../core/errors.rkt"
          "../core/lists.rkt"
          "../core/objects.rkt"
@@ -21,13 +22,8 @@
          "../readers/type-tag.rkt"
          "../runtime/codec.rkt"
          "../runtime/host.rkt"
+         "helpers/fresh-language.rkt"
          "helpers/lazy.rkt")
-
-(define (apply2 function first second)
-  (lazy-apply (lazy-apply function first) second))
-
-(define (apply3 function first second third)
-  (lazy-apply (apply2 function first second) third))
 
 (define (typed-value? type value)
   (raw-boolean->boolean
@@ -292,3 +288,96 @@
                        #"stdout"
                        #"wrong-type")
 (check-equal? (get-output-bytes untouched-output) #"")
+
+;; Native exit calls belong only in child processes, including malformed
+;; requests: a regression must not terminate this test runner. Reuse the
+;; isolated compiled installation so the existing 20-second execution deadline
+;; measures the child operation rather than uncompiled source loading.
+(define-runtime-path project-root "..")
+(define-runtime-path lazy-helper "helpers/lazy.rkt")
+(define-runtime-path tag-reader "../readers/type-tag.rkt")
+
+(call-with-fresh-language-install
+ project-root
+ (lambda (installation)
+   (define environment (fresh-language-install-environment installation))
+   (define imports
+     `(require racket/promise
+               attalambda/runtime/host
+               attalambda/runtime/codec
+               attalambda/effects/protocol
+               attalambda/core/errors
+               attalambda/core/objects
+               attalambda/core/pair
+               attalambda/core/lists
+               attalambda/core/logic
+               (only-in attalambda/core/binary-nat raw-one-bits)
+               (only-in attalambda/core/tags rat-type)
+               (only-in attalambda/core/typed-logic TRUE)
+               (file ,(path->string lazy-helper))
+               (only-in (file ,(path->string tag-reader)) type-tag->integer)))
+   (define (run-host-child body)
+     (run-command environment racket-executable
+                  (list "-e" (format "~s" `(begin ,imports ,@body)))
+                  20
+                  #:current-directory
+                  (fresh-language-install-temporary-root installation)))
+
+   (for ([status (in-list '(0 1))])
+     (define result
+       (run-host-child
+        `((force
+           (lazy-apply host
+                       (host-list->object-list
+                        (list exit-operation (exact->object-rat ,status)))))
+          (display "unexpected exit return"))))
+     (check-false (command-result-timed-out? result) (result-diagnostic result))
+     (check-equal? (command-result-status result) status (result-diagnostic result))
+     (check-equal? (command-result-stdout result) #"" (result-diagnostic result))
+     (check-equal? (command-result-stderr result) #"" (result-diagnostic result)))
+
+   ;; Test both the public bridge and its private strict dispatcher. Access to
+   ;; the latter is test-only: it proves the real host's defensive decoding
+   ;; still rejects malformed statuses even without the pure protocol check.
+   (define invalid-result
+     (run-host-child
+      '((define direct
+          (parameterize ([current-namespace
+                          (module->namespace 'attalambda/runtime/host)])
+            (eval 'dispatch-request)))
+        (define noncanonical-one
+          (apply2 raw-make-object rat-type
+                  (apply2 raw-pair
+                          (apply2 raw-pair raw-true
+                                  (apply2 raw-cons raw-false
+                                          (apply2 raw-cons raw-true NIL)))
+                          raw-one-bits)))
+        (define cases
+          (list
+           (list '() #"wrong-arity" #"wrong-arity")
+           (list (list (exact->object-rat 0) TRUE) #"wrong-arity" #"wrong-arity")
+           (list (list TRUE) #"wrong-type" #"wrong-type")
+           (list (list (exact->object-rat 2)) #"out-of-range" #"out-of-range")
+           (list (list (exact->object-rat -1)) #"wrong-type" #"out-of-range")
+           (list (list (exact->object-rat 1/2)) #"wrong-type" #"out-of-range")
+           (list (list noncanonical-one) #"wrong-type" #"out-of-range")))
+        (for ([case (in-list cases)])
+          (for ([invoke (in-list (list host direct))]
+                [reason (in-list (cdr case))])
+            (define outcome
+              (force
+               (lazy-apply invoke
+                           (host-list->object-list
+                            (cons exit-operation (car case))))))
+            (unless (= (type-tag->integer (lazy-apply raw-object-type outcome)) 0)
+              (error 'exit-test "malformed request did not return Error"))
+            (define root (lazy-apply raw-error-root outcome))
+            (define details (lazy-apply raw-error-root-details root))
+            (unless (and (= (type-tag->integer (lazy-apply raw-error-root-kind root)) 7)
+                         (equal? (object-string->bytes (lazy-apply raw-first details))
+                                 #"exit")
+                         (equal? (object-string->bytes (lazy-apply raw-second details))
+                                 reason))
+              (error 'exit-test "wrong malformed-request details"))))
+        (display "invalid exit requests returned Errors\n"))))
+   (check-command-success invalid-result #"invalid exit requests returned Errors\n")))

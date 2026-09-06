@@ -19,12 +19,6 @@
          "../runtime/codec.rkt"
          "helpers/lazy.rkt")
 
-(define (apply2 function first second)
-  (lazy-apply (lazy-apply function first) second))
-
-(define (apply3 function first second third)
-  (lazy-apply (apply2 function first second) third))
-
 (define (apply-arguments function arguments)
   (if (null? arguments)
       function

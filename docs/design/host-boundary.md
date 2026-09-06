@@ -1,127 +1,99 @@
 # Host boundary design
 
-Status: approved 2026-08-27; effects-and-standalone milestone complete
+Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05.
+Exit protocol, host, and public wrapper injection are implemented. The 0.3.0
+representation and existing nine operations are behaviorally unchanged.
 
-Date: 2026-08-27
+This document records the exact current contract for AttaLambda's one
+outside-world boundary. The three canonical
+[`docs/specifications/`](../specifications/README.md) documents remain
+authoritative.
 
-This document fixes the contract for the second milestone's single privileged
-outside-world boundary. It is subordinate to the three canonical
-[specifications](../specifications/README.md). Its approval authorizes only the
-closed implementation described here and no broader relaxation of
-`AGENTS.md`.
+## The boundary in one page
 
-Kyle approved using the single `host` boundary in AttaLambda and then
-approved this concrete request, codec, authority, and runtime contract on
-2026-08-27. Phases 14 through 20 subsequently implemented the approved codec
-split, sole host bridge, `stdout`, whole-file operations, and complete blocking
-TCP lifecycle, followed by pure HTTP parsing, rendering, routing, and
-sequential serving outside the host, then the standalone reader, facade,
-runnable applications, and whole-milestone acceptance evidence.
+- `runtime/host.rkt` alone defines and exports the unary `host` value.
+- `runtime/codec.rkt` converts representations. It performs no external
+  effect, owns no registry, and is imported in production only by the host.
+- `effects/` validates arguments and constructs requests with pure lambda
+  computation. It receives the host as an ordinary unary argument and never
+  imports `runtime/`.
+- `lang/expander.rkt` is the sole production importer of `host`; it injects
+  that value once into the ten public wrappers.
+- The closed effect set is standard output, whole-file read and replacement,
+  blocking TCP connect/listen/accept/read/write/close, and explicit process exit.
+- HTTP parsing, rendering, routing, and server decisions stay in `effects/`
+  as pure computation over the TCP wrappers.
+- The host inherits the launching process's permissions. It is not a sandbox.
 
+The shortest implementation path is:
 
-> **Milestone 4 amendment (2026-09-01).** Since Step 35.4/35.5 the ordinary
-> numeric request fields (ports, backlog sizes, read limits, handles) are
-> canonical nonnegative whole Rat objects and handle responses are Rat; since
-> Step 36.1 successful no-value acknowledgements are `Ok(UNIT)`; since Steps
-> 37.3 and 37.4 file and TCP payloads cross the boundary as `List Byte`
-> (`read-file` and `tcp-read` return `Ok(List Byte)`, `write-file` and
-> `tcp-write` accept a validated `List Byte`). Operation
-> codes, error kinds, and argument positions remain fixed Church numerals,
-> and the authority of the single bridge is unchanged. The pre-amendment
-> text below is the literal contract of the completed milestones.
+```text
+effects wrapper -> host -> dispatch-request -> perform-* -> codec result
+```
 
-## Decision summary
+Explicit exit ends at `perform-exit`: successful real termination has no
+return value to convert.
 
-- The public boundary is exactly one unary function: `host`.
-- Exact object-language-to-Racket and Racket-to-object-language conversion is
-  isolated in `runtime/codec.rkt`; it is trusted conversion code but has no
-  operating-system effects, registry, or language-visible export.
-- `host` accepts one canonical proper List request.
-- A non-List argument or incoming Error follows the existing strict Error
-  rules. A malformed List request returns InvalidHostRequest Error. A valid
-  request always returns Result.
-- The operation set is closed to `stdout`, whole-file read and replacement,
-  and blocking TCP connect/listen/accept/read/write/close.
-- Every byte crossing the boundary is a Char payload from 0 through 255 inside
-  a String. No host String, byte string, path, port, socket, exception, or
-  collection becomes an object-language value.
-- TCP resources stay in a runtime-owned registry. The language sees only
-  nonzero Nat handles that are opaque by convention.
-- The runtime inherits the launching process's filesystem and network
-  authority. There is no hidden sandbox or permission prompt.
-- Effects are synchronous and occur only when a lazy `host` application is
-  forced. Sequencing requires an explicit data dependency on the preceding
-  Result.
+Start with `dispatch-request` in `runtime/host.rkt` for routing and argument
+decoding. Follow only its selected `perform-*` function for the native effect,
+and open `runtime/codec.rkt` only for the representation conversion it calls.
 
-## Boundary type
+## Boundary type and request shape
 
 Conceptually:
 
 ```text
-host : List -> Error | Result
+host : List -> Error | Result (or explicit process termination)
 ```
 
-`host` has exactly one object-language argument. It first applies the existing
-strict List contract:
-
-- incoming Error: bubble it through `host(arg1 expected LIST)`;
-- another typed value: return framed TypeMismatch Error;
-- canonical List: validate the request schema in pure lambda computation.
-
-Schema failure returns InvalidHostRequest Error and never enters the trusted
-dispatcher. A schema-valid request crosses the privileged boundary and
-returns one canonical Result. The dispatcher defensively validates the decoded
-shape again, but it never broadens the public contract.
-
-The trusted implementation is split by capability. `runtime/codec.rkt`
-performs only exact representation conversion. `runtime/host.rkt` imports
-that codec, performs the closed dispatch and approved effects, and exports
-only the one `host` value. Neither module exposes a generic callback,
-evaluator, namespace, port, dispatcher handle, or codec through the Alone the
-Lambdas language surface.
-
-## Request encoding
-
-A request is a proper List with this exact flat shape:
+A request is one canonical proper List:
 
 ```text
 [operation argument ...]
 ```
 
-`operation` is a typed String containing one canonical lowercase ASCII name.
-Every schema has exact arity; trailing elements are invalid. Operation names
-are pure String constants generated mechanically at expansion time, following
-the established function-name pattern.
+`operation` is a typed String containing a closed lowercase ASCII name. Every
+operation has exact arity. Pure wrappers check their public argument contracts;
+the pure host bridge checks the complete request rules before dispatch. The
+real host also decodes and defensively checks the request rather than trusting
+a direct caller.
 
-| Canonical request | Valid argument constraints | Ok payload |
+An incoming Error bubbles through the normal strict boundary. A non-List
+argument returns TypeMismatch; a malformed List request returns
+InvalidHostRequest. Both are bare `Error` values.
+Except for exit, a valid request returns `Result`: `Ok` for success or
+`Err(HostFailure)` for an expected external failure. A valid exit request
+terminates with the requested status, returns nothing, and prints nothing
+automatically.
+
+## Closed operation table
+
+| Request | Decoded constraints | Successful result |
 | --- | --- | --- |
-| `["stdout", bytes]` | `bytes : String` | `NIL` after all bytes are written and flushed |
-| `["read-file", path]` | `path : String` | complete file contents as String bytes |
-| `["write-file", path, bytes]` | `path : String`, `bytes : String` | `NIL` after replacement completes |
-| `["tcp-connect", remote, port]` | nonempty `remote : String`; `port : Nat` in 1–65535 | nonzero connection-handle Nat |
-| `["tcp-listen", local, port, backlog]` | `local : String`; `port : Nat` in 0–65535; `backlog : Nat` in 1–65535 | two-element List `[listener-handle, bound-port]` |
-| `["tcp-accept", listener]` | nonzero handle Nat | nonzero connection-handle Nat |
-| `["tcp-read", connection, maximum]` | nonzero handle Nat; `maximum : Nat` in 1–65536 | zero through `maximum` bytes as String |
-| `["tcp-write", connection, bytes]` | nonzero handle Nat; `bytes : String` | `NIL` after the complete String is written |
-| `["tcp-close", handle]` | nonzero handle Nat | `NIL` after removal and close |
+| `stdout String` | String bytes | `Ok(UNIT)` after write and flush |
+| `read-file String` | path bytes must be UTF-8 | `Ok(List Byte)` with the complete file |
+| `write-file String (List Byte)` | UTF-8 path and byte payload | `Ok(UNIT)` after truncating replacement |
+| `tcp-connect String Rat` | nonempty UTF-8 hostname; whole port 1..65535 | `Ok(Rat)` connection handle |
+| `tcp-listen String Rat Rat` | UTF-8 interface; whole port 0..65535; whole backlog 1..65535 | `Ok(List)` containing handle Rat and bound-port Rat |
+| `tcp-accept Rat` | positive whole listener handle | `Ok(Rat)` connection handle |
+| `tcp-read Rat Rat` | positive whole connection handle; whole maximum 1..65536 | `Ok(List Byte)`, with `NIL` at EOF |
+| `tcp-write Rat (List Byte)` | positive whole connection handle and byte payload | `Ok(UNIT)` after the complete write |
+| `tcp-close Rat` | positive whole listener or connection handle | `Ok(UNIT)` after removal and cleanup |
+| `exit Rat` | canonical whole Rat exactly 0 or 1 | process terminates with that status; does not return |
 
-The quotes in the table describe String values; they are not host strings in
-the runtime representation.
+The table's operation and arguments are List elements, not Racket command
+arguments. Numeric fields remain typed Rat values at the boundary; conversion
+accepts only nonnegative whole values in the listed range. Handles are
+positive whole Rats but are opaque identifiers, not public resource objects.
 
-For `tcp-listen`, `EMPTY-STRING` means all local interfaces. Port zero asks the
-operating system for an ephemeral port, and the actual bound port is returned.
-Any other local String is passed as the requested interface or hostname.
+For `tcp-listen`, an empty interface String means all local interfaces. Port
+zero requests an ephemeral port and the returned pair reports the actual bound
+port. `tcp-read` blocks until data, EOF, or failure. An empty write still
+validates the connection and succeeds without a platform write.
 
-`tcp-read` blocks until at least one byte is available, EOF is known, or an
-external failure occurs. `Ok EMPTY-STRING` means orderly peer EOF, never
-failure. `tcp-write` has an all-bytes contract: platform-level partial writes
-are completed inside the trusted bridge before Ok is returned. It always
-validates the connection handle; with a valid connection, an empty String
-succeeds without a platform write.
+## Pure wrappers
 
-## Public wrappers
-
-The ordinary effect layer provides strict, curried wrappers with these names:
+The wrapper names in the approved language contract are:
 
 ```text
 stdout
@@ -133,44 +105,39 @@ tcp-accept
 tcp-read
 tcp-write
 tcp-close
+exit
 ```
 
-Each wrapper validates its normal typed arguments through the generalized
-checker, constructs one request with pure List/String/Nat computation, and
-applies its injected unary `host`. The wrapper itself contains no Racket
-effect. Internal wrapper builders accept a host function first so tests can
-inject a deterministic fake; the standalone language binds them once to the
-real production `host`.
+`effects/stdout.rkt`, `effects/files.rkt`, `effects/tcp.rkt`, and
+`effects/exit.rkt` build these wrappers. Each builder accepts a host first,
+which lets tests inject a unary fake. That injection is ordinary lambda
+calculus and does not create another privileged primitive.
 
-This higher-order injection is ordinary lambda calculus. It does not create a
-second privileged primitive.
+Request construction and validation remain pure. A bad typed argument,
+non-whole count, or non-Byte payload element becomes the specified Error
+before the host is called. The pure host bridge rejects an out-of-range whole
+count before its strict dispatcher runs. Early Errors retain exact remaining
+unary arity and normal propagation frames.
 
-## Result and Error contract
+For exit, the generalized checker produces TypeMismatch for a non-Rat and
+bubbles an incoming Error with its normal frame. Pure Rat equality admits
+only 0 or 1; every other Rat produces InvalidCount without a host call.
+Malformed direct List requests retain InvalidHostRequest instead. The host
+uses the unchanged codec and bounded-count decoder to defensively require a
+canonical whole Rat 0 or 1. It does not choose a status from any other value.
 
-Every schema-valid request returns Result:
+## Errors and external failures
 
-- Ok contains exactly the payload listed in the request table.
-- Err contains a canonical HostFailure Error.
-
-Two new Error kinds use the permitted tiny Church metadata namespace without
-changing the closed type-tag table (kind 6 is the core's
-WRONG-RESULT-VARIANT):
-
-```text
-7  INVALID-HOST-REQUEST
-8  HOST-FAILURE
-```
-
-Both kinds use the existing Error-root shape. Their `details` field is exactly
-one raw lambda pair; no record, host collection, or new object type is added:
+InvalidHostRequest and HostFailure use Error kinds in the approved tiny Church
+metadata namespace; they are not new object-language types.
 
 ```text
 InvalidHostRequest details = raw-pair(operation String, reason String)
 HostFailure details         = raw-pair(operation String, code String)
 ```
 
-If an operation String cannot be recovered, `operation` is `EMPTY-STRING`.
-The closed reasons are:
+If the operation cannot be recovered, its detail is `EMPTY-STRING`. The
+closed malformed-request reasons are:
 
 ```text
 unknown-operation
@@ -199,182 +166,117 @@ timed-out
 io-failure
 ```
 
-The bridge maps the most specific stable Racket/OS category available and uses
-`io-failure` as the fallback. It never places raw exception text, errno data,
-paths, hostnames, or host values in an Error. Readers may render the two pure
-String detail fields later.
+`runtime/host.rkt` maps stable Racket and operating-system categories to the
+most specific code above and uses `io-failure` as the fallback. Returned data
+never contains exception text, errno data, a native path or hostname, a port,
+socket, or other Racket value.
 
-Malformed direct `host` calls are contract failures and therefore bare Error,
-not Result Err. A valid request rejected by the operating system is expected
-external failure and therefore Result Err. This preserves the existing
-Error-versus-Result distinction.
+Malformed direct calls are contract failures and therefore bare Error values.
+Operating-system rejection of a valid request is expected computational
+failure and therefore `Result Err`.
 
-## Boundary codecs
+## Codec contract
 
-Request construction is not boundary conversion. `effects/protocol.rkt` and
-the public wrappers construct and validate lambda-encoded requests using pure
-object-language computation. Only a schema-valid request reaches the trusted
-runtime.
+`runtime/codec.rkt` exports concrete conversions for:
 
-Here, codec means exact representation conversion, not compression or text
-encoding. `runtime/codec.rkt` is the one deterministic bidirectional
-conversion module. It may force already-validated lazy object-language
-values, inspect their canonical lambda representations, and use Racket
-control flow, exact nonnegative integers, immutable byte strings, and
-temporary private collections solely to translate representations. Each
-implementation phase may add only the conversions needed by the operations
-implemented in that phase:
+- proper List to and from a private host list;
+- String to and from immutable bytes;
+- `List Byte` to and from immutable bytes;
+- exact Rat to and from a Racket exact rational;
+- canonical Unit, Ok, and Err construction.
 
-- object-language Char and String values to exact host bytes and exact host
-  bytes back to canonical object-language Char and String values;
-- object-language Nat values to exact host integers and exact nonnegative host
-  integers back to normalized object-language Nat values when TCP handles and
-  bounds are added;
-- the proper Lists, typed acknowledgements, Result values, and Error values
-  needed to return the closed response algebra.
+Decoding checks tags, proper List tails, cycles, Byte/Char bounds, normalized
+binary magnitudes, reduced Rat parts, a positive denominator, and the sole
+positive `0/1` zero. A malformed representation returns `codec-failure` and
+never reaches a native effect. Encoding builds canonical lambda values and
+does not run object-language arithmetic.
 
-Object-language-to-host decoding defensively checks the expected tag, proper
-List shape, Char range, and normalized Nat representation even though pure
-protocol validation has already run. A conversion failure returns the
-applicable InvalidHostRequest reason without dispatching an effect.
-Host-to-object-language encoding always constructs canonical values: zero is
-`[0]`, positive Nats have no leading zeroes, every Char is 0 through 255, every
-List has a List tail, and no Racket value is captured inside the returned
-lambda term.
+The codec may force validated values and use temporary private Racket data for
+translation. It may not interpret paths, dispatch operations, perform I/O,
+map exceptions, mutate resource state, implement language algorithms,
+format values for people, terminate the process, or decide program success.
 
-The codec does not interpret paths or hostnames, dispatch operations, perform
-stdout/file/TCP access, normalize operating-system exceptions, mutate the
-handle registry, implement object-language algorithms, or format values for
-people. It does not import any reader. Raw stdout, file, and TCP content
-remains bytes; only `runtime/host.rkt` applies the separately specified UTF-8
-rule when a decoded byte sequence is used as a path or network name.
+## Bytes, paths, and files
 
-The codec is internal trusted infrastructure, not a second object-language
-primitive. Only `runtime/host.rkt` may import it in production. Tests may
-import it directly to prove exact round trips, canonical output,
-malformed-value rejection, and absence of effects.
-
-## Byte, path, and file semantics
-
-All boundary content is bytes:
+Stdout, file contents, and TCP payloads are byte-exact. No newline, text
+normalization, or character encoding is implicit:
 
 ```text
-one object Char  <->  one host byte
-one object String  <->  one immutable host byte sequence at the bridge
+one object Char or Byte <-> one host byte
 ```
 
-No newline, character encoding, or text normalization is implicit for stdout,
-file contents, or TCP payloads.
+Path and TCP name Strings are the exception: the host interprets their bytes
+as UTF-8. Invalid encoding returns `invalid-text`. Host rejection of a decoded
+path returns the applicable closed filesystem code.
 
-Path Strings and TCP host/interface Strings are the one exception: their byte
-content must be valid UTF-8 and is decoded to a host text value at the bridge.
-Invalid UTF-8 returns Result Err with `invalid-text`; a decoded path rejected
-by the host returns `invalid-path`. Arbitrary non-UTF-8 filesystem names are
-outside this milestone.
+Relative paths use the process's current directory; absolute paths are
+allowed. Host-default symlink traversal applies. `read-file` reads the complete
+file. `write-file` creates a missing file or truncates and replaces an existing
+one. It creates no parent directory and is not atomic, so a failed write may
+leave a partial file.
 
-Relative paths resolve against the launching process's current directory.
-Absolute paths are allowed. Host-default symlink traversal applies. The
-runtime creates no parent directories and performs no path sandboxing.
+`stdout` writes raw String bytes to the current output port and flushes before
+returning. It appends nothing and does not write stderr.
 
-`read-file` reads the complete regular file as bytes. `write-file` creates a
-missing file or truncates and replaces an existing file's contents. It is not
-an atomic replace operation. A failed write may therefore leave a partial
-file, exactly as documented; later atomic-file APIs would require a separate
-approved operation.
+## TCP registry and cleanup
 
-`stdout` writes raw bytes to the process's current standard-output port and
-flushes before Ok. It does not append a newline and does not write stderr.
+The host owns one private registry of listeners and full-duplex connections.
+Handles start at one, increase monotonically, and are never reused within a
+runtime instance. A fabricated, closed, or foreign handle returns
+`invalid-handle`; using a listener as a connection or the reverse returns
+`wrong-handle-kind`.
 
-## TCP handles and lifecycle
+Connect, listen, and accept register a resource only after successful
+acquisition. If registration or result conversion fails, the newly acquired
+resource is cleaned up. Read or write failure removes and closes its
+connection. Close removes the handle before attempting native cleanup, tries
+both ports of a connection, and leaves the handle stale even if cleanup
+reports failure. The current custodian closes any resources left at process
+shutdown, but normal language paths still close handles explicitly.
 
-The trusted runtime owns a registry whose entries are either listeners or
-full-duplex connections. Handles:
+The TCP API is synchronous and blocking. It has no timeout argument,
+half-close, readiness, TLS, UDP, asynchronous operation, production thread, or
+cancellation surface. Hostname resolution is part of `tcp-connect`.
 
-- are canonical nonzero Nat values;
-- begin at ONE within one runtime instance;
-- increase monotonically and are never reused in that instance;
-- have no arithmetic meaning despite their Nat representation;
-- cannot be transferred to another process or runtime instance.
+## Laziness and order
 
-A fabricated, closed, or foreign handle is structurally valid but resolves to
-Result Err `invalid-handle`. Using a listener where a connection is required,
-or the reverse, returns `wrong-handle-kind`.
+Constructing a request has no effect. The effect occurs when the host
+application is forced. A forced promise caches its value, so forcing the same
+bound application again does not repeat the effect; making another host
+application requests another effect.
 
-`tcp-connect`, `tcp-listen`, and `tcp-accept` register a resource only after
-successful acquisition. `tcp-close` removes the entry and closes the complete
-listener or both sides of a connection. A second close returns
-`invalid-handle`. Racket assigns every acquired listener and connection port to
-the runtime's current custodian, so shutting that custodian down closes any
-remaining operating-system resources; normal wrapper and server paths must
-still call `tcp-close` as soon as they finish with a handle. A read or write
-failure removes and closes its connection before returning Err. A close
-failure still leaves the handle removed and therefore stale.
+Successful real exit never returns to be forced again. An injected fake host
+may return an ordinary value; the exit wrapper preserves that value and its
+normal force-once behavior. An exit in an unselected branch remains unforced.
 
-The initial TCP surface is deliberately blocking. It has no timeout argument,
-half-close, readiness API, TLS, UDP, async, production threads, or
-cancellation. Hostname resolution performed as part of `tcp-connect` is
-inside that one requested effect.
+Programs sequence effects through a data dependency: inspect the first Result,
+select an Ok or Err continuation with the strict lazy conditional, and create
+the next host application only in the selected continuation. Binding an unused
+first result does not establish order.
 
-## Laziness and effect order
+Pure AttaLambda decides whether a failure is fatal and explicitly calls exit
+with 1 (unsuccessful completion) or 0 (successful completion). Error and
+Result Err remain ordinary values; neither the host nor runner automatically
+prints them or derives a status from them. Without an exit call, normal
+program completion remains status 0. A performed exit prevents later effects.
+The runner's separate native exit path remains limited to launcher, source,
+and scaffolding failures; only the host performs program-requested exit.
 
-Constructing a request has no effect. Applying `host` creates a lazy
-computation; the effect occurs when its Result or Error is demanded. A forced
-promise caches its result, so forcing the same bound host application again
-does not repeat the effect. Evaluating a new host application performs a new
-effect.
+## Authority
 
-Effect order is expressed through a real data dependency:
+The real host has the launching process's relevant authority. An AttaLambda
+program can write stdout, read permitted files, create or truncate permitted
+paths including symlink targets, resolve names, connect to permitted remote TCP
+endpoints, bind permitted local ports, and terminate its own process with
+status 0 or 1. Users must inspect and trust a program before running it.
 
-1. force and inspect the first Result;
-2. branch on Ok or Err with the strict lazy `if`;
-3. construct the next host application only in the selected continuation.
+The closed host does not expose environment enumeration, subprocesses, shell
+commands, dynamic loading, evaluation, namespaces, FFI, directory listing or
+deletion, clocks, randomness, UDP, TLS, or an HTTP library. This closed set
+limits available operations; it does not create a filesystem or network
+sandbox.
 
-Merely placing two calls beside one another or binding an unused first result
-does not sequence them. No `begin`, mutation, hidden scheduler, or host control
-flow is added to the object language.
-
-## Authority and trust
-
-Running an AttaLambda program with the real host grants it the same
-relevant authority as the launching Racket process:
-
-- it can write arbitrary bytes to stdout;
-- it can read any file the process may read;
-- `write-file` can create, truncate, and overwrite any path the process may
-  write, including a symlink target;
-- it can resolve names, connect to remote TCP endpoints, and bind listening
-  ports permitted by the operating system.
-
-There is no Mirafold-style approval prompt, project-root jail, or automatic
-backup. Users must trust a program before running it with the real host. Tests
-use captured stdout, isolated temporary directories, and loopback networking.
-
-The closed operation set does not expose environment enumeration, subprocesses,
-shell commands, dynamic loading, `eval`, Racket namespaces, arbitrary FFI,
-filesystem listing/deletion/rename, clocks, randomness, UDP, TLS, or HTTP host
-libraries.
-
-## Modules and dependency direction
-
-The completed implementation contains only demonstrated files within these
-layers:
-
-```text
-core/                 unchanged pure data and computation
-effects/protocol.rkt  pure request validation, constants, and Error data
-effects/stdout.rkt    pure injected-host wrapper
-effects/files.rkt     pure injected-host wrappers
-effects/tcp.rkt       pure injected-host wrappers
-effects/http.rkt      pure HTTP request parsing and shared message constants
-effects/http-response.rkt  pure HTTP response rendering
-effects/http-server.rkt  pure routing and sequential TCP/HTTP composition
-runtime/codec.rkt     trusted exact conversion; no operating-system effects
-runtime/host.rkt      sole language host binding, dispatcher, effects, registry
-lang/                 standalone reader and canonical facade/expander
-info.rkt              single-collection package metadata
-```
-
-Dependencies are one-way:
+## Dependency and enforcement
 
 ```text
 core <- effects <- lang
@@ -382,185 +284,32 @@ core <- runtime/codec <- runtime/host <- lang
 core <- effects/protocol <- runtime/host
 ```
 
-`core/` never imports upward. `effects/` never imports `runtime/`; it receives
-one host function as an ordinary lambda argument. `runtime/codec.rkt` imports
-only the core representations and the narrowly allowed Racket facilities
-needed for exact conversion. No production module except `runtime/host.rkt`
-may import the codec. The host module imports the codec and protocol, performs
-the approved effects, and constructs responses through the codec. Human-facing
-readers remain outside the computational dependency graph and are not reused
-as bidirectional codecs.
-
-## Purity classifications
-
-Phase 14 updated tooling and project rules to enforce these distinct classes;
-Phase 15 extended the host's exact capability vocabulary for whole-file read
-and replacement, Phase 16 admitted only the five `racket/tcp` bindings needed
-for the approved lifecycle while adding a project-wide sole-importer check,
-Phase 17 added pure HTTP messages under the unchanged `effects/` class, and
-Phase 18 added only pure TCP/HTTP composition under that same class. Phase 19
-then added the exact standalone reader, expander, and package classes without
-granting any new operating-system capability. Phase 20 inventories every
-Racket source, enforces the reader/support/application directions, and adds no
-host capability. The classifications are:
-
-| Class | Allowed boundary | Required check |
-| --- | --- | --- |
-| `core/` | none | Existing absolute unary-lambda/application scan; `host` remains forbidden |
-| `effects/` | invocation of its injected unary host argument only | Same pure-form scan plus no Racket effect imports or definitions |
-| `runtime/codec.rkt` | deterministic canonical conversion between object-language values and private host bytes/integers/collections | Exact-path conversion scan, narrow import allowlist, no I/O or network imports, no mutation or registry, no reader imports, and no language-visible export |
-| `runtime/host.rkt` | only the approved byte/file/TCP operations, UTF-8 interpretation, exception normalization, and private registry state | Exact-path effect scan, import allowlist, sole `host` definition/direct producer export, sole production codec importer, and forbidden eval/process/FFI/environment capabilities |
-| `lang/reader.rkt` | Lisp reader delegation only | Exact path, `syntax/module-reader` language, and sole expander target; no other form |
-| `lang/expander.rkt` | mechanical expansion, canonical import/export wiring, and one-time effect-wrapper injection | Exact imports and exports, fixed transformer/helper/runtime definitions, closed source vocabulary, no OS/process/environment/dynamic-loading/FFI/mutation capability, and the sole authorized import/re-export of production `host` |
-| `info.rkt` | single-collection package metadata | Exact collection name, runtime/build dependencies, description, and version |
-| `macros/` | mechanical syntax translation | Exactly the two approved paths, pinned languages/imports/exports and source vocabulary, and no OS/process/environment/dynamic-loading/FFI/mutation capabilities |
-| `readers/` | one-way human observation with host values and control flow, but no external effects, mutation, registry, or upward dependency | Racket/base reader scan, closed source vocabulary, narrow import direction, capability denial, and exclusion from every production dependency path |
-| `tests/` and `tooling/` | host facilities needed to verify the claim | Every Racket module is inventoried; both classes remain unrestricted support code and are rejected from production dependency paths |
-| `examples/` | public standalone language and its explicitly requested real-host effects | Exact `#lang attalambda` classification plus fresh-install end-to-end execution in temporary/loopback scope |
-
-Repository checks must prove:
-
-- exactly one production module defines and directly exports `host`; the
-  exact facade alone may import and re-export that same binding;
-- no production module except `runtime/host.rkt` imports the codec or Racket
-  filesystem/TCP facilities;
-- the codec imports no effects, readers, filesystem, TCP, process, eval,
-  dynamic-loading, environment, FFI, or mutation facilities;
-- no production module imports process, eval, dynamic-loading, environment,
-  or FFI facilities;
-- the two mechanical macro modules satisfy their approved path, language,
-  import, export, and vocabulary constraints; imports are authorized before
-  export discovery; the complete project-root anchor and production paths are
-  validated before discovery; rejected symlinks are never traversed; no
-  additional macro or language module exists; and the exact reader, expander,
-  package metadata, and facade host path remain pinned;
-- every Racket source belongs to an approved repository class; readers have
-  only core/reader dependencies and no external-effect capability; and
-  readers, tests, tooling, and applications never enter production imports;
-- every pure production lambda is unary after mechanical expansion;
-- every wrapper's fake-host trace contains only its canonical request;
-- every implemented codec direction has exact round-trip, canonicality, and
-  malformed-value coverage;
-- `core/` retains zero exceptions and all existing acceptance evidence.
-
-Approval changes only the deliberate `host` exception. It does not authorize
-host implementation of parsing, routing, arithmetic, String algorithms, type
-checking, Result control flow, or other ordinary language behavior.
-
-## Verification strategy
-
-Each implementation phase must have both deterministic and real-boundary
-coverage:
-
-- codec: all 256 byte/Char values, empty and embedded-zero Strings,
-  representative Nat boundaries when added, canonical output, malformed input,
-  and proof that conversion itself performs no effect;
-- fake host: exact request shape, no call after contract Error, result
-  propagation, failure propagation, branch laziness, and call count;
-- stdout: byte capture and flush-visible completion;
-- files: isolated temporary directory, replacement warning, binary round trip,
-  missing path, permission failure where the platform can prove it, and no
-  unrelated path access;
-- TCP: loopback only, ephemeral listen port, fragmented reads, EOF, complete
-  writes, wrong/stale handles, and cleanup;
-- HTTP: test-side external client, while parsing/routing/rendering remain under
-  the pure scan;
-- laziness: an unforced or unselected host application performs no effect, and
-  repeated forcing of the same promise performs exactly one.
-
-No real-host effect test contacts an external network service or performs file
-effects outside its temporary scope; ordinary test/tooling reads of repository
-source are not object-language host operations.
-
-## Standalone surface
-
-The implemented language exports canonical `lambda`, `def`, `let`, typed `if`,
-typed `cons`, the public data API, these effect wrappers, and the single
-explicit `host`. Internal raw operations and Racket collision workarounds stay
-hidden.
-
-The standalone reader keeps Lisp syntax. Nonnegative integer literals lower
-mechanically to canonical binary Nat. Source String literals lower
-mechanically to their UTF-8 bytes, with one object Char per encoded byte. No
-host number or String survives expansion, and no general parser, reader-time
-effect, coercion, or additional literal family is introduced.
-
-## Reuse from `all_the_lambdas`
-
-The verified reusable pattern is narrow:
-
-- its `macros/lazy-with-macros.rkt` demonstrates a small language shell that
-  re-exports Lazy Racket application and datum machinery;
-- its macro modules demonstrate mechanical lowering under `#lang s-exp`.
-
-AttaLambda already supersedes the old finite-arity `def`. The old
-repository has no host dispatcher, filesystem/TCP layer, HTTP server, custom
-language reader, or standalone runtime to borrow. Its `_if`, `_let`, `_cons`,
-coercive layers, and older representations remain explicitly inapplicable.
-
-## Feasibility references
-
-The design relies only on documented host behavior:
-
-- [Lazy Racket](https://docs.racket-lang.org/lazy/) delays applications,
-  treats imported strict functions as strict, and exposes effects when their
-  promises are forced.
-- [Racket promises](https://docs.racket-lang.org/reference/Delayed_Evaluation.html)
-  cache a forced result.
-- [Racket TCP](https://docs.racket-lang.org/reference/tcp.html) provides the
-  blocking listener/connection operations and supports port zero with bound
-  port discovery.
-- [Racket byte strings](https://docs.racket-lang.org/reference/bytestrings.html)
-  represent exact byte values from 0 through 255.
-
-These are implementation feasibility facts, not object-language semantics.
+`tooling/check-purity.rkt` verifies that `core/` and `effects/` expand only to
+the permitted lambda terms. `tooling/check-boundaries.rkt` enforces the sole
+host definition/export/import path, sole production codec importer, closed
+runtime imports and capabilities, reader separation, and complete source
+classification. Focused tests cover request precedence, all codec directions,
+failure mapping, force-once behavior, byte-exact files and stdout, loopback TCP
+lifecycle, cleanup, and hostile boundary mutations.
 
 ## Approval record
 
-Approval accepts the request schemas, Result/Error split, byte and path rules,
-destructive replacement behavior of `write-file`, process-level authority,
-blocking TCP lifecycle, separated codec/host trust boundary, purity
-classifications, and standalone literal policy defined above.
-
-Kyle approved the high-level use of `host` and then explicitly approved these
-detailed implementation boundaries on 2026-08-27 by replying:
+Kyle approved the high-level `host` boundary and this concrete request,
+conversion, authority, and runtime design on 2026-08-27 by replying:
 
 ```text
 Approve the Phase 13 host-boundary design.
 ```
 
-Phase 14 executed the approved first slice on 2026-08-27: exact String-byte
-conversion, the sole unary `host`, pure injected-host `stdout`, real output,
-and the separate structural boundary gate. Phase 15 executed the approved file
-slice on 2026-08-27: pure injected-host wrappers, byte-exact whole-file reads
-and replacement writes, UTF-8 path interpretation, closed Result Err mapping,
-and isolated temporary-directory tests. Phase 16 executed the approved TCP
-slice on 2026-08-27: pure injected-host wrappers, canonical Nat conversion,
-private monotonic listener/connection handles, blocking bounded reads,
-all-bytes writes, explicit close and failure cleanup, closed network failure
-mapping, loopback-only integration tests, and exact sole-host TCP import
-enforcement. Phase 17 executed the approved pure HTTP slice on 2026-08-27:
-incremental GET request parsing into target Strings, distinct Result Err
-outcomes, fixed response status and header rendering, lambda-computed decimal
-content lengths, exact binary bodies, and explicit boundary regressions that
-reject host String, regex, arithmetic, and HTTP-library helpers. It added no
-host operation or authority. Phase 18 then composed those pure message
-functions with the existing injected-host TCP wrappers: a strict single-path
-handler selects explicit statuses and bodies, one-connection serving closes
-every accepted connection on completed paths, and the blocking server repeats
-that operation sequentially over a caller-owned listener. Deterministic fakes
-prove exact TCP-only traces, while a test-side external HTTP client proves the
-real ephemeral-loopback response. Phase 18 likewise added no host operation,
-authority, runtime import, production thread, or HTTP library. Phase 19 added
-the single-collection reader and facade, canonical names, nested-unary source
-application lowering, exact Nat and UTF-8 String literals, and the one-time
-binding of all nine public effect wrappers to the real host. Its fresh-install
-suite proves canonical values and module isolation, while the structural gate
-proves the facade is the only new production importer/exporter of `host` and
-has no direct operating-system capability. Phase 20 added the exact stdout,
-isolated file-round-trip, and ephemeral-loopback HTTP applications; ran them
-from a copied package installation under an isolated Racket user home; and
-closed the evidence map across core, effects, codec, host, macros, language,
-readers, tests, tooling, and applications. It changed no production operation,
-authority, representation, or language semantic. The approval record above
-continues to control the completed boundary.
+The approved implementation subsequently replaced public Nat counts and
+handles with whole Rat values, acknowledgements with Unit, and file/TCP
+payload Strings with `List Byte` as part of the completed 0.3.0 language
+change. The current contract above includes those approved representations;
+the operation set and sole-host authority did not change.
+
+On 2026-09-05 Kyle approved the five-phase HTTP/List/exit plan. Its matching
+amendments to all three normative specifications add exactly the tenth exit
+operation above. The sole-host architecture, deterministic codec role, and
+absolute object-language purity remain in force. No process spawning,
+signals, other exit statuses, or automatic Error/Result status mapping was
+approved.

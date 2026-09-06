@@ -408,7 +408,20 @@
     65
     (source-diagnostic
      "unsupported-datum.attl"
-     "unsupported literal; only nonnegative Nat and String literals are supported"
+     "unsupported literal; only exact Rat and String literals are supported"
+     #:line 2
+     #:column 0))
+
+   (define invalid-syntax-source
+     (build-path working-directory "invalid-syntax.attl"))
+   (write-source invalid-syntax-source
+                 "#lang attalambda\n(lambda (left right) left)\n")
+   (check-runner-failure
+    (run '("invalid-syntax.attl"))
+    65
+    (source-diagnostic
+     "invalid-syntax.attl"
+     "source has invalid syntax"
      #:line 2
      #:column 0))
 
@@ -442,20 +455,13 @@
    ;; classify it as status 70 and discard every raw detail byte.
    (define runner-source
      (file->string runner))
-   (define loader-expression
-     "(dynamic-require source-path #f)")
-   (check-equal?
-    (length
-     (regexp-match* #rx"[(]dynamic-require source-path #f[)]"
-                    runner-source))
-    1)
    (define fault-runner
      (build-path package-source "runner" "attalambda-phase-23-fault.rkt"))
    (write-source
     fault-runner
     (string-replace
      runner-source
-     loader-expression
+     "(dynamic-require source-path #f)"
      "(error 'phase-23-test \"raw host detail: ~s\" car)"))
    (define internal-failure-result
      (run-command environment
@@ -501,4 +507,31 @@
                  "#lang attalambda\n(read-file \"absent.txt\")\n")
    (check-command-success
     (run '("host-result-error.attl"))
-    #"")))
+    #"")
+
+   ;; The program, not the runner, chooses fatal versus recoverable failure.
+   ;; Every case is public-only source in the isolated working directory.
+   (for ([case
+          (in-list
+           '(("exit-zero.attl" "(exit 0)\n" 0 #"")
+             ("exit-one.attl" "(exit 1)\n" 1 #"")
+             ("missing-file-fatal.attl"
+              "(def outcome = (read-file \"missing-exit-input.txt\"))\n(if (is-err outcome) (exit 1) (exit 0))\n"
+              1 #"")
+             ("missing-file-recoverable.attl"
+              "(def outcome = (read-file \"missing-exit-input.txt\"))\n(if (is-err outcome) (exit 0) (exit 1))\n"
+              0 #"")
+             ("exit-sequencing.attl"
+              "(stdout \"before\")\n(exit 1)\n(stdout \"after\")\n"
+              1 #"before")
+             ("exit-unselected.attl"
+              "(if FALSE (exit 1) (stdout \"continued\"))\n"
+              0 #"continued")))])
+     (define name (car case))
+     (write-source (build-path working-directory name)
+                   (string-append "#lang attalambda\n" (cadr case)))
+     (define result (run (list name)))
+     (check-false (command-result-timed-out? result) (result-diagnostic result))
+     (check-equal? (command-result-status result) (caddr case) (result-diagnostic result))
+     (check-equal? (command-result-stdout result) (cadddr case) (result-diagnostic result))
+     (check-equal? (command-result-stderr result) #"" (result-diagnostic result)))))
