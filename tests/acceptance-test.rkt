@@ -134,7 +134,7 @@
 (check-equal? (object-type-name contract-failure)
               "ERROR")
 (check-equal? (error-value->string contract-failure)
-              "ADD(arg1 expected RAT got BOOL)")
+              "add(arg1 expected RAT got BOOL)")
 
 (define-runtime-path core-directory
   "../core")

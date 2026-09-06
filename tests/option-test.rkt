@@ -101,14 +101,14 @@
           TRUE
           (lambda (payload) payload)
           FALSE))
- "OPTION-CASE(arg1 expected OPTION got BOOL)")
+ "option-case(arg1 expected OPTION got BOOL)")
 (check-equal?
  (error-value->string
   (apply3 OPTION-CASE
           invalid-nat-error
           (lambda (payload) payload)
           FALSE))
- "INVALID-NAT\n  -> OPTION-CASE(arg1 expected OPTION)")
+ "INVALID-NAT\n  -> option-case(arg1 expected OPTION)")
 
 ;; Operations remain chains of unary lambdas.
 (for ([function (in-list (list SOME IS-SOME IS-NONE OPTION-CASE))])

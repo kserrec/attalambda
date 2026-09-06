@@ -5,22 +5,22 @@
 ; Option, and persistent Map. Every check prints one deterministic line.
 (def show name passed =
   (stdout
-   (STRING-APPEND (if passed "ok " "FAIL ")
-                  (STRING-APPEND name "\n"))))
+   (string-append (if passed "ok " "FAIL ")
+                  (string-append name "\n"))))
 
-(show "negative-fraction" (EQ (ADD -7/3 1/3) -2))
-(show "exact-division" (EQ (unwrap-ok (DIV 7 2)) 7/2))
-(show "power" (EQ (unwrap-ok (EXP -3/2 5)) -243/32))
-(show "negative-power" (EQ (unwrap-ok (EXP 2 -3)) 1/8))
-(show "floor" (EQ (FLOOR -7/2) -4))
+(show "negative-fraction" (eq (add -7/3 1/3) -2))
+(show "exact-division" (eq (unwrap-ok (div 7 2)) 7/2))
+(show "power" (eq (unwrap-ok (exp -3/2 5)) -243/32))
+(show "negative-power" (eq (unwrap-ok (exp 2 -3)) 1/8))
+(show "floor" (eq (floor -7/2) -4))
 (show "unit-acknowledgement" (is-ok (stdout "")))
-(show "bytes" (STRING-EQ (BYTES-TO-STRING (STRING-TO-BYTES "λ")) "λ"))
+(show "bytes" (string-eq (bytes-to-string (string-to-bytes "λ")) "λ"))
 (show "option"
-      (OPTION-CASE (MAP-LOOKUP (MAP-SET (MAKE-MAP EQ) 2/3 42) 2/3)
-                   (lambda (value) (EQ value 42))
+      (option-case (map-lookup (map-set (make-map eq) 2/3 42) 2/3)
+                   (lambda (value) (eq value 42))
                    FALSE))
-(let base = (MAP-SET (MAKE-MAP EQ) 1 10)
-  (let updated = (MAP-REMOVE base 1)
+(let base = (map-set (make-map eq) 1 10)
+  (let updated = (map-remove base 1)
     (show "map-persistence"
-          (AND (IS-SOME (MAP-LOOKUP base 1))
-               (IS-NONE (MAP-LOOKUP updated 1))))))
+          (and (is-some (map-lookup base 1))
+               (is-none (map-lookup updated 1))))))

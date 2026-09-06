@@ -595,3 +595,41 @@ and parsing remain pure unary lambda computation under the existing rules.
 Neither the HTTP change nor explicit exit permits native Racket arithmetic,
 conditionals, strings, buffers, collections, or mutation in object-language
 computation. Both architectural checkers must enforce these boundaries.
+
+---
+
+# Public API and List Library Amendment (2026-09-06)
+
+This amendment applies the existing absolute-purity rules to the approved
+public API and List update. It supersedes earlier syntax examples only to
+permit mechanical Char literal expansion; no computational exception widens.
+
+Every new List algorithm, callback application, predicate-result check,
+Error construction/propagation, Option result, count/index calculation,
+range/repetition, and flattening type-tag decision is object-language
+computation. After expansion it consists only of variables, unary lambdas,
+and application. Use existing tagged values, Michaelson Lists, fixed-point
+recursion, and private binary arithmetic. No Racket collection algorithms,
+arithmetic, conditionals, equality, mutation, or host values may determine
+these results. The closed type-tag table and generalized checker stay intact.
+
+Reuse `raw-append`, `raw-reverse`, `raw-map`, and `raw-filter` where their raw
+contracts fit, with strict public adapters for the new contracts. Preserve
+existing raw behavior and callers. New raw algorithms remain raw; strict
+typing belongs at their typed boundary. Left-to-right reduce requires its
+specified accumulator behavior, not renaming the existing right fold.
+
+Public renaming consists of module export renaming and mechanical updates to
+lambda-encoded diagnostic names. It adds no executable compatibility wrappers
+or public aliases. Char literals use the existing reader and Char emitter:
+host character inspection at expansion time may validate the ASCII literal
+and mechanically emit its canonical binary representation. No host Char,
+Unicode runtime representation, parser, or new runtime helper is introduced.
+
+All existing boundary classifications remain: codec performs deterministic
+conversion; the sole host owns its ten approved effects; readers only
+observe; tests/tooling cannot enter production dependencies. Source inventory
+and expanded-purity checks cover every new production module. Do not weaken
+those gates. Host-side edits remain simple explicit export entries, literal
+checks, and necessary test/checker updates. No new dependency, registry,
+dispatcher, callback/type framework, or unrelated feature is authorized.

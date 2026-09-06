@@ -160,19 +160,75 @@
                      [language-if if]
                      [language-cons cons]
                      [language-host host]
-                     [language-exit exit])
-         TRUE FALSE NOT AND OR XOR
-         NIL HEAD TAIL IS-NIL LEN TAKE DROP
-         SUCC ADD SUB MULT DIV EXP RECIP NEG ABS FLOOR
-         EQ LT LTE GT GTE IS-ZERO IS-WHOLE IS-NONNEGATIVE-WHOLE
+                     [language-exit exit]
+                     [HEAD head]
+                     [TAIL tail]
+                     [IS-NIL is-nil]
+                     [LEN len]
+                     [TAKE take]
+                     [DROP drop]
+                     [NOT not]
+                     [AND and]
+                     [OR or]
+                     [XOR xor]
+                     [SUCC succ]
+                     [ADD add]
+                     [SUB sub]
+                     [MULT mult]
+                     [DIV div]
+                     [EQ eq]
+                     [LT lt]
+                     [LTE lte]
+                     [GT gt]
+                     [GTE gte]
+                     [IS-ZERO is-zero]
+                     [MAKE-CHAR make-char]
+                     [CHAR-EQ char-eq]
+                     [CHAR-LT char-lt]
+                     [CHAR-LTE char-lte]
+                     [CHAR-GT char-gt]
+                     [CHAR-GTE char-gte]
+                     [MAKE-STRING make-string]
+                     [STRING-EMPTY? string-empty?]
+                     [STRING-LENGTH string-length]
+                     [STRING-EQ string-eq]
+                     [STRING-APPEND string-append]
+                     [STRING-HEAD string-head]
+                     [STRING-TAIL string-tail]
+                     [STRING-PREFIX? string-prefix?]
+                     [STRING-CONTAINS? string-contains?]
+                     [EXP exp]
+                     [RECIP recip]
+                     [NEG neg]
+                     [ABS abs]
+                     [FLOOR floor]
+                     [IS-WHOLE is-whole]
+                     [IS-NONNEGATIVE-WHOLE is-nonnegative-whole]
+                     [MAKE-BYTE make-byte]
+                     [BYTE-VALUE byte-value]
+                     [BYTE-EQ byte-eq]
+                     [BYTE-LT byte-lt]
+                     [BYTE-LTE byte-lte]
+                     [BYTE-GT byte-gt]
+                     [BYTE-GTE byte-gte]
+                     [STRING-TO-BYTES string-to-bytes]
+                     [BYTES-TO-STRING bytes-to-string]
+                     [SOME some]
+                     [IS-SOME is-some]
+                     [IS-NONE is-none]
+                     [OPTION-CASE option-case]
+                     [MAKE-MAP make-map]
+                     [MAP-EMPTY? map-empty?]
+                     [MAP-SIZE map-size]
+                     [MAP-LOOKUP map-lookup]
+                     [MAP-CONTAINS? map-contains?]
+                     [MAP-SET map-set]
+                     [MAP-REMOVE map-remove])
+         TRUE FALSE
+         NIL
          UNIT
-         MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE BYTE-GT BYTE-GTE
-         STRING-TO-BYTES BYTES-TO-STRING
-         SOME NONE IS-SOME IS-NONE OPTION-CASE
-         MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
-         MAP-CONTAINS? MAP-SET MAP-REMOVE
+         NONE
          make-ok make-err is-ok is-err unwrap-ok unwrap-err
-         MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE
          A B C D E F G H I J K L M
          N O P Q R S T U V W X Y Z
          a b c d e f g h i j k l m
@@ -186,9 +242,7 @@
          LEFT-PAREN RIGHT-PAREN
          LEFT-BRACKET RIGHT-BRACKET
          LEFT-BRACE RIGHT-BRACE
-         EMPTY-STRING MAKE-STRING
-         STRING-EMPTY? STRING-LENGTH STRING-EQ STRING-APPEND
-         STRING-HEAD STRING-TAIL STRING-PREFIX? STRING-CONTAINS?
+         EMPTY-STRING
          stdout read-file write-file
          tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
          parse-http-request

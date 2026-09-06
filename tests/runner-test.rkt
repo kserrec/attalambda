@@ -496,7 +496,7 @@
    (define pure-result-error-source
      (build-path working-directory "pure-result-error.attl"))
    (write-source pure-result-error-source
-                 "#lang attalambda\n(DIV 1 0)\n")
+                 "#lang attalambda\n(div 1 0)\n")
    (check-command-success
     (run '("pure-result-error.attl"))
     #"")

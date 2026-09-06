@@ -523,3 +523,69 @@ lambda-encoded String `"exit"`. A peer `effects/exit.rkt` owns pure request
 construction and validation, while `runtime/host.rkt` owns the native effect.
 Runner-native exit continues to describe launcher/source/scaffolding status;
 host exit describes explicit AttaLambda-program-chosen status.
+
+---
+
+# Public API and List Library Amendment (2026-09-06)
+
+This amendment overrides earlier public callable spellings, including the
+Milestone 4 exact-name lists. Every public callable built-in uses lowercase
+hyphenated names, retaining question marks where already specified. Existing
+lowercase names keep their spelling. Old uppercase callable aliases are
+removed from `#lang attalambda`, and user-facing Error metadata uses the new
+public spelling. Internal raw/typed identifiers remain implementation names;
+module renaming handles Racket collisions without new runtime wrappers.
+
+The existing callable inventory becomes:
+
+```text
+if not and or xor
+cons head tail is-nil len take drop
+succ add sub mult div exp recip neg abs floor
+eq lt lte gt gte is-zero is-whole is-nonnegative-whole
+make-byte byte-value byte-eq byte-lt byte-lte byte-gt byte-gte
+string-to-bytes bytes-to-string
+some is-some is-none option-case
+make-map map-empty? map-size map-lookup map-contains? map-set map-remove
+make-ok make-err is-ok is-err unwrap-ok unwrap-err
+make-char char-eq char-lt char-lte char-gt char-gte
+make-string string-empty? string-length string-eq string-append
+string-head string-tail string-prefix? string-contains?
+stdout read-file write-file exit
+tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
+parse-http-request render-http-response
+make-http-path-handler make-http-serve-one make-http-server
+host
+```
+
+The complete List inventory after the later List Phases is:
+
+```text
+cons head tail is-nil len
+take drop nth take-while drop-while
+append reverse zip concat flatten
+map filter reduce
+any? all? find find-index contains?
+range repeat
+```
+
+Map stays Map: `map` transforms a List; `make-map` and `map-*` operate on Map.
+The syntax names `lambda`, `def`, and `let` are unchanged. Constants retain
+their exact names: `TRUE`, `FALSE`, `NIL`, `UNIT`, `NONE`, `EMPTY-STRING`,
+`HTTP-STATUS-OK`, `HTTP-STATUS-BAD-REQUEST`, `HTTP-STATUS-NOT-FOUND`, and
+`HTTP-STATUS-INTERNAL-SERVER-ERROR`. They are values, not callable API entries.
+
+After the Char-literal Phase, remove all individual public Char identifiers:
+`A` through `Z`, `a` through `z`, `DIGIT-0` through `DIGIT-9`, `SPACE`, `TAB`,
+`CR`, `LF`, `DOT`, `COMMA`, `COLON`, `SEMICOLON`, `SLASH`, `BACKSLASH`,
+`HYPHEN`, `UNDERSCORE`, `QUESTION`, `EQUAL`, `AMPERSAND`, `PERCENT`, `HASH`,
+`LEFT-PAREN`, `RIGHT-PAREN`, `LEFT-BRACKET`, `RIGHT-BRACKET`, `LEFT-BRACE`,
+and `RIGHT-BRACE`. Use the main amendment's ASCII `#\` literal contract.
+Ordinary identifiers become user-defined names rather than implicitly bound
+Chars; internal constants used by the implementation may remain.
+
+Migrate live public examples, README, acceptance documentation, public API
+reference, and shipped guide examples with each affected Phase. Retain
+earlier specification sections and release evidence as explicitly historical;
+this amendment supplies their current spelling interpretation. Document
+implemented behavior separately from the later planned List and Char work.

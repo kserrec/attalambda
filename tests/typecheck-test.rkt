@@ -291,7 +291,7 @@
                 (list
                  (list (add1 wrong-index) 1)))
   (check-equal? (error-frame-names->host failure)
-                '("AND")))
+                '("and")))
 
 (define failure-after-first
   (lazy-apply checked-five rat-zero-object))
@@ -390,7 +390,7 @@
 (check-equal? (error-frames->host bubbled-at-four)
               '((4 1)))
 (check-equal? (error-frame-names->host bubbled-at-four)
-              '("AND"))
+              '("and"))
 (check-equal? (error-frames->host invalid-nat-error)
               '())
 

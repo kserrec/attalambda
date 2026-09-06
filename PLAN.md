@@ -1,3 +1,403 @@
+# Public API and List library update
+
+Status: Phase 1 complete on 2026-09-06; Phase 2 is next.
+Branch: `feature/public-api-and-list-library`.
+Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
+on clean `main`, after merge of `refactor/non-core-simplification`.
+Source: [Kyle's Public API and List Library Update](</home/serrecchia/Downloads/AttaLambda Public API and List Library Update.md>),
+SHA-256 `1991b4942f6df8f2eccd94170bd1920a23abd2dbe8a15633e67ce1b2671f3428`.
+Kyle's 2026-09-06 clarification controls implementation: preserve absolute
+purity; make naming and Char changes mechanical; keep host-side code extremely
+simple; add only the code needed for the specified behavior.
+
+## Scope and verified starting state
+
+This is a public spelling/literal migration plus 18 List operations. The
+algorithms are small. The eight Phases follow the supplied order; each Phase
+is one implementation pass with logical Steps and a complete verification
+gate. They do not authorize additional language or infrastructure work.
+
+- `lang/expander.rkt` explicitly exports the uppercase operations and named
+  Chars. It already owns `language-char-expression`, which emits canonical
+  lambda-built Chars for String literals. `language-datum` currently accepts
+  only exact Rat and String literals; the language suite rejects `#\a`.
+- String literals encode one Char per UTF-8 byte. Direct ASCII Char literals
+  can reuse that emitter without changing Char, String, readers, or codec.
+- `core/lists.rkt` contains `raw-append`, `raw-reverse`, `raw-map`, and
+  `raw-filter`. Its `raw-fold` is a right fold. `raw-map` stores callback
+  results directly; `raw-filter` expects an untagged Boolean selector.
+  These are existing raw contracts, not bugs to repair.
+- `core/list-nat.rkt` already implements Rat-based `len`, `take`, and `drop`
+  internally. `core/typecheck.rkt`, `core/errors.rkt`, `core/option.rkt`, and
+  private numeric primitives provide checking, Error frames, Option, and
+  counting. `core/map.rkt` provides a small example of checking callback Bool
+  results without inventing a Function or Any type.
+- `core/function-names.rkt` owns the encoded diagnostic names. The boundary
+  checker pins facade imports/exports; the purity checker expands production
+  code. Both must continue to enforce their existing restrictions.
+- No public expanded List library, direct Char-literal support, or standalone
+  public API reference exists yet. Creating those is new work. This planning
+  inspection is source evidence; no fresh behavioral-suite pass is claimed.
+
+## Change boundary and simplicity requirements
+
+Modify the existing facade, encoded function names, necessary List modules,
+exact boundary allowlists, directly affected tests, official examples, current
+documentation, and the three normative specifications with their hash index.
+Use existing internal `typed-*` exports and ordinary `rename-out` entries for
+public spelling changes. Internal raw/typed names need no global redesign.
+
+Create only the small List modules and focused suites needed to keep higher
+dependencies out of the foundational List module, plus `docs/API.md`, the
+requested public reference. The intended layout is two peers,
+`core/list-transform.rkt` and `core/list-search.rkt`, with matching test files;
+numeric List additions extend `core/list-nat.rkt` and its existing suite.
+Do not create empty modules in advance or add a forwarding facade. Respect
+dependency direction: foundations must not import the new library modules.
+Use the existing language-test installation/helper for public-language cases.
+
+The following are acceptance requirements, not optional cleanup goals:
+
+1. All object-language computation, including new validation, Error choices,
+   iteration, indexing, and type-tag inspection, expands to variables, unary
+   lambdas, and application. Counts use private binary Nat; public numbers
+   remain canonical Rat. No host arithmetic, branching, lists, or other
+   Racket values may compute or represent an object-language result.
+2. Keep the generalized checker and closed tag table intact. Reuse its
+   existing argument-check helper for mixed callback/value signatures, as
+   current polymorphic operations do. No Function/Any tag, callback registry,
+   alternate checker, dispatcher, intermediate representation, or collection
+   framework. Early Errors still absorb the remaining source arguments.
+3. Preserve existing raw contracts and their callers. Reuse the four named
+   raw List functions where their behavior fits; add only the pure adapters
+   needed for the public contracts. Keep new raw algorithms raw, and keep
+   strict checks in the typed layer. Shared helpers must remove actual
+   repetition among these operations, with no speculative extension points.
+4. Phase 1 executable changes affect spellings and diagnostic text only. No
+   operation's computation changes. It adds no runtime
+   wrappers, compatibility aliases, name registry, generator, migration
+   command, or export framework. Remove uppercase callable exports from
+   `#lang attalambda`; implementation-only names are a separate surface.
+5. Phase 2 adds a Char case to the existing datum expander and removes named
+   Char exports. Use the existing reader and Char emitter. No parser,
+   readtable, new runtime helper, Unicode conversion layer, or representation
+   change. Host Char inspection is permitted only during mechanical expansion.
+6. Non-core code stays direct: explicit imports/exports, a small literal
+   check, ordinary test cases, and exact updates to existing checker tables.
+   No new test runner, checker architecture, dependency, configuration,
+   performance framework, or unrelated refactor. Never weaken a gate to make
+   an implementation pass.
+
+Behaviorally unchanged: existing operation results, evaluation rules, type
+representations, raw algorithms, codec validation, and all ten host effects.
+Only the specified public spellings/diagnostic names, new Char syntax, removed
+named Char bindings, and new List functions change language behavior. Map
+stays Map. Constants `TRUE`, `FALSE`, `NIL`, `UNIT`, `NONE`, `EMPTY-STRING`, and
+the `HTTP-STATUS-*` values keep their names. Existing lowercase functions,
+including `exit` (omitted from the proposal's example inventory), remain.
+Version, published artifacts, runtime/host capabilities, and release work are
+outside this change.
+
+## Contract details to record before implementation
+
+The specifications currently require older public spellings. Step 1.1 must
+explicitly amend their precedence before any executable change; the plan
+cannot override them. Record all contracts in the supplied proposal, including
+these details that affect implementation and tests:
+
+- Direct Char literals accept ASCII values 0–127, including the supplied
+  letter, digit, punctuation, delimiter, space, tab, newline, and return
+  examples. Reject non-ASCII literals during expansion: a Unicode character
+  that occupies multiple UTF-8 bytes cannot denote one existing Char
+  consistently with String literals. `make-char` retains its full 0–255
+  contract, and UTF-8 String literals retain their existing behavior.
+- Callbacks are supplied as pure unary/curried functions, following the
+  existing Map convention. Do not inspect an arbitrary lambda as a tagged
+  value or introduce a host callable test. Validate tagged callback results.
+  `map` and `reduce` propagate callback Errors; predicate/equality results
+  must be Bool or Error. Other tagged answers produce TypeMismatch expecting
+  Bool, attributed to the public List operation. Preserve Error roots and
+  frames; retain Result Err as an ordinary computational value.
+- `contains?` applies the supplied equality to the sought value and current
+  element in that order. Its public argument order is equality, value, List.
+  `reduce` applies its curried callback to accumulator, then element.
+- `nth` returns Option; `find-index` returns Option of a whole Rat. Counts
+  and indices are nonnegative whole Rats. `range` accepts signed whole Rats,
+  includes start, excludes end, increments by one, and returns NIL when
+  start >= end. Fractional endpoints use the existing InvalidCount Error;
+  a non-Rat uses TypeMismatch. No new Error kind or range overload.
+- Predicate-driven operations stop exactly where specified. Never evaluate
+  the suffix merely to validate callbacks that the answer does not need.
+  List-producing operations must return proper Lists ending in canonical
+  NIL or propagate an Error, never hide callback Errors inside an output
+  List or an improper tail. Checking a later produced element can require
+  traversing the finite result; make no new infinite-List productivity claim.
+
+## Execution and verification
+
+Read the current instructions, relevant normative sections, named modules,
+and their tests before each Phase. The previous completed plans below are
+history, not instructions to return to their branches or repeat their work.
+Study `/home/serrecchia/Projects/all_the_lambdas/lists.rkt` and relevant typed
+List code only for useful existing patterns; current AttaLambda contracts
+and representations govern every choice.
+
+Complete and record the Steps in order. Run focused behavioral tests during
+work, plus both architectural checks after production edits. At every Phase
+boundary run `./run-all-tests.sh` (which includes both architectural gates),
+inspect the full relevant diff and `git diff --check`, and commit/push that
+verified Phase to this branch. Do not repeat successful checks without a
+subsequent change or unresolved failure. State executable, test/tooling, and
+documentation changes separately in completion records.
+
+For new operations, test public-language behavior as well as the pure unit
+contracts. Cover normal, NIL, singleton, and heterogeneous inputs where valid;
+wrong tagged arguments and incoming Errors at each applicable position;
+partial application and remaining-arity absorption; canonical output tags and
+NIL; exact diagnostic names and preserved Error roots; and the phase-specific
+cases below. Use delayed failures/call observations and existing finite
+subprocess deadlines to prove short-circuiting. Keep tests local and direct;
+do not build a matrix framework or run each small case in a fresh installation.
+
+Diagnose actual failures before changing code. Do not stack unproven fixes;
+two failed hypotheses require stopping with the evidence. Surface a genuine
+normative conflict instead of inventing a language decision. Routine work
+inside this requested scope requires no repeated permission. Final completion
+stops for Kyle's branch review; no pull request, merge, tag, or publication.
+Every recursive search/listing/bulk read or diff must explicitly exclude
+`.env`, `*.env`, `.env.*`, and `*.env.*`. Never inspect dotenv contents or use
+Graphify. Filesystem examples use temporary directories; network examples use
+ephemeral loopback ports.
+
+## Phase 1 — Mechanical public lowercase migration
+
+### Step 1.1 — Establish the canonical contract
+
+- [x] Append dated amendments to all three language specifications and update
+  precedence/provenance and SHA-256 values in their index. Preserve previous
+  text as explicitly historical. Specify the lowercase public inventory,
+  retained constants, Char rule, and all 25 final List contracts from the
+  proposal, including the details above. Distinguish normative future scope
+  from current implementation. No executable changes in this Step.
+
+Step 1.1 result (2026-09-06): appended the three normative amendments and
+updated their precedence/provenance index. All previous specification bytes
+remain exact prefixes; recorded hashes match the amended files. This Step
+changed documentation only.
+
+### Step 1.2 — Change exports and diagnostic spellings
+
+- [x] Mechanically map each existing uppercase callable to its lowercase
+  hyphenated spelling in `lang/expander.rkt`; retain existing lowercase
+  functions and constants. Update `core/function-names.rkt` so Errors report
+  the same canonical public names. Update the existing boundary tables
+  exactly. Resolve Racket name collisions through export renaming, without
+  adding wrapper functions or changing compile-time uses of Racket bindings.
+
+Step 1.2 result (2026-09-06): changed 63 explicit public export pairs and
+63 encoded diagnostic-name literals; imports, literal expansion, module
+execution, and host injection are byte-for-byte unchanged. Updated the
+existing exact checker tables; corrected an introduced EMPTY-STRING ordering
+mismatch. Expanded purity passed all 30 production modules and the complete
+boundary/inventory gate passed. No runtime wrapper or algorithm was added.
+
+### Step 1.3 — Migrate public examples and prove the surface
+
+- [x] Migrate all live public-language examples, fixtures, embedded runner
+  and distribution programs, guide text, and current documentation. Preserve
+  historical release evidence and internal implementation names as such.
+  Create `docs/API.md` with the implemented public inventory and signatures;
+  link it from README and extend it as later Phases land. Public-language
+  tests exercise every renamed binding and reject every retired uppercase
+  callable name. Update diagnostic expectations without weakening behavioral
+  assertions. Run focused language, runner, boundary, diagnostic, and affected
+  unit suites, then the Phase completion gate.
+
+Step 1.3 result (2026-09-06): migrated live public examples, embedded runner
+and Linux consumer programs, and diagnostic expectations. Added installed
+language cases executing all 63 renamed callables and rejecting all 63 old
+names, public Error-frame observations, and 27 additional encoded-name cases
+in the existing reader suite. The observation probe initially tried to import
+a reader from the deliberately production-only package; corrected the test to
+load the repository reader as an external observer. No packaging or production
+change was needed. The corrected focused language run passed 98 assertions.
+
+The complete `./run-all-tests.sh` run passed all 39 suites, 13,669 assertions,
+expanded purity for 30 production modules, and the complete source/boundary
+inventory. An earlier run stopped when the filesystem sandbox denied an
+existing purity fixture's `/var/tmp` directory; the unchanged suite passed
+with that filesystem permission. Future full runs need access to the system
+temporary directory. Shell syntax, specification hashes and preserved
+prefixes, the complete relevant diff, and whitespace checks passed.
+
+Phase 1 executable changes: 63 export renames, 63 encoded diagnostic-name
+literals, and corresponding spelling changes in official programs. Existing
+algorithms, facade imports/expansion/execution, effects, runtime, macros, and
+readers are unchanged. Tests/tooling: direct public API checks, diagnostic
+expectations, and exact existing boundary tables; no new test framework.
+Documentation: normative amendments/provenance, new `docs/API.md`, current
+README/architecture/acceptance updates, and the plan/branch instructions.
+No new production module, runtime wrapper, dependency, or host capability.
+Phase 1 is complete; the next bounded chunk is Phase 2, Char literals.
+
+## Phase 2 — Mechanical Char-literal migration
+
+### Step 2.1 — Expand literals through the existing emitter
+
+- [ ] Add the small Char datum branch in `lang/expander.rkt`, with the ASCII
+  check and a clear syntax error for unsupported characters. Emit through
+  `language-char-expression`. Keep `lang/reader.rkt`, String expansion, and
+  runtime representation intact. Update only the relevant checker vocabulary
+  and language diagnostics; retain rejection of other unsupported datums.
+
+### Step 2.2 — Remove named public Chars and verify isolation
+
+- [ ] Remove individual Char imports/exports from the language facade and
+  its exact allowlist; keep internal constants used by existing core/effects
+  code. Migrate public examples/tests to literals. Test lowercase/uppercase
+  letters, digits, punctuation, parentheses, all four named whitespace forms,
+  ASCII boundaries, and rejected non-ASCII values. Prove literal equivalence
+  to `make-char`, correct tags/canonical representation, and byte consistency
+  with a one-character ASCII String. Prove `a`, `x`, `n`, `m`, and all removed
+  names are unbound until defined, while ordinary user definitions work.
+  Update current docs/reference; run language, runner, Char, String, codec,
+  and boundary tests, then the Phase completion gate.
+
+## Phase 3 — Append, reverse, map, and filter
+
+### Step 3.1 — Expose the existing structural algorithms
+
+- [ ] Add small typed `append` and `reverse` wrappers in
+  `core/list-transform.rkt`, reusing `raw-append`/`raw-reverse` and canonical
+  reconstruction after checker unwrapping. Add their explicit exports and
+  diagnostic names. Cover order, empty sides, singleton/heterogeneous Lists,
+  argument Errors/types, partial application, and canonical empty output.
+
+### Step 3.2 — Enforce the callback contracts
+
+- [ ] Add public `map` and `filter`, reusing the existing raw operations with
+  the necessary pure typed adapters. Enforce whole-operation Error propagation
+  and Bool predicate validation without altering the raw helpers or their
+  existing callers. Use one small local predicate-result helper where it
+  actually serves the later predicate operations. Test first and later
+  callback Errors, non-Bool predicates, preserved ordering, no callback on
+  NIL, and all common contracts. Add the matching transform suite, public
+  cases, and reference entries; run the Phase completion gate.
+
+## Phase 4 — Reduce and predicate searches
+
+### Step 4.1 — Implement left reduction
+
+- [ ] Add the small accumulator recursion and typed `reduce` wrapper to the
+  transform module. `reduce f initial NIL` returns initial. Test a
+  noncommutative combining function to distinguish argument order and left
+  association from the existing right fold. Prove callback Error propagation
+  stops further callback evaluation and preserves remaining-arity behavior.
+
+### Step 4.2 — Implement the five searches
+
+- [ ] Add `any?`, `all?`, `find`, `find-index`, and `contains?` in
+  `core/list-search.rkt`, using the same predicate-result rule. Keep loops
+  direct; do not create a general search engine. Empty answers are FALSE,
+  TRUE, NONE, NONE, and FALSE respectively. Return the first matching value
+  or zero-based whole Rat index in Option. Use private binary counting.
+  Test equality argument order, type/Error cases, no-match cases, and later
+  callbacks that would fail if short-circuiting were lost. Add the matching
+  search suite, exports, diagnostics, public cases, and docs; run the Phase
+  completion gate.
+
+## Phase 5 — Indexing and predicate prefixes
+
+### Step 5.1 — Add nth
+
+- [ ] Extend `core/list-nat.rkt` and its suite with zero-based `nth` using
+  existing count validation and Option construction. Test zero, last valid,
+  exact-length, past-length, negative, fractional, wrong-type, and incoming
+  Error indices, NIL, and partial application. Expected absence returns NONE;
+  invalid counts return the existing attributed InvalidCount Error.
+
+### Step 5.2 — Add take-while and drop-while
+
+- [ ] Extend the search module with direct prefix traversal and the shared
+  predicate-result rule. Stop predicate calls at the first false result;
+  `drop-while` retains that element and its suffix. Test immediate stop,
+  all-match, NIL, predicate Error/non-Bool answers, canonical empty results,
+  and unevaluated later callbacks. Add exports, names, public cases, and docs;
+  run the Phase completion gate.
+
+## Phase 6 — Zip, concat, and flatten
+
+### Step 6.1 — Add zip and one-level concat
+
+- [ ] Extend the transform module with `zip`, producing proper two-element
+  Lists and stopping at the shorter input, and `concat`, removing exactly
+  one nesting level. Validate each visited outer element of concat as List;
+  a wrong type is an attributed structured Error. Test both unequal-length
+  directions, empty sides, empty inner Lists, nesting retained by concat,
+  and invalid first/later inner elements.
+
+### Step 6.2 — Add recursive flatten
+
+- [ ] Add the direct recursive List-tag case: visit nested Lists in order;
+  retain ordinary non-List values as leaves. Do not inspect host data or add
+  universal equality, another representation, or a traversal framework.
+  Test mixed nesting, empty nested Lists, heterogeneous leaves, fully empty
+  output, Error propagation when encountered, proper tails, and preserved
+  order. Add all three public surfaces, diagnostics, reference entries, and
+  behavioral cases; run the Phase completion gate.
+
+## Phase 7 — Range and repeat
+
+### Step 7.1 — Add the two generators
+
+- [ ] Extend the numeric List module using existing raw Rat comparison,
+  whole-number validation, increment, and private binary count operations.
+  Implement only `range start end` and `repeat count value`. Test negative
+  starts, crossing zero, adjacent/equal/reversed endpoints, fractional
+  endpoints, zero/one/multiple repetitions, negative/fractional counts,
+  wrong tagged arguments, incoming Errors, partial application, and
+  heterogeneous repeated values. Zero repetitions return canonical NIL
+  without using the value. Add exports, names, unit/public tests, and docs;
+  run the Phase completion gate.
+
+## Phase 8 — Complete surface and simplicity verification
+
+### Step 8.1 — Check the delivered API against the proposal
+
+- [ ] Compare the exact facade export set against every existing renamed
+  callable, retained constant/effect, and these 25 List operations:
+
+  `cons head tail is-nil len take drop nth take-while drop-while append
+  reverse zip concat flatten map filter reduce any? all? find find-index
+  contains? range repeat`.
+
+  Confirm old callable aliases and named public Chars are absent; Char
+  literals work; Map and its `map-*` operations remain distinct from List
+  `map`; all public diagnostics/examples use the new names. Synchronize
+  README, API reference, architecture/acceptance docs, and specification
+  status without claiming unrun or unpublished acceptance.
+
+### Step 8.2 — Verify purity, minimality, and completion
+
+- [ ] Review the complete branch diff for unrelated changes and unnecessary
+  helpers, wrappers, intermediate structures, or host-side complexity. Every
+  addition must have a direct role in a requested contract or its proof.
+  Check the new modules enter the existing production inventory and purity
+  scan; preserve fail-closed rejection and all privileged-boundary limits.
+  Run the final full suite. Update existing Linux consumer examples as
+  necessary and validate a clean recorded implementation commit with the
+  existing Linux build/consumer harness; keep the artifact unpublished.
+  Record actual tested revisions and results, commit/push verified work,
+  and stop for Kyle's branch review.
+
+---
+
+# Completed plans — historical record
+
+The material below completed before merge `097deb5`. Its branch directions,
+starting-state observations, approvals, and stop conditions describe that
+completed work only. The Public API and List library plan above is active.
+
 # HTTP, empty-List consistency, and explicit exit plan
 
 Status: all five Phases complete on 2026-09-05; verified for Kyle's review.

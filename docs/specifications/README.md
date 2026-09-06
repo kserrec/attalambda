@@ -10,6 +10,12 @@ completed milestones. The Explicit Exit Amendments (2026-09-05) add the
 program-chosen exit 0/1 contract, preserve absolute object-language purity,
 and specify the public name and existing host boundary before implementation.
 
+The Public API and List Library Amendments (2026-09-06) specify lowercase
+callable names, mechanical ASCII Char literals, and the expanded List API.
+They preserve the earlier text as history and keep all purity boundaries.
+Implementation progress is recorded in `PLAN.md`; `docs/API.md` describes
+the implemented source surface.
+
 Read them in this precedence order:
 
 1. [01-greenfield-core-language.md](01-greenfield-core-language.md) defines the
@@ -28,15 +34,17 @@ Later documents override earlier documents only where they explicitly refine
 or replace a decision. Within each document, its Milestone 4 Amendment
 overrides that document's earlier sections wherever they conflict. Each
 Explicit Exit Amendment takes precedence over that document's earlier text
-only for its explicitly stated scope; all other contracts remain in force.
+only for its explicitly stated scope. Each Public API and List Library
+Amendment takes precedence over earlier text only for the naming, literal,
+and List contracts it explicitly changes; all other contracts remain in force.
 
 ## Provenance
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `6d03e5cb9181ef250c9e23ecabe2cf9e2774bf203a9be831e57e8035569e8fa4` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `5561e0acb4ba2eb5399ffdb9fa0f5f4aa8cfd955b2b656aa93573c74ed4864df` |
-| `03-canonical-public-naming-and-host-isolation.md` | `216457319c579eaf3ad506550f2467e3071117399f04242a418aee6f391c66fe` |
+| `01-greenfield-core-language.md` | `503e8873f92bb5436df863eb095b871de385e5d6f7ba2d7c6c8240ddccc3df25` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `153941fd5d83171146a7ea702f6b72b6e2a8061e5d4e1f715fbdc68181e462c0` |
+| `03-canonical-public-naming-and-host-isolation.md` | `9e39495ef071bab601f16f025f7721154142d45bf2ce96012e5680bd982106a5` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -56,3 +64,10 @@ Before the 2026-09-05 Explicit Exit Amendments, the respective hashes were
 `d9830bfc16612ba88c1ab485720ea65ecafdb4c5c851f140be95452e2aaaf29d`.
 Phase 0 of the approved HTTP/List/exit plan appended the new amendments,
 preserving every byte of the preceding contract.
+
+Before the 2026-09-06 Public API and List Library Amendments, the respective
+hashes were
+`6d03e5cb9181ef250c9e23ecabe2cf9e2774bf203a9be831e57e8035569e8fa4`,
+`5561e0acb4ba2eb5399ffdb9fa0f5f4aa8cfd955b2b656aa93573c74ed4864df`,
+`216457319c579eaf3ad506550f2467e3071117399f04242a418aee6f391c66fe`.
+Step 1.1 appended the approved amendments without changing any preceding byte.

@@ -297,7 +297,7 @@ run_inside_consumer() {
   check_program_status packaged_exit_zero_status 0 '(exit 0)'
   check_program_status packaged_exit_one_status 1 '(exit 1)'
   check_program_status packaged_default_status 0 \
-    $'(ADD TRUE 1)\n(DIV 1 0)\n(read-file "absent-exit-input.txt")'
+    $'(add TRUE 1)\n(div 1 0)\n(read-file "absent-exit-input.txt")'
   check_program_status packaged_missing_file_fatal_status 1 \
     $'(def outcome = (read-file "absent-exit-input.txt"))\n(if (is-err outcome) (exit 1) (exit 0))'
   check_program_status packaged_missing_file_recoverable_status 0 \
