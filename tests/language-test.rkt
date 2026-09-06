@@ -123,18 +123,18 @@ PROGRAM
 (check (gt 2 1))
 (check (gte 2 2))
 (check (is-zero 0))
-(check (char-eq (make-char 65) A))
-(check (char-eq A A))
-(check (char-lt A B))
-(check (char-lte A A))
-(check (char-gt B A))
-(check (char-gte A A))
-(check (string-eq (make-string (cons A NIL)) "A"))
+(check (char-eq (make-char 65) #\A))
+(check (char-eq #\A #\A))
+(check (char-lt #\A #\B))
+(check (char-lte #\A #\A))
+(check (char-gt #\B #\A))
+(check (char-gte #\A #\A))
+(check (string-eq (make-string (cons #\A NIL)) "A"))
 (check (string-empty? EMPTY-STRING))
 (check (eq (string-length "ab") 2))
 (check (string-eq "ab" "ab"))
 (check (string-eq (string-append "a" "b") "ab"))
-(check (char-eq (string-head "A") A))
+(check (char-eq (string-head "A") #\A))
 (check (string-eq (string-tail "ab") "b"))
 (check (string-prefix? "abc" "ab"))
 (check (string-contains? "abc" "bc"))
@@ -194,7 +194,15 @@ PROGRAM
                  IS-NONNEGATIVE-WHOLE MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT
                  BYTE-LTE BYTE-GT BYTE-GTE STRING-TO-BYTES BYTES-TO-STRING
                  SOME IS-SOME IS-NONE OPTION-CASE MAKE-MAP MAP-EMPTY?
-                 MAP-SIZE MAP-LOOKUP MAP-CONTAINS? MAP-SET MAP-REMOVE))])
+                 MAP-SIZE MAP-LOOKUP MAP-CONTAINS? MAP-SET MAP-REMOVE
+                 A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                 a b c d e f g h i j k l m n o p q r s t u v w x y z
+                 DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
+                 DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
+                 SPACE TAB CR LF DOT COMMA COLON SEMICOLON
+                 SLASH BACKSLASH HYPHEN UNDERSCORE QUESTION EQUAL AMPERSAND
+                 PERCENT HASH LEFT-PAREN RIGHT-PAREN LEFT-BRACKET RIGHT-BRACKET
+                 LEFT-BRACE RIGHT-BRACE))])
     (unless
         (with-handlers
             ([exn:fail:syntax?
@@ -202,7 +210,19 @@ PROGRAM
                 (regexp-match? #rx"unbound identifier" (exn-message failure)))])
           (expand `(module retired attalambda/lang/expander ,name))
           #f)
-      (error 'retired-callable "name did not fail as unbound: ~a" name))))
+      (error 'retired-name "name did not fail as unbound: ~a" name)))
+  (for ([name (in-list
+               '(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+                 a b c d e f g h i j k l m n o p q r s t u v w x y z
+                 DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
+                 DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
+                 SPACE TAB CR LF DOT COMMA COLON SEMICOLON
+                 SLASH BACKSLASH HYPHEN UNDERSCORE QUESTION EQUAL AMPERSAND
+                 PERCENT HASH LEFT-PAREN RIGHT-PAREN LEFT-BRACKET RIGHT-BRACKET
+                 LEFT-BRACE RIGHT-BRACE))])
+    (expand `(module available attalambda/lang/expander
+               (def ,name = 1)
+               (eq ,name 1)))))
 PROBE
      )
     (check-command-success
@@ -211,6 +231,34 @@ PROBE
                   (list (path->string retired-callables-probe))
                   20)
      #"")
+
+    ;; Every ASCII literal must agree with make-char and a one-byte String.
+    ;; Sending each through the existing String codec also validates its tag,
+    ;; binary payload, and canonical List terminator.
+    (define characters-program
+      (build-path temporary-root "characters.rkt"))
+    (write-source
+     characters-program
+     (string-append
+      "#lang attalambda\n"
+      "(def check-char character code text =\n"
+      "  (stdout (if (and (char-eq character (make-char code))\n"
+      "                   (char-eq character (string-head text)))\n"
+      "              (make-string (cons character NIL)) \"FAIL\")))\n"
+      (apply string-append
+             (for/list ([code (in-range 128)])
+               (define character (integer->char code))
+               (format
+                "(check-char ~s ~a ~s)\n"
+                character code (string character))))
+      "(def a = 1)\n(def x = 2)\n(def n = 3)\n(def m = 4)\n"
+      "(stdout (if (eq (add (add a x) (add n m)) 10) \"names\" \"FAIL\"))\n"))
+    (check-command-success
+     (run-command isolated-environment
+                  racket-executable
+                  (list (path->string characters-program))
+                  20)
+     (bytes-append (list->bytes (build-list 128 values)) #"names"))
 
     (define lazy-branch-program
       (build-path temporary-root "lazy-branch.rkt"))
@@ -331,17 +379,20 @@ PROBE
 
     (for ([case
            (in-list
-            '(("#t" #rx"only exact Rat and String literals are supported")
-              ("#f" #rx"only exact Rat and String literals are supported")
-              ("1.0" #rx"only exact Rat and String literals are supported")
-              ("1e3" #rx"only exact Rat and String literals are supported")
-              ("+inf.0" #rx"only exact Rat and String literals are supported")
-              ("+nan.0" #rx"only exact Rat and String literals are supported")
-              ("1+2i" #rx"only exact Rat and String literals are supported")
-              ("#\\a" #rx"only exact Rat and String literals are supported")
-              ("#\"bytes\"" #rx"only exact Rat and String literals are supported")
+            '(("#t" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("#f" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("1.0" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("1e3" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("+inf.0" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("+nan.0" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("1+2i" #rx"only exact Rat, String, and ASCII Char literals are supported")
+              ("#\\é" #rx"Char literals must be ASCII")
+              ("#\\u0080" #rx"Char literals must be ASCII")
+              ("#\\λ" #rx"Char literals must be ASCII")
+              ("#\\🙂" #rx"Char literals must be ASCII")
+              ("#\"bytes\"" #rx"only exact Rat, String, and ASCII Char literals are supported")
               ("#:keyword" #rx"missing argument expression after keyword")
-              ("#(1)" #rx"only exact Rat and String literals are supported")))]
+              ("#(1)" #rx"only exact Rat, String, and ASCII Char literals are supported")))]
           [index (in-naturals)])
       (define literal (car case))
       (define expected-message (cadr case))

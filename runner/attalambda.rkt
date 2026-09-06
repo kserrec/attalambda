@@ -180,7 +180,7 @@
     [(and expression (identifier? expression))
      (format "unknown AttaLambda name: ~s" (syntax-e expression))]
     [(datum-failure-expression? expression)
-     "unsupported literal; only exact Rat and String literals are supported"]
+     "unsupported literal; only exact Rat, String, and ASCII Char literals are supported"]
     [else
      "source has invalid syntax"]))
 

@@ -408,7 +408,7 @@
     65
     (source-diagnostic
      "unsupported-datum.attl"
-     "unsupported literal; only exact Rat and String literals are supported"
+     "unsupported literal; only exact Rat, String, and ASCII Char literals are supported"
      #:line 2
      #:column 0))
 

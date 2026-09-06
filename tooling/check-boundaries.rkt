@@ -353,26 +353,14 @@
 
 (define expected-host-provide '(provide host))
 
-(define character-constant-bindings
-  '(A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
-    a b c d e f g h i j k l m n o p q r s t u v w x y z
-    DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-    DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-    SPACE TAB CR LF DOT COMMA COLON SEMICOLON
-    SLASH BACKSLASH HYPHEN UNDERSCORE QUESTION EQUAL AMPERSAND
-    PERCENT HASH LEFT-PAREN RIGHT-PAREN LEFT-BRACKET RIGHT-BRACKET
-    LEFT-BRACE RIGHT-BRACE))
-
 (define string-imported-bindings
   '(EMPTY-STRING MAKE-STRING STRING-EMPTY? STRING-LENGTH STRING-EQ
     STRING-APPEND STRING-HEAD STRING-TAIL STRING-PREFIX? STRING-CONTAINS?))
 
 (define language-direct-public-bindings
-  (append
-   '(TRUE FALSE NIL UNIT NONE
-     make-ok make-err is-ok is-err unwrap-ok unwrap-err)
-   character-constant-bindings
-   '(EMPTY-STRING stdout read-file write-file
+  '(TRUE FALSE NIL UNIT NONE
+     make-ok make-err is-ok is-err unwrap-ok unwrap-err
+     EMPTY-STRING stdout read-file write-file
      tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
      parse-http-request
      HTTP-STATUS-OK
@@ -382,7 +370,7 @@
      render-http-response
      make-http-path-handler
      make-http-serve-one
-     make-http-server)))
+     make-http-server))
 
 (define expected-language-expander-requires
   `((require
@@ -394,8 +382,7 @@
               STRING-TO-BYTES BYTES-TO-STRING)
      (only-in "../core/chars.rkt"
               raw-make-char
-              MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE
-              ,@character-constant-bindings)
+              MAKE-CHAR CHAR-EQ CHAR-LT CHAR-LTE CHAR-GT CHAR-GTE)
      (only-in "../core/int.rkt"
               raw-make-int)
      (only-in "../core/list-nat.rkt"
@@ -605,7 +592,7 @@
       is-none option-case make-map map-empty? map-size map-lookup
       map-contains? map-set map-remove
       #%app #%datum #%module-begin #%top ... = _ and argument body byte
-      bytes->list car cdr char=? cond datum def define-for-syntax
+      bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
       negative? rational? abs
       cons first for-syntax form function host identifier? if lambda

@@ -23,20 +23,7 @@
                   CHAR-LT
                   CHAR-LTE
                   CHAR-GT
-                  CHAR-GTE
-                  A B C D E F G H I J K L M
-                  N O P Q R S T U V W X Y Z
-                  a b c d e f g h i j k l m
-                  n o p q r s t u v w x y z
-                  DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-                  DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-                  SPACE TAB CR LF
-                  DOT COMMA COLON SEMICOLON
-                  SLASH BACKSLASH HYPHEN UNDERSCORE
-                  QUESTION EQUAL AMPERSAND PERCENT HASH
-                  LEFT-PAREN RIGHT-PAREN
-                  LEFT-BRACKET RIGHT-BRACKET
-                  LEFT-BRACE RIGHT-BRACE)
+                  CHAR-GTE)
          (only-in "../core/int.rkt"
                   raw-make-int)
          (only-in "../core/list-nat.rkt"
@@ -229,19 +216,6 @@
          UNIT
          NONE
          make-ok make-err is-ok is-err unwrap-ok unwrap-err
-         A B C D E F G H I J K L M
-         N O P Q R S T U V W X Y Z
-         a b c d e f g h i j k l m
-         n o p q r s t u v w x y z
-         DIGIT-0 DIGIT-1 DIGIT-2 DIGIT-3 DIGIT-4
-         DIGIT-5 DIGIT-6 DIGIT-7 DIGIT-8 DIGIT-9
-         SPACE TAB CR LF
-         DOT COMMA COLON SEMICOLON
-         SLASH BACKSLASH HYPHEN UNDERSCORE
-         QUESTION EQUAL AMPERSAND PERCENT HASH
-         LEFT-PAREN RIGHT-PAREN
-         LEFT-BRACKET RIGHT-BRACKET
-         LEFT-BRACE RIGHT-BRACE
          EMPTY-STRING
          stdout read-file write-file
          tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
@@ -347,8 +321,8 @@
              (bytes->list
               (string->bytes/utf-8 value))))))
 
-;; These are the only source datums. Expansion consumes every host number or
-;; String and emits only references plus unary lambda applications that build
+;; These are the only source datums. Expansion consumes every host number,
+;; String, or Char and emits references plus unary applications that build
 ;; the already-specified canonical representations.
 (define-syntax (language-datum stx)
   (syntax-case stx ()
@@ -359,10 +333,14 @@
           (language-rat-expression datum)]
          [(string? datum)
           (language-string-expression datum)]
+         [(char? datum)
+          (if (<= (char->integer datum) 127)
+              (language-char-expression (char->integer datum))
+              (raise-syntax-error #f "Char literals must be ASCII (0-127)" stx))]
          [else
           (raise-syntax-error
            #f
-           "only exact Rat and String literals are supported"
+           "only exact Rat, String, and ASCII Char literals are supported"
            stx)]))]))
 
 ;; The facade performs only one-time dependency injection. These bindings are

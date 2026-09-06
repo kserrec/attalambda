@@ -1,11 +1,11 @@
 # Public API
 
 This reference describes the source surface on
-`feature/public-api-and-list-library` after Phase 1. The published 0.3.0
+`feature/public-api-and-list-library` after Phase 2. The published 0.3.0
 archive retains its earlier uppercase library names. All callable built-ins
 below are lowercase; their old uppercase aliases are absent from the language.
-Constants keep their names. Char literals and the expanded List functions are
-specified for later Phases in [PLAN.md](../PLAN.md), not implemented yet.
+Constants keep their names. The expanded List functions are specified for
+later Phases in [PLAN.md](../PLAN.md), not implemented yet.
 
 Programs begin with `#lang attalambda`. Every function is curried: supplying
 one argument returns the function awaiting the next. Every lambda has one
@@ -25,14 +25,15 @@ printing or conversion from Error to a process exit status.
 | `(function first second)` | Curried application, equivalent to `((function first) second)`. |
 | `-7/3`, `0`, `42` | Canonical exact Rat literals; inexact and complex literals are rejected. |
 | `"hello"` | String literal, one byte-sized Char per UTF-8 byte. |
+| `#\a`, `#\A`, `#\0`, `#\(`, `#\)` | ASCII Char literals (0–127). |
+| `#\space`, `#\tab`, `#\newline`, `#\return` | Whitespace Char literals. |
 
 The constants are `TRUE`, `FALSE`, `NIL`, `UNIT`, `NONE`, `EMPTY-STRING`,
-and the four HTTP status constants listed below. In this Phase, named Chars
-also remain: `A`–`Z`, `a`–`z`, `DIGIT-0`–`DIGIT-9`, `SPACE`, `TAB`, `CR`,
-`LF`, `DOT`, `COMMA`, `COLON`, `SEMICOLON`, `SLASH`, `BACKSLASH`, `HYPHEN`,
-`UNDERSCORE`, `QUESTION`, `EQUAL`, `AMPERSAND`, `PERCENT`, `HASH`, `LEFT-PAREN`,
-`RIGHT-PAREN`, `LEFT-BRACKET`, `RIGHT-BRACKET`, `LEFT-BRACE`, `RIGHT-BRACE`.
-Direct `#\` Char literals are still rejected until Phase 2.
+and the four HTTP status constants listed below. Individual named Chars are
+no longer exported; ordinary names such as `a`, `x`, `n`, and `m` are free for
+user definitions. Direct Char literals reject non-ASCII characters during
+expansion; `make-char` still accepts the full byte range 0–255. String literals
+retain their UTF-8 byte encoding.
 
 `Rat`, `List`, `Bool`, and the other type names in the tables describe
 contracts; they are not additional exported identifiers. Likewise, `value`

@@ -17,8 +17,8 @@ scan.
 Source beyond the published 0.3.0 archive includes incremental HTTP request
 reading, a 21-case canonical-empty codec matrix, and explicit program exit.
 Their packaged acceptance is recorded separately below. The current public
-API branch adds lowercase callable exports and diagnostic names; its
-verification is recorded in [`PLAN.md`](../PLAN.md). The Char-literal and
+API branch adds lowercase callable exports and diagnostic names, and ASCII
+Char literals; its verification is recorded in [`PLAN.md`](../PLAN.md). The
 expanded List Phases are not implemented yet.
 
 ## Language criteria
@@ -28,6 +28,7 @@ expanded List Phases are not implemented yet.
 | Production computation expands to variables, unary lambdas, and unary application. | [`check-purity.rkt`](../tooling/check-purity.rkt) expands and inspects every `core/` and `effects/` module; [`purity-test.rkt`](../tests/purity-test.rkt) proves forbidden host forms and non-unary lambdas are rejected. |
 | Public syntax is `lambda`, `def`, `let`, `if`, and the specified `cons`; literals expand mechanically. | [`macros-test.rkt`](../tests/macros-test.rkt) covers hygiene and generated terms; [`language-test.rkt`](../tests/language-test.rkt) covers the installed `#lang attalambda` surface, shadowing, and rejected names/literals. |
 | All 63 renamed callables use lowercase exports and diagnostic names; retired uppercase callable names are unbound. | [`language-test.rkt`](../tests/language-test.rkt) exercises every renamed operation, expands a public module rejecting each old name, and observes public Error frames. Existing diagnostic suites pin encoded names, roots, and propagation details. |
+| ASCII Char literals agree with `make-char` and UTF-8 String bytes; named Char exports are removed. | [`language-test.rkt`](../tests/language-test.rkt) checks all 128 ASCII values through public operations and canonical codec conversion, rejects non-ASCII literals and all retired names, and proves ordinary user definitions. |
 | Values carry closed Church type tags, and one arbitrary-arity checker owns strict runtime typing. | [`tags-test.rkt`](../tests/tags-test.rkt), [`objects-test.rkt`](../tests/objects-test.rkt), [`typecheck-test.rkt`](../tests/typecheck-test.rkt), and [`errors-test.rkt`](../tests/errors-test.rkt) cover tags, positions, partial application, laziness, and early Error absorption. |
 | Bool and strict `if` preserve typed, lazy branch choice. | [`logic-test.rkt`](../tests/logic-test.rkt) and [`typed-logic-test.rkt`](../tests/typed-logic-test.rkt) prove canonical values, wrong-type Errors, chosen-branch forcing, and unchosen-branch laziness. |
 | List uses the Michaelson representation; `NIL` is distinct from false and zero, and every tail is a List. | [`lists-test.rkt`](../tests/lists-test.rkt) and [`errors-test.rkt`](../tests/errors-test.rkt) cover proper construction, operations, contracts, and malformed tails. |

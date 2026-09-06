@@ -26,9 +26,9 @@ Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.3.0>
 
 Current source includes incremental HTTP request accumulation and explicit
 `exit`. The `feature/public-api-and-list-library` branch also uses lowercase
-callable names, documented in the [public API reference](docs/API.md).
+callable names and ASCII Char literals, documented in the [public API reference](docs/API.md).
 These changes are not in the published 0.3.0 archive, which retains its older
-API. Char literals and the expanded List library are planned subsequent work.
+API. The expanded List library is planned subsequent work.
 
 Download, verify, extract, and run it:
 

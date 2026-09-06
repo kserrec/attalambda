@@ -5,24 +5,24 @@
 ; lambda-language computation.
 (def decimal-digit value =
   (if (eq value 0)
-      DIGIT-0
+      #\0
       (if (eq value 1)
-          DIGIT-1
+          #\1
           (if (eq value 2)
-              DIGIT-2
+              #\2
               (if (eq value 3)
-                  DIGIT-3
+                  #\3
                   (if (eq value 4)
-                      DIGIT-4
+                      #\4
                       (if (eq value 5)
-                          DIGIT-5
+                          #\5
                           (if (eq value 6)
-                              DIGIT-6
+                              #\6
                               (if (eq value 7)
-                                  DIGIT-7
+                                  #\7
                                   (if (eq value 8)
-                                      DIGIT-8
-                                      DIGIT-9))))))))))
+                                      #\8
+                                      #\9))))))))))
 
 (def nat-to-decimal value =
   (if (lt value 10)

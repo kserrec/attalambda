@@ -386,7 +386,10 @@ unwrapped Char payloads and return tagged Bool values.
 The module defines every required upper- and lowercase letter, decimal digit,
 control constant, and named punctuation constant as a genuine lambda-built
 Char. Constants are derived from binary Nat values and unary successor chains;
-production code contains no host numbers or character literals.
+core computation contains no host numbers or character literals. These
+constants remain internal. Public ASCII Char literals use the existing reader
+and `language-char-expression` during mechanical expansion; the facade
+rejects non-ASCII Char literals and exports no named Char constants.
 
 `readers/char.rkt` converts a completed Char payload to a host integer or
 display string. It renders TAB, LF, CR, and printable ASCII directly and uses

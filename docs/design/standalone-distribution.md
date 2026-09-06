@@ -152,7 +152,7 @@ The exact reasons are:
 | invalid encoding | 65 | `source is not valid UTF-8` |
 | reader failure | 65 | `source could not be read; check delimiters and UTF-8 encoding` |
 | unavailable identifier | 65 | `unknown AttaLambda name: IDENTIFIER` |
-| unsupported datum | 65 | `unsupported literal; only exact Rat and String literals are supported` |
+| unsupported datum | 65 | `unsupported literal; only exact Rat, String, and ASCII Char literals are supported` |
 | other expansion failure | 65 | `source has invalid syntax` |
 | unexpected failure | 70 | `unexpected launcher failure; verify the AttaLambda installation` |
 

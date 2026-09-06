@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phase 1 complete on 2026-09-06; Phase 2 is next.
+Status: Phases 1–2 complete; continuing Phases 3–8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -244,15 +244,20 @@ Phase 1 is complete; the next bounded chunk is Phase 2, Char literals.
 
 ### Step 2.1 — Expand literals through the existing emitter
 
-- [ ] Add the small Char datum branch in `lang/expander.rkt`, with the ASCII
+- [x] Add the small Char datum branch in `lang/expander.rkt`, with the ASCII
   check and a clear syntax error for unsupported characters. Emit through
   `language-char-expression`. Keep `lang/reader.rkt`, String expansion, and
   runtime representation intact. Update only the relevant checker vocabulary
   and language diagnostics; retain rejection of other unsupported datums.
 
+Step 2.1 result (2026-09-06): the existing datum expander now accepts ASCII
+Chars through its existing emitter. Updated the exact facade checker vocabulary
+and literal diagnostics; no reader, String emitter, or runtime change.
+Expanded purity passed all 30 production modules; boundary checks passed.
+
 ### Step 2.2 — Remove named public Chars and verify isolation
 
-- [ ] Remove individual Char imports/exports from the language facade and
+- [x] Remove individual Char imports/exports from the language facade and
   its exact allowlist; keep internal constants used by existing core/effects
   code. Migrate public examples/tests to literals. Test lowercase/uppercase
   letters, digits, punctuation, parentheses, all four named whitespace forms,
@@ -262,6 +267,29 @@ Phase 1 is complete; the next bounded chunk is Phase 2, Char literals.
   names are unbound until defined, while ordinary user definitions work.
   Update current docs/reference; run language, runner, Char, String, codec,
   and boundary tests, then the Phase completion gate.
+
+Step 2.2 result (2026-09-06): removed all named Char imports/exports from
+only the public facade and its exact checker inventory; migrated the HTTP
+example and public callable tests to literals. The installed-language suite
+checks every ASCII value against make-char and one-byte Strings through the
+canonical codec, rejects all removed names and non-ASCII literals, and proves
+user definitions. Its first generated all-ASCII program exceeded the existing
+20-second deadline: a separate timing probe measured 43.6 seconds in expansion.
+Factoring its repeated check into one ordinary source function preserved all
+128 cases; the unchanged deadline then passed. No production change was needed.
+Focused language tests passed 111 assertions; runner, Char, String, codec, and
+boundary suites passed 1,670 assertions. The full suite passed all 39 suites,
+13,682 assertions, expanded purity for 30 modules, and complete boundaries.
+The complete relevant diff and whitespace check passed. Racket's ordinary
+ignored compilation cache was populated; no generated artifact is tracked.
+
+Phase 2 executable changes: one ASCII datum branch, named Char export removal,
+the matching runner diagnostic, and mechanical example literal substitutions.
+Tests/tooling: literal/name coverage and exact facade tables. Documentation:
+current API, architecture, README, acceptance, launcher contract, and this plan.
+Reader, String expansion, core constants, representations, codec, and effects
+are unchanged. No new production module, runtime helper, dependency, or host
+capability. Phase 2 is complete; Phase 3 follows under the continuous approval.
 
 ## Phase 3 — Append, reverse, map, and filter
 
