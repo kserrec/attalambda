@@ -6,6 +6,10 @@ is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
+The current source contract below includes explicit program exit, added after
+the published 0.3.0 archive. The release ledger remains historical evidence;
+these branch changes have not been published.
+
 ## Current public support
 
 Linux x86-64 is the sole supported public binary target. The supported
@@ -21,6 +25,8 @@ Racket installation, package registry, AttaLambda checkout, build directory,
 or network service. This is a distribution promise, not a sandbox promise: a
 program using the real host receives the launching process's documented
 stdout, filesystem, DNS, connection, and listening authority.
+The current source also permits a program to terminate its own process through
+explicit `exit`; it grants no process-spawning or signal capability.
 
 The macOS and Windows builders and consumers remain portability checks in CI.
 They do not make those systems supported public targets. Public macOS binaries
@@ -107,9 +113,19 @@ operating-system status.
 An object-language Error, `Result Err`, or `Result Ok` is ordinary completed
 lambda data. The module wrapper forces each top-level expression for requested
 effects and discards its value; the launcher never decodes that value or bases
-its exit status on it. A completed Error or Err therefore exits `0` unless an
-independent launcher failure occurs. An operating-system failure from a valid
-host request becomes the specified `Result Err`, not status `70`.
+its exit status on it. Without a performed explicit exit, normal completion
+remains status `0`, including when an expression produces Error or Err. An
+operating-system failure from a valid returning host request becomes the
+specified `Result Err`, not status `70`.
+
+Separately from launcher-controlled completion, `(exit 0)` and `(exit 1)`
+request those exact operating-system statuses. Pure AttaLambda code decides
+whether a condition is fatal and validates the status; only the real host
+terminates the process, without returning a value or printing a diagnostic.
+Wrong types yield TypeMismatch Error, other Rats yield InvalidCount Error, and
+incoming Errors bubble without dispatch. An unselected exit remains lazy; a
+performed exit prevents later expressions from running. The
+[host-boundary contract](host-boundary.md) defines this tenth operation.
 
 Diagnostics use one of these shapes, where `SOURCE` is the safely quoted
 original spelling, line numbers are one-based, and columns are zero-based:
@@ -232,9 +248,14 @@ crosses a build-to-consumer transfer boundary into
 The consumer has no Racket command or source checkout and receives the archive,
 checksum, and self-contained consumer harness. It verifies the checksum,
 layout, permissions, manifest, legal bytes, guide commands, version/help,
-diagnostics, stdout, binary file round-trip, TCP/HTTP loopback behavior,
-foundations example, and relocation. External networking is disabled; only
-ephemeral loopback service is used.
+stdout, byte-exact file-example round-trip, TCP/HTTP loopback behavior, and
+relocation. The current consumer also checks explicit/default program statuses
+and both fatal and recoverable missing-file decisions. The foundations example
+is inventoried but not executed by this consumer. Fixed launcher-failure
+statuses and sanitized diagnostics are covered by `tests/runner-test.rkt`;
+foundations execution is covered by `tests/milestone-two-acceptance-test.rkt`.
+Those are source-suite checks, not packaged-consumer results. External
+networking is disabled; only ephemeral loopback service is used.
 
 Building or verifying an archive does not authorize a tag, Release, upload,
 signing or notarization operation, paid account use, purchase, or publication.

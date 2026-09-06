@@ -414,6 +414,67 @@ readers, runner production code, version, legal bytes, and build script are
 untouched. All five Phases are complete. Stop for Kyle's branch review; no
 pull request, merge, tag, or release has been created.
 
+## Final branch bug hunt — 2026-09-05
+
+Kyle separately approved this branch-wide correctness pass after milestone
+completion. Scope: all 57 changed paths from `main` at `578f1ac` through
+`96652c0`, plus their direct interactions. No further refactor is authorized.
+
+Coverage: 40 current files received a close read. The other 17 received a
+close read of the delta with selected direct interactions or a surrounding
+skim: `effects/http.rkt`, `tooling/check-boundaries.rkt`, and the boundary,
+distribution, errors, files, HTTP, language, Lists, purity, runner, stdout,
+Strings, TCP-host, TCP, typecheck, and Unit test suites. No in-scope delta was
+left unexamined. Unchanged core algorithms and unrelated platform machinery
+did not receive a fresh full audit; the complete source suite still exercises
+them. Normative amendments, previous review repairs, codec canonicality,
+dispatch/error precedence, resource cleanup, reader/helper substitutions,
+incremental HTTP, exit injection, and architectural enforcement were traced.
+
+No production correctness defect was confirmed. A deterministic seed-9052026
+scratch probe passed 2,770 assertions over 180 scanner inputs and 45 multi-chunk
+server scenarios, comparing framing with a host-byte oracle and server results
+with the existing semantic parser. It also checked cleanup, unforced effects,
+and repeated forcing. It found no bug; it is not counted as retained regression
+coverage or a replacement for the existing HTTP tests.
+
+Three documentation discrepancies in completed work were confirmed and
+corrected serially:
+
+1. The distribution contract conflated normal completion with explicit program
+   termination. Existing runner cases show missing-file Err can deliberately
+   lead to status 1, while no exit and recoverable choices remain 0. The contract
+   now distinguishes these paths and marks exit as unpublished source behavior.
+2. Consumer evidence had been copied from source-suite evidence. The Linux
+   harness inventories foundations but never executes it and does not exercise
+   fixed launcher failures. Corrected both the current distribution contract
+   and the earlier non-core acceptance paragraph;
+   the earlier acceptance-document correction had missed these sibling claims.
+   `tests/runner-test.rkt` and `tests/milestone-two-acceptance-test.rkt` own
+   those executable checks; the consumer's actual checks remain unchanged.
+3. The shipped guide assumed the manifest records an operating-system version.
+   The actual clean-`3113822` archive manifest and builder record target,
+   toolchain, and native-library assumptions, not that version. Corrected the
+   guide without introducing a compatibility promise; one assertion in the
+   existing guide-contract test pins the corrected claim. It checks the guide's
+   wording, not runtime compatibility. Packaged acceptance must be repeated
+   because the guide is a shipped input.
+
+Production-code changes: none. Tests: one guide-contract assertion; the first two
+prose corrections are verified against existing behavioral tests and the exact
+consumer commands, not new source-string behavior tests. Documentation:
+existing distribution contract, guide, and this plan only. No new module,
+dependency, language behavior, purity exception, release, or permission change.
+Focused exit verification passed 167 assertions. The full run passed all 39
+suites with 13,606 assertions, expanded purity for 30 production modules, and
+the complete boundary/inventory gate. That run reached the distribution suite
+before its edit (208 assertions); the post-edit focused run passed all 209,
+including the added guide assertion. The new assertion rejects the previous
+guide wording. Fresh cold review of all four repair files and direct evidence
+found zero confirmed issues, including in the shared guide's macOS and Windows
+manifest claims. No findings are deferred. A clean build/consumer rerun remains
+pending before final branch acceptance and push.
+
 ---
 
 # Completed non-core simplification plan
@@ -839,10 +900,11 @@ The existing consumer passed in read-only digest-pinned
 `ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`
 with Racket and `raco` absent, no checkout, all capabilities dropped, and
 external networking disabled. Checksum, exact inventory, permissions, legal
-bytes, guide workflow, help/version, launcher statuses and sanitized
-diagnostics, stdout, binary file round-trip, TCP/HTTP loopback, foundations,
-and relocation all passed. First startup was 470 ms and relocated startup was
-369 ms.
+bytes, guide workflow, help/version, stdout, byte-exact file-example round-trip,
+TCP/HTTP loopback, and relocation all passed. Launcher-failure statuses and
+sanitized diagnostics were checked by the source runner suite; foundations
+execution was checked by the source milestone-two acceptance suite, not this
+consumer. First startup was 470 ms and relocated startup was 369 ms.
 
 | Maintained code | Baseline | Final | Change |
 | --- | ---: | ---: | ---: |

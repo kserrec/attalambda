@@ -113,9 +113,9 @@ produced for other targets are internal portability evidence, not supported publ
 
 ## Known limitations
 
-- This archive was tested only on the exact target and operating-system
-  version recorded in `BUILD-MANIFEST.txt`; that observation is not a minimum
-  compatibility guarantee.
+- `BUILD-MANIFEST.txt` records the target, toolchain, and observed native-library
+  assumptions. It does not record a tested operating-system version or establish
+  a minimum compatibility guarantee.
 - There is no installer, automatic PATH configuration, REPL, program-argument
   API, package manager, updater, formatter, debugger, or editor integration.
 - Programs receive no sandbox, permission prompt, backup, timeout, or

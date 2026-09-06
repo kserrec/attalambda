@@ -414,6 +414,7 @@
           "write-file` can create, truncate, or replace files"
           "distribution supports Linux x86-64"
           "internal portability evidence, not supported public downloads"
+          "does not record a tested operating-system version"
           "Linux x86-64 is the only supported public binary target"))])
   (check-not-false (string-contains? getting-started-template required-text)))
 
