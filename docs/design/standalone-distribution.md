@@ -1,14 +1,14 @@
 # Standalone distribution
 
 This document records the current launcher and binary-distribution contract,
-then preserves the evidence for the two public releases. The language itself
+then preserves the evidence for the three public releases. The language itself
 is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current source contract below includes explicit program exit, added after
-the published 0.3.0 archive. The release ledger remains historical evidence;
-these branch changes have not been published.
+The current source contract includes explicit program exit, lowercase public
+callables, ASCII Char literals, and the complete List library, published in
+0.4.0. The release ledger distinguishes current and earlier artifact evidence.
 
 ## Current public support
 
@@ -267,9 +267,55 @@ files, checksums, support claims, and public action.
 
 ## Public release ledger
 
+### AttaLambda 0.4.0 — 2026-09-06
+
+PR https://github.com/kserrec/attalambda/pull/2 merged as
+`bd1dd56925765f8d8359609a49e333ba570bcfc6`. Its complete tree equals verified
+PR revision `d6f50eec467062a0d33ce0697229f0b691735a06`. Automated review of the
+language implementation found no actionable issue. All ten PR CI jobs and
+all ten post-merge CI jobs passed; the local source gate passed 41 suites,
+14,100 assertions, expanded purity for 32 production modules, and complete
+boundaries. These are the CI runs:
+
+- https://github.com/kserrec/attalambda/actions/runs/34048807658
+- https://github.com/kserrec/attalambda/actions/runs/34049568221
+
+The exact merged commit built cleanly with full Racket CS 9.3 from cached
+image `sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+Unsigned annotated tag `v0.4.0` has tag-object SHA
+`baba89b99fafbc5109af1b5dc23f5f1df90ed591` and peels to that build commit.
+GitHub release ID `383668323` was published at `2026-09-06T18:00:46Z` and
+marked latest, with exactly these supported assets:
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.4.0-linux-x86_64.tar.gz` | `14,016,817` | `29728792d17843c7c09faf5f9be0cb4b215e13a43113a7b65d83d909dd37ac8b` |
+| `SHA256SUMS` | `103` | `4bf58df3b8ea6e5c9fc36b1227d7065283925aedcc744fe6cf40f7269bfc19dd` |
+
+Their asset IDs are `547488679` and `547488678`, respectively. The release
+page is https://github.com/kserrec/attalambda/releases/tag/v0.4.0.
+Fresh unauthenticated downloads from its two public asset URLs matched both
+local build hashes, and the downloaded checksum manifest passed verification.
+Older release assets were preserved. macOS/Windows remain internal portability
+evidence, not supported public downloads.
+
+The exact archive passed the existing digest-pinned Ubuntu 24.04 consumer
+without Racket, a checkout, or external networking. Its 30 public-API markers
+covered all 25 List functions, Char literals, ordinary identifiers, Map, and
+laziness. Guide workflow, stdout, file/TCP/HTTP, exit statuses, and relocation
+also passed. The archive has 11 files and 59,860,179 unpacked regular-file
+bytes, including two runtime files. First/relocated version startup measured
+435/521 ms in that run, without a performance guarantee. The source, legal
+bytes, and runtime assumptions are recorded in its clean build manifest.
+
+Local evidence remains in `/tmp/attalambda-0.4.0-release/`,
+`/tmp/attalambda-0.4.0-public-download/`, and the preparation/build/consumer
+logs named in `PLAN.md`. Later publication-record commits change documentation
+only; the tagged commit is the exact artifact source.
+
 ### AttaLambda 0.3.0 — 2026-09-02
 
-The current release was built from clean commit
+The 0.3.0 release was built from clean commit
 `1b51603671e87bcc524e2413491c94ad1ea7d763` with full Racket CS 9.3 in
 `racket/racket:9.3-full`. Annotated tag `v0.3.0` peels to that commit. The
 independent no-Racket Ubuntu 24.04 consumer passed checksum, guide, relocation,

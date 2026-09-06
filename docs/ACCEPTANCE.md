@@ -9,17 +9,19 @@ release facts are in the
 
 Run [`run-all-tests.sh`](../run-all-tests.sh) for the source acceptance gate.
 It runs every test suite, the expanded purity proof, and the repository-wide
-boundary inventory. The released 0.3.0 source passed 38 suites with 12,298
-assertions. The completed non-core refactor at `f772e8d` passed 38 suites with
+boundary inventory. The released 0.4.0 implementation passed 41 suites with
+14,100 assertions, 32 pure production modules, and the complete boundary
+scan. Earlier 0.3.0 source passed 38 suites with 12,298 assertions. The
+completed non-core refactor at `f772e8d` passed 38 suites with
 12,301 assertions, all 29 pure production modules, and the complete boundary
 scan.
 
-Source beyond the published 0.3.0 archive includes incremental HTTP request
-reading, a 21-case canonical-empty codec matrix, and explicit program exit.
-Their packaged acceptance is recorded separately below. The current public
-API branch adds lowercase callable exports and diagnostic names, ASCII Char
-literals, and the complete 25-function List API. Source verification is recorded
-in [`PLAN.md`](../PLAN.md); its unpublished Linux acceptance is recorded below.
+Release 0.4.0 includes incremental HTTP request reading, a 21-case
+canonical-empty codec matrix, explicit program exit, lowercase callable
+exports and diagnostic names, ASCII Char literals, and the complete
+25-function List API. Source and release verification are recorded in
+[`PLAN.md`](../PLAN.md) and below; earlier unpublished build evidence remains
+explicitly historical.
 
 ## Language criteria
 
@@ -85,7 +87,27 @@ It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
 
-### Public API and List library acceptance — 2026-09-06
+### AttaLambda 0.4.0 publication — 2026-09-06
+
+PR https://github.com/kserrec/attalambda/pull/2 received a completed automated
+review with no actionable findings. The subsequent version-only preparation
+passed the local 41-suite, 14,100-assertion gate and both architectural checks;
+all ten PR CI jobs passed on `d6f50ee`. The merged commit
+`bd1dd56925765f8d8359609a49e333ba570bcfc6` has exactly the same file tree, and
+all ten post-merge CI jobs passed before publication.
+
+The clean merged commit produced the final 0.4.0 Linux archive with Racket CS
+9.3. That exact archive passed the isolated Ubuntu consumer, including all 30
+public-API markers, guide, file/TCP/HTTP, exit-status, and relocation checks.
+The annotated tag points to the exact build commit. The latest stable release
+is https://github.com/kserrec/attalambda/releases/tag/v0.4.0; fresh public
+downloads of its archive and checksum manifest matched both verified local
+hashes. Exact tag/asset IDs, sizes, SHA-256 values, and CI URLs are in the
+[release ledger](design/standalone-distribution.md#attalambda-040--2026-09-06).
+Linux x86-64 remains the sole supported binary download. Later documentation
+records do not change the tagged build inputs.
+
+### Public API and List library implementation acceptance — 2026-09-06
 
 The final Phase 8 source run passed all 41 suites with 14,099 assertions, expanded
 purity for 32 production modules, and the complete boundary/inventory gate.
@@ -131,8 +153,9 @@ version startup measured 331/311 ms, without a performance guarantee.
 
 The later Phase 8 acceptance commit changes only the consumer program and
 documentation. Its production sources and shipped examples are identical to
-the recorded build commit. Version and legal bytes are unchanged; no pull
-request, merge, tag, or publication is part of this update.
+the recorded build commit. At that completion point, version and legal bytes
+were unchanged and no pull request, merge, tag, or publication had occurred.
+The separately authorized 0.4.0 publication above followed this verification.
 
 ### HTTP/List/exit milestone acceptance — 2026-09-05
 

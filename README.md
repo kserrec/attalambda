@@ -19,27 +19,27 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.3.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.4.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.3.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.4.0>
 
-Current source includes incremental HTTP request accumulation and explicit
-`exit`. The `feature/public-api-and-list-library` branch also provides lowercase
-callable names, ASCII Char literals, and the complete 25-function List API,
-documented in the [public API reference](docs/API.md). These changes are not
-in the published 0.3.0 archive, which retains its older API.
-The [acceptance record](docs/ACCEPTANCE.md) includes verification of this source
-and its unpublished Linux build.
+Version 0.4.0 includes lowercase callable names, ASCII Char literals, the
+complete 25-function List API, incremental HTTP request accumulation, and
+explicit `exit`. Programs written for 0.3.0 need the new function spellings and
+Char literals; old uppercase callable aliases and named Chars are removed.
+The [public API reference](docs/API.md) describes the complete surface, and
+the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
+verification.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.3.0/attalambda-0.3.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.3.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.4.0/attalambda-0.4.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.4.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.3.0-linux-x86_64.tar.gz
-cd attalambda-0.3.0-linux-x86_64
+tar -xzf attalambda-0.4.0-linux-x86_64.tar.gz
+cd attalambda-0.4.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -47,7 +47,7 @@ cd attalambda-0.3.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.3.0
+AttaLambda 0.4.0
 Hello from AttaLambda.
 ```
 
@@ -140,10 +140,11 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-Version 0.3.0 is the second public release. It delivers Milestone 4: Rat as
-the only public number type with exact literal arithmetic, plus Unit, Byte,
-Option, and Map, with file and TCP payloads crossing the host boundary as
-bytes. [`PLAN.md`](PLAN.md) holds the current roadmap and
+Version 0.4.0 is the third public release. It completes the public API and
+List library update while preserving absolute object-language purity. Rat
+remains the only public number type; Unit, Byte, Option, Map, and byte-based
+file/TCP payloads retain their existing representations.
+[`PLAN.md`](PLAN.md) holds the current roadmap and
 [`PLAN-ARCHIVE.md`](PLAN-ARCHIVE.md) the completed phase history; this README
 intentionally repeats neither.
 

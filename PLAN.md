@@ -1,11 +1,11 @@
 # Release 0.4.0
 
-Status: in progress on `feature/public-api-and-list-library`.
+Status: complete on main. PR #2 merged and 0.4.0 published and verified.
 Kyle explicitly authorized the PR, evaluation of useful actionable review
 comments, merge, and release on 2026-09-06. This authorization supersedes the
-completed implementation plan's stop conditions below. Starting revision is
-clean `65b875cfef5bdc12adc236af158c563a7004cb82`; the existing public release is
-0.3.0 with only its Linux x86-64 archive and checksum manifest.
+completed implementation plan's stop conditions below. Preparation started at
+clean `65b875cfef5bdc12adc236af158c563a7004cb82`; the public release at that point
+was 0.3.0 with only its Linux x86-64 archive and checksum manifest.
 
 Release scope: 0.4.0 packages the completed public API/List changes and the
 already merged HTTP/exit/refactor work since 0.3.0. Add exactly the approved
@@ -47,7 +47,7 @@ dependency, representation, effect, or publication-support claim changed.
 
 ### Step 2.1 — Resolve useful findings and verify the PR
 
-- [ ] Read completed reviews and inline/discussion comments. Accept only
+- [x] Read completed reviews and inline/discussion comments. Accept only
   findings supported by the code, behavior, and canonical specification;
   diagnose before fixing and test any repair. Wait for the final PR revision's
   existing CI jobs to pass. Record the review result and actual tested revision.
@@ -56,27 +56,48 @@ Review observed (2026-09-06): the repository's automated Codex review of
 `65b875c` completed at 17:12:36 UTC with a thumbs-up. Both paginated review
 comment/submission endpoints and the unresolved-thread inventory contained
 no findings. No repair is justified by that review. The later version-only
-delta is reviewed locally and awaits its own full suite and final PR CI.
+delta was reviewed locally and passed its own full suite. Final PR revision
+`d6f50eec467062a0d33ce0697229f0b691735a06` passed all ten jobs in
+https://github.com/kserrec/attalambda/actions/runs/34048807658. A final check of
+comments and submitted reviews still found no actionable issue.
 
 ### Step 2.2 — Merge the verified revision
 
-- [ ] Merge with a merge commit, preserving the separate implementation
+- [x] Merge with a merge commit, preserving the separate implementation
   phases. Update local main without overwriting local work and verify the
   resulting commit/checks. Kyle's instruction already authorizes this merge.
+
+Step 2.2 result: PR #2 merged at 17:45:00 UTC as
+`bd1dd56925765f8d8359609a49e333ba570bcfc6`. Local main was fast-forwarded and
+verified clean. Its tree `ae8eddd8d437a1bd88f2581b583612b99a106241` exactly
+matches the final CI-verified PR tree. Post-merge CI is tracked separately in
+https://github.com/kserrec/attalambda/actions/runs/34049568221; all ten jobs
+passed before publication.
 
 ## Phase 3 — Publish and verify 0.4.0
 
 ### Step 3.1 — Build and test the exact release inputs
 
-- [ ] From clean merged main, use the existing Racket CS 9.3 Linux builder
+- [x] From clean merged main, use the existing Racket CS 9.3 Linux builder
   and isolated Ubuntu consumer. Record source commit, archive/checksum names,
   exact SHA-256 and sizes, and passing consumer evidence. Stage release notes
   describing the breaking spellings/Char migration, complete List library,
   HTTP/exit changes, and unchanged Linux-only support.
 
+Step 3.1 result: the exact merged commit built cleanly with cached full
+Racket CS 9.3. The isolated Ubuntu consumer passed all 30 public-API markers,
+guide, file/TCP/HTTP, exit-status, and relocation checks. Archive
+`/tmp/attalambda-0.4.0-release/attalambda-0.4.0-linux-x86_64.tar.gz` is
+14,016,817 bytes, SHA-256
+`29728792d17843c7c09faf5f9be0cb4b215e13a43113a7b65d83d909dd37ac8b`.
+Sibling `SHA256SUMS` is 103 bytes, SHA-256
+`4bf58df3b8ea6e5c9fc36b1227d7065283925aedcc744fe6cf40f7269bfc19dd`.
+The build/consumer logs are `/tmp/attalambda-0.4.0-build.log` and
+`/tmp/attalambda-0.4.0-consumer.log`.
+
 ### Step 3.2 — Publish the authorized release and verify public bytes
 
-- [ ] Create annotated tag `v0.4.0` at the tested clean build commit. Publish
+- [x] Create annotated tag `v0.4.0` at the tested clean build commit. Publish
   a GitHub release with only `attalambda-0.4.0-linux-x86_64.tar.gz` and
   `SHA256SUMS`, after checking the staged assets. Preserve older releases.
   Download the public assets afresh, compare hashes, and verify release/tag
@@ -84,6 +105,27 @@ delta is reviewed locally and awaits its own full suite and final PR CI.
   handoff to the observed published state; commit/push the documentation and
   leave main clean. No additional publication approval is needed for this
   explicitly requested release within the established support boundary.
+
+Staging result: annotated tag `v0.4.0` (tag object
+`baba89b99fafbc5109af1b5dc23f5f1df90ed591`) points to the exact merged/build
+commit. GitHub draft release ID `383668323` contains only the archive (asset
+`547488679`) and checksum manifest (asset `547488678`). GitHub's asset digests
+and fresh authenticated draft downloads match both local hashes exactly.
+Published at 18:00:46 UTC as the latest stable release:
+https://github.com/kserrec/attalambda/releases/tag/v0.4.0. Fresh unauthenticated
+downloads in `/tmp/attalambda-0.4.0-public-download/` matched both exact local
+hashes, and `sha256sum -c SHA256SUMS` passed. The older releases and assets
+were preserved. README/API links and status, the acceptance/release ledger,
+project instructions, and handoff now describe the observed published state.
+
+Completion changes after the tagged build are documentation only; all
+production, version, builder, consumer, and shipped-example inputs remain
+identical to `bd1dd56`. The final publication-record full suite passed all 41
+files and 14,100 assertions, including the distribution suite's 209 checks;
+32-module expanded purity and complete boundaries passed again. Its log is
+`/tmp/attalambda-0.4.0-publication-record-tests.log`. Diff and whitespace checks
+passed. No further release or feature work is authorized by this completed
+plan.
 
 ---
 

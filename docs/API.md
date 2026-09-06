@@ -1,8 +1,8 @@
 # Public API
 
-This reference describes the source surface on
-`feature/public-api-and-list-library` with the complete public API update.
-The published 0.3.0 archive retains its earlier uppercase library names.
+This reference describes AttaLambda 0.4.0, including the complete public API
+and List library update. Programs written for 0.3.0 need the new function
+spellings and Char literals.
 All callable built-ins below are lowercase; their old uppercase aliases are
 absent from the language.
 Constants keep their names. All 25 specified List operations are implemented.

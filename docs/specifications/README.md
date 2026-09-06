@@ -13,7 +13,7 @@ and specify the public name and existing host boundary before implementation.
 The Public API and List Library Amendments (2026-09-06) specify lowercase
 callable names, mechanical ASCII Char literals, and the expanded List API.
 They preserve the earlier text as history and keep all purity boundaries.
-The source implementation is complete on `feature/public-api-and-list-library`.
+The implementation is complete and published in AttaLambda 0.4.0.
 [PLAN.md](../../PLAN.md) records verification; [docs/API.md](../API.md)
 describes the implemented surface. The published 0.3.0 archive retains its
 earlier API.
