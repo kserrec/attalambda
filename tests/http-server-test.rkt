@@ -273,6 +273,93 @@
        (list #"tcp-write" 2 expected-ok-response)
        (list #"tcp-close" 2)))
 
+;; Framing must not depend on TCP packet boundaries. The scripted host has
+;; exactly the expected reads: an extra read, premature completion, reordered chunk,
+;; duplicate effect, missing close, or changed target/response fails here.
+(define (check-request-chunks chunks expected-kind)
+  (define handler-calls 0)
+  (define-values (fake-host get-traces get-calls get-remaining)
+    (make-scripted-host
+     (append
+      (list (object-ok connection-handle))
+      (for/list ([chunk (in-list chunks)])
+        (object-ok (bytes->object-byte-list chunk)))
+      (if expected-kind '() (list (object-ok UNIT)))
+      (list (object-ok UNIT)))))
+  (define pending
+    (apply2
+     (configure-serve-one
+      fake-host
+      (lambda (target)
+        (set! handler-calls (add1 handler-calls))
+        (check-equal? (object-string->bytes target) #"/lambda")
+        (lazy-apply handler target)))
+     listener-handle
+     maximum))
+  (check-equal? (get-calls) 0)
+  (check-equal? handler-calls 0)
+  (for ([forcing (in-range 2)])
+    (if expected-kind
+        (check-result-err-kind pending expected-kind)
+        (check-ok-unit pending))
+    (check-equal? handler-calls (if expected-kind 0 1))
+    (check-equal? (get-calls)
+                  (+ (length chunks) (if expected-kind 2 3))))
+  (check-equal? (get-remaining) '())
+  (check-equal?
+   (decoded-traces get-traces)
+   (append
+    (list (list #"tcp-accept" 1))
+    (for/list ([chunk (in-list chunks)]) (list #"tcp-read" 2 65536))
+    (if expected-kind '() (list (list #"tcp-write" 2 expected-ok-response)))
+    (list (list #"tcp-close" 2)))))
+
+(define framing-request
+  (bytes-append valid-request-one valid-request-two))
+(check-request-chunks (list framing-request) #f)
+(check-request-chunks
+ (for/list ([byte (in-bytes framing-request)]) (bytes byte))
+ #f)
+;; Nonempty pieces only: an empty TCP read means EOF, not a fragment.
+(for ([split (in-range 1 (bytes-length framing-request))])
+  (with-check-info (['split split])
+    (check-request-chunks
+     (list (subbytes framing-request 0 split)
+           (subbytes framing-request split))
+     #f)))
+
+(check-request-chunks (list #"") 9)
+(check-request-chunks (list #"GET /lambda HTTP/1.1\r\n\r" #"") 9)
+(check-request-chunks (list #"GET /lambda HTTP/1.1\nHost: x\r\n\r" #"\n") 10)
+(check-request-chunks (list #"POST /lambda HTTP/1.1\r\n\r" #"\n") 11)
+;; Trailing bytes must arrive in the completing chunk. The server does not
+;; read further stream data after it has received a complete bodyless request.
+(check-request-chunks (list (bytes-append framing-request #"body")) 10)
+(check-request-chunks
+ (list (subbytes framing-request 0 (sub1 (bytes-length framing-request)))
+       #"\nbody")
+ 10)
+
+(define (padded-request method size)
+  (define prefix (bytes-append method #" /lambda HTTP/1.1\r\nHost: localhost\r\nX: "))
+  (define suffix #"\r\n\r\n")
+  (bytes-append prefix
+                (make-bytes (- size (bytes-length prefix) (bytes-length suffix))
+                            (char->integer #\a))
+                suffix))
+(define at-cap-request (padded-request #"GET" 8192))
+(check-request-chunks (list at-cap-request) #f)
+(check-request-chunks
+ (list (subbytes at-cap-request 0 8190) (subbytes at-cap-request 8190))
+ #f)
+;; POST would be unsupported (11) if parsed; over-cap must win as malformed
+;; (10), including when the last chunk completes both the count and delimiter.
+(define over-cap-request (padded-request #"POST" 8193))
+(check-request-chunks (list over-cap-request) 10)
+(check-request-chunks
+ (list (subbytes over-cap-request 0 8190) (subbytes over-cap-request 8190))
+ 10)
+
 ;; Complete parse failures and incomplete EOF both close the acquired
 ;; connection and perform no write.
 (define-values (malformed-host malformed-traces malformed-calls
@@ -324,6 +411,7 @@
                                   read-failure-remaining)
   (make-scripted-host
    (list (object-ok connection-handle)
+         (object-ok (bytes->object-byte-list valid-request-one))
          (object-err invalid-nat-error)
          (object-ok UNIT))))
 (check-result-err-kind
@@ -335,8 +423,9 @@
  (decoded-traces read-failure-traces)
  (list (list #"tcp-accept" 1)
        (list #"tcp-read" 2 65536)
+       (list #"tcp-read" 2 65536)
        (list #"tcp-close" 2)))
-(check-equal? (read-failure-calls) 3)
+(check-equal? (read-failure-calls) 4)
 (check-equal? (read-failure-remaining) '())
 
 (define-values (double-failure-host double-failure-traces

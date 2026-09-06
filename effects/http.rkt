@@ -7,7 +7,9 @@
                   NIL
                   raw-make-root-error)
          "../core/fix.rkt"
+         (only-in "../core/list-nat.rkt" raw-list-take)
          (only-in "../core/lists.rkt"
+                  raw-append
                   raw-cons
                   raw-list-head
                   raw-list-is-nil
@@ -30,6 +32,7 @@
          raw-http-version-chars
          raw-space-chars
          raw-crlf-chars
+         raw-scan-http-header-end
          parse-http-request)
 
 ;; Error kinds 0 through 8 are already assigned to core and host failures.
@@ -134,6 +137,20 @@
    ((raw-cons LF)
     ((raw-cons CR)
      ((raw-cons LF) NIL)))))
+
+;; The caller carries at most three prior characters. Scan only that suffix
+;; plus the new chunk; retain at most three characters for the next read.
+;; Once found, no suffix is needed. Semantic parsing remains separate.
+(def raw-scan-http-header-end suffix chunk =
+  (lambda-let candidate = ((raw-append suffix) chunk)
+    (lambda-let found =
+      ((raw-string-contains? candidate) raw-header-end-chars)
+      ((raw-pair found)
+       (((raw-if found)
+         NIL)
+        (raw-reverse
+         ((raw-list-take (raw-nat-succ raw-two-bits))
+          (raw-reverse candidate))))))))
 
 (def raw-http-char-succ char =
   (raw-make-char

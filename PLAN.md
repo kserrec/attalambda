@@ -1,7 +1,7 @@
 # HTTP, empty-List consistency, and explicit exit plan
 
-Status: approved for serial execution on 2026-09-05; Phases 0–1 complete;
-Phase 2 next.
+Status: approved for serial execution on 2026-09-05; Phases 0–2 complete;
+Phase 3 next.
 Branch: `refactor/non-core-simplification`; no new branch.
 Verified baseline: `6663ad6c55a71791df1db768652089cabcce6496`, with a clean
 working tree before this planning edit.
@@ -148,7 +148,7 @@ untouched.
 
 ### Step 2.1 — Add the pure delimiter scanner
 
-- [ ] Add `raw-scan-http-header-end` in `effects/http.rkt`, returning a raw
+- [x] Add `raw-scan-http-header-end` in `effects/http.rkt`, returning a raw
   Pair of found flag and next suffix. Inspect only the new chunk plus at
   most three preceding characters, using existing pure List/String tools;
   retain at most the last three characters when incomplete. Extend
@@ -156,9 +156,15 @@ untouched.
   splits, byte-at-a-time input, overlapping CRs, near matches, empty chunks,
   trailing characters, and every two-chunk split of a complete valid request.
 
+Step 2.1 result (2026-09-05): added the pure suffix/chunk scanner without
+changing semantic parsing. The HTTP suite passed 510 assertions, including
+all delimiter/request splits and suffix bounds. Expanded purity passed all
+29 production modules; the source inventory/boundary gate and complete
+relevant diff/whitespace checks passed.
+
 ### Step 2.2 — Replace the server's repeated prefix work
 
-- [ ] Change `effects/http-server.rkt` loop state to reversed accumulated
+- [x] Change `effects/http-server.rkt` loop state to reversed accumulated
   characters, running private binary Nat count, and at-most-three-character
   suffix. Convert/count/reverse only the new chunk; prepend its reverse
   without walking the old prefix. Check the running count against 8192
@@ -168,9 +174,15 @@ untouched.
   trailing-data rejection stays intact. Update the loop's obsolete comments;
   preserve callers, cleanup, EOF and failure behavior. Run both HTTP suites.
 
+Step 2.2 result (2026-09-05): replaced repeated prefix append, recount, and
+parsing with reversed accumulation, a private binary count, and suffix-only
+framing. Parser and cleanup implementations are untouched. Both HTTP suites
+passed 668 assertions; expanded purity (29 modules), boundary/inventory,
+complete relevant diff review, and whitespace checks passed.
+
 ### Step 2.3 — Verify server behavior across chunk boundaries
 
-- [ ] Extend existing fake-host tests in `tests/http-server-test.rkt` for
+- [x] Extend existing fake-host tests in `tests/http-server-test.rkt` for
   one chunk, one byte per chunk, every nonempty two-chunk split, and each
   delimiter split. An empty TCP read remains EOF, not an interior fragment.
   Pin premature EOF, exactly 8192 and over-cap requests, malformed and
@@ -178,6 +190,21 @@ untouched.
   and repeated-forcing laziness. Review source to prove no full parse on
   incomplete chunks, no repeated old-prefix append traversal, and no whole
   request recount. Run both HTTP suites, checkers, full suite, and review.
+
+Step 2.3 result (2026-09-05): split, byte-at-a-time, EOF, exact/over-cap,
+malformed/unsupported, trailing-data, partial-read failure, cleanup, and
+repeated-forcing regressions passed. Corrected the new padded valid fixture
+to include the parser's required Host header; no production repair was
+needed. Focused HTTP suites passed 1,412 assertions (510/902). The full run
+passed 38 suites, 13,381 assertions, expanded purity for 29 production modules,
+and the inventory/boundary gate. Fresh Phase 2 review found zero confirmed
+issues or material regression gaps; its independent HTTP run also passed
+1,412 assertions. Source review confirms one guarded full parse and no old
+prefix append/recount; tests observe results and effects, not parser calls.
+Complete relevant diff and whitespace checks passed. Executable changes:
+pure scanner and server accumulation only. Tests: two HTTP suites. Comments
+and documentation: accurate buffering/test descriptions and this plan.
+Semantic parser, cleanup implementation, host, codec, and core are untouched.
 
 ## Phase 3 — Add public exit 0/1 (four Steps)
 
