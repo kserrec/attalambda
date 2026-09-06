@@ -15,6 +15,9 @@
          typed-map
          typed-filter
          typed-reduce
+         typed-zip
+         typed-concat
+         typed-flatten
          typed-predicate-result)
 
 (def list-binary-signature =
@@ -113,3 +116,64 @@
       raw-keep-return)
      (((raw-fix typed-reduce-step) function) initial))
     list)))
+
+(def raw-zip-step recur left right =
+  (((raw-if ((raw-or (raw-list-is-nil left)) (raw-list-is-nil right)))
+    NIL)
+   ((raw-cons
+     ((raw-cons (raw-list-head left))
+      ((raw-cons (raw-list-head right)) NIL)))
+    ((recur (raw-list-tail left)) (raw-list-tail right)))))
+
+(def raw-zip-values left right =
+  (((raw-fix raw-zip-step) (raw-rebuild-list left))
+   (raw-rebuild-list right)))
+
+(def typed-zip =
+  ((((make-typed-function raw-zip-values)
+     zip-function-name)
+    list-binary-signature)
+   raw-keep-return))
+
+(def typed-concat-step recur lists =
+  (((raw-if (raw-list-is-nil lists))
+    NIL)
+   ((((((raw-check-argument concat-function-name)
+        argument-position-one)
+       list-type)
+      raw-keep-return)
+     (lambda (inner)
+       (lambda-let rest = (recur (raw-list-tail lists))
+         (((raw-if ((raw-is-type error-type) rest))
+           rest)
+          ((raw-append inner) rest)))))
+    (raw-list-head lists))))
+
+(def typed-concat =
+  (((((raw-check-argument concat-function-name)
+      argument-position-one)
+     list-type)
+    raw-keep-return)
+   (raw-fix typed-concat-step)))
+
+;; The suffix holds the remaining output, joining nested Lists in order.
+(def typed-flatten-step recur list suffix =
+  (((raw-if (raw-list-is-nil list))
+    suffix)
+   (lambda-let value = (raw-list-head list)
+     (((raw-if ((raw-is-type error-type) value))
+       ((raw-add-result-frame value) flatten-function-name))
+      (lambda-let rest = ((recur (raw-list-tail list)) suffix)
+        (((raw-if ((raw-is-type list-type) value))
+          ((recur value) rest))
+         (((raw-if ((raw-is-type error-type) rest))
+           rest)
+          ((raw-cons value) rest))))))))
+
+(def typed-flatten =
+  (((((raw-check-argument flatten-function-name)
+      argument-position-one)
+     list-type)
+    raw-keep-return)
+   (lambda (list)
+     (((raw-fix typed-flatten-step) list) NIL))))

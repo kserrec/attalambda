@@ -194,3 +194,111 @@
  (lazy-force
   (apply3 typed-reduce (lambda (accumulator) (lambda (value) value)) NIL heterogeneous))
  (lazy-force (lazy-apply typed-head (lazy-apply typed-tail (lazy-apply typed-tail heterogeneous)))))
+
+;; zip returns proper two-element Lists, stopping at the shorter side.
+(define (read-pairs value)
+  (map read-numbers (object-list->host-list value)))
+(check-equal? (read-pairs (apply2 typed-zip sample (numbers '(4 5 6))))
+              '((1 4) (2 5) (3 6)))
+(check-equal? (read-pairs (apply2 typed-zip sample (numbers '(4 5))))
+              '((1 4) (2 5)))
+(check-equal? (read-pairs (apply2 typed-zip (numbers '(4 5)) sample))
+              '((4 1) (5 2)))
+(check-equal? (read-pairs (apply2 typed-zip (numbers '(1)) (numbers '(2))))
+              '((1 2)))
+(check-equal?
+ (map (lambda (pair) (map object-tag (object-list->host-list pair)))
+      (object-list->host-list (apply2 typed-zip heterogeneous sample)))
+ '((1 7) (7 7) (6 7)))
+(for ([value (in-list (list (apply2 typed-zip NIL NIL)
+                            (apply2 typed-zip NIL sample)
+                            (apply2 typed-zip sample NIL)
+                            (apply2 typed-zip NIL (host-list->object-list (list unused)))))])
+  (check-eq? (lazy-force value) (lazy-force NIL))
+  (check-equal? (object-list->host-list value) '()))
+(check-equal? (error-value->string (apply2 typed-zip TRUE unused))
+              "zip(arg1 expected LIST got BOOL)")
+(check-equal? (error-value->string (apply2 typed-zip invalid-count-error unused))
+              "INVALID-COUNT\n  -> zip(arg1 expected LIST)")
+(check-equal? (error-value->string (apply2 typed-zip NIL TRUE))
+              "zip(arg2 expected LIST got BOOL)")
+(check-equal? (error-value->string (apply2 typed-zip sample invalid-count-error))
+              "INVALID-COUNT\n  -> zip(arg2 expected LIST)")
+(for ([partial (in-list (list typed-zip
+                              (lazy-apply typed-zip sample)
+                              (lazy-apply typed-zip invalid-count-error)))])
+  (check-equal? (procedure-arity (lazy-force partial)) 1))
+
+;; concat removes exactly one level, retaining nested Lists and NIL elements.
+(define nested
+  (host-list->object-list
+   (list (host-list->object-list (list one (numbers '(2)))) (numbers '(3)))))
+(check-equal? (read-numbers
+               (lazy-apply typed-concat
+                           (host-list->object-list (list (numbers '(1 2)) NIL (numbers '(3))))))
+              '(1 2 3))
+(define concatenated (lazy-apply typed-concat nested))
+(check-equal? (map object-tag (object-list->host-list concatenated)) '(7 2 7))
+(check-equal? (read-numbers (lazy-apply typed-head (lazy-apply typed-tail concatenated))) '(2))
+(check-equal? (object-tag
+               (lazy-apply typed-head
+                           (lazy-apply typed-concat
+                                       (host-list->object-list
+                                        (list (host-list->object-list (list NIL)))))))
+              2)
+(for ([value (in-list (list (lazy-apply typed-concat NIL)
+                            (lazy-apply typed-concat (host-list->object-list (list NIL NIL)))))])
+  (check-eq? (lazy-force value) (lazy-force NIL))
+  (check-equal? (object-list->host-list value) '()))
+(check-equal? (map object-tag
+                   (object-list->host-list
+                    (lazy-apply typed-concat (host-list->object-list (list heterogeneous)))))
+              '(1 7 6))
+(for ([source (in-list (list (host-list->object-list (list TRUE unused))
+                             (host-list->object-list (list sample TRUE))))])
+  (define result (lazy-apply typed-concat source))
+  (check-equal? (object-tag result) 0)
+  (check-equal? (error-value->string result) "concat(arg1 expected LIST got BOOL)"))
+(check-equal? (error-value->string (lazy-apply typed-concat one))
+              "concat(arg1 expected LIST got RAT)")
+(check-equal? (error-value->string (lazy-apply typed-concat invalid-count-error))
+              "INVALID-COUNT\n  -> concat(arg1 expected LIST)")
+(check-equal? (error-value->string
+               (lazy-apply typed-concat (host-list->object-list (list sample invalid-count-error))))
+              "INVALID-COUNT\n  -> concat(arg1 expected LIST)")
+(check-equal? (procedure-arity (lazy-force typed-concat)) 1)
+
+;; flatten recursively traverses only Lists; other tagged values stay leaves.
+(check-equal? (read-numbers (lazy-apply typed-flatten nested)) '(1 2 3))
+(check-equal? (read-numbers (lazy-apply typed-flatten sample)) '(1 2 3))
+(check-equal? (read-numbers (lazy-apply typed-flatten (numbers '(1)))) '(1))
+(define deep-empty
+  (host-list->object-list (list NIL (host-list->object-list (list NIL NIL)))))
+(for ([source (in-list (list NIL deep-empty))])
+  (define result (lazy-apply typed-flatten source))
+  (check-eq? (lazy-force result) (lazy-force NIL))
+  (check-equal? (object-list->host-list result) '()))
+(define mixed-nesting
+  (host-list->object-list
+   (list TRUE (host-list->object-list (list one NIL))
+         (host-list->object-list (list result-err heterogeneous)))))
+(check-equal? (map object-tag (object-list->host-list (lazy-apply typed-flatten mixed-nesting)))
+              '(1 7 4 1 7 6))
+(for ([source (in-list
+              (list (host-list->object-list (list invalid-count-error unused))
+                    (host-list->object-list (list one invalid-count-error))
+                    (host-list->object-list
+                     (list (host-list->object-list (list one invalid-count-error)) unused))))])
+  (define result (lazy-apply typed-flatten source))
+  (check-equal? (object-tag result) 0)
+  (check-equal? (error-value->string result) "INVALID-COUNT\n  -> flatten(result)"))
+(check-equal?
+ (error-value->string
+  (lazy-apply typed-flatten
+              (host-list->object-list (list (lazy-apply typed-head NIL)))))
+ "EMPTY-LIST\n  -> head(result)\n  -> flatten(result)")
+(check-equal? (error-value->string (lazy-apply typed-flatten TRUE))
+              "flatten(arg1 expected LIST got BOOL)")
+(check-equal? (error-value->string (lazy-apply typed-flatten invalid-count-error))
+              "INVALID-COUNT\n  -> flatten(arg1 expected LIST)")
+(check-equal? (procedure-arity (lazy-force typed-flatten)) 1)

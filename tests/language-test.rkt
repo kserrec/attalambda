@@ -241,6 +241,7 @@ PROBE
 
 (def check condition = (stdout (if condition "." "!")))
 (def values = (cons 1 (cons 2 (cons 3 NIL))))
+(def nested = (cons (cons 1 (cons (cons 2 NIL) NIL)) (cons (cons 3 NIL) NIL)))
 (def loop value = (loop value))
 
 (check (eq (len (append values (cons 4 NIL))) 4))
@@ -268,6 +269,12 @@ PROBE
 (check (eq (head (drop-while (lambda (value) (lt value 2)) values)) 2))
 (check (is-nil (take-while (lambda (value) (if (eq value 1) FALSE (loop value))) values)))
 (check (eq (head (drop-while (lambda (value) (if (eq value 1) FALSE (loop value))) values)) 1))
+(check (eq (head (tail (head (zip values (reverse values))))) 3))
+(check (eq (len (concat nested)) 3))
+(check (eq (head (head (tail (concat nested)))) 2))
+(check (eq (reduce add 0 (flatten nested)) 6))
+(check (is-nil (concat (cons NIL NIL))))
+(check (is-nil (flatten (cons (cons NIL NIL) NIL))))
 PROGRAM
      )
     (check-command-success
@@ -275,7 +282,7 @@ PROGRAM
                   racket-executable
                   (list (path->string list-library-program))
                   20)
-     (make-bytes 25 46))
+     (make-bytes 31 46))
 
     ;; Every ASCII literal must agree with make-char and a one-byte String.
     ;; Sending each through the existing String codec also validates its tag,

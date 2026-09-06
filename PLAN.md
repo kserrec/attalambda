@@ -1,6 +1,6 @@
 # Public API and List library update
 
-Status: Phases 1–5 complete; continuing Phases 6–8 autonomously as authorized.
+Status: Phases 1–6 complete; continuing Phases 7–8 autonomously as authorized.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -437,22 +437,47 @@ Phase 6 follows under the continuous approval.
 
 ### Step 6.1 — Add zip and one-level concat
 
-- [ ] Extend the transform module with `zip`, producing proper two-element
+- [x] Extend the transform module with `zip`, producing proper two-element
   Lists and stopping at the shorter input, and `concat`, removing exactly
   one nesting level. Validate each visited outer element of concat as List;
   a wrong type is an attributed structured Error. Test both unequal-length
   directions, empty sides, empty inner Lists, nesting retained by concat,
   and invalid first/later inner elements.
 
+Step 6.1 result (2026-09-06): zip constructs two-element Lists with canonical
+NIL and stops at the shorter side; concat checks each outer element as List
+and propagates recursive Errors before appending. Corrected three extra closing
+parentheses in newly written tests before execution. Focused transform tests
+then passed 121 assertions, including both unequal-length directions, retained
+nesting, empty inputs, wrong types, incoming Errors, and canonical output.
+The exact facade boundary gate passed.
+
 ### Step 6.2 — Add recursive flatten
 
-- [ ] Add the direct recursive List-tag case: visit nested Lists in order;
+- [x] Add the direct recursive List-tag case: visit nested Lists in order;
   retain ordinary non-List values as leaves. Do not inspect host data or add
   universal equality, another representation, or a traversal framework.
   Test mixed nesting, empty nested Lists, heterogeneous leaves, fully empty
   output, Error propagation when encountered, proper tails, and preserved
   order. Add all three public surfaces, diagnostics, reference entries, and
   behavioral cases; run the Phase completion gate.
+
+Step 6.2 result (2026-09-06): flatten uses direct List-tag recursion with a
+remaining-output suffix, preserving leaf order and propagating encountered
+Errors once while retaining Result Err. Focused transform tests passed 139
+assertions, encoded-name tests passed 304, and installed-language tests passed
+115. Coverage includes nesting retained by concat, recursive flattening,
+canonical empty results, heterogeneous leaves, existing Error frames, and
+unevaluated later leaves after failure. The full run passed all 41 suites,
+14,034 assertions, expanded purity for 32 modules, and complete boundaries.
+The relevant diff and whitespace checks passed.
+
+Phase 6 executable changes: three functions in the existing transform module,
+explicit exports, and encoded names. Tests/tooling: focused/public cases and
+exact facade tables. Documentation: current API, README, architecture,
+acceptance, and plan. No new module, representation, traversal framework,
+dependency, runtime code, or host capability. Phase 6 is complete; the two
+specified generators are next under the continuous approval.
 
 ## Phase 7 — Range and repeat
 

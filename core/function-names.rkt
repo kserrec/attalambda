@@ -18,6 +18,9 @@
          drop-while-function-name
          append-function-name
          reverse-function-name
+         zip-function-name
+         concat-function-name
+         flatten-function-name
          map-function-name
          filter-function-name
          reduce-function-name
@@ -108,6 +111,9 @@
 (define-function-name drop-while-function-name drop-while)
 (define-function-name append-function-name append)
 (define-function-name reverse-function-name reverse)
+(define-function-name zip-function-name zip)
+(define-function-name concat-function-name concat)
+(define-function-name flatten-function-name flatten)
 (define-function-name map-function-name map)
 (define-function-name filter-function-name filter)
 (define-function-name reduce-function-name reduce)

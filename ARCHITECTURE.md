@@ -249,6 +249,12 @@ validation and returning Some or NONE. The search peer also supplies
 answer, and drop returns the retained suffix directly. Take propagates a
 later predicate Error before constructing an earlier output node.
 
+The transform peer supplies `zip` as raw pairwise List traversal with typed
+List arguments, `concat` as checked one-level append, and `flatten` as a direct
+List-tag recursion. Flatten passes the remaining output as a suffix when
+entering a nested List, preserving order without repeated prefix append.
+Encountered Error leaves propagate; Result Err is retained as an ordinary leaf.
+
 ### Natural numbers (private machinery)
 
 Binary Nat values are private machinery since Milestone 4: no public Nat type

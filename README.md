@@ -29,7 +29,8 @@ Current source includes incremental HTTP request accumulation and explicit
 callable names and ASCII Char literals, documented in the [public API reference](docs/API.md).
 These changes are not in the published 0.3.0 archive, which retains its older
 API. The branch also implements List transforms, left reduction, and predicate
-searches, indexing, and predicate prefixes; nesting and generators remain planned.
+searches, indexing, predicate prefixes, zip, concat, and flatten. Only the List
+generators remain planned.
 
 Download, verify, extract, and run it:
 

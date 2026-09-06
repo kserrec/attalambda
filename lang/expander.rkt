@@ -35,7 +35,8 @@
                   typed-any? typed-all? typed-find typed-find-index typed-contains?
                   typed-take-while typed-drop-while)
          (only-in "../core/list-transform.rkt"
-                  typed-append typed-reverse typed-map typed-filter typed-reduce)
+                  typed-append typed-reverse typed-map typed-filter typed-reduce
+                  typed-zip typed-concat typed-flatten)
          (only-in "../core/lists.rkt"
                   NIL
                   raw-cons
@@ -165,6 +166,9 @@
                      [typed-drop-while drop-while]
                      [typed-append append]
                      [typed-reverse reverse]
+                     [typed-zip zip]
+                     [typed-concat concat]
+                     [typed-flatten flatten]
                      [typed-map map]
                      [typed-filter filter]
                      [typed-reduce reduce]
