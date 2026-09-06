@@ -13,8 +13,10 @@ and specify the public name and existing host boundary before implementation.
 The Public API and List Library Amendments (2026-09-06) specify lowercase
 callable names, mechanical ASCII Char literals, and the expanded List API.
 They preserve the earlier text as history and keep all purity boundaries.
-Implementation progress is recorded in `PLAN.md`; `docs/API.md` describes
-the implemented source surface.
+The source implementation is complete on `feature/public-api-and-list-library`.
+[PLAN.md](../../PLAN.md) records verification; [docs/API.md](../API.md)
+describes the implemented surface. The published 0.3.0 archive retains its
+earlier API.
 
 Read them in this precedence order:
 

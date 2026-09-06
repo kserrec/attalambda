@@ -29,6 +29,8 @@ Current source includes incremental HTTP request accumulation and explicit
 callable names, ASCII Char literals, and the complete 25-function List API,
 documented in the [public API reference](docs/API.md). These changes are not
 in the published 0.3.0 archive, which retains its older API.
+The [acceptance record](docs/ACCEPTANCE.md) includes verification of this source
+and its unpublished Linux build.
 
 Download, verify, extract, and run it:
 

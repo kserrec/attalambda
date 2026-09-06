@@ -273,6 +273,54 @@ run_inside_consumer() {
   "$attalambda" "$generated_source" >"$stdout_file" 2>"$stderr_file"
   check_captured_output $'Generated after packaging.\n' "generated source"
 
+  local public_api_source="$scratch_root/public-api.attl"
+  cat > "$public_api_source" <<'PROGRAM'
+#lang attalambda
+
+(def check condition = (stdout (if condition "." "!")))
+(def values = (cons 1 (cons 2 (cons 3 NIL))))
+(def nested = (cons (cons 1 (cons (cons 2 NIL) NIL)) (cons (cons 3 NIL) NIL)))
+(def loop value = (loop value))
+(def a = 1)
+(def x = 2)
+(def n = 3)
+(def m = 4)
+
+(check (eq (head values) 1))
+(check (eq (head (tail values)) 2))
+(check (eq (len values) 3))
+(check (eq (len (take 2 values)) 2))
+(check (is-nil (drop 3 values)))
+(check (option-case (nth 1 values) (eq 2) FALSE))
+(check (eq (len (take-while (lt 1) values)) 0))
+(check (eq (head (drop-while (eq 1) values)) 2))
+(check (eq (len (append values (cons 4 NIL))) 4))
+(check (eq (head (reverse values)) 3))
+(check (eq (head (tail (head (zip values (reverse values))))) 3))
+(check (eq (len (concat nested)) 3))
+(check (eq (head (head (tail (concat nested)))) 2))
+(check (eq (reduce add 0 (flatten nested)) 6))
+(check (eq (reduce add 0 (map succ values)) 9))
+(check (eq (head (filter (lambda (value) (gt value 1)) values)) 2))
+(check (eq (reduce sub 10 values) 4))
+(check (any? (eq 2) values))
+(check (all? (lambda (value) (lt value 4)) values))
+(check (option-case (find (eq 2) values) (eq 2) FALSE))
+(check (option-case (find-index (eq 2) values) (eq 1) FALSE))
+(check (contains? eq 2 values))
+(check (and (eq (reduce add 0 (range -2 3)) 0) (eq (len (range -2 3)) 5)))
+(check (string-eq (make-string (repeat 3 #\x)) "xxx"))
+(check (is-nil (repeat 0 (loop NIL))))
+(check (and (eq a 1) (and (eq x 2) (and (eq n 3) (eq m 4)))))
+(check (option-case (map-lookup (map-set (make-map eq) 1 7) 1) (eq 7) FALSE))
+(check (and (char-eq #\a (make-char 97)) (char-eq #\A (string-head "A"))))
+(check (string-eq (make-string (cons #\( (cons #\) (cons #\space (cons #\tab (cons #\newline (cons #\return NIL))))))) "() \t\n\r"))
+(check (any? (lambda (value) (if (eq value 1) TRUE (loop value))) values))
+PROGRAM
+  timeout 20 "$attalambda" "$public_api_source" >"$stdout_file" 2>"$stderr_file"
+  check_captured_output '..............................' "packaged public API"
+  printf 'packaged_public_api=passed\n'
+
   local completion_work="$scratch_root/completion-work"
   mkdir -p -- "$completion_work"
   check_program_status() {

@@ -1,6 +1,7 @@
 # Public API and List library update
 
-Status: Phases 1–7 complete; continuing Phase 8 autonomously as authorized.
+Status: Phases 1–8 complete; verified for Kyle's branch review. No pull request,
+merge, tag, or publication is authorized by this completed plan.
 Branch: `feature/public-api-and-list-library`.
 Verified starting revision: `097deb5e397617c08f736bb00e47fddb33f40e68`
 on clean `main`, after merge of `refactor/non-core-simplification`.
@@ -515,7 +516,7 @@ are implemented; final branch and packaged verification follows in Phase 8.
 
 ### Step 8.1 — Check the delivered API against the proposal
 
-- [ ] Compare the exact facade export set against every existing renamed
+- [x] Compare the exact facade export set against every existing renamed
   callable, retained constant/effect, and these 25 List operations:
 
   `cons head tail is-nil len take drop nth take-while drop-while append
@@ -528,9 +529,22 @@ are implemented; final branch and packaged verification follows in Phase 8.
   README, API reference, architecture/acceptance docs, and specification
   status without claiming unrun or unpublished acceptance.
 
+Step 8.1 result (2026-09-06): a read-only comparison of the baseline facade,
+current explicit exports, normative inventory, and API reference agreed
+exactly: 105 callables, 10 retained constants, and seven syntax/module
+bindings. The delta is exactly 63 lowercase callable renames, 85 removed
+named Chars, and 18 additions completing the 25 List functions. Existing
+installed-language tests execute every renamed/new operation, reject all old
+callables and named Chars, validate all 128 ASCII literals, and permit ordinary
+Char-name definitions. Map remains distinct from List map. Current examples
+and documentation use the new names; older acceptance/specification text is
+explicitly historical. The three normative file hashes and proposal hash
+still match their recorded values. Documentation now describes the complete
+source API and continues to distinguish the published archive.
+
 ### Step 8.2 — Verify purity, minimality, and completion
 
-- [ ] Review the complete branch diff for unrelated changes and unnecessary
+- [x] Review the complete branch diff for unrelated changes and unnecessary
   helpers, wrappers, intermediate structures, or host-side complexity. Every
   addition must have a direct role in a requested contract or its proof.
   Check the new modules enter the existing production inventory and purity
@@ -540,6 +554,44 @@ are implemented; final branch and packaged verification follows in Phase 8.
   existing Linux build/consumer harness; keep the artifact unpublished.
   Record actual tested revisions and results, commit/push verified work,
   and stop for Kyle's branch review.
+
+Step 8.2 result (2026-09-06): reviewed the complete branch delta from
+`097deb5`, including the new pure modules, existing numeric List additions,
+mechanical facade/diagnostic changes, tests/checker tables, and current docs.
+Every addition serves the specified surface or its verification. The four
+existing raw List algorithms, generalized checker, closed tags, macros,
+readers, effects, codec, and host remain unchanged. There is no new dependency,
+representation, callback framework, runtime wrapper, or host capability. All
+70 existing encoded diagnostic names have the required lowercase spellings;
+exactly 18 specified names were added. Both new modules enter the existing
+inventory and expanded-purity scan; fail-closed enforcement is retained.
+
+The unchanged builder produced a clean Linux artifact from implementation
+commit `17641cc41f53d00e96308846500f8ed65e633203` using cached Racket CS 9.3.
+The existing Ubuntu consumer, without Racket/checkout/external network,
+passed its complete workflow and one additional public-only program with 30
+success markers covering all 25 List functions, Char literals, ordinary
+identifiers, Map, and laziness. Archive SHA-256 is
+`38329c11591b5d724ced243bc3327576dbe2bc3d06b428ae65fbad6b84af3acf`;
+the unpublished artifact and full provenance/results are recorded in
+[docs/ACCEPTANCE.md](docs/ACCEPTANCE.md). Final production sources and shipped
+examples are identical to that build commit; Phase 8 changes only consumer
+test code and documentation.
+
+The final full source run passed all 41 suites, 14,099 assertions, expanded
+purity for 32 modules, and the complete source/boundary inventory. The affected
+distribution suite separately passed 209 assertions; shell syntax and final
+diff/whitespace checks passed. Full Phase logs remain under
+`/tmp/attalambda-public-api-phase*-tests.log`; final build/consumer logs are
+`/tmp/attalambda-public-api-phase8-build.log` and
+`/tmp/attalambda-public-api-phase8-consumer.log`.
+
+Phase 8 executable language changes: none. Tests/tooling: one direct program
+in the existing Linux consumer, with no new harness. Documentation: completed
+plan, API/reference status, README links, and exact acceptance evidence; the
+three normative specification files retain their recorded hashes. Phases 1–8
+are complete as separately verified feature-branch commits. Stop for Kyle's
+branch review; no pull request, merge, version change, tag, or publication.
 
 ---
 

@@ -1,16 +1,19 @@
 # Public API
 
 This reference describes the source surface on
-`feature/public-api-and-list-library` after Phase 7. The published 0.3.0
-archive retains its earlier uppercase library names. All callable built-ins
-below are lowercase; their old uppercase aliases are absent from the language.
-Constants keep their names. All 25 specified List operations are implemented;
-final branch and packaged verification is tracked in [PLAN.md](../PLAN.md).
+`feature/public-api-and-list-library` with the complete public API update.
+The published 0.3.0 archive retains its earlier uppercase library names.
+All callable built-ins below are lowercase; their old uppercase aliases are
+absent from the language.
+Constants keep their names. All 25 specified List operations are implemented.
+Verification is recorded in [PLAN.md](../PLAN.md) and the
+[acceptance record](ACCEPTANCE.md).
 
-Programs begin with `#lang attalambda`. Every function is curried: supplying
-one argument returns the function awaiting the next. Every lambda has one
-parameter. Wrong tagged arguments return structured Error values with the
-public operation's name; an early Error absorbs the remaining arguments.
+Programs begin with `#lang attalambda`. Functions with multiple parameters
+are curried: supplying one argument returns the function awaiting the next.
+Every lambda has one parameter. Wrong tagged arguments return structured Error
+values with the public operation's name; an early Error absorbs the remaining
+arguments.
 Expected computational failures return Result Err. There is no implicit
 printing or conversion from Error to a process exit status.
 
