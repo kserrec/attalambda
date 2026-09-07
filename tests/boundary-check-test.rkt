@@ -1335,3 +1335,31 @@
    (delete-file language-file)
 
    (check-equal? (project-boundary-violations root) '())))
+
+;; Generic printing makes Error formatting a pure-core responsibility.
+;; An otherwise permitted host formatter in this observer must fail closed.
+(temporary-project
+ (lambda (root)
+   (define reader (build-path root "readers" "error.rkt"))
+   (define clean (read-datum (build-path project-root "readers" "error.rkt")))
+   (write-datum (build-path root "core" "render-error.rkt")
+                '(module render-error racket/base
+                   (#%module-begin
+                    (provide raw-error-diagnostic-string)
+                    (define (raw-error-diagnostic-string value) value))))
+   (write-datum (build-path root "readers" "string.rkt")
+                '(module string racket/base
+                   (#%module-begin
+                    (provide string-value->string)
+                    (define (string-value->string value) value))))
+   (write-datum reader clean)
+   (check-equal? (file-boundary-violations reader 'reader root) '())
+   (write-datum reader
+                (replace-datum
+                 '(string-value->string ((force raw-error-diagnostic-string) error))
+                 '(format "~a" (string-value->string
+                                ((force raw-error-diagnostic-string) error)))
+                 clean))
+   (check-not-false
+    (member 'independent-error-formatting-policy
+            (kinds (file-boundary-violations reader 'reader root))))))

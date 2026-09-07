@@ -78,15 +78,38 @@ raw-function addendum
 
 ## Phase 2 — Pure Error diagnostics
 
-- [ ] Step 2.1 — Implement raw-error-diagnostic-string and error-to-string.
+- [x] Step 2.1 — Implement raw-error-diagnostic-string and error-to-string.
   Preserve all existing kind/type names, numeric fallbacks, argument positions,
   oldest-first frame order, result frames and the framed TypeMismatch policy.
   Explicitly consume Error as data; other tagged types produce TypeMismatch.
-- [ ] Step 2.2 — Make readers/error.rkt only decode the pure diagnostic String.
+- [x] Step 2.2 — Make readers/error.rkt only decode the pure diagnostic String.
   Tighten its boundary to forbid an independent formatting policy. Test all core
   kinds, host/HTTP and unknown fallback kinds, unknown types, root-only/single/
   multiple/result frames, wrong input, and unused-details laziness. Run the full
   gate including existing runner diagnostics; commit/push.
+
+Phase 2 focused evidence: 186 new Error-rendering assertions and all 308
+existing Error-reader assertions passed. They cover every assigned core kind,
+all host/HTTP fallback kinds, unknown kind/type identifiers, multi-digit
+metadata, root-only and ordered frames, result-frame laziness, deliberate
+Error consumption and wrong-type diagnostics. The narrowed observer bridge
+admits no independent formatting policy; all 133 boundary tests pass,
+including a mutation introducing native formatting into that bridge.
+The core inventory now requires 29 modules. Phase 1 was committed and pushed
+as `7758f83`. Phase 2 full gate passed all 43 files and 15987 assertions, 37-module
+expanded purity, and the complete boundary inventory. Logs are
+`/tmp/attalambda-printing-phase-2.log` and the ten-file continuation
+`/tmp/attalambda-printing-phase-2-resumed.log`. The first run reached stdout
+before encountering stale compiled dependency metadata from the old reader.
+The identical stdout tests passed with compiled loading disabled and then
+passed all 24 assertions normally after `raco make`; no source repair or
+weakened assertion was needed. Remaining artifacts were refreshed before
+resuming. Refresh classified test artifacts before subsequent full gates
+when changing the dependency graph; never commit generated Racket files.
+Executable changes are pure Error formatting, its strict consuming wrapper,
+the one-way reader bridge, and the stricter reader boundary. Tests add Error
+cases and a native-formatter rejection mutation, and update the exact source
+inventory. Architecture and plan text describe the verified implementation.
 
 ## Phase 3 — One recursive renderer
 

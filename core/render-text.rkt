@@ -24,7 +24,35 @@
          raw-text-escape-newline
          raw-text-escape-tab
          raw-text-escape-return
-         raw-text-escape-hex)
+         raw-text-escape-hex
+         raw-text-error-open
+         raw-text-type-mismatch
+         raw-text-empty-list
+         raw-text-invalid-nat
+         raw-text-divide-by-zero
+         raw-text-invalid-char
+         raw-text-invalid-string
+         raw-text-wrong-result-variant
+         raw-text-non-whole-exponent
+         raw-text-invalid-count
+         raw-text-invalid-byte
+         raw-text-error-kind
+         raw-text-type-fallback
+         raw-text-argument-open
+         raw-text-expected
+         raw-text-got
+         raw-text-result-frame
+         raw-text-arrow
+         raw-text-type-error
+         raw-text-type-bool
+         raw-text-type-list
+         raw-text-type-result
+         raw-text-type-char
+         raw-text-type-string
+         raw-text-type-rat
+         raw-text-type-byte
+         raw-text-type-option
+         raw-text-type-map)
 
 (def raw-name-char bits = ((raw-make-object char-type) bits))
 (def raw-name-string chars = chars)
@@ -49,3 +77,33 @@
 (define-function-name raw-text-escape-tab |\t|)
 (define-function-name raw-text-escape-return |\r|)
 (define-function-name raw-text-escape-hex |\x|)
+
+(define-function-name raw-text-error-open |ERROR(|)
+(define-function-name raw-text-type-mismatch |TYPE-MISMATCH|)
+(define-function-name raw-text-empty-list |EMPTY-LIST|)
+(define-function-name raw-text-invalid-nat |INVALID-NAT|)
+(define-function-name raw-text-divide-by-zero |DIVIDE-BY-ZERO|)
+(define-function-name raw-text-invalid-char |INVALID-CHAR|)
+(define-function-name raw-text-invalid-string |INVALID-STRING|)
+(define-function-name raw-text-wrong-result-variant |WRONG-RESULT-VARIANT|)
+(define-function-name raw-text-non-whole-exponent |NON-WHOLE-EXPONENT|)
+(define-function-name raw-text-invalid-count |INVALID-COUNT|)
+(define-function-name raw-text-invalid-byte |INVALID-BYTE|)
+(define-function-name raw-text-error-kind |ERROR-KIND:|)
+(define-function-name raw-text-type-fallback |TYPE:|)
+(define-function-name raw-text-argument-open |(arg|)
+(define-function-name raw-text-expected | expected |)
+(define-function-name raw-text-got | got |)
+(define-function-name raw-text-result-frame |(result)|)
+(define-function-name raw-text-arrow |
+  -> |)
+(define-function-name raw-text-type-error |ERROR|)
+(define-function-name raw-text-type-bool |BOOL|)
+(define-function-name raw-text-type-list |LIST|)
+(define-function-name raw-text-type-result |RESULT|)
+(define-function-name raw-text-type-char |CHAR|)
+(define-function-name raw-text-type-string |STRING|)
+(define-function-name raw-text-type-rat |RAT|)
+(define-function-name raw-text-type-byte |BYTE|)
+(define-function-name raw-text-type-option |OPTION|)
+(define-function-name raw-text-type-map |MAP|)

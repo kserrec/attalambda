@@ -386,11 +386,14 @@ or a `Result` payload — is returned unchanged. The polymorphic `typed-cons`
 head and `make-ok` likewise preserve an incoming Error without adding a frame
 because neither position has an expected runtime type to record.
 
-`readers/error.rkt` reverses the stored frame List for causal display, renders
-the oldest mismatch frame with its actual type, prints a result frame as
-`NAME(result)`, and then prints each later boundary as an arrow. Function names remain structured String values inside
-the Error; only the reader flattens them to diagnostic text. Language-level
-failures never use host exceptions or strings.
+`core/render-error.rkt` constructs diagnostic text entirely through pure lambda
+computation. It reverses the stored frame List for causal display, renders the
+oldest mismatch frame with its actual type, uses `NAME(result)` for a result
+frame, and joins later frames with arrows. `raw-error-diagnostic-string`
+returns that historical body as an AttaLambda String; `error-to-string` adds
+`ERROR(...)`. `readers/error.rkt` only converts the completed diagnostic String
+for host observation. Function names and the original Error remain structured
+lambda values. Language-level failures never use host exceptions or strings.
 
 `core/result.rkt` represents Result as a Result-tagged object whose payload
 pairs a raw Boolean discriminator with a payload. True identifies Ok; false

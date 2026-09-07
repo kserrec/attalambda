@@ -466,7 +466,7 @@
 ;; Directory spellings that end in a separator must scan the same files.
 (check-equal? (length (production-files-under
                        (path->directory-path core-directory)))
-              28)
+              29)
 
 ;; A symlinked directory under a production tree is reported, not skipped.
 (let ()
@@ -864,7 +864,7 @@
   (files-violations (production-files-under core-directory)))
 
 (check-equal? (length production-results)
-              28)
+              29)
 (for ([entry (in-list production-results)])
   (check-equal? (cdr entry)
                 '()

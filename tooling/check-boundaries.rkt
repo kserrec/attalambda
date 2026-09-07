@@ -192,7 +192,7 @@
     racket/list racket/promise racket/string raw-boolean raw-boolean->boolean
     byte-value->integer
     rat->number raw-byte-value raw-char-value
-    raw-error-frame-argument-position
+    raw-error-frame-argument-position raw-error-diagnostic-string
     raw-object-type
     raw-int-magnitude raw-int-sign
     raw-rat-denominator raw-rat-numerator
@@ -1448,6 +1448,20 @@
   (define symbols
     (module-symbols info))
   (append
+   ;; The Error observer must delegate all diagnostic policy to pure terms.
+   ;; Pin this tiny conversion bridge so a second host formatter cannot return.
+   (if (equal? (normalized path)
+               (normalized (build-path project-root "readers" "error.rkt")))
+       (if (equal? (module-info-forms info)
+                   '((require racket/promise "../core/render-error.rkt" "string.rkt")
+                     (provide error-value->string)
+                     (define (error-value->string error)
+                       (string-value->string
+                        ((force raw-error-diagnostic-string) error)))))
+           '()
+           (list (violation path 'independent-error-formatting-policy
+                            (module-info-forms info))))
+       '())
    (exact-language-violations path
                               info
                               'racket/base
