@@ -105,6 +105,15 @@ you are willing to expose.
 
 ## Release notes
 
+Version 0.5.0 adds `(rec name argument ... = body)` for pure self recursion.
+Change a self-recursive declaration from `def` to `rec`; ordinary `def`
+must now be acyclic. Direct or indirect recursive module bindings are rejected
+with status 65 and a specific source diagnostic. Mutual top-level cycles
+remain invalid even when their declarations use `rec`. Acyclic forward
+references, partial application, lexical shadowing, and lazy evaluation remain
+supported. `rec` expands through a private lambda-calculus fixed-point term;
+it adds no runtime primitive or host capability.
+
 This self-contained distribution supports Linux x86-64; it provides the direct
 `attalambda FILE.attl` command, the canonical `.attl` and `#lang attalambda`
 source contract, explicit exit 0/1, and stdout, whole-file, TCP, and minimal

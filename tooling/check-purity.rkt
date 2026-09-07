@@ -17,6 +17,10 @@
 ;;   - variables bound by those lambdas, by this module, or by a project
 ;;     module that passes the same scan.
 ;;
+;; Accepted module definitions must additionally form an acyclic dependency
+;; graph. Recursion may arise from lexical self-application, never from a
+;; cycle of phase-0 module bindings.
+;;
 ;; The two Lazy Racket shapes are not modelled by hand. A reference term,
 ;; `(lambda (f) (lambda (x) (f x)))`, is expanded in the same shell, and every
 ;; production lambda and application must be alpha-equivalent to the
@@ -829,7 +833,58 @@
                                imported-path
                                (violation-kind (car findings))))))
      (project-import-paths forms source-path)))
-  (append own-findings import-findings))
+  (append own-findings
+          (if (null? own-findings)
+              (module-binding-cycle-violations forms)
+              '())
+          import-findings))
+
+;; Only accepted expanded trees reach this check. Binding identity at phase 0
+;; excludes lambda parameters and imported names, including renamed imports.
+;; Return the first cycle in source/dependency order, with its closing name.
+(define (module-binding-cycle-violations forms)
+  (define definitions
+    (filter-map
+     (lambda (form)
+       (and (eq? (form-head-name form) 'define-values)
+            (let ([parts (syntax->list form)])
+              (cons (car (syntax->list (cadr parts))) (caddr parts)))))
+     forms))
+  (define names (map car definitions))
+  (define (references expression)
+    (cond
+      [(identifier? expression)
+       (define binding (identifier-binding expression 0))
+       (define name
+         (and (list? binding)
+              (self-chain? (module-path-chain (car binding)))
+              (findf (lambda (name) (free-identifier=? expression name 0)) names)))
+       (if name (list name) '())]
+      [else
+       (append-map references (or (syntax->list expression) '()))]))
+  (define graph
+    (map (lambda (definition)
+           (cons (car definition) (remove-duplicates (references (cdr definition)) eq?)))
+         definitions))
+  (define finished (make-hasheq))
+  (define (visit name path)
+    (cond
+      [(memq name path)
+       (append (cons name (reverse (takef path (lambda (prior) (not (eq? prior name))))))
+               (list name))]
+      [(hash-ref finished name #f) #f]
+      [else
+       (define cycle
+         (ormap (lambda (dependency) (visit dependency (cons name path)))
+                (cdr (assq name graph))))
+       (hash-set! finished name #t)
+       cycle]))
+  (define cycle (ormap (lambda (name) (visit name '())) names))
+  (if cycle
+      (list (violation 'recursive-module-binding
+                       (string-join (map (lambda (name) (symbol->string (syntax-e name))) cycle)
+                                    " -> ")))
+      '()))
 
 (define (production-language-shell-violations)
   (with-handlers

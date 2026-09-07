@@ -18,6 +18,14 @@ The implementation is complete and published in AttaLambda 0.4.0.
 describes the implemented surface. The published 0.3.0 archive retains its
 earlier API.
 
+The Recursive Definitions Amendment (2026-09-07) in the absolute-purity
+addendum rejects module-binding cycles and defines public `rec` over the
+existing pure fixed-point term. It strengthens the earlier purity contract
+only for recursion; all other rules remain in force. This amendment is
+implemented in the source prepared for 0.5.0 and is not part of the published
+0.4.0 binary. The [supplied specification](../recursive-purity-spec.md) and
+[migration notes](../releases/0.5.0.md) preserve its scope and public behavior.
+
 Read them in this precedence order:
 
 1. [01-greenfield-core-language.md](01-greenfield-core-language.md) defines the
@@ -45,7 +53,7 @@ and List contracts it explicitly changes; all other contracts remain in force.
 | File | SHA-256 |
 | --- | --- |
 | `01-greenfield-core-language.md` | `503e8873f92bb5436df863eb095b871de385e5d6f7ba2d7c6c8240ddccc3df25` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `153941fd5d83171146a7ea702f6b72b6e2a8061e5d4e1f715fbdc68181e462c0` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `07ec56d2c9922478f5eff55ac54a12754ac8d2b564e24d6288e4ebe9b4c97da1` |
 | `03-canonical-public-naming-and-host-isolation.md` | `9e39495ef071bab601f16f025f7721154142d45bf2ce96012e5680bd982106a5` |
 
 If a specification copy changes intentionally, update its hash here in the
@@ -73,3 +81,9 @@ hashes were
 `5561e0acb4ba2eb5399ffdb9fa0f5f4aa8cfd955b2b656aa93573c74ed4864df`,
 `216457319c579eaf3ad506550f2467e3071117399f04242a418aee6f391c66fe`.
 Step 1.1 appended the approved amendments without changing any preceding byte.
+
+Before the 2026-09-07 Recursive Definitions Amendment, the absolute-purity
+addendum's hash was
+`153941fd5d83171146a7ea702f6b72b6e2a8061e5d4e1f715fbdc68181e462c0`.
+Milestone 5 Phase 1 appended the authorized recursion amendment without
+changing the earlier text. Phase 2 corrects this index's previously stale hash.

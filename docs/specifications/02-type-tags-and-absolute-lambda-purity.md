@@ -633,3 +633,27 @@ and expanded-purity checks cover every new production module. Do not weaken
 those gates. Host-side edits remain simple explicit export entries, literal
 checks, and necessary test/checker updates. No new dependency, registry,
 dispatcher, callback/type framework, or unrelated feature is authorized.
+
+---
+
+# Recursive Definitions Amendment (2026-09-07)
+
+Top-level names are module scaffolding only. No cycle among object-language
+top-level bindings may provide computational recursion. Public `def` gives
+an acyclic module name to a lambda term; it cannot recursively depend on
+itself directly or indirectly. Acyclic forward references remain permitted.
+
+Public `(rec name argument ... = body)` is mechanical syntax over the
+existing private `core/fix.rkt` fixed-point term. It creates an acyclic
+top-level binding whose recursive name is lambda-bound inside that term;
+every declared argument introduces another unary lambda. Zero arguments
+are allowed. `raw-fix` remains private. `rec` supports self recursion only,
+not mutual module-binding cycles. Lexical shadowing follows the existing
+argument, `lambda`, and `let` rules.
+
+The public language must reject cyclic module dependencies at expansion
+time. The production purity checker must independently reject cycles among
+expanded same-module phase-0 bindings using binding identity; lambda-bound
+self-application and imported references must not be mistaken for such
+cycles. This strengthens Sections E and K without changing representations,
+typing, evaluation, host capabilities, or any other purity rule.

@@ -32,7 +32,7 @@
       #:mode 'binary))
   (define matched
     (and (bytes? content)
-         (regexp-match #px#"^(0[.]4[.]0|0[.]3[.]0(?:-dev)?|0[.]2[.]0(?:-dev|-rc[.]1)?)\n$"
+         (regexp-match #px#"^(0[.]5[.]0|0[.]4[.]0|0[.]3[.]0(?:-dev)?|0[.]2[.]0(?:-dev|-rc[.]1)?)\n$"
                        content)))
   (unless matched
     (raise-syntax-error #f "invalid product version metadata" stx))
@@ -177,6 +177,10 @@
 
 (define (syntax-failure-reason expression)
   (cond
+    [(and expression (eq? (syntax-property expression 'attalambda-recursion) 'self))
+     "recursive def binding is not allowed; use rec for self recursion"]
+    [(and expression (eq? (syntax-property expression 'attalambda-recursion) 'cycle))
+     "module-binding recursion is forbidden; rec supports only self recursion"]
     [(and expression (identifier? expression))
      (format "unknown AttaLambda name: ~s" (syntax-e expression))]
     [(datum-failure-expression? expression)

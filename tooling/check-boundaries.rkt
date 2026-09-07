@@ -125,6 +125,7 @@
     source-preflight-result split-path srcloc-column srcloc-line status stop
     string->path string-append string-downcase stx supplied-path syntax-column
     syntax-e syntax-failure-expression syntax-failure-reason syntax-line
+    syntax-property attalambda-recursion self cycle
     syntax-source syntax? terminator unavailable-source-status
     unexpected-failure-status unless up valid validate-source value
     vector->list when with-handlers))
@@ -377,6 +378,7 @@
      (for-syntax racket/base)
      (only-in racket/base (void language-discard))
      (only-in "../macros/macros.rkt" def (lambda-let language-let))
+     (only-in "../core/fix.rkt" (raw-fix language-fix))
      (only-in "../core/byte.rkt"
               MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE BYTE-GT BYTE-GTE
               STRING-TO-BYTES BYTES-TO-STRING)
@@ -475,6 +477,7 @@
      (language-application #%app)
      (language-datum #%datum)
      (language-lambda lambda)
+     (language-rec rec)
      (language-let let)
      (language-if if)
      (language-cons cons)
@@ -577,12 +580,18 @@
 
 (define expected-language-transformers
   '(language-module-begin
+    language-rec
     language-application
     language-lambda
     language-datum))
 
 (define expected-language-for-syntax-definitions
   '(language-definition-form?
+    language-curried-lambdas
+    language-bound-name
+    language-definition-parts
+    language-dependencies
+    language-check-definitions
     language-list-expression
     language-bit-expressions
     language-magnitude-expression
@@ -624,6 +633,14 @@
       is-none option-case make-map map-empty? map-size map-lookup
       map-contains? map-set map-remove
       #%app #%datum #%module-begin #%top ... = _ and argument body byte
+      language-rec rec raw-fix language-fix
+      language-curried-lambdas language-bound-name language-definition-parts
+      language-dependencies language-check-definitions
+      arguments name names candidate bound bound-identifier=? free-identifier=? ormap
+      list quote andmap eq? equals expression part apply
+      define definitions parts collect cadr caddr graph definition forms
+      finished visit path when memq self? syntax-property attalambda-recursion
+      self cycle foldl dependency assq
       bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
       negative? rational? abs
@@ -667,7 +684,8 @@
     (#"0.2.0\n" . "0.2")
     (#"0.3.0-dev\n" . "0.2.900")
     (#"0.3.0\n" . "0.3")
-    (#"0.4.0\n" . "0.4")))
+    (#"0.4.0\n" . "0.4")
+    (#"0.5.0\n" . "0.5")))
 
 (define runner-forbidden-version-literals
   (append-map

@@ -6,4 +6,4 @@
 (define license 'Apache-2.0)
 (define pkg-desc
   "A pure unary-lambda language with one explicit host boundary")
-(define version "0.4")
+(define version "0.5")

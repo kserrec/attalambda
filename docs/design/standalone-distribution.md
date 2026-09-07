@@ -6,9 +6,11 @@ is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current source contract includes explicit program exit, lowercase public
-callables, ASCII Char literals, and the complete List library, published in
-0.4.0. The release ledger distinguishes current and earlier artifact evidence.
+The current source prepares 0.5.0 with pure `rec` definitions and rejection
+of recursive module bindings. The published release remains 0.4.0, including
+explicit program exit, lowercase public callables, ASCII Char literals, and
+the complete List library. The [0.5.0 migration notes](../releases/0.5.0.md)
+describe the source changes; the release ledger records published artifacts.
 
 ## Current public support
 
@@ -190,10 +192,12 @@ different syntax, so build tooling checks this closed projection:
 | `0.3.0-dev` | `0.2.900` |
 | `0.3.0` | `0.3` |
 | `0.4.0` | `0.4` |
+| `0.5.0` | `0.5` |
 
-A new version state requires an explicit plan change. The 2026-09-06 release
-plan authorizes 0.4.0 for the public API/List update; publication evidence is
-recorded separately from version preparation.
+A new version state requires an explicit plan change. Milestone 5 Phase 2
+authorizes exactly 0.5.0 for pure recursive definitions. Publication evidence
+is recorded separately from version preparation; merge and publication are
+pending approval of the concrete reviewed release.
 
 ## Build, archive, and consumer contract
 

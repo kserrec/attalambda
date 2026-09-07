@@ -24,7 +24,7 @@
                                       #\8
                                       #\9))))))))))
 
-(def nat-to-decimal value =
+(rec nat-to-decimal value =
   (if (lt value 10)
       (make-string (cons (decimal-digit value) NIL))
       (let quotient = (floor (unwrap-ok (div value 10)))

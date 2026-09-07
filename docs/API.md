@@ -1,8 +1,9 @@
 # Public API
 
-This reference describes AttaLambda 0.4.0, including the complete public API
-and List library update. Programs written for 0.3.0 need the new function
-spellings and Char literals.
+This reference describes the source API prepared for 0.5.0, including pure
+recursive definitions and the complete List library. See the
+[0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.
+Programs written for 0.3.0 also need the new function spellings and Char literals.
 All callable built-ins below are lowercase; their old uppercase aliases are
 absent from the language.
 Constants keep their names. All 25 specified List operations are implemented.
@@ -22,14 +23,27 @@ printing or conversion from Error to a process exit status.
 | Form | Meaning |
 | --- | --- |
 | `(lambda (value) body)` | Unary function. |
-| `(def name = value)` | Named value. |
-| `(def name first second = body)` | Sugar for nested unary lambdas. |
+| `(def name = value)` | Named acyclic value. |
+| `(def name first second = body)` | Named acyclic definition; arguments curry to unary lambdas. |
+| `(rec name first second = body)` | Pure self-recursive definition; syntax over the lambda fixed-point combinator. |
 | `(let name = value body)` | Unary-lambda application sugar. |
 | `(function first second)` | Curried application, equivalent to `((function first) second)`. |
 | `-7/3`, `0`, `42` | Canonical exact Rat literals; inexact and complex literals are rejected. |
 | `"hello"` | String literal, one byte-sized Char per UTF-8 byte. |
 | `#\a`, `#\A`, `#\0`, `#\(`, `#\)` | ASCII Char literals (0–127). |
 | `#\space`, `#\tab`, `#\newline`, `#\return` | Whitespace Char literals. |
+
+The recursion changes in this source tree target 0.5.0 and are not part of
+the published 0.4.0 binary. `def` cannot depend on itself directly or through
+other top-level definitions; acyclic forward references remain valid.
+Use `rec` for self recursion, with zero or more source arguments. It binds
+the recursive name inside a unary lambda and applies the existing pure
+fixed-point combinator. `rec` is syntax, not a runtime primitive, and
+`raw-fix` remains private. Mutual cycles between top-level definitions are
+rejected, including cycles involving `rec`. Local `lambda` parameters,
+`def`/`rec` arguments, and `let` names shadow top-level names normally; a
+`let` name is in scope only in its body, not its value expression. Resulting
+computation remains untyped unary lambda calculus.
 
 The constants are `TRUE`, `FALSE`, `NIL`, `UNIT`, `NONE`, `EMPTY-STRING`,
 and the four HTTP status constants listed below. Individual named Chars are

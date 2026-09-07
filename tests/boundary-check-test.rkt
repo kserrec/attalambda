@@ -977,6 +977,30 @@
    (define clean-package-info-datum
      (read-datum package-info))
 
+   ;; The fixed point is a single selected private import. Neither exposing
+   ;; it nor replacing it with a native recursive form is part of rec.
+   (for ([name (in-list '(raw-fix language-fix))])
+     (write-datum language-expander
+                  (append-module-form clean-language-expander-datum `(provide ,name)))
+     (check-not-false
+      (member 'invalid-language-expander-export
+              (kinds (file-boundary-violations language-expander 'language-expander root)))))
+   (write-datum language-expander
+                (replace-datum '(only-in "../core/fix.rkt" (raw-fix language-fix))
+                               "../core/fix.rkt"
+                               clean-language-expander-datum))
+   (check-not-false
+    (member 'invalid-language-expander-imports
+            (kinds (file-boundary-violations language-expander 'language-expander root))))
+   (write-datum language-expander
+                (append-module-form clean-language-expander-datum
+                                    '(define-syntax (language-rec stx)
+                                       (syntax (letrec ([loop loop]) loop)))))
+   (check-not-false
+    (member 'unapproved-language-identifier
+            (kinds (file-boundary-violations language-expander 'language-expander root))))
+   (write-datum language-expander clean-language-expander-datum)
+
    (check-equal?
     (file-boundary-violations language-expander
                               'language-expander
@@ -1014,7 +1038,7 @@
    ;; existing approved helpers, without relying on an unknown helper name.
    (for ([replacement
           (in-list
-           '((define-for-syntax (language-definition-form? form) (exit 1))
+           '((define-for-syntax (language-definition-form? form bound) (exit 1))
              (define-syntax (language-lambda stx) (syntax (exit 1)))
              (define-syntax (language-lambda stx)
                (syntax-case (syntax #&exit) ()
@@ -1127,19 +1151,20 @@
                      (#"0.2.0\n" "0.2")
                      (#"0.3.0-dev\n" "0.2.900")
                      (#"0.3.0\n" "0.3")
-                     (#"0.4.0\n" "0.4")))])
+                     (#"0.4.0\n" "0.4")
+                     (#"0.5.0\n" "0.5")))])
      (write-exact-bytes product-version-file (car version-pair))
      (write-datum
       package-info
       (replace-package-version clean-package-info-datum
                                (cadr version-pair)))
      (check-equal? (project-boundary-violations root) '()))
-   (write-exact-bytes product-version-file #"0.4.0\n")
+   (write-exact-bytes product-version-file #"0.5.0\n")
    (write-datum package-info clean-package-info-datum)
 
-   (write-exact-bytes product-version-file #"0.4.0")
+   (write-exact-bytes product-version-file #"0.5.0")
    (check-project-kind 'invalid-product-version)
-   (write-exact-bytes product-version-file #"0.4.0\n")
+   (write-exact-bytes product-version-file #"0.5.0\n")
 
    (define saved-version-file
      (build-path root "VERSION.backup"))
@@ -1147,7 +1172,7 @@
      (make-temporary-file "attalambda-version-target-~a"
                           #f
                           (path-only root)))
-   (write-exact-bytes version-target #"0.4.0\n")
+   (write-exact-bytes version-target #"0.5.0\n")
    (rename-file-or-directory product-version-file saved-version-file)
    (make-file-or-directory-link version-target product-version-file)
    (define-values (version-link-findings version-target-reads)
