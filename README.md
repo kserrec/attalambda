@@ -19,32 +19,30 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.4.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.5.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.4.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.5.0>
 
-Version 0.4.0 includes lowercase callable names, ASCII Char literals, the
-complete 25-function List API, incremental HTTP request accumulation, and
-explicit `exit`. Programs written for 0.3.0 need the new function spellings and
-Char literals; old uppercase callable aliases and named Chars are removed.
+Version 0.5.0 adds pure self recursion with `rec` and rejects recursive module
+bindings. Change a self-recursive declaration from `def` to `rec`; mutual
+top-level cycles remain invalid. The complete List API, exact rational
+arithmetic, and existing host capabilities are behaviorally unchanged.
 The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
-The `milestone-5-recursive-purity` branch prepares 0.5.0 with pure `rec`
-syntax and rejection of recursive `def`. See the
-[0.5.0 migration and release notes](docs/releases/0.5.0.md) for the source
-changes; that release is not yet published.
+See the [0.5.0 migration and release notes](docs/releases/0.5.0.md) for a
+complete recursive-function example and the compatibility changes.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.4.0/attalambda-0.4.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.4.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.5.0/attalambda-0.5.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.5.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.4.0-linux-x86_64.tar.gz
-cd attalambda-0.4.0-linux-x86_64
+tar -xzf attalambda-0.5.0-linux-x86_64.tar.gz
+cd attalambda-0.5.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -52,7 +50,7 @@ cd attalambda-0.4.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.4.0
+AttaLambda 0.5.0
 Hello from AttaLambda.
 ```
 
@@ -145,8 +143,8 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-Version 0.4.0 is the third public release. It completes the public API and
-List library update while preserving absolute object-language purity. Rat
+Version 0.5.0 is the fourth public release. It adds `rec` and enforces the
+purity rule against recursive module bindings. Rat
 remains the only public number type; Unit, Byte, Option, Map, and byte-based
 file/TCP payloads retain their existing representations.
 [`PLAN.md`](PLAN.md) holds the current roadmap and

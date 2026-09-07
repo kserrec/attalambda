@@ -9,14 +9,17 @@ release facts are in the
 
 Run [`run-all-tests.sh`](../run-all-tests.sh) for the source acceptance gate.
 It runs every test suite, the expanded purity proof, and the repository-wide
-boundary inventory. The released 0.4.0 implementation passed 41 suites with
-14,100 assertions, 32 pure production modules, and the complete boundary
-scan. Earlier 0.3.0 source passed 38 suites with 12,298 assertions. The
+boundary inventory. The released 0.5.0 implementation passed 41 suites with
+14,210 assertions, 32 pure production modules, and the complete boundary
+scan. The earlier 0.4.0 release passed 41 suites with 14,100 assertions;
+0.3.0 source passed 38 suites with 12,298 assertions. The
 completed non-core refactor at `f772e8d` passed 38 suites with
 12,301 assertions, all 29 pure production modules, and the complete boundary
 scan.
 
-Release 0.4.0 includes incremental HTTP request reading, a 21-case
+Release 0.5.0 adds pure `rec`, rejection of recursive module bindings, and
+safe recursion-specific diagnostics. It retains 0.4.0's incremental HTTP
+request reading, a 21-case
 canonical-empty codec matrix, explicit program exit, lowercase callable
 exports and diagnostic names, ASCII Char literals, and the complete
 25-function List API. Source and release verification are recorded in
@@ -31,7 +34,7 @@ The source now rejects recursive module bindings, provides pure `rec` syntax,
 and reports safe recursion-specific launcher diagnostics. The Linux consumer
 fixture's 31 public-API assertions and the complete migration example also
 passed exact source-launcher probes. Evidence is recorded in
-[`PLAN.md`](../PLAN.md); no 0.5.0 archive is published yet.
+[`PLAN.md`](../PLAN.md); the published archive evidence appears below.
 
 | Criterion | Executable evidence |
 | --- | --- |
@@ -96,6 +99,30 @@ It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
 
+### AttaLambda 0.5.0 publication — 2026-09-07
+
+PR https://github.com/kserrec/attalambda/pull/3 merged as
+`d770b8335a06a8ec6e5925030c4a92cde88e85d8`, with the same tree as reviewed
+revision `39fa142`. The one automated suggestion was evaluated on both source
+Racket 8.10 and packaged Racket CS 9.3: definition bodies use module-wide
+bindings, so the proposed source-order syntax scan did not match execution.
+No source repair was justified; the thread is resolved and PLAN.md retains
+the probe evidence. All ten PR CI jobs and all ten post-merge jobs passed.
+The merged source job independently confirmed 41 suites, 14,210 assertions,
+32-module purity, and complete structural boundaries.
+
+The exact clean merged commit produced the Racket CS 9.3 Linux archive.
+Its isolated consumer passed 31 public-API checks, including recursive
+partial application, and the guide, file/TCP/HTTP, exit-status, and relocation
+checks. Annotated tag `v0.5.0` points to the build commit. The release was
+published at `2026-09-07T20:21:07Z`:
+https://github.com/kserrec/attalambda/releases/tag/v0.5.0.
+Fresh public downloads matched the verified local archive and checksum
+manifest exactly. Exact hashes, sizes, tag/asset IDs, and CI URLs are in the
+[release ledger](design/standalone-distribution.md#attalambda-050--2026-09-07).
+Linux x86-64 remains the sole supported binary download. Publication-record
+documentation is separate from the tagged build inputs.
+
 ### AttaLambda 0.4.0 publication — 2026-09-06
 
 PR https://github.com/kserrec/attalambda/pull/2 received a completed automated
@@ -108,8 +135,8 @@ all ten post-merge CI jobs passed before publication.
 The clean merged commit produced the final 0.4.0 Linux archive with Racket CS
 9.3. That exact archive passed the isolated Ubuntu consumer, including all 30
 public-API markers, guide, file/TCP/HTTP, exit-status, and relocation checks.
-The annotated tag points to the exact build commit. The latest stable release
-is https://github.com/kserrec/attalambda/releases/tag/v0.4.0; fresh public
+The annotated tag points to the exact build commit. That release is
+https://github.com/kserrec/attalambda/releases/tag/v0.4.0; fresh public
 downloads of its archive and checksum manifest matched both verified local
 hashes. Exact tag/asset IDs, sizes, SHA-256 values, and CI URLs are in the
 [release ledger](design/standalone-distribution.md#attalambda-040--2026-09-06).

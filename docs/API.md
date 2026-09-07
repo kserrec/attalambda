@@ -1,6 +1,6 @@
 # Public API
 
-This reference describes the source API prepared for 0.5.0, including pure
+This reference describes the API published in 0.5.0, including pure
 recursive definitions and the complete List library. See the
 [0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.
 Programs written for 0.3.0 also need the new function spellings and Char literals.
@@ -33,9 +33,10 @@ printing or conversion from Error to a process exit status.
 | `#\a`, `#\A`, `#\0`, `#\(`, `#\)` | ASCII Char literals (0–127). |
 | `#\space`, `#\tab`, `#\newline`, `#\return` | Whitespace Char literals. |
 
-The recursion changes in this source tree target 0.5.0 and are not part of
-the published 0.4.0 binary. `def` cannot depend on itself directly or through
-other top-level definitions; acyclic forward references remain valid.
+The recursion rules below are included in 0.5.0; older 0.4.0 binaries lack
+`rec` and permit recursive `def`. In 0.5.0, `def` cannot depend on itself
+directly or through other top-level definitions; acyclic forward references
+remain valid.
 Use `rec` for self recursion, with zero or more source arguments. It binds
 the recursive name inside a unary lambda and applies the existing pure
 fixed-point combinator. `rec` is syntax, not a runtime primitive, and

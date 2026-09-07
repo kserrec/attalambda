@@ -22,8 +22,8 @@ The Recursive Definitions Amendment (2026-09-07) in the absolute-purity
 addendum rejects module-binding cycles and defines public `rec` over the
 existing pure fixed-point term. It strengthens the earlier purity contract
 only for recursion; all other rules remain in force. This amendment is
-implemented in the source prepared for 0.5.0 and is not part of the published
-0.4.0 binary. The [supplied specification](../recursive-purity-spec.md) and
+implemented and published in 0.5.0; older 0.4.0 binaries retain their earlier
+recursion behavior. The [supplied specification](../recursive-purity-spec.md) and
 [migration notes](../releases/0.5.0.md) preserve its scope and public behavior.
 
 Read them in this precedence order:

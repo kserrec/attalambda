@@ -128,9 +128,10 @@ design.
   changes the released language lands on one milestone branch (as Milestone 4
   did on `milestone-4-rationals`) and merges to `main` only with Kyle's
   explicit approval.
-- The public API/List milestone is complete: PR #2 merged and 0.4.0 published
-  on 2026-09-06. Its completed plan grants no authority for another release.
-  Linux x86-64 remains the only supported binary download.
+- The public API/List milestone (0.4.0) and recursive-purity milestone (0.5.0)
+  are complete. PR #3 merged and 0.5.0 was published on 2026-09-07. Their
+  completed plans grant no authority for another release. Linux x86-64 remains
+  the only supported binary download.
 - Commit and push after each meaningful, verified phase.
 - Keep commits narrow and descriptive.
 - Do not leave generated Racket artifacts in Git.

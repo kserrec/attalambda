@@ -1,16 +1,16 @@
 # Standalone distribution
 
 This document records the current launcher and binary-distribution contract,
-then preserves the evidence for the three public releases. The language itself
+then preserves the evidence for the four public releases. The language itself
 is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current source prepares 0.5.0 with pure `rec` definitions and rejection
-of recursive module bindings. The published release remains 0.4.0, including
-explicit program exit, lowercase public callables, ASCII Char literals, and
-the complete List library. The [0.5.0 migration notes](../releases/0.5.0.md)
-describe the source changes; the release ledger records published artifacts.
+The current published release is 0.5.0, with pure `rec` definitions and
+rejection of recursive module bindings. It retains explicit program exit,
+lowercase public callables, ASCII Char literals, and the complete List library.
+The [0.5.0 migration notes](../releases/0.5.0.md) describe the changes; the
+release ledger records published artifacts.
 
 ## Current public support
 
@@ -195,9 +195,9 @@ different syntax, so build tooling checks this closed projection:
 | `0.5.0` | `0.5` |
 
 A new version state requires an explicit plan change. Milestone 5 Phase 2
-authorizes exactly 0.5.0 for pure recursive definitions. Publication evidence
-is recorded separately from version preparation; merge and publication are
-pending approval of the concrete reviewed release.
+authorized exactly 0.5.0 for pure recursive definitions. The subsequent
+authorized merge and publication are recorded separately from preparation
+in the release ledger below; they do not authorize a future release.
 
 ## Build, archive, and consumer contract
 
@@ -270,6 +270,58 @@ Each publication needs Kyle's explicit approval for the exact commit, tag,
 files, checksums, support claims, and public action.
 
 ## Public release ledger
+
+### AttaLambda 0.5.0 — 2026-09-07
+
+PR https://github.com/kserrec/attalambda/pull/3 merged at `20:04:33Z` as
+`d770b8335a06a8ec6e5925030c4a92cde88e85d8`. Its tree
+`28f5161e211c4cb2c32816c8fe28b640098b22ef` equals reviewed PR revision
+`39fa142800c7bfc33e407fb93718960f91fe90d9`. The one automated review suggestion
+was evaluated with source and packaged-runtime probes and did not match the
+observed module-wide binding behavior in definition bodies. No repair was
+justified; the assessment is in the PR and PLAN.md, and its thread is resolved.
+
+All ten jobs passed in both PR and post-merge CI:
+
+- https://github.com/kserrec/attalambda/actions/runs/34156900771
+- https://github.com/kserrec/attalambda/actions/runs/34158001491
+
+The local and merged CI source gates each passed 41 suites with 14,210
+assertions, expanded purity for 32 production modules, and the complete
+boundary/source inventory. The final archive was built from the clean merged
+commit using full Racket CS 9.3 in cached image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+Unsigned annotated tag `v0.5.0`, tag object
+`718078c3b8f7c68e165ddab0e157f0765234d5ff`, peels to that exact build commit.
+
+GitHub release `384296811` was published at `2026-09-07T20:21:07Z` and marked
+latest: https://github.com/kserrec/attalambda/releases/tag/v0.5.0.
+It contains exactly these supported assets:
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.5.0-linux-x86_64.tar.gz` | `14,027,976` | `9d87027d3fcad80c58668ce2d1d31365bba507131bc67889118e3d2ae7af36c4` |
+| `SHA256SUMS` | `103` | `0f8a2b3ca0e63d8f2c8bf336c916ef7682b42701359f014d284754c993b1a1f6` |
+
+Asset IDs are `549317035` and `549317036`, respectively. GitHub's digests,
+authenticated draft downloads, and fresh unauthenticated public downloads
+matched the local files exactly; the downloaded checksum manifest passed.
+Older release assets were preserved. Linux x86-64 remains the sole supported
+binary target; macOS and Windows remain internal portability evidence.
+
+The exact final archive passed the isolated digest-pinned Ubuntu 24.04
+consumer without Racket, a source checkout, or external networking. Its 31
+public-API checks include `rec` execution and partial application. Guide,
+stdout, file/TCP/HTTP examples, explicit/default process statuses, and
+relocation also passed. The archive contains 11 regular files totaling
+59,871,086 bytes, including two runtime files. First/relocated startup was
+407/365 ms in that run, without a performance guarantee.
+
+Local evidence: `/tmp/attalambda-0.5.0-release/`,
+`/tmp/attalambda-0.5.0-draft-download/`,
+`/tmp/attalambda-0.5.0-public-download/`, and the build/consumer/CI logs in
+PLAN.md. Publication records are later documentation changes; the tagged
+commit remains the exact artifact source.
 
 ### AttaLambda 0.4.0 — 2026-09-06
 

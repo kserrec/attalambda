@@ -1,15 +1,15 @@
 # Milestone 5 — Pure recursive definitions (target 0.5.0)
 
-Status: Phases 1 and 2 complete on `milestone-5-recursive-purity`; the
-prepared 0.5.0 milestone proceeds to PR review. Merge and publication remain
-pending Kyle's explicit approval of the concrete reviewed release.
+Status: complete on main. PR #3 merged and 0.5.0 is published and verified.
 Kyle authorized starting this work on 2026-09-07 after choosing 0.5.0 for
 the new public syntax and the migration away from recursive `def`.
+Kyle's subsequent "keep going" followed the explicit merge/build/verify/
+publish steps and authorized completing this release on 2026-09-07.
 Starting revision: clean `0987c8a` on main, following the published 0.4.0.
 Source: [supplied recursion specification](docs/recursive-purity-spec.md),
 SHA-256 `108e4b13b73350d1cfb959752fc29f55f0fbe7951e268d276585a818856278f5`.
 
-## Scope and verified starting state
+## Scope and verified starting state at `0987c8a`
 
 `macros/macros.rkt` expands `def` into host `define` and unary lambdas.
 `lang/expander.rkt` recognizes only `def` as a definition and performs no
@@ -163,6 +163,80 @@ results are recorded by GitHub rather than inferred from local tests.
 Next action: evaluate the PR's CI/reviews, then obtain explicit approval
 before merging and following the existing Linux release process. This Phase
 does not create a release tag or publish downloadable assets.
+
+## Phase 3 — Review, merge, publish, and verify 0.5.0
+
+- [x] Step 3.1 — Evaluate the completed automated review and wait for all
+  checks on the final PR revision. Record concrete evidence for accepting or
+  rejecting each finding; make no speculative code change.
+- [x] Step 3.2 — Merge the authorized PR with a merge commit, fast-forward
+  local main, verify equality with the reviewed tree, and check post-merge CI.
+- [x] Step 3.3 — Build from clean merged main with the existing Racket CS 9.3
+  Linux builder; run the isolated consumer. Stage the exact archive and
+  checksum, create the annotated tag, publish, and verify fresh public bytes.
+- [x] Step 3.4 — Update current download links, API/release status, acceptance,
+  ledger, project instructions, and handoff. Verify the documentation and
+  unchanged build inputs, commit/push this publication record, and leave main
+  clean. This completed milestone does not authorize another release.
+
+Review result: all ten jobs passed on PR head
+`39fa142800c7bfc33e407fb93718960f91fe90d9` in
+https://github.com/kserrec/attalambda/actions/runs/34156900771.
+The one automated P2 suggestion claimed that later module definitions named
+`lambda` or `let` must not affect earlier definition bodies. Exact probes
+disproved that premise on source Racket 8.10 and packaged Racket CS 9.3:
+the forms succeed without the later shadow; with it, even renaming the outer
+function to remove the alleged self edge still fails during ordinary
+expansion. A valid forward-call control with `(def identity = (let value =
+1 value))`, later `(def let a b c d = a)`, `(def = = 0)`, and `(def value = 7)`
+evaluates identity to 7 through the later ordinary function. Lexical `let`
+would produce 1. Declaration recognition is source-ordered; definition-body
+bindings are module-wide. The existing scanner reflects that distinction.
+No production fix or regression-test change was justified. The assessment is
+in the PR description; review thread `PRRT_kwDOUC8y9s6gBBBI` is resolved.
+Evidence: `/tmp/attalambda-050-shadow-before.json`,
+`/tmp/attalambda-050-shadow-scope.json`, and
+`/tmp/attalambda-050-native-shadow.json`.
+
+PR #3 merged at `2026-09-07T20:04:33Z` as
+`d770b8335a06a8ec6e5925030c4a92cde88e85d8`. Local main was fast-forwarded;
+its tree `28f5161e211c4cb2c32816c8fe28b640098b22ef` equals the reviewed head's
+tree. All ten post-merge jobs passed in
+https://github.com/kserrec/attalambda/actions/runs/34158001491.
+The downloaded source-job log independently confirms all 41 files and 14,210
+assertions, 32-module purity, and complete boundaries:
+`/tmp/attalambda-0.5.0-merged-ci-tests.log`.
+
+The exact merged commit built cleanly with the cached Racket CS 9.3 image.
+The local container requires a read-only `/usr/bin/git` mount and runs as
+UID/GID 1000:1000 to write its user-owned output directory with capabilities
+dropped. Those environment requirements were diagnosed without code edits.
+The final archive and 103-byte checksum manifest are in
+`/tmp/attalambda-0.5.0-release/`. The archive is 14,027,976 bytes with SHA-256
+`9d87027d3fcad80c58668ce2d1d31365bba507131bc67889118e3d2ae7af36c4`.
+The isolated consumer passed all 31 public-API checks, including `rec` and
+partial application, plus guide, file/TCP/HTTP, process-status, and relocation
+checks. Logs: `/tmp/attalambda-0.5.0-build.log` and
+`/tmp/attalambda-0.5.0-consumer.log`. The earlier reviewed-head archive in
+`/tmp/attalambda-050-review-39fa142/` remains an unpublished probe artifact.
+
+Unsigned annotated tag `v0.5.0` (object
+`718078c3b8f7c68e165ddab0e157f0765234d5ff`) points to the merged build commit.
+Release `384296811` was staged with exactly the archive (asset `549317035`)
+and checksum manifest (asset `549317036`). GitHub's digests and authenticated
+draft downloads matched both local files. Published at
+`2026-09-07T20:21:07Z` as the latest stable release:
+https://github.com/kserrec/attalambda/releases/tag/v0.5.0.
+Fresh unauthenticated downloads in `/tmp/attalambda-0.5.0-public-download/`
+matched both local hashes and passed `sha256sum -c SHA256SUMS`. Older release
+assets were preserved. Exact asset hashes, sizes, and provenance are in
+`docs/design/standalone-distribution.md`.
+
+The publication-record diff changes documentation only. No executable,
+test, version, bundled-guide, legal, or other archive input changed after the
+verified build. Its source/architecture verification is the completed local
+and post-merge full suite above; documentation links, published metadata,
+asset preservation, and final whitespace/source-diff checks were also verified.
 
 ---
 
