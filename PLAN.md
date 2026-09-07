@@ -1,6 +1,8 @@
 # Milestone 5 — Pure recursive definitions (target 0.5.0)
 
-Status: Phase 1 complete on `milestone-5-recursive-purity`; Phase 2 is next.
+Status: Phases 1 and 2 complete on `milestone-5-recursive-purity`; the
+prepared 0.5.0 milestone proceeds to PR review. Merge and publication remain
+pending Kyle's explicit approval of the concrete reviewed release.
 Kyle authorized starting this work on 2026-09-07 after choosing 0.5.0 for
 the new public syntax and the migration away from recursive `def`.
 Starting revision: clean `0987c8a` on main, following the published 0.4.0.
@@ -104,15 +106,63 @@ owns preparation of the chosen 0.5.0 release. Final whitespace checks pass.
 
 ## Phase 2 — Prepare 0.5.0 for release review
 
-- [ ] Step 2.1 — Add exactly the 0.5.0 product / 0.5 package version state
+- [x] Step 2.1 — Add exactly the 0.5.0 product / 0.5 package version state
   to metadata, exact runner/boundary/build/consumer validation and tests.
-- [ ] Step 2.2 — Prepare migration/release notes distinguishing the purity
+- [x] Step 2.2 — Prepare migration/release notes distinguishing the purity
   repair from the new `rec` syntax and breaking recursive-`def` rule.
   Run focused and full verification; commit and push the preparation.
-- [ ] Step 2.3 — Prepare the reviewable PR and report its verified revision.
-  Merge to main requires Kyle's explicit approval under AGENTS.md. Build and
+- [x] Step 2.3 — Prepare the reviewable PR and report its verified revision.
+  Merge to main requires Kyle's explicit approval under AGENTS.md. Release build and
   publication follow the existing Linux release process after approval of
   the concrete reviewed release; do not reuse the historical 0.4.0 authority.
+
+Step 2.1 result: VERSION is 0.5.0 and info.rkt projects it to 0.5. The runner,
+boundary checker, all three builders, and the macOS/Windows consumers accept
+exactly that additional state while preserving their historical states. The
+Linux consumer derives its version from VERSION. Current-version fixtures
+were updated; the boundary suite additionally exercises the new projection.
+
+Release preparation also found an embedded recursive `def` in the Linux
+consumer's public-API fixture. Running the exact extracted program failed at
+expansion with status 65 and the expected recursive-def diagnostic. Changed
+that declaration to `rec` and added an executed two-argument recursive
+countdown, partially applied, to the consumer's existing output assertions.
+The resulting program passes all 31 checks through the source launcher.
+
+Migration notes are in `docs/releases/0.5.0.md` and the packaged getting-started
+guide. The specification index now describes the recursion amendment and
+records its actual hash; no normative specification changed in this Phase.
+README download links still refer to the published 0.4.0 archive.
+
+Focused verification: `TMPDIR=/tmp raco test tests/boundary-check-test.rkt
+tests/distribution-test.rkt tests/runner-test.rkt` passed 564 assertions.
+The extracted Linux consumer program and complete release-note factorial
+example both produced exact expected output; the CLI prints exactly
+`AttaLambda 0.5.0` with one LF. Logs are `/tmp/attalambda-050-focused.log`
+and `/tmp/attalambda-050-probes.json`. Complete verification with
+`TMPDIR=/tmp ./run-all-tests.sh` passed all 41 test files, 14,210 assertions,
+32-module expanded purity, and complete structural boundaries/source
+inventory. The passing-file list exactly matches repository test discovery.
+Evidence: `/tmp/attalambda-050-full.log` and per-file counts in
+`/tmp/attalambda-050-verification.json`. All 129 local links in the changed
+reference documents resolve; final whitespace checks pass.
+
+Phase 2 executable changes are only the exact version metadata/allowlists.
+Test changes update current-version assertions, exercise the new package
+projection, and migrate/extend the Linux consumer's recursion fixture.
+Documentation adds migration/release notes and synchronizes source versus
+published-release descriptions, the specification index, plan, and handoff.
+Core, effects, runtime, macros, expander, and canonical examples have no
+additional diff from the verified Phase 1 commit `c7c729f`.
+
+The reviewable PR uses `milestone-5-recursive-purity` as head and `main` as
+base; its description covers both Phases and the above verification. Use
+`gh pr view milestone-5-recursive-purity` for its URL, exact head, and live CI
+status. The Phase 2 commit closes the prepared source changes; CI and review
+results are recorded by GitHub rather than inferred from local tests.
+Next action: evaluate the PR's CI/reviews, then obtain explicit approval
+before merging and following the existing Linux release process. This Phase
+does not create a release tag or publish downloadable assets.
 
 ---
 

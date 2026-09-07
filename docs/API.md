@@ -1,8 +1,9 @@
 # Public API
 
-This reference describes the current source API, including the complete public API
-and List library update. Programs written for 0.3.0 need the new function
-spellings and Char literals.
+This reference describes the source API prepared for 0.5.0, including pure
+recursive definitions and the complete List library. See the
+[0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.
+Programs written for 0.3.0 also need the new function spellings and Char literals.
 All callable built-ins below are lowercase; their old uppercase aliases are
 absent from the language.
 Constants keep their names. All 25 specified List operations are implemented.

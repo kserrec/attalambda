@@ -25,10 +25,19 @@ explicitly historical.
 
 ## Language criteria
 
+Milestone 5's final 0.5.0 preparation passed all 41 source suites with 14,210
+assertions, 32 pure production modules, and the complete boundary inventory.
+The source now rejects recursive module bindings, provides pure `rec` syntax,
+and reports safe recursion-specific launcher diagnostics. The Linux consumer
+fixture's 31 public-API assertions and the complete migration example also
+passed exact source-launcher probes. Evidence is recorded in
+[`PLAN.md`](../PLAN.md); no 0.5.0 archive is published yet.
+
 | Criterion | Executable evidence |
 | --- | --- |
 | Production computation expands to variables, unary lambdas, and unary application. | [`check-purity.rkt`](../tooling/check-purity.rkt) expands and inspects every `core/` and `effects/` module; [`purity-test.rkt`](../tests/purity-test.rkt) proves forbidden host forms and non-unary lambdas are rejected. |
-| Public syntax is `lambda`, `def`, `let`, `if`, and the specified `cons`; literals expand mechanically. | [`macros-test.rkt`](../tests/macros-test.rkt) covers hygiene and generated terms; [`language-test.rkt`](../tests/language-test.rkt) covers the installed `#lang attalambda` surface, shadowing, and rejected names/literals. |
+| Public syntax is `lambda`, `def`, `rec`, `let`, `if`, and the specified `cons`; literals expand mechanically. | [`macros-test.rkt`](../tests/macros-test.rkt) covers hygiene and generated terms; [`language-test.rkt`](../tests/language-test.rkt) covers the installed `#lang attalambda` surface, shadowing, and rejected names/literals. |
+| Module dependencies are acyclic; `rec` derives self recursion from the private pure fixed-point term. | [`language-test.rkt`](../tests/language-test.rkt) covers execution, currying, partial application, laziness, lexical shadowing, and rejected direct/indirect cycles. [`purity-test.rkt`](../tests/purity-test.rkt) independently checks expanded binding cycles; [`runner-test.rkt`](../tests/runner-test.rkt) pins safe diagnostics and status 65. |
 | All 63 renamed callables use lowercase exports and diagnostic names; retired uppercase callable names are unbound. | [`language-test.rkt`](../tests/language-test.rkt) exercises every renamed operation, expands a public module rejecting each old name, and observes public Error frames. Existing diagnostic suites pin encoded names, roots, and propagation details. |
 | ASCII Char literals agree with `make-char` and UTF-8 String bytes; named Char exports are removed. | [`language-test.rkt`](../tests/language-test.rkt) checks all 128 ASCII values through public operations and canonical codec conversion, rejects non-ASCII literals and all retired names, and proves ordinary user definitions. |
 | Values carry closed Church type tags, and one arbitrary-arity checker owns strict runtime typing. | [`tags-test.rkt`](../tests/tags-test.rkt), [`objects-test.rkt`](../tests/objects-test.rkt), [`typecheck-test.rkt`](../tests/typecheck-test.rkt), and [`errors-test.rkt`](../tests/errors-test.rkt) cover tags, positions, partial application, laziness, and early Error absorption. |

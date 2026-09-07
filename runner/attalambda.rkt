@@ -32,7 +32,7 @@
       #:mode 'binary))
   (define matched
     (and (bytes? content)
-         (regexp-match #px#"^(0[.]4[.]0|0[.]3[.]0(?:-dev)?|0[.]2[.]0(?:-dev|-rc[.]1)?)\n$"
+         (regexp-match #px#"^(0[.]5[.]0|0[.]4[.]0|0[.]3[.]0(?:-dev)?|0[.]2[.]0(?:-dev|-rc[.]1)?)\n$"
                        content)))
   (unless matched
     (raise-syntax-error #f "invalid product version metadata" stx))

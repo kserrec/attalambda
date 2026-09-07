@@ -280,7 +280,9 @@ run_inside_consumer() {
 (def check condition = (stdout (if condition "." "!")))
 (def values = (cons 1 (cons 2 (cons 3 NIL))))
 (def nested = (cons (cons 1 (cons (cons 2 NIL) NIL)) (cons (cons 3 NIL) NIL)))
-(def loop value = (loop value))
+(rec loop value = (loop value))
+(rec countdown count answer =
+  (if (eq count 0) answer (countdown (sub count 1) answer)))
 (def a = 1)
 (def x = 2)
 (def n = 3)
@@ -316,9 +318,10 @@ run_inside_consumer() {
 (check (and (char-eq #\a (make-char 97)) (char-eq #\A (string-head "A"))))
 (check (string-eq (make-string (cons #\( (cons #\) (cons #\space (cons #\tab (cons #\newline (cons #\return NIL))))))) "() \t\n\r"))
 (check (any? (lambda (value) (if (eq value 1) TRUE (loop value))) values))
+(check (eq ((countdown 3) 7) 7))
 PROGRAM
   timeout 20 "$attalambda" "$public_api_source" >"$stdout_file" 2>"$stderr_file"
-  check_captured_output '..............................' "packaged public API"
+  check_captured_output '...............................' "packaged public API"
   printf 'packaged_public_api=passed\n'
 
   local completion_work="$scratch_root/completion-work"

@@ -125,6 +125,7 @@ case "$product_version" in
   0.3.0-dev) expected_package_version="0.2.900" ;;
   0.3.0) expected_package_version="0.3" ;;
   0.4.0) expected_package_version="0.4" ;;
+  0.5.0) expected_package_version="0.5" ;;
   *) die "VERSION is outside the approved milestone states" ;;
 esac
 

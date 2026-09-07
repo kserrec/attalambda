@@ -32,6 +32,11 @@ The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
+The `milestone-5-recursive-purity` branch prepares 0.5.0 with pure `rec`
+syntax and rejection of recursive `def`. See the
+[0.5.0 migration and release notes](docs/releases/0.5.0.md) for the source
+changes; that release is not yet published.
+
 Download, verify, extract, and run it:
 
 ```sh
