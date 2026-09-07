@@ -1,5 +1,28 @@
 # Session handoff
 
+Status recorded 2026-09-07: pure-recursion implementation for target 0.5.0
+is on `milestone-5-recursive-purity`, based on `0987c8a`. Kyle authorized
+starting the supplied recursion specification after choosing 0.5.0.
+Phase 1 implementation and verification are complete: all 41 test files
+passed 14,209 assertions, expanded purity passed all 32 production modules,
+and complete boundaries/source inventory passed. The cold reviewer confirmed
+the final corrections with no remaining concrete issue. Kyle explicitly
+approved verification, commit, and push; an earlier execution-tool rejection
+did not come from him. This verified Phase 1 commit closes the implementation.
+See PLAN.md for exact scope, corrections, and logs.
+
+The active [PLAN.md](PLAN.md) controls this milestone. Phase 2 prepares the
+exact 0.5.0/0.5 version state, migration notes, and reviewable release PR.
+Merge to main requires explicit approval. No 0.5.0 release is published;
+the product metadata and current downloads still identify 0.4.0.
+[docs/API.md](docs/API.md) distinguishes the new source recursion rules
+from that published binary. The supplied spec is preserved verbatim in
+[docs/recursive-purity-spec.md](docs/recursive-purity-spec.md).
+
+---
+
+## Completed 0.4.0 release (historical)
+
 Status recorded 2026-09-06: the public API/List update, PR review, merge, and
 0.4.0 release are complete. Kyle explicitly authorized each of those actions.
 The checkout is on main. Subsequent release/feature work requires a new request;

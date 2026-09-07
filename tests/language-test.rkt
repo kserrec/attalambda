@@ -37,6 +37,152 @@
     (define isolated-environment
       (fresh-language-install-environment installation))
 
+    ;; Expand without instantiating the user's module: these failures must
+    ;; precede execution, including effects placed before a bad definition.
+    (define expansion-probe (build-path temporary-root "expand-source.rkt"))
+    (write-source
+     expansion-probe
+     #<<PROBE
+#lang racket/base
+(require racket/list)
+(define path (vector-ref (current-command-line-arguments) 0))
+(parameterize ([read-accept-reader #t]
+               [current-namespace (make-base-namespace)])
+  (call-with-input-file path
+    (lambda (input)
+      (port-count-lines! input)
+      (define expanded (expand (read-syntax path input)))
+      (when (= (vector-length (current-command-line-arguments)) 2)
+        (define name (string->symbol (vector-ref (current-command-line-arguments) 1)))
+        (define forms (cdr (syntax->list (cadddr (syntax->list expanded)))))
+        (define definition
+          (findf (lambda (form)
+                   (define parts (syntax->list form))
+                   (and parts (eq? (syntax-e (car parts)) 'define-values)
+                        (equal? (syntax->datum (cadr parts)) (list name))))
+                 forms))
+        (define recursive-bindings '())
+        (define fixed-point-import? #f)
+        (define (walk expression)
+          (cond
+            [(identifier? expression)
+             (define binding (identifier-binding expression 0))
+             (when (eq? (syntax-e expression) name)
+               (set! recursive-bindings (cons binding recursive-bindings)))
+             (when (and (list? binding) (eq? (cadr binding) 'raw-fix))
+               (set! fixed-point-import?
+                     (equal? (resolved-module-path-name
+                              (module-path-index-resolve (car binding)))
+                             (collection-file-path "fix.rkt" "attalambda" "core"))))]
+            [else (for-each walk (or (syntax->list expression) '()))]))
+        (unless definition (error 'rec-expansion "missing recursive definition"))
+        (walk (caddr (syntax->list definition)))
+        (unless (and (pair? recursive-bindings)
+                     (andmap (lambda (binding) (eq? binding 'lexical)) recursive-bindings)
+                     fixed-point-import?)
+          (error 'rec-expansion "rec must lambda-bind its name and use core/fix.rkt"))))))
+PROBE
+     )
+    (for ([source
+           (in-list
+            '("(def loop value = (loop value))"
+              "(def loop = loop)"
+              "(def first x = (second x))\n(def second x = (first x))"
+              "(def first = second)\n(def second = third)\n(def third = first)"
+              "(def loop x = (let loop = loop loop))"
+              "(def loop x = ((lambda (ignored) x) loop))"
+              "(rec first x = (second x))\n(def second x = (first x))"
+              "(rec first x = (second x))\n(rec second x = (first x))"
+              "(def loop lambda = (lambda (loop) loop))"
+              "(def loop let = (let loop = loop loop))"))]
+          [index (in-naturals)])
+      (define program
+        (build-path temporary-root (format "recursive-def-~a.attl" index)))
+      (write-source program
+                    (string-append "#lang attalambda\n(stdout \"must not run\")\n"
+                                   source "\n(stdout \"must not run\")\n"))
+      (check-command-failure
+       (run-command isolated-environment racket-executable
+                    (list (path->string expansion-probe) (path->string program))
+                    20)
+       #rx"recursive def binding is not allowed|module-binding recursion is forbidden"))
+
+    (define recursion-program (build-path temporary-root "pure-recursion.attl"))
+    (write-source
+     recursion-program
+     #<<PROGRAM
+#lang attalambda
+(def check condition = (stdout (if condition "." "!")))
+(rec factorial n = (if (eq n 0) 1 (mult n (factorial (sub n 1)))))
+(rec sum n total = (if (eq n 0) total (sum (sub n 1) (add total n))))
+(def sum-four = (sum 4))
+(rec constant = 7)
+(rec countdown = (lambda (n) (if (eq n 0) n (countdown (sub n 1)))))
+(def first value = (second value))
+(def second value = value)
+(def local-lambda value = ((lambda (local-lambda) local-lambda) value))
+(def local-let value = (let local-let = value local-let))
+(def local-argument local-argument = local-argument)
+(rec recursive-argument recursive-argument = recursive-argument)
+(def shadow-syntax lambda = (lambda 9))
+(rec loop value = (loop value))
+(def recursion-helper left = (lambda (right) (add left right)))
+(check (eq (factorial 4) 24))
+(check (eq (sum-four 0) 10))
+(check (eq constant 7))
+(check (eq (countdown 3) 0))
+(check (eq (first 4) 4))
+(check (eq (local-lambda 5) 5))
+(check (eq (local-let 6) 6))
+(check (eq (local-argument 7) 7))
+(check (eq (recursive-argument 8) 8))
+(check (eq (shadow-syntax (lambda (x) x)) 9))
+(check (eq (if TRUE 10 (loop NIL)) 10))
+(check (eq ((recursion-helper 3) 4) 7))
+PROGRAM
+     )
+    (check-command-success
+     (run-command isolated-environment racket-executable
+                  (list (path->string recursion-program)) 20)
+     #"............")
+
+    ;; Definitions are recognized in source order. A declared function can
+    ;; shadow syntax, and a later application must remain an expression.
+    (for ([source
+           (in-list
+            '("(def rec x = x)\n(rec 7)\n(stdout (if (eq (rec 7) 7) \"shadowed\" \"wrong\"))"
+              "(def def x = x)\n(def 7)\n(stdout (if (eq (def 7) 7) \"shadowed\" \"wrong\"))"
+              "(rec rec x = x)\n(rec 7)\n(stdout (if (eq (rec 7) 7) \"shadowed\" \"wrong\"))"
+              "(def def x = x)\n(rec count n = (if (eq n 0) 0 (count (sub n 1))))\n(stdout (if (eq (count 2) 0) \"shadowed\" \"wrong\"))"))]
+          [index (in-naturals)])
+      (define program (build-path temporary-root (format "shadow-syntax-~a.attl" index)))
+      (write-source program (string-append "#lang attalambda\n" source "\n"))
+      (check-command-success
+       (run-command isolated-environment racket-executable
+                    (list (path->string program)) 20)
+       #"shadowed"))
+
+    ;; A recursive declaration alone is legal and does not force divergence.
+    (define declaration-program (build-path temporary-root "rec-only.attl"))
+    (write-source declaration-program
+                  "#lang attalambda\n(rec loop value = (loop value))\n")
+    (check-command-success
+     (run-command isolated-environment racket-executable
+                  (list (path->string expansion-probe) (path->string declaration-program) "loop")
+                  20)
+     #"")
+
+    (for ([source (in-list '("(rec 1 x = x)" "(rec loop 1 = 1)"
+                            "(rec loop x x)" "(rec loop x = x x)"
+                            "(rec loop = = 1)" "(rec = x = x)"))]
+          [index (in-naturals)])
+      (define program (build-path temporary-root (format "invalid-rec-~a.attl" index)))
+      (write-source program (string-append "#lang attalambda\n" source "\n"))
+      (check-command-failure
+       (run-command isolated-environment racket-executable
+                    (list (path->string expansion-probe) (path->string program)) 20)
+       #rx"expected .*rec.*name.*body"))
+
     (check-false
      (environment-variables-ref isolated-environment #"PLTCOLLECTS"))
 
@@ -242,7 +388,7 @@ PROBE
 (def check condition = (stdout (if condition "." "!")))
 (def values = (cons 1 (cons 2 (cons 3 NIL))))
 (def nested = (cons (cons 1 (cons (cons 2 NIL) NIL)) (cons (cons 3 NIL) NIL)))
-(def loop value = (loop value))
+(rec loop value = (loop value))
 
 (check (eq (len (append values (cons 4 NIL))) 4))
 (check (eq (head (reverse values)) 3))
@@ -325,7 +471,7 @@ PROGRAM
      #<<PROGRAM
 #lang attalambda
 
-(def loop value =
+(rec loop value =
   (loop value))
 
 (stdout
@@ -504,6 +650,8 @@ PROBE
               "(+ 1 2)"
               "(display \"leak\")"
               "(raw-cons 1 NIL)"
+              "raw-fix"
+              "language-fix"
               "(typed-if TRUE \"yes\" \"no\")"
               "(_if TRUE \"yes\" \"no\")"
               "'quoted"))]

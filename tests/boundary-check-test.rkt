@@ -977,6 +977,30 @@
    (define clean-package-info-datum
      (read-datum package-info))
 
+   ;; The fixed point is a single selected private import. Neither exposing
+   ;; it nor replacing it with a native recursive form is part of rec.
+   (for ([name (in-list '(raw-fix language-fix))])
+     (write-datum language-expander
+                  (append-module-form clean-language-expander-datum `(provide ,name)))
+     (check-not-false
+      (member 'invalid-language-expander-export
+              (kinds (file-boundary-violations language-expander 'language-expander root)))))
+   (write-datum language-expander
+                (replace-datum '(only-in "../core/fix.rkt" (raw-fix language-fix))
+                               "../core/fix.rkt"
+                               clean-language-expander-datum))
+   (check-not-false
+    (member 'invalid-language-expander-imports
+            (kinds (file-boundary-violations language-expander 'language-expander root))))
+   (write-datum language-expander
+                (append-module-form clean-language-expander-datum
+                                    '(define-syntax (language-rec stx)
+                                       (syntax (letrec ([loop loop]) loop)))))
+   (check-not-false
+    (member 'unapproved-language-identifier
+            (kinds (file-boundary-violations language-expander 'language-expander root))))
+   (write-datum language-expander clean-language-expander-datum)
+
    (check-equal?
     (file-boundary-violations language-expander
                               'language-expander
@@ -1014,7 +1038,7 @@
    ;; existing approved helpers, without relying on an unknown helper name.
    (for ([replacement
           (in-list
-           '((define-for-syntax (language-definition-form? form) (exit 1))
+           '((define-for-syntax (language-definition-form? form bound) (exit 1))
              (define-syntax (language-lambda stx) (syntax (exit 1)))
              (define-syntax (language-lambda stx)
                (syntax-case (syntax #&exit) ()

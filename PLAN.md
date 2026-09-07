@@ -1,4 +1,122 @@
-# Release 0.4.0
+# Milestone 5 — Pure recursive definitions (target 0.5.0)
+
+Status: Phase 1 complete on `milestone-5-recursive-purity`; Phase 2 is next.
+Kyle authorized starting this work on 2026-09-07 after choosing 0.5.0 for
+the new public syntax and the migration away from recursive `def`.
+Starting revision: clean `0987c8a` on main, following the published 0.4.0.
+Source: [supplied recursion specification](docs/recursive-purity-spec.md),
+SHA-256 `108e4b13b73350d1cfb959752fc29f55f0fbe7951e268d276585a818856278f5`.
+
+## Scope and verified starting state
+
+`macros/macros.rkt` expands `def` into host `define` and unary lambdas.
+`lang/expander.rkt` recognizes only `def` as a definition and performs no
+dependency-cycle validation. `tooling/check-purity.rkt` accepts same-module
+references but does not check their dependency graph. `core/fix.rkt` already
+contains the canonical lambda-only fixed-point term. Public `rec` is absent.
+Two language fixtures and `examples/http-server.attl` use recursive `def`.
+The runner currently replaces general syntax exceptions with a generic
+diagnostic; recursion failures need a narrowly selected safe explanation.
+
+Modify the expander, purity and boundary checks, focused tests, runner syntax
+diagnostics, the HTTP example's definition keyword, API and purity docs.
+Create the saved source specification and this active plan. Preserve core
+algorithms (including `raw-fix`), the macro layer, representations, typing,
+laziness, all ten host capabilities, and Linux-only binary support. Do not
+add dependencies or public fixed-point functions. No mutual-recursion sugar.
+
+The supplied specification's six stages are retained in order as Steps in
+one implementation Phase: they cannot independently satisfy its requirement
+that every completed Phase pass all tests. In particular the new syntax,
+pinned boundary rules, and existing recursive fixtures must land together.
+Each Phase below is one complete implementation/verification pass.
+
+## Phase 1 — Implement and verify pure recursion
+
+- [x] Step 1.1 — Add rejection tests for direct/indirect recursive `def`
+  and expanded module bindings. Observe the failures before enforcement.
+- [x] Step 1.2 — Privately reuse `raw-fix`, implement public `rec` with
+  unary currying, and recognize it as a top-level definition. Test execution,
+  zero/multiple arguments, partial application, and laziness.
+- [x] Step 1.3 — Reject top-level dependency cycles at expansion, treating
+  `rec` self references and `def`/`rec` arguments, `lambda`, and `let` names
+  as lexical. Preserve acyclic forward references and actual shadowing.
+  Cover `rec`/`def` cycles and non-call references. Give direct and indirect
+  cycles clear diagnostics, including through the public runner.
+- [x] Step 1.4 — Check expanded same-module phase-0 dependencies by binding
+  identity. Reject deterministic cycles while retaining lexical recursion,
+  imported references, and acyclic definitions. Scan real core/effects.
+- [x] Step 1.5 — Pin only the exact new expander import/export/helpers and
+  vocabulary; test private-name isolation and retained prohibitions. Convert
+  the two divergent fixtures and only the HTTP formatter's `def` keyword.
+  Update API docs and add the absolute-purity amendment.
+- [x] Step 1.6 — Run focused tests, then the complete suite and both
+  architectural checks. Obtain the fresh-agent cold review required for
+  fixes, address proven findings, record results, commit and push this Phase.
+
+Steps 1.1–1.5 evidence: before enforcement, all six new public recursive-def
+fixtures expanded successfully, and all five checker-level recursive
+fixtures returned no violations (5/147 assertions failed as expected).
+The baseline language run additionally hit the existing representation
+probe's 20-second deadline while other work was running; no deadline or
+production algorithm was changed. Its subsequent isolated run passed.
+
+Focused verification after implementation passed 148 purity assertions,
+130 boundary assertions, and 401 language/runner assertions. A fresh-agent
+cold review found one additional acyclic-source regression: calls to user
+bindings named `def` or `rec` were being parsed as declarations. Declaration
+collection now follows source order, and the wrapper uses that same result.
+Four execution cases protect this class, including private macro hygiene.
+The reviewer confirmed the final correction with isolated probes and found
+no remaining concrete issue. Full-suite verification below includes these
+four additional cases. Logs are `/tmp/attalambda-recursion-purity.log`,
+`/tmp/attalambda-recursion-boundary-tests.log`, and
+`/tmp/attalambda-recursion-public-tests.log`.
+
+Full-suite attempt: acceptance passed 21 assertions and binary Nat passed
+2,168, then a boundary mutation fixture could not locate the helper because
+it still expected the old one-argument signature. Updated that exact fixture
+to `(language-definition-form? form bound)`; focused boundary verification
+again passed all 130 assertions. The cold reviewer confirmed its native-exit
+prohibition remains intact. No production code changed after those first two
+full-suite files passed. The initial log is
+`/tmp/attalambda-recursion-full-tests.log`.
+
+Step 1.6 completion: Kyle explicitly approved continuing verification,
+commit, and push after correcting an execution-tool rejection that did not
+come from him. The remaining 39 files passed, including all 193 public
+language assertions, launcher diagnostics, and the real HTTP example on an
+ephemeral loopback port. Together with the unchanged first two files, all
+41 test files passed 14,209 assertions. The passing-file inventory exactly
+matches repository discovery. Final expanded purity passed all 32 production
+modules; the complete structural boundary/source inventory check passed.
+Continuation log: `/tmp/attalambda-recursion-remaining-tests.log`.
+Per-file counts: `/tmp/attalambda-recursion-verification.json`.
+
+Executable changes are confined to the language expander, runner syntax
+diagnostics, purity/boundary checkers, and the HTTP example's definition
+keyword. Four test files add regression coverage and update the existing
+boundary mutation fixture. Documentation updates cover the API, purity
+amendment, saved verbatim specification, plan, and handoff. Core, effects,
+runtime, and macro files have no diff. No dependency or host capability was
+added. Version metadata and release downloads still identify 0.4.0; Phase 2
+owns preparation of the chosen 0.5.0 release. Final whitespace checks pass.
+
+## Phase 2 — Prepare 0.5.0 for release review
+
+- [ ] Step 2.1 — Add exactly the 0.5.0 product / 0.5 package version state
+  to metadata, exact runner/boundary/build/consumer validation and tests.
+- [ ] Step 2.2 — Prepare migration/release notes distinguishing the purity
+  repair from the new `rec` syntax and breaking recursive-`def` rule.
+  Run focused and full verification; commit and push the preparation.
+- [ ] Step 2.3 — Prepare the reviewable PR and report its verified revision.
+  Merge to main requires Kyle's explicit approval under AGENTS.md. Build and
+  publication follow the existing Linux release process after approval of
+  the concrete reviewed release; do not reuse the historical 0.4.0 authority.
+
+---
+
+# Release 0.4.0 (complete; historical)
 
 Status: complete on main. PR #2 merged and 0.4.0 published and verified.
 Kyle explicitly authorized the PR, evaluation of useful actionable review

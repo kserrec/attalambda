@@ -425,6 +425,27 @@
      #:line 2
      #:column 0))
 
+   ;; Recursion errors keep actionable, fixed text and the user's location;
+   ;; they must not expose host exception text or execute preceding effects.
+   (for ([case (in-list
+                '(("recursive-def.attl" "(def loop x = (loop x))"
+                   "recursive def binding is not allowed; use rec for self recursion")
+                  ("recursive-alias.attl" "(def loop = loop)"
+                   "recursive def binding is not allowed; use rec for self recursion")
+                  ("recursive-cycle.attl"
+                   "(def first x = (second x))\n(def second x = (first x))"
+                   "module-binding recursion is forbidden; rec supports only self recursion")
+                  ("recursive-mixed.attl"
+                   "(rec first x = (second x))\n(def second x = (first x))"
+                   "module-binding recursion is forbidden; rec supports only self recursion")))])
+     (define filename (car case))
+     (write-source (build-path working-directory filename)
+                   (string-append "#lang attalambda\n(stdout \"must not run\")\n"
+                                  (cadr case) "\n"))
+     (check-runner-failure
+      (run (list filename)) 65
+      (source-diagnostic filename (caddr case) #:line 3 #:column 5)))
+
    (define reader-failure-source
      (build-path working-directory "reader-failure.attl"))
    (write-source reader-failure-source

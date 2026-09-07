@@ -6,6 +6,8 @@
          (only-in "../macros/macros.rkt"
                   def
                   [lambda-let language-let])
+         (only-in "../core/fix.rkt"
+                  [raw-fix language-fix])
          (only-in "../core/byte.rkt"
                   MAKE-BYTE
                   BYTE-VALUE
@@ -150,6 +152,7 @@
                      [language-application #%app]
                      [language-datum #%datum]
                      [language-lambda lambda]
+                     [language-rec rec]
                      [language-let let]
                      [language-if if]
                      [language-cons cons]
@@ -257,22 +260,141 @@
 ;; Racket's ordinary module wrapper prints every top-level expression result.
 ;; A language program instead forces each expression for its effects and
 ;; discards the resulting lambda value. Definitions remain definitions.
-(define-for-syntax (language-definition-form? form)
-  (syntax-case form (def)
-    [(def . remaining) #t]
+(define-for-syntax (language-definition-form? form bound)
+  (syntax-case form ()
+    [(head . remaining)
+     (and (identifier? #'head)
+          (not (language-bound-name #'head bound))
+          (or (free-identifier=? #'head #'def)
+              (free-identifier=? #'head #'language-rec)))]
     [_ #f]))
+
+(define-for-syntax (language-curried-lambdas arguments body)
+  (if (null? arguments)
+      body
+      #`(lambda (#,(car arguments))
+          #,(language-curried-lambdas (cdr arguments) body))))
+
+;; Before expansion, compare prospective binders with their source references.
+;; Equal spellings with different scopes must not become dependency edges.
+(define-for-syntax (language-bound-name name names)
+  (ormap (lambda (candidate)
+           (and (identifier? name)
+                (bound-identifier=? name candidate)
+                candidate))
+         names))
+
+(define-for-syntax (language-definition-parts form)
+  (syntax-case form ()
+    [(_ name argument ... equals body)
+     (and (identifier? #'name)
+          (eq? (syntax-e #'equals) '=)
+          (andmap identifier? (syntax->list #'(argument ...))))
+     (list #'name (syntax->list #'(argument ...)) #'body)]
+    [_ (raise-syntax-error #f "expected (def or rec name argument ... = body)" form)]))
+
+(define-for-syntax (language-dependencies expression names bound)
+  (cond
+    [(identifier? expression)
+     (let ([name (language-bound-name expression names)])
+       (if (and name (not (language-bound-name expression bound)))
+           (list name)
+           '()))]
+    [else
+     (syntax-case expression ()
+       [(head (argument) body)
+        (and (identifier? #'head)
+             (free-identifier=? #'head #'language-lambda)
+             (identifier? #'argument)
+             (not (language-bound-name #'head (append bound names))))
+        (language-dependencies #'body names (cons #'argument bound))]
+       [(head name equals value body)
+        (and (identifier? #'head)
+             (free-identifier=? #'head #'language-let)
+             (identifier? #'name)
+             (eq? (syntax-e #'equals) '=)
+             (not (language-bound-name #'head (append bound names))))
+        (append (language-dependencies #'value names bound)
+                (language-dependencies #'body names (cons #'name bound)))]
+       [(part ...)
+        (apply append
+               (map (lambda (part) (language-dependencies part names bound))
+                    (syntax->list #'(part ...))))]
+       [_ '()])]))
+
+(define-for-syntax (language-check-definitions forms)
+  ;; Module declarations expand in source order. Once a name shadows def or
+  ;; rec, later calls to that binding are expressions, not declarations.
+  (define definitions
+    (let collect ([remaining forms] [bound '()])
+      (cond
+        [(null? remaining) '()]
+        [else
+         (define form (car remaining))
+         (if (language-definition-form? form bound)
+             (cons form
+                   (collect (cdr remaining)
+                            (cons (car (language-definition-parts form)) bound)))
+             (collect (cdr remaining) bound))])))
+  (define parts (map language-definition-parts definitions))
+  (define names (map car parts))
+  (define graph
+    (map (lambda (form definition)
+           (define name (car definition))
+           (define arguments (cadr definition))
+           (define bound
+             (syntax-case form (language-rec)
+               [(language-rec . remaining) (cons name arguments)]
+               [_ arguments]))
+           (cons name (language-dependencies (caddr definition) names bound)))
+         definitions parts))
+  (define (visit name path finished)
+    (when (memq name path)
+      (define self? (eq? name (car path)))
+      (raise-syntax-error
+       #f
+       (if self?
+           "recursive def binding is not allowed; use rec for self recursion"
+           "module-binding recursion is forbidden; rec supports only self recursion")
+       (syntax-property name 'attalambda-recursion (if self? 'self 'cycle))))
+    (if (memq name finished)
+        finished
+        (cons name
+              (foldl (lambda (dependency finished)
+                       (visit dependency (cons name path) finished))
+                     finished
+                     (cdr (assq name graph))))))
+  (foldl (lambda (name finished) (visit name '() finished)) '() names)
+  definitions)
 
 (define-syntax (language-module-begin stx)
   (syntax-case stx ()
     [(_ form ...)
      (with-syntax
          ([(prepared-form ...)
-           (map (lambda (form)
-                  (if (language-definition-form? form)
-                      form
-                      #`(language-discard #,form)))
-                (syntax->list #'(form ...)))])
+           (let ([definitions (language-check-definitions (syntax->list #'(form ...)))])
+             (map (lambda (form)
+                    (if (memq form definitions)
+                        form
+                        #`(language-discard #,form)))
+                  (syntax->list #'(form ...))))])
        #'(#%module-begin prepared-form ...))]))
+
+(define-syntax (language-rec stx)
+  (syntax-case stx ()
+    [(_ name argument ... equals body)
+     (and (identifier? #'name)
+          (not (eq? (syntax-e #'name) '=))
+          (eq? (syntax-e #'equals) '=)
+          (andmap (lambda (argument)
+                    (and (identifier? argument)
+                         (not (eq? (syntax-e argument) '=))))
+                  (syntax->list #'(argument ...))))
+     #`(def name =
+         (language-fix
+          (lambda (name)
+            #,(language-curried-lambdas (syntax->list #'(argument ...)) #'body))))]
+    [_ (raise-syntax-error #f "expected (rec name argument ... = body)" stx)]))
 
 ;; More than one source argument is notation for nested unary application.
 ;; The generated base case explicitly uses Lazy Racket's original #%app.
@@ -291,7 +413,7 @@
       "expected a function and at least one argument"
       stx)]))
 
-;; Lambda abstraction itself stays unary. `def` is the separate currying
+;; Lambda abstraction itself stays unary. `def` and `rec` provide currying
 ;; sugar for convenient named functions with any source arity.
 (define-syntax (language-lambda stx)
   (syntax-case stx ()

@@ -32,7 +32,7 @@
 
 ;; Writes `datum` as core/production.rkt beside optional dependency modules,
 ;; with the real macros/ directory linked in, and returns the violation kinds.
-(define (file-kinds datum [dependencies '()])
+(define (file-findings datum [dependencies '()])
   (define directory (temporary-tree "purity"))
   (define core (build-path directory "core"))
   (define path (build-path core "production.rkt"))
@@ -50,9 +50,12 @@
         (make-directory* base)
         (write-datum dependency-path (cadr dependency))))
     (lambda ()
-      (map violation-kind (file-violations path)))
+      (file-violations path))
     (lambda ()
       (delete-directory/files directory))))
+
+(define (file-kinds datum [dependencies '()])
+  (map violation-kind (file-findings datum dependencies)))
 
 ;; Wraps one expression as the body of a curried definition so that the
 ;; free names the cases use are ordinary lambda-bound variables.
@@ -135,6 +138,54 @@
            (isolated-file-violations production)))
     (lambda ()
       (delete-directory/files directory))))
+
+;; ---------------------------------------------------------------------------
+;; Module names must not supply recursion, even when every RHS is locally pure.
+
+(check-equal?
+ (file-findings
+  '(module production "../macros/lazy-with-macros.rkt"
+     (#%module-begin
+      (require "../macros/macros.rkt")
+      (def entry = first)
+      (def first value = (second value))
+      (def second value = (first value)))))
+ (list (violation 'recursive-module-binding "first -> second -> first")))
+
+(for ([definitions
+       (in-list
+        '(((def loop value = (loop value)))
+          ((def loop = loop))
+          ((def first value = (second value))
+           (def second value = (first value)))
+          ((def first = second) (def second = third) (def third = first))
+          ((def loop value = ((lambda (ignored) value) loop)))))])
+  (check-equal?
+   (file-kinds
+    `(module production "../macros/lazy-with-macros.rkt"
+       (#%module-begin
+        (require "../macros/macros.rkt")
+        ,@definitions)))
+   '(recursive-module-binding)
+   (format "~s" definitions)))
+
+(for ([definitions
+       (in-list
+        '(((def fixed function =
+             ((lambda (self) (function (self self)))
+              (lambda (self) (function (self self))))))
+          ((def first value = (second value)) (def second value = value))
+          ((def loop loop = loop))
+          ((def loop value = ((lambda (loop) loop) value)))
+          ((def loop value = (lambda-let loop = value loop)))))])
+  (check-equal?
+   (file-kinds
+    `(module production "../macros/lazy-with-macros.rkt"
+       (#%module-begin
+        (require "../macros/macros.rkt")
+        ,@definitions)))
+   '()
+   (format "~s" definitions)))
 
 ;; ---------------------------------------------------------------------------
 ;; Expressions: only variables, unary lambda, and unary application survive
