@@ -1,3 +1,154 @@
+# Milestone 6 — Generic pure value rendering and printing
+
+Status: active on `milestone-6-pure-printing`, based on clean main `e8572ee`.
+Kyle authorized planning and executing every pass autonomously on 2026-09-07.
+The user instruction overrides the next skill's normal stop-after-one-pass rule.
+Contracts: [printing specification](docs/generic-pure-printing-spec.md) and
+[raw-function addendum](docs/raw-function-printing-contract.md), with the latter
+controlling raw functions and unknown-tag fallback. Existing specifications,
+representation invariants, closed capabilities, and recursive purity remain binding.
+
+## Verified starting state and scope
+
+No `core/to-string.rkt`, `effects/print.rkt`, or public value renderer exists.
+`readers/error.rkt` owns diagnostic formatting in Racket. Its TypeMismatch
+with frames prints the oldest frame with actual type, followed by newer
+frames without actual type; it omits the root label in that case. Preserve
+these exact diagnostics through a new pure helper. Binary division/remainder,
+Char Lists, raw append/reverse, the generalized checker, and raw-fix already
+exist and will be reused. `stdout` is String-only and injected once in the
+language facade. The expanded purity checker rejects module-binding cycles.
+The predecessor repository has no reusable pure decimal/rendering implementation.
+
+Create pure rendering modules as `core/render-*.rkt`, facade `core/to-string.rkt`,
+`effects/print.rkt`, focused tests, and the saved contracts. Modify diagnostic
+name exports, the Error reader, language exports/injection, exact boundary
+allowlists, API/architecture/acceptance documents, and this plan. All existing
+representations, raw algorithms, general typing, runtime/codec, host protocol,
+stdout, parser, recursion rules, and dependencies remain behaviorally unchanged.
+No new runtime tag, reflection, raw-function guard, newline, sorting, or
+serialization promise. Printable ASCII is 32–126; other String bytes use
+uppercase two-digit hexadecimal escapes, including each UTF-8 byte separately.
+
+Each Step below is independently executable in one pass. Complete Steps
+serially and continue automatically. Every Phase ends with the complete suite
+and both architectural gates, then one narrow commit and push to verified
+origin `git@github.com:kserrec/attalambda.git`. Never continue beyond a failing
+Phase gate. Diagnose failures from evidence before repairs; do not weaken tests.
+Keep this milestone on its branch. This request authorizes the implementation
+and a reviewable PR; AGENTS.md requires explicit approval to merge a milestone.
+No version bump, tag, publication, or download-link change belongs to this plan.
+
+## Phase 1 — Pure scalar foundation
+
+- [x] Step 1.1 — Save contracts and this plan. Add fixed Char sequences using
+  existing mechanical macro expansion; add pure binary decimal conversion by
+  division/remainder ten and two-digit hex conversion. Share these algorithms
+  across all renderers; Church-to-binary conversion is only for metadata.
+- [x] Step 1.2 — Add raw Rat, Bool, Unit, Byte, Char and quoted/escaped String
+  renderers, strict unary wrappers using make-typed-function, and diagnostic
+  names. Keep scalar helpers dependency-oriented and acyclic. No facade exports yet.
+- [x] Step 1.3 — Test zero, signs, exact fractions, large Rats, every Char/Byte,
+  quote/backslash/control/UTF-8 escaping, wrong types, Error propagation, String
+  representation, and irrelevant-payload laziness. Run the full gate; commit/push.
+
+Phase 1 work: four new pure modules reuse the existing fixed-text macro,
+binary division/remainder, and generalized checker. Scalar tests pass 1,584
+assertions, covering every byte independently. The expanded purity scan
+passes all 36 production modules. The three exact core inventory assertions
+now require 28 instead of 24 modules; their rejection rules are unchanged.
+Focused acceptance/purity verification passed 173 assertions. Initial checks
+caught and corrected one missing parenthesis and a test-only broad import
+that shadowed Racket `if`; neither required a change to an existing algorithm.
+Full gate: all 42 files passed 15798 assertions, expanded purity passed 36
+modules, and the complete boundary inventory passed. Evidence combines
+`/tmp/attalambda-printing-phase-1.log` (16 passing files) with
+`/tmp/attalambda-printing-phase-1-resumed.log` (26 passing files). The initial
+language suite hit the existing ASCII fixture's unchanged 20-second deadline.
+Three isolated runs of that exact probe then passed in 17.8, 16.5 and 14.8
+seconds without any code/deadline change; the complete language suite passed
+on resumption. This is recorded timing variability, not a claimed code fix.
+The scalar unit's imports, algorithms and wrapper aliases pass the final gate.
+No runtime, effects, codec, macro or language-facade implementation changed.
+
+Saved contract SHA-256 values: printing
+`125120685fc1d2df8161f53fd152ac9f43c2bd9fd5784400bb42dcdbd4bc9291`;
+raw-function addendum
+`2f89c6672905c06dd53344008bac9a101990a88f44ced4f56907de30db1597cf`.
+
+## Phase 2 — Pure Error diagnostics
+
+- [ ] Step 2.1 — Implement raw-error-diagnostic-string and error-to-string.
+  Preserve all existing kind/type names, numeric fallbacks, argument positions,
+  oldest-first frame order, result frames and the framed TypeMismatch policy.
+  Explicitly consume Error as data; other tagged types produce TypeMismatch.
+- [ ] Step 2.2 — Make readers/error.rkt only decode the pure diagnostic String.
+  Tighten its boundary to forbid an independent formatting policy. Test all core
+  kinds, host/HTTP and unknown fallback kinds, unknown types, root-only/single/
+  multiple/result frames, wrong input, and unused-details laziness. Run the full
+  gate including existing runner diagnostics; commit/push.
+
+## Phase 3 — One recursive renderer
+
+- [ ] Step 3.1 — Add List, Option, Result and Map helpers taking the recursive
+  renderer explicitly. Build one raw-fix engine for all eleven tags. Preserve
+  Map traversal order, ignore Map equality and NONE payload, render Err through
+  Error formatting, and add decimal unknown-tag fallback without inspecting payload.
+- [ ] Step 3.2 — Add strict per-container wrappers and complete core/to-string.rkt.
+  Test all eleven generic cases, heterogeneous and deeply nested containers,
+  empty forms, Errors as nested data, wrong types, propagated Errors, and lazy
+  unused payloads. Never probe arbitrary raw functions as supported values.
+  Run the full gate; commit/push.
+
+## Phase 4 — Public pure API
+
+- [ ] Step 4.1 — Export exactly the eleven lowercase per-type renderers and
+  value-to-string through the language facade. Pin corresponding exact boundary
+  imports/exports; preserve private raw helpers and the current public surface.
+- [ ] Step 4.2 — Execute source-language acceptance for every renderer, String
+  result typing, recursive dispatch, wrong inputs and no effects. Check aliases,
+  hygiene, private helper isolation and existing language behavior. Run the full
+  gate; commit/push.
+
+## Phase 5 — Print through existing stdout
+
+- [ ] Step 5.1 — Add a unary composition factory taking the already-created
+  stdout function, never host. Inject print from stdout in the facade and pin
+  that exact wiring. Add print's normal diagnostic name without wrapping Error
+  inputs in general propagation before rendering.
+- [ ] Step 5.2 — Test one String-only stdout delegation, identical success/
+  failure returns, no implicit newline, no call before application, and real
+  source output for scalars, nested containers, and Errors. Verify stdout remains
+  byte-exact and String-only. Run the full structural/test gate; commit/push.
+
+## Phase 6 — Explicit purity and contract audit
+
+- [ ] Step 6.1 — Trace every new production path through expanded unary lambda
+  terms. Verify no runtime/readers/effects import enters rendering, no new host
+  capability or primitive, no module recursion cycle, and no tag/codec change.
+  Add meaningful isolated mutation coverage for printing boundaries and Error
+  reader policy. Review all implemented contract cases and repair proven issues.
+- [ ] Step 6.2 — Run the complete suite and architectural gates, record exact
+  counts and limits, compare the milestone diff with scope, commit/push.
+
+## Phase 7 — Documentation and reviewable completion
+
+- [ ] Step 7.1 — Document each renderer, recursive containers, raw-function
+  unspecified behavior, unknown well-formed tags, exact escapes, diagnostic
+  compatibility, stdout versus print, no newline, and display-only Map ordering.
+  Update architecture, specification index and acceptance only for this feature;
+  distinguish branch implementation from published 0.5.0.
+- [ ] Step 7.2 — Execute documented examples, verify local links and all tests/
+  boundaries, record executable/test/doc changes separately, commit/push, and
+  create a reviewable PR with the final scope and verification. Inspect its CI;
+  resolve concrete in-scope findings and leave the branch clean. End with all
+  authorized implementation passes complete; merge/publication require later
+  explicit approval and are not unfinished implementation Steps.
+
+---
+
+# Completed plans (historical; no further authority)
+
 # Milestone 5 — Pure recursive definitions (target 0.5.0)
 
 Status: complete on main. PR #3 merged and 0.5.0 is published and verified.

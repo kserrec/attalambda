@@ -6,7 +6,20 @@
          "objects.rkt"
          "tags.rkt")
 
-(provide cons-function-name
+(provide error-to-string-function-name
+         bool-to-string-function-name
+         list-to-string-function-name
+         result-to-string-function-name
+         char-to-string-function-name
+         string-to-string-function-name
+         rat-to-string-function-name
+         unit-to-string-function-name
+         byte-to-string-function-name
+         option-to-string-function-name
+         map-to-string-function-name
+         value-to-string-function-name
+         print-function-name
+         cons-function-name
          head-function-name
          tail-function-name
          is-nil-function-name
@@ -198,3 +211,17 @@
 (define-function-name map-contains-function-name map-contains?)
 (define-function-name map-set-function-name map-set)
 (define-function-name map-remove-function-name map-remove)
+
+(define-function-name error-to-string-function-name error-to-string)
+(define-function-name bool-to-string-function-name bool-to-string)
+(define-function-name list-to-string-function-name list-to-string)
+(define-function-name result-to-string-function-name result-to-string)
+(define-function-name char-to-string-function-name char-to-string)
+(define-function-name string-to-string-function-name string-to-string)
+(define-function-name rat-to-string-function-name rat-to-string)
+(define-function-name unit-to-string-function-name unit-to-string)
+(define-function-name byte-to-string-function-name byte-to-string)
+(define-function-name option-to-string-function-name option-to-string)
+(define-function-name map-to-string-function-name map-to-string)
+(define-function-name value-to-string-function-name value-to-string)
+(define-function-name print-function-name print)
