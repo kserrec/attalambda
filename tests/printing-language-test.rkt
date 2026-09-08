@@ -74,8 +74,31 @@
                 "(def raw-value-to-chars x = \"wrong\")\n(def render = rat-to-string)\n(stdout (string-append (render 42) (value-to-string TRUE)))\n")
     #"42TRUE")
 
+   ;; print composes the pure representation with the existing stdout effect.
+   (check-command-success
+    (run-source "print-values.attl"
+                (apply string-append
+                       (for/list ([entry (in-list rendering-cases)])
+                         (format "(print ~a)\n(stdout \"|\")\n" (second entry)))))
+    (string->bytes/utf-8
+     (apply string-append
+            (map (lambda (entry) (string-append (third entry) "|")) rendering-cases))))
+   (check-command-success
+    (run-source "print-and-stdout.attl"
+                "(stdout \"hello\")\n(print \"hello\")\n(print 5)\n(stdout 5)\n(print (cons 1 (cons TRUE NIL)))\n")
+    #"hello\"hello\"5[1, TRUE]")
+   (check-command-success
+    (run-source "print-hygiene.attl"
+                "(def stdout value = UNIT)\n(def value-to-string value = \"wrong\")\n(def show = print)\n(show 42)\n")
+    #"42")
+   (check-command-success
+    (run-source "print-laziness.attl"
+                "(if FALSE (print \"unused\") UNIT)\n(if (is-ok (print 42)) (stdout \"ok\") UNIT)\n")
+    #"42ok")
+
    (for ([name (in-list '("raw-value-to-chars" "raw-error-diagnostic-string"
-                         "typed-rat-to-string" "RAT-TO-STRING" "VALUE-TO-STRING"))])
+                         "typed-rat-to-string" "RAT-TO-STRING" "VALUE-TO-STRING"
+                         "language-print" "language-make-print" "PRINT"))])
      (check-command-failure
       (run-source "private-renderer.attl" (format "(~a 1)\n" name))
       #rx"unbound identifier"))))

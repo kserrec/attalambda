@@ -136,6 +136,8 @@
                   make-http-path-handler
                   make-http-serve-one
                   make-http-server)
+         (only-in "../effects/print.rkt"
+                  [make-print language-make-print])
          (only-in "../effects/stdout.rkt"
                   [make-stdout language-make-stdout])
          (only-in "../effects/tcp.rkt"
@@ -160,6 +162,7 @@
                      [language-cons cons]
                      [language-host host]
                      [language-exit exit]
+                     [language-print print]
                      [HEAD head]
                      [TAIL tail]
                      [IS-NIL is-nil]
@@ -497,6 +500,9 @@
 ;; ordinary lambda values; only language-host is privileged.
 (def stdout =
   (language-make-stdout language-host))
+
+(def language-print =
+  (language-make-print stdout))
 
 (def read-file =
   (language-make-read-file language-host))

@@ -1050,7 +1050,11 @@
                (syntax-case (syntax #(exit)) ()
                  [#(function) (syntax (function 1))]))
              (define-syntax (language-lambda stx)
-               (syntax #hash((function . exit))))))])
+               (syntax #hash((function . exit))))
+             (define-for-syntax (language-definition-form? form bound) (print 1))
+             (define-syntax (language-lambda stx) (syntax (print 1)))
+             (define-syntax (language-lambda stx)
+               (syntax #hash((function . print))))))])
      (define original
        (for/first ([form (in-list (cdr (cadddr clean-language-expander-datum)))]
                    #:when (equal? (take form 2) (take replacement 2)))

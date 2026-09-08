@@ -169,14 +169,32 @@ file covers installed source programs. This plan records the verification.
 
 ## Phase 5 — Print through existing stdout
 
-- [ ] Step 5.1 — Add a unary composition factory taking the already-created
+- [x] Step 5.1 — Add a unary composition factory taking the already-created
   stdout function, never host. Inject print from stdout in the facade and pin
   that exact wiring. Add print's normal diagnostic name without wrapping Error
   inputs in general propagation before rendering.
-- [ ] Step 5.2 — Test one String-only stdout delegation, identical success/
+- [x] Step 5.2 — Test one String-only stdout delegation, identical success/
   failure returns, no implicit newline, no call before application, and real
   source output for scalars, nested containers, and Errors. Verify stdout remains
   byte-exact and String-only. Run the full structural/test gate; commit/push.
+
+Phase 5 adds only a unary composition factory receiving the already-injected
+stdout. The facade's private `language-print` binding captures that stdout and
+is renamed only on export. Native Racket print remains forbidden in every
+other class; in the facade the exact export is its sole permitted occurrence,
+with native calls and generated/native syntax-data uses rejected by mutation
+checks. The exact import and injection definitions remain pinned. No host,
+codec, protocol or stdout source changes. Composition tests cover String-only
+requests, no newline, no premature call/repeated effect, and identity-preserved
+success/Err/Error results. The effect inventory increases from eight to nine.
+Phase 4 was pushed as `34097b4`. Phase 5 focused verification passed 94 installed-language assertions, 22
+composition/protocol assertions and all 136 boundary assertions. Full gate:
+all 45 test files, 16174 assertions, 39-module expanded purity and complete
+boundary inventory passed in one run. Log: `/tmp/attalambda-printing-phase-5.log`.
+Executable changes are the pure composition and exact facade wiring/export
+checks. Tests add print behavior and native-printer rejection, and update the
+explicit effects inventory. No runtime, codec, host protocol, stdout source,
+new runtime tag, macro primitive or recursive-purity exception was added.
 
 ## Phase 6 — Explicit purity and contract audit
 

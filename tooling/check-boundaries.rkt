@@ -72,10 +72,10 @@
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place))
 
-;; These names denote pure, host-injected wrappers at the language boundary.
-;; Exact imports/definitions still reject direct native TCP or exit bindings.
+;; These spellings denote pure wrappers at the language boundary. Exact
+;; imports/definitions and export-only occurrence checks retain native bans.
 (define forbidden-language-capabilities
-  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit)
+  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit print)
            forbidden-codec-capabilities))
 
 ;; The runner is trusted only to decide whether and how the host process loads
@@ -460,6 +460,7 @@
               make-http-path-handler
               make-http-serve-one
               make-http-server)
+     (only-in "../effects/print.rkt" (make-print language-make-print))
      (only-in "../effects/stdout.rkt"
               (make-stdout language-make-stdout))
      (only-in "../effects/tcp.rkt"
@@ -486,6 +487,7 @@
      (language-cons cons)
      (language-host host)
      (language-exit exit)
+     (language-print print)
      (HEAD head)
      (TAIL tail)
      (IS-NIL is-nil)
@@ -571,6 +573,7 @@
 
 (define expected-language-runtime-definitions
   '((def stdout = (language-make-stdout language-host))
+    (def language-print = (language-make-print stdout))
     (def read-file = (language-make-read-file language-host))
     (def write-file = (language-make-write-file language-host))
     (def tcp-connect = (language-make-tcp-connect language-host))
@@ -654,6 +657,7 @@
       language-if language-lambda language-let language-list-expression
       language-exit language-make-exit make-exit exit
       language-make-read-file language-make-stdout
+      language-print language-make-print make-print print
       language-make-tcp-accept language-make-tcp-close
       language-make-tcp-connect language-make-tcp-listen
       language-make-tcp-read language-make-tcp-write
@@ -1422,6 +1426,11 @@
    (if (= (datum-occurrence-count 'exit (module-info-forms info)) 1)
        '()
        (list (violation path 'forbidden-language-capability 'exit)))
+   ;; `print` is allowed solely as the exported spelling of language-print.
+   ;; Any extra use could select Racket's native printer and is forbidden.
+   (if (= (datum-occurrence-count 'print (module-info-forms info)) 1)
+       '()
+       (list (violation path 'forbidden-language-capability 'print)))
    (symbol-violations path
                       symbols
                       forbidden-language-capabilities
