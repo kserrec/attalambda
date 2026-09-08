@@ -36,6 +36,16 @@ at the interrupted test without changing source or weakening deadlines;
 [PLAN.md](../PLAN.md) records the complete evidence. Published 0.5.0 remains
 unchanged, and this milestone has not published a binary.
 
+Phase 7's final local run passed the same 45 files and 17,064 assertions in
+one uninterrupted run. [PR #4](https://github.com/kserrec/attalambda/pull/4)
+records the complete scope. All ten jobs in
+[CI run 34181311603](https://github.com/kserrec/attalambda/actions/runs/34181311603)
+passed at `a9ae2f6`, including the Racket CS 9.3 source suite with identical
+counts, Linux distribution, macOS and Windows build/consumer jobs, and cleanup.
+The complete API example also passed six isolated-install checks with exact
+output; all 185 local documentation links and five specification hashes passed.
+The subsequent closure record changes documentation only.
+
 | Printing contract | Executable evidence |
 | --- | --- |
 | All eleven tagged types render to canonical language Strings. | [`to-string-test.rkt`](../tests/to-string-test.rkt) checks every Byte/Char and String byte, exact large Rats, UTF-8 escapes, heterogeneous containers, 72 alternating container levels, stored Map order, unused-payload laziness, wrong types, and Error propagation. Independent codec validation checks each rendered representation. |
