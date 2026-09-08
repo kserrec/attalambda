@@ -7,6 +7,7 @@
          "../core/strings.rkt" "../core/tags.rkt" "../core/to-string.rkt"
          (only-in "../core/typed-logic.rkt" TRUE FALSE) "../core/unit.rkt"
          "../readers/error.rkt" "../readers/string.rkt"
+         (only-in "../runtime/codec.rkt" object-string->bytes)
          "helpers/lazy.rkt" "helpers/values.rkt")
 
 (define (byte-object tag n)
@@ -19,7 +20,10 @@
 (define (check-render renderer input expected)
   (define result (lazy-apply renderer input))
   (check-equal? (object-tag result) 6)
-  (check-equal? (string-value->string result) expected))
+  (check-equal? (string-value->string result) expected)
+  ;; The independent boundary decoder rejects malformed List tails, non-Char
+  ;; elements and noncanonical/out-of-range binary payloads hidden by display.
+  (check-equal? (object-string->bytes result) (string->bytes/utf-8 expected)))
 
 (for ([n (in-list (list 0 1 42 -42 3/7 -7/3 1200 -1200
                         123456789012345678901234567890

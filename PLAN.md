@@ -198,13 +198,35 @@ new runtime tag, macro primitive or recursive-purity exception was added.
 
 ## Phase 6 — Explicit purity and contract audit
 
-- [ ] Step 6.1 — Trace every new production path through expanded unary lambda
+- [x] Step 6.1 — Trace every new production path through expanded unary lambda
   terms. Verify no runtime/readers/effects import enters rendering, no new host
   capability or primitive, no module recursion cycle, and no tag/codec change.
   Add meaningful isolated mutation coverage for printing boundaries and Error
   reader policy. Review all implemented contract cases and repair proven issues.
-- [ ] Step 6.2 — Run the complete suite and architectural gates, record exact
+- [x] Step 6.2 — Run the complete suite and architectural gates, record exact
   counts and limits, compare the milestone diff with scope, commit/push.
+
+Phase 6 review found no production defect. All six rendering modules depend
+only on permitted pure modules and existing mechanical macros. One fixed-point
+value engine supplies recursive arguments to container helpers. The unchanged
+expanded checker passes all 39 production modules, including cycle detection;
+the complete boundary inventory passes. A baseline diff confirms no changes to
+tags, representations, generalized typing, numeric algorithms, runtime/codec,
+host/protocol, stdout, or macro implementation. Existing boundary mutations
+reject native print and an independent Error-reader formatting policy; a new
+mutation also rejects injecting the host into print instead of stdout.
+Independent codec validation now checks canonical String results throughout
+the scalar/container/Error matrix, used only from tests. All 2,862 focused
+rendering/Error/boundary assertions pass. Raw functions remain outside the
+contract, and no safety guarantee or probe for them was introduced.
+Phase 6 full gate passed all 45 files and 17,064 assertions, 39-module
+expanded purity, and the complete boundary inventory. The run was interrupted
+by continuation turns, each recorded as a user break rather than an assertion
+failure. The unchanged source was resumed at the interrupted file; completed
+files were not rerun. Evidence is `/tmp/attalambda-printing-phase-6.log` and
+its `-resumed`, `-resumed-2`, and `-resumed-3` logs (12 + 12 + 5 + 16 files).
+The phase changes tests and this record only; no executable production or
+checker implementation changed. Phase 5 was committed/pushed as `d905f61`.
 
 ## Phase 7 — Documentation and reviewable completion
 

@@ -4,6 +4,7 @@
          "../core/errors.rkt" "../core/function-names.rkt"
          "../core/objects.rkt" "../core/render-error.rkt" "../core/tags.rkt"
          "../core/to-string.rkt" "../readers/error.rkt" "../readers/string.rkt"
+         (only-in "../runtime/codec.rkt" object-string->bytes)
          "helpers/lazy.rkt" "helpers/values.rkt")
 
 (define (metadata n)
@@ -16,6 +17,9 @@
   (check-equal? (object-tag display) 6)
   (check-equal? (string-value->string body) expected)
   (check-equal? (string-value->string display) (string-append "ERROR(" expected ")"))
+  (check-equal? (object-string->bytes body) (string->bytes/utf-8 expected))
+  (check-equal? (object-string->bytes display)
+                (string->bytes/utf-8 (string-append "ERROR(" expected ")")))
   (check-equal? (error-value->string value) expected))
 
 (for ([entry (in-list

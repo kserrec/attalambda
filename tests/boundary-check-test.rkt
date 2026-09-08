@@ -1069,6 +1069,20 @@
                (file-boundary-violations language-expander 'language-expander root)))))
    (write-datum language-expander clean-language-expander-datum)
 
+   ;; Even an existing approved host binding cannot be injected into print:
+   ;; its argument must be the already-created String-only stdout function.
+   (write-datum
+    language-expander
+    (replace-datum
+     '(def language-print = (language-make-print stdout))
+     '(def language-print = (language-make-print language-host))
+     clean-language-expander-datum))
+   (check-not-false
+    (member 'invalid-language-runtime-definitions
+            (kinds (file-boundary-violations language-expander
+                                              'language-expander root))))
+   (write-datum language-expander clean-language-expander-datum)
+
    (write-datum
     language-expander
     (append-module-form clean-language-expander-datum
