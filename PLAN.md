@@ -1,8 +1,10 @@
 # Milestone 6 — Generic pure value rendering and printing
 
-Status: all seven implementation phases complete on `milestone-6-pure-printing`,
-based on clean main `e8572ee`. [PR #4](https://github.com/kserrec/attalambda/pull/4)
-is open; merge and publication remain outside this plan's authorization.
+Status: all seven implementation phases complete and merged into main through
+[PR #4](https://github.com/kserrec/attalambda/pull/4), with Kyle's explicit
+merge approval. Merge commit: `e088e1fc22463c1118127badcdc066c4f8b6cef6`.
+The milestone began from clean main `e8572ee`. Publication remains outside
+this plan's authorization.
 Kyle authorized planning and executing every pass autonomously on 2026-09-07.
 The user instruction overrides the next skill's normal stop-after-one-pass rule.
 Contracts: [printing specification](docs/generic-pure-printing-spec.md) and
@@ -265,7 +267,7 @@ in one run, 39-module expanded purity, and the complete boundary inventory.
 Evidence: `/tmp/attalambda-printing-phase-7.log`. The documented program's
 six checks also passed independently. All local implementation and documentation
 work is verified. Documentation was committed/pushed as `a9ae2f6`, and
-[PR #4](https://github.com/kserrec/attalambda/pull/4) is open against main.
+[PR #4](https://github.com/kserrec/attalambda/pull/4) was opened against main.
 [CI run 34181311603](https://github.com/kserrec/attalambda/actions/runs/34181311603)
 passed all ten jobs for `a9ae2f6032377f97d91773b449e0618b60773707`: source tests,
 Linux distribution, both macOS architectures and Windows build/consumer checks,
@@ -275,7 +277,21 @@ Evidence: `/tmp/attalambda-printing-ci-a9ae2f6.log`. Final review/comment
 inspection found no posted findings. This closure record changes documentation
 only; no executable or test file differs from that verified head. All authorized
 implementation passes are complete. The PR is the review and live CI entry point;
-merge and any later release require Kyle's explicit approval under AGENTS.md.
+merge required Kyle's separate explicit approval under AGENTS.md, recorded below.
+
+## Approved merge
+
+Kyle explicitly approved merging PR #4 on 2026-09-07. GitHub merged the
+verified head `c3d61fd7a3baf75ba1e44f9fb27457ef67bc1ca6` into main at
+`2026-09-08T03:33:50Z`, creating `e088e1fc22463c1118127badcdc066c4f8b6cef6`.
+The merge tree exactly equals the approved PR tree (`34f5e863bb7c4b4b17579b42a7743b5b0230fb94`).
+All ten jobs in [the final PR CI run](https://github.com/kserrec/attalambda/actions/runs/34182567747)
+passed at that head, including 45 source suites, 17,064 assertions, 39-module
+expanded purity, and the complete boundary inventory. No review findings were
+posted when the merge was approved. Local main was fast-forwarded to the merge.
+The follow-up commit updates only merge/status documentation; executable,
+test, and checker code remains the verified PR tree. Main's workflow supplies
+post-merge verification. No version, tag, download metadata, or release changed.
 
 ---
 

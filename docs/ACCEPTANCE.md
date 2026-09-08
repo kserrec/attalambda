@@ -46,6 +46,14 @@ The complete API example also passed six isolated-install checks with exact
 output; all 185 local documentation links and five specification hashes passed.
 The subsequent closure record changes documentation only.
 
+Kyle approved merging PR #4 on 2026-09-07. The merge completed at
+`2026-09-08T03:33:50Z` as `e088e1fc22463c1118127badcdc066c4f8b6cef6`, with
+exactly the same tree as final PR head `c3d61fd`. All ten jobs in
+[the final PR CI run](https://github.com/kserrec/attalambda/actions/runs/34182567747)
+passed at that head with the same source counts and purity/boundary results.
+The follow-up merge record changes documentation only. This is a source merge;
+no new binary release, version, or tag was published.
+
 | Printing contract | Executable evidence |
 | --- | --- |
 | All eleven tagged types render to canonical language Strings. | [`to-string-test.rkt`](../tests/to-string-test.rkt) checks every Byte/Char and String byte, exact large Rats, UTF-8 escapes, heterogeneous containers, 72 alternating container levels, stored Map order, unused-payload laziness, wrong types, and Error propagation. Independent codec validation checks each rendered representation. |

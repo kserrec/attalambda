@@ -31,8 +31,8 @@ The Generic Pure Printing Amendments (2026-09-07) incorporate the
 controlling [raw-function addendum](../raw-function-printing-contract.md).
 They extend only rendering and printing, retaining existing representations,
 absolute purity, recursion rules, and host authority. All earlier text is
-preserved verbatim. Milestone 6 implements these contracts on
-`milestone-6-pure-printing`; the feature is unreleased and absent from 0.5.0
+preserved verbatim. Milestone 6 implements these contracts on main following
+the approved merge of PR #4; the feature is unreleased and absent from 0.5.0
 binaries. The [API reference](../API.md#value-rendering-and-printing) records
 the exact display spellings and chosen byte escapes.
 

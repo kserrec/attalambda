@@ -143,7 +143,7 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-The `milestone-6-pure-printing` source branch adds pure value renderers and
+The current main branch includes pure value renderers and
 generic `print` through the existing stdout boundary. See
 [Value Rendering and Printing](docs/API.md#value-rendering-and-printing).
 This feature is unreleased; the published binaries retain the 0.5.0 API.

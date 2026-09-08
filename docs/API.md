@@ -1,7 +1,7 @@
 # Public API
 
 This reference describes the current source API, including Milestone 6's
-unreleased value rendering and printing on `milestone-6-pure-printing`.
+unreleased value rendering and printing, now merged into main.
 Published 0.5.0 includes pure recursive definitions and the complete List
 library; its binaries do not include the rendering functions below. See the
 [0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.

@@ -1,21 +1,24 @@
 # Session handoff
 
-Milestone 6 generic pure printing is complete on `milestone-6-pure-printing`.
+Milestone 6 generic pure printing is complete and merged into main.
 All seven authorized implementation phases are complete; [PLAN.md](PLAN.md)
 records the work and evidence. [PR #4](https://github.com/kserrec/attalambda/pull/4)
-is open against main. Local Racket CS 8.10 and CI Racket CS 9.3 each passed
+merged with Kyle's explicit approval at `2026-09-08T03:33:50Z` as
+`e088e1fc22463c1118127badcdc066c4f8b6cef6`. Its tree exactly equals approved
+head `c3d61fd7a3baf75ba1e44f9fb27457ef67bc1ca6`.
+Local Racket CS 8.10 and CI Racket CS 9.3 each passed
 45 files, 17,064 assertions, 39 pure modules, and the boundary inventory.
 The API example passed in an isolated installation; 185 local documentation
 links and all five specification hashes were verified. Historical canonical
 specification text remains byte-for-byte preserved before the new amendments.
-All ten jobs in [CI run 34181311603](https://github.com/kserrec/attalambda/actions/runs/34181311603)
-passed for implementation/documentation head `a9ae2f6`, including Linux,
+All ten jobs in [CI run 34182567747](https://github.com/kserrec/attalambda/actions/runs/34182567747)
+passed for final PR head `c3d61fd`, including Linux,
 both macOS architectures, Windows, and artifact cleanup. No review findings
-were posted at closure. The following closure commit changes records only;
-the PR shows live CI for its latest head.
-No merge or release is authorized by this milestone plan; AGENTS.md requires
-explicit approval to merge a language milestone. Published 0.5.0 remains the
-latest release, and no version, tag, or download metadata has changed.
+were posted at merge. Local main is synced; the follow-up commit only records
+the merge and updates source-status wording. Main's workflow shows post-merge
+verification. No implementation or merge work remains. Release publication
+requires a separate instruction; published 0.5.0 remains the latest release,
+and no version, tag, or download metadata has changed.
 
 ## Completed 0.5.0 release (historical)
 
