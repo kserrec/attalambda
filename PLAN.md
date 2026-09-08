@@ -1,9 +1,10 @@
 # Release 0.6.0 — Generic pure printing
 
-Status: authorized and in progress on main. Kyle explicitly requested publication
+Status: complete. AttaLambda 0.6.0 is published and its public Linux download is
+verified. Kyle explicitly requested publication
 on 2026-09-08 after confirming that the printing implementation was merged but
-not yet released. Continue through both release phases without another approval
-pause. This new request authorizes version 0.6.0, its verified Linux x86-64
+not yet released. That request authorized both release phases without another
+approval pause, covering version 0.6.0, its verified Linux x86-64
 archive and SHA256SUMS, annotated tag v0.6.0 at the clean build commit, GitHub
 Release publication, public-download verification, and current release records.
 The completed implementation plan below remains historical evidence.
@@ -61,24 +62,65 @@ publication, alongside the exact archive's independent consumer result.
 
 ## Phase 2 — Build, publish, and verify 0.6.0
 
-- [ ] Step 2.1 — Build the final archive and SHA256SUMS from the clean prepared
+- [x] Step 2.1 — Build the final archive and SHA256SUMS from the clean prepared
   commit with the existing Racket CS 9.3 builder. Run the isolated no-Racket,
   no-checkout Linux consumer, including printing, guide, file/TCP/HTTP, process
   statuses, and relocation. Require all preparation CI jobs to pass. Record
   exact provenance, archive inventory, sizes, and both hashes.
-- [ ] Step 2.2 — Create the annotated v0.6.0 tag at that build commit, stage a
+- [x] Step 2.2 — Create the annotated v0.6.0 tag at that build commit, stage a
   GitHub Release with exactly the verified two assets, and compare downloaded
   draft bytes with the originals. Publish as the latest stable release, then
   fetch both public URLs without authentication and verify hashes, manifest,
   version, and packaged printing. No repeated permission request is needed:
   publication is the explicit task Kyle authorized above.
-- [ ] Step 2.3 — Update README downloads, API/specification status, release
+- [x] Step 2.3 — Update README downloads, API/specification status, release
   notes, acceptance evidence, release ledger, AGENTS.md, and handoff to the
   observed published result. Mark the phases complete, validate local links
   and release metadata, and confirm the publication-record diff changes no
   archive input. Commit/push the records and leave main clean and synced.
   Prior verified source checks apply to identical executable/test inputs;
   inspect the resulting CI without repeating unchanged local suites.
+
+Phase 2 result: preparation commit `dfa5d52a1c9f4a5841bacbba88e06b8eae90e824` was
+committed/pushed cleanly and all ten jobs in
+[CI run 34233310627](https://github.com/kserrec/attalambda/actions/runs/34233310627)
+passed. The downloaded source-job log independently confirms 45 files and
+17,065 assertions, 39-module purity, and complete boundaries
+(`/tmp/attalambda-060-ci-tests.log`).
+
+The existing full Racket CS 9.3 builder produced the final clean archive in
+`/tmp/attalambda-0.6.0-dfa5d52-release/`. Its digest is
+`c3d9ea5263f7ab09e5f9b8d3260b8ead1335d8f1a052c7aba11edd4bf020bb4f`; size is 14,159,078 bytes. The
+103-byte SHA256SUMS digest is
+`5380ea26bf9bb906d70ac8f1b52301b763dfeb93a3ed737810cfe13f6093f3f6`. The original archive and a fresh
+unauthenticated public copy each passed the complete isolated Linux consumer,
+including 31 existing API checks and 13 printing checks, guide, file/TCP/HTTP,
+process statuses, and relocation. Logs: `/tmp/attalambda-060-build.log`,
+`/tmp/attalambda-060-consumer.log`, and `/tmp/attalambda-060-public-consumer.log`.
+The public-download preflight initially observed local mode 0664; setting those
+two session-owned files to the consumer's required 0644 allowed verification
+without changing downloaded bytes or the consumer.
+
+Annotated tag `v0.6.0` (object `af80443d34027d3c9c414c0506213da23f57c2a1`)
+peels to the exact build commit. Release `384776276` contains only
+the archive (asset `550607281`) and checksum manifest (asset `550607275`).
+GitHub's digests and draft downloads matched both originals before publication.
+It was published at `2026-09-08T13:59:26Z` as the latest stable release:
+<https://github.com/kserrec/attalambda/releases/tag/v0.6.0>.
+Fresh public downloads matched both hashes, passed the downloaded checksum
+manifest, and passed the independent consumer. All four older releases and
+their asset identities, descriptions, sizes, hashes, and URLs were preserved.
+
+README, release notes, API/specification status, acceptance, release ledger,
+project instructions, and handoff now describe observed publication. These
+publication records change Markdown only, outside the tagged archive inputs.
+The verified source and CI gates above apply to identical executable/test
+inputs. All 159 local links in the nine changed Markdown files resolve; the
+publication diff is limited to those nine documents, and remote release/asset
+metadata matches the recorded values. The publication-record commit leaves
+main clean and synced, with its workflow providing final CI verification.
+No implementation, merge, or release action remains pending. Future work
+requires a new instruction.
 
 ---
 

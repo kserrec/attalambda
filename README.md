@@ -19,30 +19,30 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.5.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.6.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.5.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.6.0>
 
-Version 0.5.0 adds pure self recursion with `rec` and rejects recursive module
-bindings. Change a self-recursive declaration from `def` to `rec`; mutual
-top-level cycles remain invalid. The complete List API, exact rational
-arithmetic, and existing host capabilities are behaviorally unchanged.
+Version 0.6.0 adds twelve pure value renderers and generic `print`. Nested
+Lists, Options, Results, Maps, and Errors have readable display forms. `print`
+uses the existing stdout capability and adds no newline. Exact rational
+arithmetic, the complete List API, and the pure `rec` rules remain available.
 The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
-See the [0.5.0 migration and release notes](docs/releases/0.5.0.md) for a
-complete recursive-function example and the compatibility changes.
+See the [0.6.0 release notes](docs/releases/0.6.0.md) for printing examples,
+byte escapes, compatibility, and the raw-function contract.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.5.0/attalambda-0.5.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.5.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.6.0/attalambda-0.6.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.6.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.5.0-linux-x86_64.tar.gz
-cd attalambda-0.5.0-linux-x86_64
+tar -xzf attalambda-0.6.0-linux-x86_64.tar.gz
+cd attalambda-0.6.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -50,7 +50,7 @@ cd attalambda-0.5.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.5.0
+AttaLambda 0.6.0
 Hello from AttaLambda.
 ```
 
@@ -143,13 +143,10 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-The current main branch includes pure value renderers and
-generic `print` through the existing stdout boundary. See
+Version 0.6.0 is the fifth public release. It includes pure value renderers
+and generic `print` through the existing stdout boundary. See
 [Value Rendering and Printing](docs/API.md#value-rendering-and-printing).
-This feature is unreleased; the published binaries retain the 0.5.0 API.
-
-Version 0.5.0 is the fourth public release. It adds `rec` and enforces the
-purity rule against recursive module bindings. Rat
+The purity rule against recursive module bindings continues to apply. Rat
 remains the only public number type; Unit, Byte, Option, Map, and byte-based
 file/TCP payloads retain their existing representations.
 [`PLAN.md`](PLAN.md) holds the current roadmap and

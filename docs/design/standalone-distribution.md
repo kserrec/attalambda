@@ -1,16 +1,17 @@
 # Standalone distribution
 
 This document records the current launcher and binary-distribution contract,
-then preserves the evidence for the four public releases. The language itself
+then preserves the evidence for the five public releases. The language itself
 is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current published release is 0.5.0, with pure `rec` definitions and
-rejection of recursive module bindings. It retains explicit program exit,
-lowercase public callables, ASCII Char literals, and the complete List library.
-The [0.5.0 migration notes](../releases/0.5.0.md) describe the changes; the
-release ledger records published artifacts.
+The current published release is 0.6.0, with twelve pure value renderers and
+generic `print` through the existing stdout capability. It retains pure `rec`,
+rejection of recursive module bindings, explicit exit, lowercase public
+callables, ASCII Char literals, and the complete List library. The
+[0.6.0 release notes](../releases/0.6.0.md) describe printing and compatibility;
+the release ledger records published artifacts.
 
 ## Current public support
 
@@ -259,7 +260,10 @@ checksum, and self-contained consumer harness. It verifies the checksum,
 layout, permissions, manifest, legal bytes, guide commands, version/help,
 stdout, byte-exact file-example round-trip, TCP/HTTP loopback behavior, and
 relocation. The current consumer also checks explicit/default program statuses
-and both fatal and recoverable missing-file decisions. The foundations example
+and both fatal and recoverable missing-file decisions. Its 31 existing public-API
+checks cover the List surface and recursion; 13 additional printing checks cover
+every new callable, nested data, Error text, UTF-8 byte escapes, lazy output,
+returned Result, and exact output without an implicit newline. The foundations example
 is inventoried but not executed by this consumer. Fixed launcher-failure
 statuses and sanitized diagnostics are covered by `tests/runner-test.rkt`;
 foundations execution is covered by `tests/milestone-two-acceptance-test.rkt`.
@@ -272,6 +276,54 @@ Each publication needs Kyle's explicit approval for the exact commit, tag,
 files, checksums, support claims, and public action.
 
 ## Public release ledger
+
+### AttaLambda 0.6.0 — 2026-09-08
+
+Kyle explicitly authorized publication after PR #4 merged the pure-printing
+implementation. Clean release-preparation commit `dfa5d52a1c9f4a5841bacbba88e06b8eae90e824`
+adds the closed 0.6.0 / package 0.6 version state, release guidance, and a Linux
+printing consumer. It changes no pure core, effects, runtime, facade, macro,
+representation, dependency, specification text, or legal bytes.
+
+The local Racket CS 8.10 gate and Racket CS 9.3 CI each passed 45 source files,
+17,065 assertions, 39 pure production modules, and complete boundaries. All ten
+jobs passed in [CI run 34233310627](https://github.com/kserrec/attalambda/actions/runs/34233310627).
+The focused release/version/example checks passed 581 assertions independently.
+The final archive was built from that exact clean commit with cached full
+Racket CS 9.3 image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+
+Unsigned annotated tag `v0.6.0`, tag object
+`af80443d34027d3c9c414c0506213da23f57c2a1`, peels to that build commit.
+GitHub release `384776276` was published at `2026-09-08T13:59:26Z`
+and marked latest: <https://github.com/kserrec/attalambda/releases/tag/v0.6.0>.
+It contains exactly these supported assets:
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.6.0-linux-x86_64.tar.gz` | `14,159,078` | `c3d9ea5263f7ab09e5f9b8d3260b8ead1335d8f1a052c7aba11edd4bf020bb4f` |
+| `SHA256SUMS` | `103` | `5380ea26bf9bb906d70ac8f1b52301b763dfeb93a3ed737810cfe13f6093f3f6` |
+
+Asset IDs are `550607281` and `550607275`, respectively. GitHub's digests,
+authenticated draft downloads, and fresh unauthenticated public downloads all
+matched the verified originals; the downloaded checksum manifest passed.
+The final archive and the public copy each passed the isolated digest-pinned
+Ubuntu consumer without Racket, a source checkout, or external networking.
+That includes 31 existing public-API checks, 13 additional printing checks,
+guide commands, file/TCP/HTTP examples, explicit/default process statuses,
+and relocation. The archive contains 11 regular files totaling 60,083,750
+bytes, including two runtime files.
+
+All four older releases retain their IDs, descriptions, and asset names, IDs,
+sizes, hashes, and URLs. Linux x86-64 remains the sole supported public binary;
+macOS and Windows remain internal portability evidence. The archive has no
+cryptographic signature. Publication records are later documentation changes
+and do not alter the tagged build inputs.
+
+Local evidence: `/tmp/attalambda-0.6.0-dfa5d52-release/`,
+`/tmp/attalambda-0.6.0-draft-download/`,
+`/tmp/attalambda-0.6.0-public-download/`, and the build, consumer, public-consumer,
+source-suite, and CI logs recorded in [PLAN.md](../../PLAN.md).
 
 ### AttaLambda 0.5.0 — 2026-09-07
 

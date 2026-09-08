@@ -1,10 +1,10 @@
 # Public API
 
-This reference describes the current source API, including Milestone 6's
-unreleased value rendering and printing, now merged into main.
-Published 0.5.0 includes pure recursive definitions and the complete List
-library; its binaries do not include the rendering functions below. See the
-[0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.
+This reference describes the published 0.6.0 API, including generic pure value
+rendering and printing. See the [0.6.0 release notes](releases/0.6.0.md) for
+printing examples and compatibility. Older 0.5.0 binaries include pure recursion
+and the complete List library but lack the rendering functions below. The
+[0.5.0 migration notes](releases/0.5.0.md) cover recursive `def` changes.
 Programs written for 0.3.0 also need the new function spellings and Char literals.
 All callable built-ins below are lowercase; their old uppercase aliases are
 absent from the language.
@@ -241,7 +241,7 @@ SOME(OK([1, TRUE]))
 | Application | Successful outcome |
 | --- | --- |
 | `stdout string` | Write and flush bytes; Ok UNIT. |
-| `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Unreleased Milestone 6. |
+| `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Added in 0.6.0. |
 | `read-file path` | Ok containing the complete List of Byte. |
 | `write-file path bytes` | Replace file contents from List of Byte; Ok UNIT. |
 | `exit status` | Terminate with status 0 or 1; no return value or automatic output. |

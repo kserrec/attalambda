@@ -1,29 +1,40 @@
 # Session handoff
 
-Kyle explicitly authorized publishing AttaLambda 0.6.0 on 2026-09-08. Execute
-both phases of the release plan at the top of [PLAN.md](PLAN.md) autonomously;
-no additional publication confirmation is required. The plan authorizes the
-verified Linux x86-64 archive and SHA256SUMS, annotated v0.6.0 tag, GitHub
-Release publication, fresh public-download checks, and final documentation.
+AttaLambda 0.6.0 is published and verified. Kyle explicitly authorized the
+release on 2026-09-08. Both release phases in [PLAN.md](PLAN.md) are complete;
+no implementation, merge, or release action remains pending. Future work needs
+a new instruction.
 
-Starting main: `0f85683d3b8747078b532d88bc0ccecfb7ac610b`. The printing milestone
-is complete and PR #4 is merged. All ten checks passed in
-[CI run 34188023243](https://github.com/kserrec/attalambda/actions/runs/34188023243),
-including 45 files, 17,064 assertions, 39 pure modules, and complete boundaries.
-The current work adds only the 0.6.0 / 0.6 version state, release documentation,
-and a packaged Linux printing check; pure computation and host authority remain
-unchanged. Release notes are [docs/releases/0.6.0.md](docs/releases/0.6.0.md).
+Release: <https://github.com/kserrec/attalambda/releases/tag/v0.6.0>, published at
+`2026-09-08T13:59:26Z` as the latest stable release. Unsigned annotated tag
+`v0.6.0` peels to clean build commit `dfa5d52a1c9f4a5841bacbba88e06b8eae90e824`;
+tag object is `af80443d34027d3c9c414c0506213da23f57c2a1`. PR #4 merged the
+printing implementation before release preparation. Linux x86-64 remains the
+only supported public binary; older releases, tags, and assets are preserved.
 
-Phase 1 release inputs are verified: focused checks passed 581 assertions,
-and `env TMPDIR=/tmp ./run-all-tests.sh` passed all 45 files and 17,065
-assertions, 39 pure modules, and complete boundaries in one run. Logs are
-`/tmp/attalambda-060-focused.log` and `/tmp/attalambda-060-full-suite.log`.
-The preparation commit is the input for Phase 2. Build that clean commit with
-the cached Racket CS 9.3 image, run the isolated Linux consumer, and wait for
-all preparation CI jobs before tagging/staging/publishing. Verify draft and
-fresh public bytes against the exact local assets, then record publication.
-GitHub's latest release was still 0.5.0 at orientation; README download links
-remain there until 0.6.0 is published. Preserve older releases, tags, and assets.
+Both local Racket CS 8.10 and CI Racket CS 9.3 passed 45 files, 17,065 assertions,
+39-module purity, and complete boundaries. All ten jobs passed for the build
+commit in [CI run 34233310627](https://github.com/kserrec/attalambda/actions/runs/34233310627).
+The final archive and fresh public download each passed the isolated no-Racket
+Ubuntu consumer: 31 existing public-API checks, 13 printing checks covering
+every new callable, guide, file/TCP/HTTP, process statuses, and relocation.
+
+Archive SHA-256:
+`c3d9ea5263f7ab09e5f9b8d3260b8ead1335d8f1a052c7aba11edd4bf020bb4f`.
+The archive is 14,159,078 bytes; SHA256SUMS is 103 bytes with digest
+`5380ea26bf9bb906d70ac8f1b52301b763dfeb93a3ed737810cfe13f6093f3f6`. GitHub's digests, draft downloads,
+and unauthenticated public downloads all matched the originals. Exact tag,
+asset IDs, hashes, and provenance are in the
+[release ledger](docs/design/standalone-distribution.md#attalambda-060--2026-09-08).
+The publication record changes documentation only, outside the tagged inputs.
+
+Local evidence: `/tmp/attalambda-060-release-state.json`,
+`/tmp/attalambda-060-full-suite.log`, `/tmp/attalambda-060-ci-tests.log`,
+`/tmp/attalambda-060-build.log`, `/tmp/attalambda-060-consumer.log`, and
+`/tmp/attalambda-060-public-consumer.log`. Use `env TMPDIR=/tmp` for local source
+checks so temporary fixtures stay within permitted paths; no test deadline or
+purity rule was weakened. The [0.6.0 notes](docs/releases/0.6.0.md) and
+[API reference](docs/API.md) describe the published printing contract.
 
 ## Completed 0.5.0 release (historical)
 

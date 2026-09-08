@@ -9,18 +9,19 @@ release facts are in the
 
 Run [`run-all-tests.sh`](../run-all-tests.sh) for the source acceptance gate.
 It runs every test suite, the expanded purity proof, and the repository-wide
-boundary inventory. The released 0.5.0 implementation passed 41 suites with
-14,210 assertions, 32 pure production modules, and the complete boundary
-scan. The earlier 0.4.0 release passed 41 suites with 14,100 assertions;
+boundary inventory. Release 0.6.0 passed 45 suites with 17,065 assertions,
+39 pure production modules, and the complete boundary scan. The earlier 0.5.0
+release passed 41 suites with 14,210 assertions and 32 pure modules;
+0.4.0 passed 41 suites with 14,100 assertions;
 0.3.0 source passed 38 suites with 12,298 assertions. The
 completed non-core refactor at `f772e8d` passed 38 suites with
 12,301 assertions, all 29 pure production modules, and the complete boundary
 scan.
 
-Release 0.5.0 adds pure `rec`, rejection of recursive module bindings, and
-safe recursion-specific diagnostics. It retains 0.4.0's incremental HTTP
-request reading, a 21-case
-canonical-empty codec matrix, explicit program exit, lowercase callable
+Release 0.6.0 adds pure value rendering and `print`, retaining the 0.5.0
+`rec` rules and safe recursion-specific diagnostics. It also retains
+0.4.0's incremental HTTP request reading, a 21-case canonical-empty codec
+matrix, explicit program exit, lowercase callable
 exports and diagnostic names, ASCII Char literals, and the complete
 25-function List API. Source and release verification are recorded in
 [`PLAN.md`](../PLAN.md) and below; earlier unpublished build evidence remains
@@ -28,13 +29,14 @@ explicitly historical.
 
 ## Language criteria
 
-Milestone 6's unreleased source implementation adds the thirteen printing
+Milestone 6, published as 0.6.0, adds the thirteen printing
 callables documented in [the API](API.md#value-rendering-and-printing).
 Its Phase 6 complete gate passed all 45 files, 17,064 assertions, 39 pure
 production modules, and the full boundary inventory. Interrupted runs resumed
 at the interrupted test without changing source or weakening deadlines;
-[PLAN.md](../PLAN.md) records the complete evidence. Published 0.5.0 remains
-unchanged, and this milestone has not published a binary.
+[PLAN.md](../PLAN.md) records the complete evidence. The separate 0.6.0
+release verification and publication are recorded below; the 0.5.0 assets
+remain preserved.
 
 Phase 7's final local run passed the same 45 files and 17,064 assertions in
 one uninterrupted run. [PR #4](https://github.com/kserrec/attalambda/pull/4)
@@ -51,8 +53,9 @@ Kyle approved merging PR #4 on 2026-09-07. The merge completed at
 exactly the same tree as final PR head `c3d61fd`. All ten jobs in
 [the final PR CI run](https://github.com/kserrec/attalambda/actions/runs/34182567747)
 passed at that head with the same source counts and purity/boundary results.
-The follow-up merge record changes documentation only. This is a source merge;
-no new binary release, version, or tag was published.
+The follow-up merge record changed documentation only. That source merge
+published no binary, version, or tag; the separately authorized 0.6.0 release
+is recorded below.
 
 | Printing contract | Executable evidence |
 | --- | --- |
@@ -140,6 +143,32 @@ The 0.3.0 publication used release commit `1b51603` and annotated tag
 It passed the independent no-Racket consumer before upload and matched a fresh
 public download afterward. Building or testing a future archive grants no
 publication authority.
+
+### AttaLambda 0.6.0 publication — 2026-09-08
+
+Release preparation commit `dfa5d52a1c9f4a5841bacbba88e06b8eae90e824` passed all ten
+[CI jobs](https://github.com/kserrec/attalambda/actions/runs/34233310627).
+Both the local and CI source gates passed 45 files, 17,065 assertions,
+39-module expanded purity, and the complete boundary inventory. The new
+version state is the only launcher change; the pure printing implementation
+was already merged through PR #4. Focused release checks passed 581 assertions,
+including the release-note example and exact packaged-consumer program.
+
+The clean commit produced the final Linux archive with full Racket CS 9.3.
+The isolated consumer passed the existing 31 public-API checks plus 13 printing
+checks for every new callable, nested values, Error text, byte escapes, lazy
+output, returned Result, and exact output without an implicit newline. Guide,
+file/TCP/HTTP, process-status, and relocation checks also passed.
+Annotated tag `v0.6.0` points to that exact build commit. Publication completed
+at `2026-09-08T13:59:26Z`: <https://github.com/kserrec/attalambda/releases/tag/v0.6.0>.
+
+GitHub's asset digests, authenticated draft downloads, and fresh unauthenticated
+public downloads matched the verified local archive and checksum exactly. The
+public copy independently passed the same complete isolated consumer. All four
+older releases and their assets were preserved. The
+[release ledger](design/standalone-distribution.md#attalambda-060--2026-09-08)
+records exact hashes, sizes, tag/asset IDs, and provenance. Linux x86-64 remains
+the sole supported binary download; publication records change no build input.
 
 ### AttaLambda 0.5.0 publication — 2026-09-07
 
