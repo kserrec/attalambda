@@ -113,15 +113,31 @@ inventory. Architecture and plan text describe the verified implementation.
 
 ## Phase 3 — One recursive renderer
 
-- [ ] Step 3.1 — Add List, Option, Result and Map helpers taking the recursive
+- [x] Step 3.1 — Add List, Option, Result and Map helpers taking the recursive
   renderer explicitly. Build one raw-fix engine for all eleven tags. Preserve
   Map traversal order, ignore Map equality and NONE payload, render Err through
   Error formatting, and add decimal unknown-tag fallback without inspecting payload.
-- [ ] Step 3.2 — Add strict per-container wrappers and complete core/to-string.rkt.
+- [x] Step 3.2 — Add strict per-container wrappers and complete core/to-string.rkt.
   Test all eleven generic cases, heterogeneous and deeply nested containers,
   empty forms, Errors as nested data, wrong types, propagated Errors, and lazy
   unused payloads. Never probe arbitrary raw functions as supported values.
   Run the full gate; commit/push.
+
+Phase 3 implementation uses one `core/render-value.rkt` module with explicit
+recursive arguments for container helpers and one fixed-point value engine.
+Lists and Maps share only the ordinary comma-joining traversal. NONE never
+reads its payload; Map rendering never touches equality; unknown well-formed
+tags never read their payload. The expanded purity checker passes 38 modules,
+including the new acyclic engine. Error Phase 2 was committed/pushed as
+`9849156`. Phase 3 focused rendering passes 1,650 assertions, including all eleven
+tags, nested Maps, heterogeneous Lists, 72 alternating container levels,
+wrong-type and propagated Errors, empty forms, stored Map order, and poisoned
+unused payload/equality fields. Full verification passed all 43 files and
+16054 assertions in one run, plus 38-module expanded purity and the complete
+boundary inventory. Log: `/tmp/attalambda-printing-phase-3.log`.
+The sole new module is the recursive value engine; existing scalar/Error
+algorithms and all runtime/effect/frontend behavior remain unchanged. Tests
+extend the rendering matrix and exact core inventory; this plan records scope.
 
 ## Phase 4 — Public pure API
 

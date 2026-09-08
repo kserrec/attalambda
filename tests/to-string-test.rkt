@@ -2,6 +2,8 @@
 
 (require rackunit racket/list racket/promise racket/format
          "../core/errors.rkt" "../core/lists.rkt" "../core/objects.rkt"
+         "../core/option.rkt" "../core/result.rkt" "../core/map.rkt"
+         "../core/pair.rkt" (only-in "../core/logic.rkt" raw-true raw-false)
          "../core/strings.rkt" "../core/tags.rkt" "../core/to-string.rkt"
          (only-in "../core/typed-logic.rkt" TRUE FALSE) "../core/unit.rkt"
          "../readers/error.rkt" "../readers/string.rkt"
@@ -71,3 +73,76 @@
   (check-equal? (error-value->string (lazy-apply renderer invalid-nat-error))
                 (format "INVALID-NAT\n  -> ~a(arg1 expected ~a)"
                         (second entry) (third entry))))
+
+(define one (exact->typed-rat 1))
+(define two (exact->typed-rat 2))
+(define hello (byte-string '(104 101 108 108 111)))
+(define mixed (host-list (list one TRUE hello)))
+(define empty-map
+  (lazy-apply typed-make-map (lambda (key) (error 'unused-equality))))
+(define entries
+  (host-list (list (apply2 raw-pair hello one)
+                   (apply2 raw-pair (host-list (list one two))
+                           (lazy-apply raw-make-some TRUE)))))
+(define mixed-map
+  (apply2 raw-make-object map-type
+          (apply2 raw-pair (delay (error 'unused-equality)) entries)))
+(define failed (lazy-apply raw-make-err divide-by-zero-error))
+
+(define generic-cases
+  (list (list invalid-nat-error "ERROR(INVALID-NAT)")
+        (list TRUE "TRUE") (list mixed "[1, TRUE, \"hello\"]")
+        (list (lazy-apply raw-make-ok mixed) "OK([1, TRUE, \"hello\"])")
+        (list (byte-object char-type 65) "#\\A")
+        (list hello "\"hello\"") (list (exact->typed-rat -7/3) "-7/3")
+        (list UNIT "UNIT") (list (byte-object byte-type 255) "BYTE(255)")
+        (list (lazy-apply raw-make-some mixed) "SOME([1, TRUE, \"hello\"])")
+        (list mixed-map "{\"hello\": 1, [1, 2]: SOME(TRUE)}")
+        (list (lazy-apply raw-make-ok mixed-map)
+              "OK({\"hello\": 1, [1, 2]: SOME(TRUE)})")
+        (list (host-list (list mixed-map NONE))
+              "[{\"hello\": 1, [1, 2]: SOME(TRUE)}, NONE]")
+        (list NIL "[]") (list empty-map "{}") (list NONE "NONE")
+        (list failed "ERR(ERROR(DIVIDE-BY-ZERO))")
+        (list (host-list (list failed)) "[ERR(ERROR(DIVIDE-BY-ZERO))]")
+        (list (host-list (list one (host-list (list two)) FALSE)) "[1, [2], FALSE]")))
+(for ([entry (in-list generic-cases)])
+  (check-render value-to-string (first entry) (second entry)))
+
+(for ([entry (in-list
+              (list (list list-to-string mixed "[1, TRUE, \"hello\"]" "list-to-string" "LIST")
+                    (list map-to-string mixed-map "{\"hello\": 1, [1, 2]: SOME(TRUE)}" "map-to-string" "MAP")
+                    (list option-to-string NONE "NONE" "option-to-string" "OPTION")
+                    (list result-to-string failed "ERR(ERROR(DIVIDE-BY-ZERO))" "result-to-string" "RESULT")))])
+  (check-render (first entry) (second entry) (third entry))
+  (check-equal? (error-value->string (lazy-apply (first entry) TRUE))
+                (format "~a(arg1 expected ~a got BOOL)" (fourth entry) (fifth entry)))
+  (check-equal? (error-value->string (lazy-apply (first entry) invalid-nat-error))
+                (format "INVALID-NAT\n  -> ~a(arg1 expected ~a)" (fourth entry) (fifth entry))))
+
+;; NONE and unknown well-formed tags must not inspect their unused payloads.
+(check-render value-to-string
+              (apply2 raw-make-object option-type
+                      (apply2 raw-pair raw-false (delay (error 'unused-none)))) "NONE")
+(for ([n (in-list '(3 12 42))])
+  (define tag (for/fold ([tag church-zero]) ([i (in-range n)])
+                (lazy-apply church-succ tag)))
+  (check-render value-to-string
+                (apply2 raw-make-object tag (delay (error 'unused-unknown)))
+                (format "<UNPRINTABLE-TYPE:~a>" n)))
+
+;; Alternating containers exercise the same recursive engine at every level.
+(define-values (deep expected-deep)
+  (for/fold ([value one] [text "1"]) ([depth (in-range 24)])
+    (values (lazy-apply raw-make-some
+                        (lazy-apply raw-make-ok (host-list (list value))))
+            (string-append "SOME(OK([" text "]))"))))
+(check-render value-to-string deep expected-deep)
+
+;; Map order is precisely its stored entry order; reversing the entries
+;; changes the display without ever using the Map's equality function.
+(check-render value-to-string
+              (apply2 raw-make-object map-type
+                      (apply2 raw-pair (delay (error 'unused-equality))
+                              (lazy-apply raw-reverse entries)))
+              "{[1, 2]: SOME(TRUE), \"hello\": 1}")

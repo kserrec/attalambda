@@ -52,7 +52,19 @@
          raw-text-type-rat
          raw-text-type-byte
          raw-text-type-option
-         raw-text-type-map)
+         raw-text-type-map
+         raw-text-list-open
+         raw-text-list-close
+         raw-text-map-open
+         raw-text-map-close
+         raw-text-comma
+         raw-text-colon
+         raw-text-none
+         raw-text-some-open
+         raw-text-ok-open
+         raw-text-err-open
+         raw-text-unprintable-open
+         raw-text-unprintable-close)
 
 (def raw-name-char bits = ((raw-make-object char-type) bits))
 (def raw-name-string chars = chars)
@@ -107,3 +119,16 @@
 (define-function-name raw-text-type-byte |BYTE|)
 (define-function-name raw-text-type-option |OPTION|)
 (define-function-name raw-text-type-map |MAP|)
+
+(define-function-name raw-text-list-open |[|)
+(define-function-name raw-text-list-close |]|)
+(define-function-name raw-text-map-open |{|)
+(define-function-name raw-text-map-close |}|)
+(define-function-name raw-text-comma |, |)
+(define-function-name raw-text-colon |: |)
+(define-function-name raw-text-none |NONE|)
+(define-function-name raw-text-some-open |SOME(|)
+(define-function-name raw-text-ok-open |OK(|)
+(define-function-name raw-text-err-open |ERR(|)
+(define-function-name raw-text-unprintable-open |<UNPRINTABLE-TYPE:|)
+(define-function-name raw-text-unprintable-close |>|)
