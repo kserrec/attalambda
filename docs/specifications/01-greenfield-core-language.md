@@ -2468,3 +2468,34 @@ application, short-circuiting, zero/negative/fractional counts, boundary/past-en
 indices, unequal zip lengths, one-level versus recursive flattening, nested
 empty Lists, and signed/equal/reversed ranges. Both behavioral and structural
 purity suites must pass after each major implementation part.
+
+---
+
+# Generic Pure Printing Amendment (2026-09-07)
+
+The [supplied printing specification](../generic-pure-printing-spec.md) defines
+value rendering for all eleven current public tagged data types and recursive
+containers. The [raw-function addendum](../raw-function-printing-contract.md)
+overrides its weaker wording about unsupported functions and unknown tags.
+These contracts extend this document only for value rendering and printing;
+all existing representations, type contracts, and language rules remain binding.
+
+Add eleven strict unary per-type renderers, generic pure `value-to-string`,
+and unary `print` as composition with existing String-only stdout. All numeric
+conversion, dispatch, traversal, escaping, and Error formatting are pure lambda
+computation. `error-to-string` and the generic renderer consume Error as data;
+other per-type renderers retain normal checking and Error propagation.
+Printing returns stdout's result and adds no newline.
+
+The supplied display forms are human-readable inspection, not serialization.
+Map traversal follows existing stored order without sorting or equality calls.
+String bytes 32–126 are directly printable except quote and backslash; escape
+those and LF/TAB/CR as specified, and use uppercase two-digit `\xNN` for every
+remaining byte, including each UTF-8 byte separately. Char uses direct ASCII
+33–126, the four specified whitespace names, and decimal `CHAR(n)` otherwise.
+Preserve existing Error diagnostic wording and frames through the pure helper.
+
+Raw functions, directly or nested in data, have unspecified printing behavior;
+no structured Error is guaranteed. The unknown-tag placeholder applies only
+to well-formed tagged objects. No new runtime type, function detection,
+reflection, implicit output, newline operation, or host capability is added.

@@ -10,8 +10,9 @@ representation invariants, closed capabilities, and recursive purity remain bind
 
 ## Verified starting state and scope
 
-No `core/to-string.rkt`, `effects/print.rkt`, or public value renderer exists.
-`readers/error.rkt` owns diagnostic formatting in Racket. Its TypeMismatch
+At starting revision `e8572ee`, no `core/to-string.rkt`, `effects/print.rkt`,
+or public value renderer existed. `readers/error.rkt` owned diagnostic
+formatting in Racket. Its TypeMismatch
 with frames prints the oldest frame with actual type, followed by newer
 frames without actual type; it omits the root label in that case. Preserve
 these exact diagnostics through a new pure helper. Binary division/remainder,
@@ -230,10 +231,13 @@ checker implementation changed. Phase 5 was committed/pushed as `d905f61`.
 
 ## Phase 7 — Documentation and reviewable completion
 
-- [ ] Step 7.1 — Document each renderer, recursive containers, raw-function
+- [x] Step 7.1 — Document each renderer, recursive containers, raw-function
   unspecified behavior, unknown well-formed tags, exact escapes, diagnostic
   compatibility, stdout versus print, no newline, and display-only Map ordering.
   Update architecture, specification index and acceptance only for this feature;
+  append scoped amendments incorporating the supplied contracts into the three
+  canonical specifications and update their hashes. Refresh current README and
+  handoff pointers without changing historical release evidence;
   distinguish branch implementation from published 0.5.0.
 - [ ] Step 7.2 — Execute documented examples, verify local links and all tests/
   boundaries, record executable/test/doc changes separately, commit/push, and
@@ -241,6 +245,24 @@ checker implementation changed. Phase 5 was committed/pushed as `d905f61`.
   resolve concrete in-scope findings and leave the branch clean. End with all
   authorized implementation passes complete; merge/publication require later
   explicit approval and are not unfinished implementation Steps.
+
+Phase 7 documentation now covers all thirteen new public callables, exact
+display/byte rules, recursive containers, consuming Error behavior, existing
+diagnostic compatibility, unsupported raw functions, and the stdout distinction.
+Architecture describes the verified dependency and injection path. Three scoped
+canonical amendments incorporate the supplied contracts without changing any
+preceding byte; the index records all new and previous hashes. README and
+handoff distinguish this branch from published 0.5.0. The API's complete
+public-only example was extracted verbatim and passed six isolated-install
+assertions with exact bytes and no trailing newline. All 185 local links in
+the ten modified Markdown files and all five contract hashes passed validation.
+Phase 6 was committed/pushed as `eb9a6d7`. This phase changes documentation
+only; executable production, checker and test sources remain unchanged.
+The final Phase 7 local gate passed all 45 test files and 17,064 assertions
+in one run, 39-module expanded purity, and the complete boundary inventory.
+Evidence: `/tmp/attalambda-printing-phase-7.log`. The documented program's
+six checks also passed independently. All local implementation and documentation
+work is verified; PR creation and CI inspection remain in Step 7.2.
 
 ---
 

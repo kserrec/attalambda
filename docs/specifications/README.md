@@ -26,6 +26,16 @@ implemented and published in 0.5.0; older 0.4.0 binaries retain their earlier
 recursion behavior. The [supplied specification](../recursive-purity-spec.md) and
 [migration notes](../releases/0.5.0.md) preserve its scope and public behavior.
 
+The Generic Pure Printing Amendments (2026-09-07) incorporate the
+[supplied printing contract](../generic-pure-printing-spec.md) and its
+controlling [raw-function addendum](../raw-function-printing-contract.md).
+They extend only rendering and printing, retaining existing representations,
+absolute purity, recursion rules, and host authority. All earlier text is
+preserved verbatim. Milestone 6 implements these contracts on
+`milestone-6-pure-printing`; the feature is unreleased and absent from 0.5.0
+binaries. The [API reference](../API.md#value-rendering-and-printing) records
+the exact display spellings and chosen byte escapes.
+
 Read them in this precedence order:
 
 1. [01-greenfield-core-language.md](01-greenfield-core-language.md) defines the
@@ -52,9 +62,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `503e8873f92bb5436df863eb095b871de385e5d6f7ba2d7c6c8240ddccc3df25` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `07ec56d2c9922478f5eff55ac54a12754ac8d2b564e24d6288e4ebe9b4c97da1` |
-| `03-canonical-public-naming-and-host-isolation.md` | `9e39495ef071bab601f16f025f7721154142d45bf2ce96012e5680bd982106a5` |
+| `01-greenfield-core-language.md` | `c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91` |
+| `03-canonical-public-naming-and-host-isolation.md` | `5a5bd4cb2447aa667a1a130c71471f3651a8639997759870a523a06cace921f7` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -87,3 +97,13 @@ addendum's hash was
 `153941fd5d83171146a7ea702f6b72b6e2a8061e5d4e1f715fbdc68181e462c0`.
 Milestone 5 Phase 1 appended the authorized recursion amendment without
 changing the earlier text. Phase 2 corrects this index's previously stale hash.
+
+Before the Generic Pure Printing Amendments, the respective hashes were
+`503e8873f92bb5436df863eb095b871de385e5d6f7ba2d7c6c8240ddccc3df25`,
+`07ec56d2c9922478f5eff55ac54a12754ac8d2b564e24d6288e4ebe9b4c97da1`, and
+`9e39495ef071bab601f16f025f7721154142d45bf2ce96012e5680bd982106a5`.
+Milestone 6 Phase 7 appends the scoped amendments without changing preceding
+bytes. The saved supplied contracts remain verbatim: printing SHA-256
+`125120685fc1d2df8161f53fd152ac9f43c2bd9fd5784400bb42dcdbd4bc9291`;
+raw-function addendum SHA-256
+`2f89c6672905c06dd53344008bac9a101990a88f44ced4f56907de30db1597cf`.

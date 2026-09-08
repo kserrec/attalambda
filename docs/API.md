@@ -1,7 +1,9 @@
 # Public API
 
-This reference describes the API published in 0.5.0, including pure
-recursive definitions and the complete List library. See the
+This reference describes the current source API, including Milestone 6's
+unreleased value rendering and printing on `milestone-6-pure-printing`.
+Published 0.5.0 includes pure recursive definitions and the complete List
+library; its binaries do not include the rendering functions below. See the
 [0.5.0 migration notes](releases/0.5.0.md) for recursive `def` changes.
 Programs written for 0.3.0 also need the new function spellings and Char literals.
 All callable built-ins below are lowercase; their old uppercase aliases are
@@ -150,11 +152,96 @@ Map keys and values are non-Error values. Equality is supplied as a pure
 curried function; each comparison must return tagged Bool. Error propagates;
 another tagged answer produces TypeMismatch attributed to the Map operation.
 
+## Value Rendering and Printing
+
+The eleven unary type-specific renderers return a language String. They
+require the named tagged type and use ordinary TypeMismatch and incoming-Error
+propagation, except that `error-to-string` deliberately consumes Error as data.
+`(error-to-string 5)` therefore returns a TypeMismatch expecting ERROR.
+The generic unary `value-to-string` also consumes Error as printable data.
+All twelve functions are pure; calling them alone produces no output.
+
+| Function | Display representation |
+| --- | --- |
+| `rat-to-string` | Exact decimal `0`, `42`, `-42`, `3/7`, or `-7/3`; no `/1` and no approximation. |
+| `bool-to-string` | `TRUE` or `FALSE`. |
+| `unit-to-string` | `UNIT`. |
+| `byte-to-string` | `BYTE(n)`, where n is decimal 0–255. |
+| `char-to-string` | Printable ASCII `#\A`; named `#\space`, `#\tab`, `#\newline`, `#\return`; otherwise decimal `CHAR(n)`. |
+| `string-to-string` | Double-quoted, byte-escaped text, such as `"hello"`. |
+| `list-to-string` | `[]` or comma-separated recursive values, such as `[1, TRUE, "hello"]`. |
+| `option-to-string` | `NONE` or `SOME(value)`; NONE ignores its unused payload. |
+| `result-to-string` | `OK(value)` or `ERR(ERROR(...))`. |
+| `map-to-string` | `{}` or recursive keys and values, such as `{"answer": 42}`. |
+| `error-to-string` | `ERROR(...)`, containing the existing diagnostic body and frames. |
+| `value-to-string` | Dispatch by the existing tag to the corresponding representation above. |
+
+Lists, Maps, Options, and Results recurse through one generic renderer;
+callers do not supply rendering callbacks. For example, a Some containing an
+Ok containing a heterogeneous List displays as `SOME(OK([1, TRUE, "hello"]))`.
+Map entries retain their stored traversal order, without sorting or invoking
+the Map's equality function. Equivalent Maps can display in different orders.
+These forms are human-readable display, not a stable serialization protocol
+or a promise that the parser accepts the output.
+
+String rendering escapes quote as `\"`, backslash as `\\`, newline as `\n`,
+tab as `\t`, and return as `\r`. Other bytes in ASCII 32–126 appear directly;
+all remaining bytes use uppercase two-digit `\xNN`. UTF-8 is escaped one byte
+at a time: the String containing é displays as `"\xC3\xA9"`.
+Char rendering uses direct notation for ASCII 33–126, the four named whitespace
+forms, and `CHAR(n)` for all other byte values.
+
+Error text retains existing kind/type names, decimal unknown-kind/type
+fallbacks, argument positions, function names, oldest-first frame order,
+and result frames. A framed TypeMismatch starts with its oldest function
+frame and actual type, without duplicating a root label; later frames retain
+their expected types. The runner's existing diagnostics keep their wording.
+
+`value-to-string` and `print` support valid tagged data with printable contents.
+Ordinary functions are untagged lambdas. Passing one directly or recursively
+inside data has **unspecified behavior**; no structured Error is guaranteed.
+There is no function detection, Function/Any tag, or host-side safety check.
+`<UNPRINTABLE-TYPE:n>` is reserved for a well-formed tagged object with an
+unknown tag; it is not a fallback for arbitrary functions. Rendering a
+complete display requires finite contents.
+
+`print value` applies `stdout` to `(value-to-string value)`. It returns exactly
+stdout's success or failure result and adds no newline. `stdout string`
+continues to emit the supplied String bytes exactly and rejects other tagged
+types. There is no new host operation and no automatic top-level printing.
+
+This complete program supplies its own line separators:
+
+```racket
+#lang attalambda
+
+(stdout "hello")
+(stdout "\n")
+(print "hello")
+(stdout "\n")
+(print 5)
+(stdout "\n")
+(print (cons 5 (cons TRUE (cons "hello" NIL))))
+(stdout "\n")
+(print (some (make-ok (cons 1 (cons TRUE NIL)))))
+```
+
+It writes these bytes, with no newline after the last line:
+
+```text
+hello
+"hello"
+5
+[5, TRUE, "hello"]
+SOME(OK([1, TRUE]))
+```
+
 ## Effects and HTTP
 
 | Application | Successful outcome |
 | --- | --- |
 | `stdout string` | Write and flush bytes; Ok UNIT. |
+| `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Unreleased Milestone 6. |
 | `read-file path` | Ok containing the complete List of Byte. |
 | `write-file path bytes` | Replace file contents from List of Byte; Ok UNIT. |
 | `exit status` | Terminate with status 0 or 1; no return value or automatic output. |

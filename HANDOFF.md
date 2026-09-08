@@ -1,5 +1,21 @@
 # Session handoff
 
+Current work: Milestone 6 generic pure printing on
+`milestone-6-pure-printing`, authorized on 2026-09-07 for autonomous completion.
+Phases 1–6 are committed and pushed; Phase 6 is `eb9a6d7`. All requested
+production behavior is implemented, and its latest complete gate passed
+45 files, 17,064 assertions, 39 pure modules, and the boundary inventory.
+Phase 7's API/specification/architecture/acceptance documentation is verified,
+including the executable API example, 185 local links, and all five contract
+hashes. Its final complete source gate passed the same 45 files and 17,064
+assertions in one run. PR creation and CI inspection remain; continue Step 7.2
+in [PLAN.md](PLAN.md).
+No merge or release is authorized by this milestone plan; AGENTS.md requires
+explicit approval to merge a language milestone. Published 0.5.0 remains the
+latest release, and no version, tag, or download metadata has changed.
+
+## Completed 0.5.0 release (historical)
+
 Status recorded 2026-09-07: the recursive-purity milestone and 0.5.0 release
 are complete on main. Kyle authorized continuing through the described
 merge/build/verify/publish steps. No release work or confirmed review finding
