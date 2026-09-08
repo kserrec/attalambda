@@ -44,6 +44,7 @@ Read only the row for the work you are doing:
 | Task | Start here | What follows |
 | --- | --- | --- |
 | Pure value or algorithm | the relevant file in [`core/`](core) | raw dependencies below it, then its strict wrapper |
+| Value display or generic printing | [`core/to-string.rkt`](core/to-string.rkt) | `render-value.rkt`, scalar/Error helpers, then `effects/print.rkt` for output composition |
 | Effect request or HTTP behavior | the relevant file in [`effects/`](effects) | `protocol.rkt` for request/Error data; no runtime import |
 | Native effect behavior | `dispatch-request` in [`runtime/host.rkt`](runtime/host.rkt) | one local decoder path and one `perform-*` function |
 | Representation conversion | the matching exported function in [`runtime/codec.rkt`](runtime/codec.rkt) | raw constructors/accessors imported from `core/` |
@@ -64,7 +65,37 @@ effects/protocol <- runtime/host
 The diagram shows module dependency, not authority. `effects/` receives the
 host as an ordinary unary argument; it never imports `runtime/`. The language
 facade is the single place that imports the real host and injects it into the
-ten public effect wrappers.
+ten direct effect wrappers. Generic `print` receives the already-created
+stdout wrapper and does not receive another host injection.
+
+## Pure value rendering and printing
+
+Milestone 6 adds the twelve pure public renderers in
+[`core/to-string.rkt`](core/to-string.rkt). This source implementation is not
+part of the published 0.5.0 binary. The value dispatcher in
+[`core/render-value.rkt`](core/render-value.rkt) constructs one fixed-point
+engine using the existing `raw-fix`. Container helpers receive its recursive
+argument explicitly, keeping all top-level dependencies acyclic. They produce
+canonical Char Lists, wrapped once as the final String.
+
+[`core/render-numeric.rkt`](core/render-numeric.rkt) converts binary magnitudes
+to decimal by division/remainder ten, and byte values to two hexadecimal
+digits. Only tiny Church metadata enters its metadata conversion.
+[`core/render-scalars.rkt`](core/render-scalars.rkt) owns scalar spellings and
+byte escaping; [`core/render-text.rkt`](core/render-text.rkt) builds fixed
+Char sequences with the existing mechanical text macro.
+[`core/render-error.rkt`](core/render-error.rkt) owns diagnostic policy, and
+the Error reader only decodes its pure String as described below.
+
+[`effects/print.rkt`](effects/print.rkt) is the unary composition factory:
+given the existing stdout, it renders a value and calls that stdout once.
+The facade captures stdout in its private `language-print` binding and exports
+the lowercase name. The host sees only the existing final String request.
+The codec, protocol, stdout implementation, type tags, representations, and
+purity primitives are unchanged. Boundary checks pin this exact wiring and
+reject native Racket printing in facade helpers and independent Error-reader
+formatting. Raw functions have unspecified printing behavior, including when
+nested; the unknown-tag placeholder applies only to well-formed tagged objects.
 
 ## One host request
 
@@ -386,11 +417,14 @@ or a `Result` payload — is returned unchanged. The polymorphic `typed-cons`
 head and `make-ok` likewise preserve an incoming Error without adding a frame
 because neither position has an expected runtime type to record.
 
-`readers/error.rkt` reverses the stored frame List for causal display, renders
-the oldest mismatch frame with its actual type, prints a result frame as
-`NAME(result)`, and then prints each later boundary as an arrow. Function names remain structured String values inside
-the Error; only the reader flattens them to diagnostic text. Language-level
-failures never use host exceptions or strings.
+`core/render-error.rkt` constructs diagnostic text entirely through pure lambda
+computation. It reverses the stored frame List for causal display, renders the
+oldest mismatch frame with its actual type, uses `NAME(result)` for a result
+frame, and joins later frames with arrows. `raw-error-diagnostic-string`
+returns that historical body as an AttaLambda String; `error-to-string` adds
+`ERROR(...)`. `readers/error.rkt` only converts the completed diagnostic String
+for host observation. Function names and the original Error remain structured
+lambda values. Language-level failures never use host exceptions or strings.
 
 `core/result.rkt` represents Result as a Result-tagged object whose payload
 pairs a raw Boolean discriminator with a payload. True identifies Ok; false

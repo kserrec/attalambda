@@ -28,6 +28,40 @@ explicitly historical.
 
 ## Language criteria
 
+Milestone 6's unreleased source implementation adds the thirteen printing
+callables documented in [the API](API.md#value-rendering-and-printing).
+Its Phase 6 complete gate passed all 45 files, 17,064 assertions, 39 pure
+production modules, and the full boundary inventory. Interrupted runs resumed
+at the interrupted test without changing source or weakening deadlines;
+[PLAN.md](../PLAN.md) records the complete evidence. Published 0.5.0 remains
+unchanged, and this milestone has not published a binary.
+
+Phase 7's final local run passed the same 45 files and 17,064 assertions in
+one uninterrupted run. [PR #4](https://github.com/kserrec/attalambda/pull/4)
+records the complete scope. All ten jobs in
+[CI run 34181311603](https://github.com/kserrec/attalambda/actions/runs/34181311603)
+passed at `a9ae2f6`, including the Racket CS 9.3 source suite with identical
+counts, Linux distribution, macOS and Windows build/consumer jobs, and cleanup.
+The complete API example also passed six isolated-install checks with exact
+output; all 185 local documentation links and five specification hashes passed.
+The subsequent closure record changes documentation only.
+
+| Printing contract | Executable evidence |
+| --- | --- |
+| All eleven tagged types render to canonical language Strings. | [`to-string-test.rkt`](../tests/to-string-test.rkt) checks every Byte/Char and String byte, exact large Rats, UTF-8 escapes, heterogeneous containers, 72 alternating container levels, stored Map order, unused-payload laziness, wrong types, and Error propagation. Independent codec validation checks each rendered representation. |
+| Error formatting is pure and preserves previous diagnostics. | [`render-error-test.rkt`](../tests/render-error-test.rkt) covers every current kind, numeric fallbacks, frame order and result frames, wrong arguments, deliberate Error consumption, and canonical String results. Existing Error-reader and runner tests retain their original expected messages. |
+| Public rendering is pure; print uses only existing stdout. | [`printing-language-test.rkt`](../tests/printing-language-test.rkt) runs public-only programs for every renderer and real output. [`print-test.rkt`](../tests/print-test.rkt) proves one String-only delegation, identical return values, no newline, laziness, and no repeated effect. |
+| No new host or recursion authority enters printing. | The unchanged expanded purity checker passes all 39 modules. [`boundary-check-test.rkt`](../tests/boundary-check-test.rkt) rejects native printing, host injection into print, and an independent Error-reader formatting policy; exact inventories and facade wiring are pinned. |
+
+The purity and contract review compared all new paths with the supplied
+contracts and identified no production defect. Tags, value representations,
+numeric algorithms, generalized
+typing, macro primitives, stdout, the host protocol, and runtime codec remain
+unchanged. Raw functions are deliberately untested as supported printable
+values: their behavior is unspecified, directly or recursively, and no Error
+is guaranteed. Unknown-tag tests use well-formed tagged objects only. Map
+display is stored-order inspection, not canonical serialization.
+
 Milestone 5's final 0.5.0 preparation passed all 41 source suites with 14,210
 assertions, 32 pure production modules, and the complete boundary inventory.
 The source now rejects recursive module bindings, provides pure `rec` syntax,

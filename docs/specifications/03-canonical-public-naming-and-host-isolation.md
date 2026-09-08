@@ -589,3 +589,25 @@ reference, and shipped guide examples with each affected Phase. Retain
 earlier specification sections and release evidence as explicitly historical;
 this amendment supplies their current spelling interpretation. Document
 implemented behavior separately from the later planned List and Char work.
+
+---
+
+# Generic Pure Printing Amendment (2026-09-07)
+
+The [printing specification](../generic-pure-printing-spec.md) and controlling
+[raw-function addendum](../raw-function-printing-contract.md) add exactly these
+lowercase public callable names and their normal diagnostic name values:
+
+```text
+error-to-string bool-to-string list-to-string result-to-string
+char-to-string string-to-string rat-to-string unit-to-string
+byte-to-string option-to-string map-to-string value-to-string print
+```
+
+The first twelve functions are pure. `print` is composition through the
+existing String-only stdout function, not a Racket printing binding or new
+host operation. Keep raw helpers and typed implementation names private to
+the language facade, resolve host collisions through module boundaries and
+selective export renaming, and add no uppercase aliases. The pure diagnostic
+helper `raw-error-diagnostic-string` is internal. Existing naming and host
+isolation rules remain in force outside this explicitly extended API.

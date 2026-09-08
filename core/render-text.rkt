@@ -1,0 +1,134 @@
+#lang s-exp "../macros/lazy-with-macros.rkt"
+
+;; Fixed display spellings use the existing mechanical identifier-to-byte
+;; expansion. Its local String constructor is identity: these are Char Lists.
+(require "../macros/macros.rkt" "errors.rkt" "logic.rkt"
+         "objects.rkt" "tags.rkt")
+
+(provide raw-text-true
+         raw-text-false
+         raw-text-unit
+         raw-text-byte-open
+         raw-text-char-open
+         raw-text-close
+         raw-text-slash
+         raw-text-minus
+         raw-text-quote
+         raw-text-char-prefix
+         raw-text-space-char
+         raw-text-tab-char
+         raw-text-newline-char
+         raw-text-return-char
+         raw-text-escape-quote
+         raw-text-escape-backslash
+         raw-text-escape-newline
+         raw-text-escape-tab
+         raw-text-escape-return
+         raw-text-escape-hex
+         raw-text-error-open
+         raw-text-type-mismatch
+         raw-text-empty-list
+         raw-text-invalid-nat
+         raw-text-divide-by-zero
+         raw-text-invalid-char
+         raw-text-invalid-string
+         raw-text-wrong-result-variant
+         raw-text-non-whole-exponent
+         raw-text-invalid-count
+         raw-text-invalid-byte
+         raw-text-error-kind
+         raw-text-type-fallback
+         raw-text-argument-open
+         raw-text-expected
+         raw-text-got
+         raw-text-result-frame
+         raw-text-arrow
+         raw-text-type-error
+         raw-text-type-bool
+         raw-text-type-list
+         raw-text-type-result
+         raw-text-type-char
+         raw-text-type-string
+         raw-text-type-rat
+         raw-text-type-byte
+         raw-text-type-option
+         raw-text-type-map
+         raw-text-list-open
+         raw-text-list-close
+         raw-text-map-open
+         raw-text-map-close
+         raw-text-comma
+         raw-text-colon
+         raw-text-none
+         raw-text-some-open
+         raw-text-ok-open
+         raw-text-err-open
+         raw-text-unprintable-open
+         raw-text-unprintable-close)
+
+(def raw-name-char bits = ((raw-make-object char-type) bits))
+(def raw-name-string chars = chars)
+
+(define-function-name raw-text-true |TRUE|)
+(define-function-name raw-text-false |FALSE|)
+(define-function-name raw-text-unit |UNIT|)
+(define-function-name raw-text-byte-open |BYTE(|)
+(define-function-name raw-text-char-open |CHAR(|)
+(define-function-name raw-text-close |)|)
+(define-function-name raw-text-slash |/|)
+(define-function-name raw-text-minus |-|)
+(define-function-name raw-text-quote |"|)
+(define-function-name raw-text-char-prefix |#\|)
+(define-function-name raw-text-space-char |#\space|)
+(define-function-name raw-text-tab-char |#\tab|)
+(define-function-name raw-text-newline-char |#\newline|)
+(define-function-name raw-text-return-char |#\return|)
+(define-function-name raw-text-escape-quote |\"|)
+(define-function-name raw-text-escape-backslash |\\|)
+(define-function-name raw-text-escape-newline |\n|)
+(define-function-name raw-text-escape-tab |\t|)
+(define-function-name raw-text-escape-return |\r|)
+(define-function-name raw-text-escape-hex |\x|)
+
+(define-function-name raw-text-error-open |ERROR(|)
+(define-function-name raw-text-type-mismatch |TYPE-MISMATCH|)
+(define-function-name raw-text-empty-list |EMPTY-LIST|)
+(define-function-name raw-text-invalid-nat |INVALID-NAT|)
+(define-function-name raw-text-divide-by-zero |DIVIDE-BY-ZERO|)
+(define-function-name raw-text-invalid-char |INVALID-CHAR|)
+(define-function-name raw-text-invalid-string |INVALID-STRING|)
+(define-function-name raw-text-wrong-result-variant |WRONG-RESULT-VARIANT|)
+(define-function-name raw-text-non-whole-exponent |NON-WHOLE-EXPONENT|)
+(define-function-name raw-text-invalid-count |INVALID-COUNT|)
+(define-function-name raw-text-invalid-byte |INVALID-BYTE|)
+(define-function-name raw-text-error-kind |ERROR-KIND:|)
+(define-function-name raw-text-type-fallback |TYPE:|)
+(define-function-name raw-text-argument-open |(arg|)
+(define-function-name raw-text-expected | expected |)
+(define-function-name raw-text-got | got |)
+(define-function-name raw-text-result-frame |(result)|)
+(define-function-name raw-text-arrow |
+  -> |)
+(define-function-name raw-text-type-error |ERROR|)
+(define-function-name raw-text-type-bool |BOOL|)
+(define-function-name raw-text-type-list |LIST|)
+(define-function-name raw-text-type-result |RESULT|)
+(define-function-name raw-text-type-char |CHAR|)
+(define-function-name raw-text-type-string |STRING|)
+(define-function-name raw-text-type-rat |RAT|)
+(define-function-name raw-text-type-byte |BYTE|)
+(define-function-name raw-text-type-option |OPTION|)
+(define-function-name raw-text-type-map |MAP|)
+
+(define-function-name raw-text-list-open |[|)
+(define-function-name raw-text-list-close |]|)
+(define-function-name raw-text-map-open |{|)
+(define-function-name raw-text-map-close |}|)
+(define-function-name raw-text-comma |, |)
+(define-function-name raw-text-colon |: |)
+(define-function-name raw-text-none |NONE|)
+(define-function-name raw-text-some-open |SOME(|)
+(define-function-name raw-text-ok-open |OK(|)
+(define-function-name raw-text-err-open |ERR(|)
+(define-function-name raw-text-unprintable-open |<UNPRINTABLE-TYPE:|)
+(define-function-name raw-text-unprintable-close |>|)

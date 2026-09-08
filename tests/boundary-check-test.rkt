@@ -1050,7 +1050,11 @@
                (syntax-case (syntax #(exit)) ()
                  [#(function) (syntax (function 1))]))
              (define-syntax (language-lambda stx)
-               (syntax #hash((function . exit))))))])
+               (syntax #hash((function . exit))))
+             (define-for-syntax (language-definition-form? form bound) (print 1))
+             (define-syntax (language-lambda stx) (syntax (print 1)))
+             (define-syntax (language-lambda stx)
+               (syntax #hash((function . print))))))])
      (define original
        (for/first ([form (in-list (cdr (cadddr clean-language-expander-datum)))]
                    #:when (equal? (take form 2) (take replacement 2)))
@@ -1063,6 +1067,20 @@
       (member 'forbidden-language-capability
               (kinds
                (file-boundary-violations language-expander 'language-expander root)))))
+   (write-datum language-expander clean-language-expander-datum)
+
+   ;; Even an existing approved host binding cannot be injected into print:
+   ;; its argument must be the already-created String-only stdout function.
+   (write-datum
+    language-expander
+    (replace-datum
+     '(def language-print = (language-make-print stdout))
+     '(def language-print = (language-make-print language-host))
+     clean-language-expander-datum))
+   (check-not-false
+    (member 'invalid-language-runtime-definitions
+            (kinds (file-boundary-violations language-expander
+                                              'language-expander root))))
    (write-datum language-expander clean-language-expander-datum)
 
    (write-datum
@@ -1335,3 +1353,31 @@
    (delete-file language-file)
 
    (check-equal? (project-boundary-violations root) '())))
+
+;; Generic printing makes Error formatting a pure-core responsibility.
+;; An otherwise permitted host formatter in this observer must fail closed.
+(temporary-project
+ (lambda (root)
+   (define reader (build-path root "readers" "error.rkt"))
+   (define clean (read-datum (build-path project-root "readers" "error.rkt")))
+   (write-datum (build-path root "core" "render-error.rkt")
+                '(module render-error racket/base
+                   (#%module-begin
+                    (provide raw-error-diagnostic-string)
+                    (define (raw-error-diagnostic-string value) value))))
+   (write-datum (build-path root "readers" "string.rkt")
+                '(module string racket/base
+                   (#%module-begin
+                    (provide string-value->string)
+                    (define (string-value->string value) value))))
+   (write-datum reader clean)
+   (check-equal? (file-boundary-violations reader 'reader root) '())
+   (write-datum reader
+                (replace-datum
+                 '(string-value->string ((force raw-error-diagnostic-string) error))
+                 '(format "~a" (string-value->string
+                                ((force raw-error-diagnostic-string) error)))
+                 clean))
+   (check-not-false
+    (member 'independent-error-formatting-policy
+            (kinds (file-boundary-violations reader 'reader root))))))

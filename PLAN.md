@@ -1,3 +1,286 @@
+# Milestone 6 — Generic pure value rendering and printing
+
+Status: all seven implementation phases complete on `milestone-6-pure-printing`,
+based on clean main `e8572ee`. [PR #4](https://github.com/kserrec/attalambda/pull/4)
+is open; merge and publication remain outside this plan's authorization.
+Kyle authorized planning and executing every pass autonomously on 2026-09-07.
+The user instruction overrides the next skill's normal stop-after-one-pass rule.
+Contracts: [printing specification](docs/generic-pure-printing-spec.md) and
+[raw-function addendum](docs/raw-function-printing-contract.md), with the latter
+controlling raw functions and unknown-tag fallback. Existing specifications,
+representation invariants, closed capabilities, and recursive purity remain binding.
+
+## Verified starting state and scope
+
+At starting revision `e8572ee`, no `core/to-string.rkt`, `effects/print.rkt`,
+or public value renderer existed. `readers/error.rkt` owned diagnostic
+formatting in Racket. Its TypeMismatch
+with frames prints the oldest frame with actual type, followed by newer
+frames without actual type; it omits the root label in that case. Preserve
+these exact diagnostics through a new pure helper. Binary division/remainder,
+Char Lists, raw append/reverse, the generalized checker, and raw-fix already
+exist and will be reused. `stdout` is String-only and injected once in the
+language facade. The expanded purity checker rejects module-binding cycles.
+The predecessor repository has no reusable pure decimal/rendering implementation.
+
+Create pure rendering modules as `core/render-*.rkt`, facade `core/to-string.rkt`,
+`effects/print.rkt`, focused tests, and the saved contracts. Modify diagnostic
+name exports, the Error reader, language exports/injection, exact boundary
+allowlists, API/architecture/acceptance documents, and this plan. All existing
+representations, raw algorithms, general typing, runtime/codec, host protocol,
+stdout, parser, recursion rules, and dependencies remain behaviorally unchanged.
+No new runtime tag, reflection, raw-function guard, newline, sorting, or
+serialization promise. Printable ASCII is 32–126; other String bytes use
+uppercase two-digit hexadecimal escapes, including each UTF-8 byte separately.
+
+Each Step below is independently executable in one pass. Complete Steps
+serially and continue automatically. Every Phase ends with the complete suite
+and both architectural gates, then one narrow commit and push to verified
+origin `git@github.com:kserrec/attalambda.git`. Never continue beyond a failing
+Phase gate. Diagnose failures from evidence before repairs; do not weaken tests.
+Keep this milestone on its branch. This request authorizes the implementation
+and a reviewable PR; AGENTS.md requires explicit approval to merge a milestone.
+No version bump, tag, publication, or download-link change belongs to this plan.
+
+## Phase 1 — Pure scalar foundation
+
+- [x] Step 1.1 — Save contracts and this plan. Add fixed Char sequences using
+  existing mechanical macro expansion; add pure binary decimal conversion by
+  division/remainder ten and two-digit hex conversion. Share these algorithms
+  across all renderers; Church-to-binary conversion is only for metadata.
+- [x] Step 1.2 — Add raw Rat, Bool, Unit, Byte, Char and quoted/escaped String
+  renderers, strict unary wrappers using make-typed-function, and diagnostic
+  names. Keep scalar helpers dependency-oriented and acyclic. No facade exports yet.
+- [x] Step 1.3 — Test zero, signs, exact fractions, large Rats, every Char/Byte,
+  quote/backslash/control/UTF-8 escaping, wrong types, Error propagation, String
+  representation, and irrelevant-payload laziness. Run the full gate; commit/push.
+
+Phase 1 work: four new pure modules reuse the existing fixed-text macro,
+binary division/remainder, and generalized checker. Scalar tests pass 1,584
+assertions, covering every byte independently. The expanded purity scan
+passes all 36 production modules. The three exact core inventory assertions
+now require 28 instead of 24 modules; their rejection rules are unchanged.
+Focused acceptance/purity verification passed 173 assertions. Initial checks
+caught and corrected one missing parenthesis and a test-only broad import
+that shadowed Racket `if`; neither required a change to an existing algorithm.
+Full gate: all 42 files passed 15798 assertions, expanded purity passed 36
+modules, and the complete boundary inventory passed. Evidence combines
+`/tmp/attalambda-printing-phase-1.log` (16 passing files) with
+`/tmp/attalambda-printing-phase-1-resumed.log` (26 passing files). The initial
+language suite hit the existing ASCII fixture's unchanged 20-second deadline.
+Three isolated runs of that exact probe then passed in 17.8, 16.5 and 14.8
+seconds without any code/deadline change; the complete language suite passed
+on resumption. This is recorded timing variability, not a claimed code fix.
+The scalar unit's imports, algorithms and wrapper aliases pass the final gate.
+No runtime, effects, codec, macro or language-facade implementation changed.
+
+Saved contract SHA-256 values: printing
+`125120685fc1d2df8161f53fd152ac9f43c2bd9fd5784400bb42dcdbd4bc9291`;
+raw-function addendum
+`2f89c6672905c06dd53344008bac9a101990a88f44ced4f56907de30db1597cf`.
+
+## Phase 2 — Pure Error diagnostics
+
+- [x] Step 2.1 — Implement raw-error-diagnostic-string and error-to-string.
+  Preserve all existing kind/type names, numeric fallbacks, argument positions,
+  oldest-first frame order, result frames and the framed TypeMismatch policy.
+  Explicitly consume Error as data; other tagged types produce TypeMismatch.
+- [x] Step 2.2 — Make readers/error.rkt only decode the pure diagnostic String.
+  Tighten its boundary to forbid an independent formatting policy. Test all core
+  kinds, host/HTTP and unknown fallback kinds, unknown types, root-only/single/
+  multiple/result frames, wrong input, and unused-details laziness. Run the full
+  gate including existing runner diagnostics; commit/push.
+
+Phase 2 focused evidence: 186 new Error-rendering assertions and all 308
+existing Error-reader assertions passed. They cover every assigned core kind,
+all host/HTTP fallback kinds, unknown kind/type identifiers, multi-digit
+metadata, root-only and ordered frames, result-frame laziness, deliberate
+Error consumption and wrong-type diagnostics. The narrowed observer bridge
+admits no independent formatting policy; all 133 boundary tests pass,
+including a mutation introducing native formatting into that bridge.
+The core inventory now requires 29 modules. Phase 1 was committed and pushed
+as `7758f83`. Phase 2 full gate passed all 43 files and 15987 assertions, 37-module
+expanded purity, and the complete boundary inventory. Logs are
+`/tmp/attalambda-printing-phase-2.log` and the ten-file continuation
+`/tmp/attalambda-printing-phase-2-resumed.log`. The first run reached stdout
+before encountering stale compiled dependency metadata from the old reader.
+The identical stdout tests passed with compiled loading disabled and then
+passed all 24 assertions normally after `raco make`; no source repair or
+weakened assertion was needed. Remaining artifacts were refreshed before
+resuming. Refresh classified test artifacts before subsequent full gates
+when changing the dependency graph; never commit generated Racket files.
+Executable changes are pure Error formatting, its strict consuming wrapper,
+the one-way reader bridge, and the stricter reader boundary. Tests add Error
+cases and a native-formatter rejection mutation, and update the exact source
+inventory. Architecture and plan text describe the verified implementation.
+
+## Phase 3 — One recursive renderer
+
+- [x] Step 3.1 — Add List, Option, Result and Map helpers taking the recursive
+  renderer explicitly. Build one raw-fix engine for all eleven tags. Preserve
+  Map traversal order, ignore Map equality and NONE payload, render Err through
+  Error formatting, and add decimal unknown-tag fallback without inspecting payload.
+- [x] Step 3.2 — Add strict per-container wrappers and complete core/to-string.rkt.
+  Test all eleven generic cases, heterogeneous and deeply nested containers,
+  empty forms, Errors as nested data, wrong types, propagated Errors, and lazy
+  unused payloads. Never probe arbitrary raw functions as supported values.
+  Run the full gate; commit/push.
+
+Phase 3 implementation uses one `core/render-value.rkt` module with explicit
+recursive arguments for container helpers and one fixed-point value engine.
+Lists and Maps share only the ordinary comma-joining traversal. NONE never
+reads its payload; Map rendering never touches equality; unknown well-formed
+tags never read their payload. The expanded purity checker passes 38 modules,
+including the new acyclic engine. Error Phase 2 was committed/pushed as
+`9849156`. Phase 3 focused rendering passes 1,650 assertions, including all eleven
+tags, nested Maps, heterogeneous Lists, 72 alternating container levels,
+wrong-type and propagated Errors, empty forms, stored Map order, and poisoned
+unused payload/equality fields. Full verification passed all 43 files and
+16054 assertions in one run, plus 38-module expanded purity and the complete
+boundary inventory. Log: `/tmp/attalambda-printing-phase-3.log`.
+The sole new module is the recursive value engine; existing scalar/Error
+algorithms and all runtime/effect/frontend behavior remain unchanged. Tests
+extend the rendering matrix and exact core inventory; this plan records scope.
+
+## Phase 4 — Public pure API
+
+- [x] Step 4.1 — Export exactly the eleven lowercase per-type renderers and
+  value-to-string through the language facade. Pin corresponding exact boundary
+  imports/exports; preserve private raw helpers and the current public surface.
+- [x] Step 4.2 — Execute source-language acceptance for every renderer, String
+  result typing, recursive dispatch, wrong inputs and no effects. Check aliases,
+  hygiene, private helper isolation and existing language behavior. Run the full
+  gate; commit/push.
+
+Phase 4 exports exactly twelve canonical pure renderers through selected
+facade imports and the pinned public surface. No runtime binding, injection,
+syntax rule or core algorithm changes. The new installed-language tests
+exercise all eleven per-type renderers, generic dispatch, exact String return
+contracts, incoming/wrong Errors, lack of effects, aliasing, lexical hygiene,
+and rejected private/uppercase names. The first combined 43-check fixture
+exceeded 20 seconds; an isolated probe measured 33.0 seconds compiling and
+2.0 seconds executing, with all 43 checks passing. Those identical checks
+are now grouped into one program per renderer under the unchanged deadline;
+no production repair or assertion removal is involved. The boundary checker
+passes the precise new imports/exports. Phase 3 was pushed as `7fb056f`.
+Phase 4 focused verification passes all 69 harness assertions and all 43
+embedded language contract checks under the unchanged deadlines. Full verification passed all 44 files with 16123 assertions in one run,
+38-module expanded purity and the complete boundary inventory. Evidence:
+`/tmp/attalambda-printing-phase-4.log`. Executable changes are only selected
+pure imports/public exports and the exact facade allowlists; the new test
+file covers installed source programs. This plan records the verification.
+
+## Phase 5 — Print through existing stdout
+
+- [x] Step 5.1 — Add a unary composition factory taking the already-created
+  stdout function, never host. Inject print from stdout in the facade and pin
+  that exact wiring. Add print's normal diagnostic name without wrapping Error
+  inputs in general propagation before rendering.
+- [x] Step 5.2 — Test one String-only stdout delegation, identical success/
+  failure returns, no implicit newline, no call before application, and real
+  source output for scalars, nested containers, and Errors. Verify stdout remains
+  byte-exact and String-only. Run the full structural/test gate; commit/push.
+
+Phase 5 adds only a unary composition factory receiving the already-injected
+stdout. The facade's private `language-print` binding captures that stdout and
+is renamed only on export. Native Racket print remains forbidden in every
+other class; in the facade the exact export is its sole permitted occurrence,
+with native calls and generated/native syntax-data uses rejected by mutation
+checks. The exact import and injection definitions remain pinned. No host,
+codec, protocol or stdout source changes. Composition tests cover String-only
+requests, no newline, no premature call/repeated effect, and identity-preserved
+success/Err/Error results. The effect inventory increases from eight to nine.
+Phase 4 was pushed as `34097b4`. Phase 5 focused verification passed 94 installed-language assertions, 22
+composition/protocol assertions and all 136 boundary assertions. Full gate:
+all 45 test files, 16174 assertions, 39-module expanded purity and complete
+boundary inventory passed in one run. Log: `/tmp/attalambda-printing-phase-5.log`.
+Executable changes are the pure composition and exact facade wiring/export
+checks. Tests add print behavior and native-printer rejection, and update the
+explicit effects inventory. No runtime, codec, host protocol, stdout source,
+new runtime tag, macro primitive or recursive-purity exception was added.
+
+## Phase 6 — Explicit purity and contract audit
+
+- [x] Step 6.1 — Trace every new production path through expanded unary lambda
+  terms. Verify no runtime/readers/effects import enters rendering, no new host
+  capability or primitive, no module recursion cycle, and no tag/codec change.
+  Add meaningful isolated mutation coverage for printing boundaries and Error
+  reader policy. Review all implemented contract cases and repair proven issues.
+- [x] Step 6.2 — Run the complete suite and architectural gates, record exact
+  counts and limits, compare the milestone diff with scope, commit/push.
+
+Phase 6 review found no production defect. All six rendering modules depend
+only on permitted pure modules and existing mechanical macros. One fixed-point
+value engine supplies recursive arguments to container helpers. The unchanged
+expanded checker passes all 39 production modules, including cycle detection;
+the complete boundary inventory passes. A baseline diff confirms no changes to
+tags, representations, generalized typing, numeric algorithms, runtime/codec,
+host/protocol, stdout, or macro implementation. Existing boundary mutations
+reject native print and an independent Error-reader formatting policy; a new
+mutation also rejects injecting the host into print instead of stdout.
+Independent codec validation now checks canonical String results throughout
+the scalar/container/Error matrix, used only from tests. All 2,862 focused
+rendering/Error/boundary assertions pass. Raw functions remain outside the
+contract, and no safety guarantee or probe for them was introduced.
+Phase 6 full gate passed all 45 files and 17,064 assertions, 39-module
+expanded purity, and the complete boundary inventory. The run was interrupted
+by continuation turns, each recorded as a user break rather than an assertion
+failure. The unchanged source was resumed at the interrupted file; completed
+files were not rerun. Evidence is `/tmp/attalambda-printing-phase-6.log` and
+its `-resumed`, `-resumed-2`, and `-resumed-3` logs (12 + 12 + 5 + 16 files).
+The phase changes tests and this record only; no executable production or
+checker implementation changed. Phase 5 was committed/pushed as `d905f61`.
+
+## Phase 7 — Documentation and reviewable completion
+
+- [x] Step 7.1 — Document each renderer, recursive containers, raw-function
+  unspecified behavior, unknown well-formed tags, exact escapes, diagnostic
+  compatibility, stdout versus print, no newline, and display-only Map ordering.
+  Update architecture, specification index and acceptance only for this feature;
+  append scoped amendments incorporating the supplied contracts into the three
+  canonical specifications and update their hashes. Refresh current README and
+  handoff pointers without changing historical release evidence;
+  distinguish branch implementation from published 0.5.0.
+- [x] Step 7.2 — Execute documented examples, verify local links and all tests/
+  boundaries, record executable/test/doc changes separately, commit/push, and
+  create a reviewable PR with the final scope and verification. Inspect its CI;
+  resolve concrete in-scope findings and leave the branch clean. End with all
+  authorized implementation passes complete; merge/publication require later
+  explicit approval and are not unfinished implementation Steps.
+
+Phase 7 documentation now covers all thirteen new public callables, exact
+display/byte rules, recursive containers, consuming Error behavior, existing
+diagnostic compatibility, unsupported raw functions, and the stdout distinction.
+Architecture describes the verified dependency and injection path. Three scoped
+canonical amendments incorporate the supplied contracts without changing any
+preceding byte; the index records all new and previous hashes. README and
+handoff distinguish this branch from published 0.5.0. The API's complete
+public-only example was extracted verbatim and passed six isolated-install
+assertions with exact bytes and no trailing newline. All 185 local links in
+the ten modified Markdown files and all five contract hashes passed validation.
+Phase 6 was committed/pushed as `eb9a6d7`. This phase changes documentation
+only; executable production, checker and test sources remain unchanged.
+The final Phase 7 local gate passed all 45 test files and 17,064 assertions
+in one run, 39-module expanded purity, and the complete boundary inventory.
+Evidence: `/tmp/attalambda-printing-phase-7.log`. The documented program's
+six checks also passed independently. All local implementation and documentation
+work is verified. Documentation was committed/pushed as `a9ae2f6`, and
+[PR #4](https://github.com/kserrec/attalambda/pull/4) is open against main.
+[CI run 34181311603](https://github.com/kserrec/attalambda/actions/runs/34181311603)
+passed all ten jobs for `a9ae2f6032377f97d91773b449e0618b60773707`: source tests,
+Linux distribution, both macOS architectures and Windows build/consumer checks,
+and temporary-artifact cleanup. Its Racket CS 9.3 source job passed the same
+45 files, 17,064 assertions, 39-module purity, and complete boundary inventory.
+Evidence: `/tmp/attalambda-printing-ci-a9ae2f6.log`. Final review/comment
+inspection found no posted findings. This closure record changes documentation
+only; no executable or test file differs from that verified head. All authorized
+implementation passes are complete. The PR is the review and live CI entry point;
+merge and any later release require Kyle's explicit approval under AGENTS.md.
+
+---
+
+# Completed plans (historical; no further authority)
+
 # Milestone 5 — Pure recursive definitions (target 0.5.0)
 
 Status: complete on main. PR #3 merged and 0.5.0 is published and verified.

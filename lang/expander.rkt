@@ -86,6 +86,8 @@
                   STRING-TAIL
                   STRING-PREFIX?
                   STRING-CONTAINS?)
+         (only-in "../core/to-string.rkt"
+                  error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string)
          (only-in "../core/typed-logic.rkt"
                   TRUE
                   FALSE
@@ -134,6 +136,8 @@
                   make-http-path-handler
                   make-http-serve-one
                   make-http-server)
+         (only-in "../effects/print.rkt"
+                  [make-print language-make-print])
          (only-in "../effects/stdout.rkt"
                   [make-stdout language-make-stdout])
          (only-in "../effects/tcp.rkt"
@@ -158,6 +162,7 @@
                      [language-cons cons]
                      [language-host host]
                      [language-exit exit]
+                     [language-print print]
                      [HEAD head]
                      [TAIL tail]
                      [IS-NIL is-nil]
@@ -243,6 +248,7 @@
          NIL
          UNIT
          NONE
+         error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string
          make-ok make-err is-ok is-err unwrap-ok unwrap-err
          EMPTY-STRING
          stdout read-file write-file
@@ -494,6 +500,9 @@
 ;; ordinary lambda values; only language-host is privileged.
 (def stdout =
   (language-make-stdout language-host))
+
+(def language-print =
+  (language-make-print stdout))
 
 (def read-file =
   (language-make-read-file language-host))

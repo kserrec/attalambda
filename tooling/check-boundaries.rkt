@@ -72,10 +72,10 @@
     ffi-lib get-ffi-obj getenv putenv current-environment-variables
     thread thread/suspend-to-kill future place))
 
-;; These names denote pure, host-injected wrappers at the language boundary.
-;; Exact imports/definitions still reject direct native TCP or exit bindings.
+;; These spellings denote pure wrappers at the language boundary. Exact
+;; imports/definitions and export-only occurrence checks retain native bans.
 (define forbidden-language-capabilities
-  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit)
+  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit print)
            forbidden-codec-capabilities))
 
 ;; The runner is trusted only to decide whether and how the host process loads
@@ -192,7 +192,7 @@
     racket/list racket/promise racket/string raw-boolean raw-boolean->boolean
     byte-value->integer
     rat->number raw-byte-value raw-char-value
-    raw-error-frame-argument-position
+    raw-error-frame-argument-position raw-error-diagnostic-string
     raw-object-type
     raw-int-magnitude raw-int-sign
     raw-rat-denominator raw-rat-numerator
@@ -360,6 +360,7 @@
 
 (define language-direct-public-bindings
   '(TRUE FALSE NIL UNIT NONE
+     error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string
      make-ok make-err is-ok is-err unwrap-ok unwrap-err
      EMPTY-STRING stdout read-file write-file
      tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
@@ -417,6 +418,8 @@
      (only-in "../core/strings.rkt"
               raw-make-string
               ,@string-imported-bindings)
+     (only-in "../core/to-string.rkt"
+              error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string)
      (only-in "../core/typed-logic.rkt"
               TRUE FALSE NOT AND OR XOR
               (typed-if language-if))
@@ -457,6 +460,7 @@
               make-http-path-handler
               make-http-serve-one
               make-http-server)
+     (only-in "../effects/print.rkt" (make-print language-make-print))
      (only-in "../effects/stdout.rkt"
               (make-stdout language-make-stdout))
      (only-in "../effects/tcp.rkt"
@@ -483,6 +487,7 @@
      (language-cons cons)
      (language-host host)
      (language-exit exit)
+     (language-print print)
      (HEAD head)
      (TAIL tail)
      (IS-NIL is-nil)
@@ -568,6 +573,7 @@
 
 (define expected-language-runtime-definitions
   '((def stdout = (language-make-stdout language-host))
+    (def language-print = (language-make-print stdout))
     (def read-file = (language-make-read-file language-host))
     (def write-file = (language-make-write-file language-host))
     (def tcp-connect = (language-make-tcp-connect language-host))
@@ -651,6 +657,7 @@
       language-if language-lambda language-let language-list-expression
       language-exit language-make-exit make-exit exit
       language-make-read-file language-make-stdout
+      language-print language-make-print make-print print
       language-make-tcp-accept language-make-tcp-close
       language-make-tcp-connect language-make-tcp-listen
       language-make-tcp-read language-make-tcp-write
@@ -1419,6 +1426,11 @@
    (if (= (datum-occurrence-count 'exit (module-info-forms info)) 1)
        '()
        (list (violation path 'forbidden-language-capability 'exit)))
+   ;; `print` is allowed solely as the exported spelling of language-print.
+   ;; Any extra use could select Racket's native printer and is forbidden.
+   (if (= (datum-occurrence-count 'print (module-info-forms info)) 1)
+       '()
+       (list (violation path 'forbidden-language-capability 'print)))
    (symbol-violations path
                       symbols
                       forbidden-language-capabilities
@@ -1448,6 +1460,20 @@
   (define symbols
     (module-symbols info))
   (append
+   ;; The Error observer must delegate all diagnostic policy to pure terms.
+   ;; Pin this tiny conversion bridge so a second host formatter cannot return.
+   (if (equal? (normalized path)
+               (normalized (build-path project-root "readers" "error.rkt")))
+       (if (equal? (module-info-forms info)
+                   '((require racket/promise "../core/render-error.rkt" "string.rkt")
+                     (provide error-value->string)
+                     (define (error-value->string error)
+                       (string-value->string
+                        ((force raw-error-diagnostic-string) error)))))
+           '()
+           (list (violation path 'independent-error-formatting-policy
+                            (module-info-forms info))))
+       '())
    (exact-language-violations path
                               info
                               'racket/base

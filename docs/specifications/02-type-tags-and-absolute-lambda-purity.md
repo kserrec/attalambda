@@ -657,3 +657,27 @@ expanded same-module phase-0 bindings using binding identity; lambda-bound
 self-application and imported references must not be mistaken for such
 cycles. This strengthens Sections E and K without changing representations,
 typing, evaluation, host capabilities, or any other purity rule.
+
+---
+
+# Generic Pure Printing Amendment (2026-09-07)
+
+The [printing specification](../generic-pure-printing-spec.md), as clarified
+by its [raw-function addendum](../raw-function-printing-contract.md), adds no
+purity exception. All production rendering must expand to variables, unary
+lambdas, and application. Decimal conversion stays on private binary Nats;
+only tiny fixed metadata may be converted from Church numerals. No runtime
+codec, reader, host formatter, Racket predicate, or native collection enters
+the rendering computation or its dependency graph.
+
+One fixed-point value renderer passes recursion explicitly to container
+helpers. Module-binding cycles remain forbidden. Error-formatting policy
+moves to pure core; the Error reader may only decode its resulting String.
+Print receives the already-created stdout wrapper, never a new host injection,
+and delegates the final String through the existing stdout protocol. Tags,
+representations, codec authority, and the ten host operations remain unchanged.
+
+Do not detect, tag, inspect, stringify, or safely reject arbitrary functions.
+Their printing behavior is unspecified even when nested, with no guaranteed
+Error. Unknown-tag fallback is defined only for well-formed tagged objects.
+Retain or strengthen expanded purity, source inventory, and boundary checks.
