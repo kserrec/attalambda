@@ -293,6 +293,47 @@ The follow-up commit updates only merge/status documentation; executable,
 test, and checker code remains the verified PR tree. Main's workflow supplies
 post-merge verification. No version, tag, download metadata, or release changed.
 
+### Post-merge CI job allowance
+
+All ten jobs passed for merge commit `e088e1f` in
+[run 34183948133](https://github.com/kserrec/attalambda/actions/runs/34183948133).
+The source job took 18 minutes 22 seconds. The documentation-only follow-up
+`b59f8f5` passed all 45 test files and 17,064 assertions in
+[run 34184114154](https://github.com/kserrec/attalambda/actions/runs/34184114154),
+then GitHub cancelled the job during its final structural checks. Its annotation
+explicitly reports exceeding the 20-minute maximum; the log contains no test
+failure. The other nine jobs passed. This proves an overall job-budget limit,
+with the identical executable/test tree already passing on the merge commit.
+The follow-up raises only `jobs.test.timeout-minutes` from 20 to 30 and refreshes
+its explanatory comment. Parsed YAML comparison proves this is the only
+workflow setting changed. Individual test deadlines, assertions, purity/boundary
+checks, and all other job limits remain unchanged.
+
+The pre-commit local gate passed 16 files and 7,503 assertions, then its
+representation fixture exceeded the existing 20-second deadline before output.
+Three exact isolated repetitions also timed out. Loading the repository Error
+reader alone took 28,272 ms. Rebuilding that reader did not refresh its core
+dependencies and did not reduce loading time. A loader trace proved that five
+core modules were being loaded from source because their generated artifacts
+predated the merge; function names and fixed rendering text dominated the delay.
+Explicitly rebuilding those five existing modules reduced reader loading to
+64 ms. The unchanged fixture then passed all three isolated repetitions
+(2,611, 2,676 and 2,664 ms; 18 assertions). No tracked source or test change was
+made for this local build-artifact issue. Evidence is in
+`/tmp/attalambda-reader-load-trace.log` and
+`/tmp/attalambda-representation-deadline-probe-after-dependencies.log`.
+The resumed language suite passed all 193 assertions. The purity suite needed
+its existing `/var/tmp` fixture permission outside the sandbox and then passed
+all 155 assertions. The complete gate passed 45 files and 17,064 assertions,
+39-module expanded purity, and the full boundary inventory. Logs are
+`/tmp/attalambda-merge-ci-allowance.log` (16 completed files), its `-resumed`
+log (14 completed files before the sandbox exception),
+`/tmp/attalambda-merge-purity-test.log` (1 file), and the allowance `-final`
+log (14 files and both structural checks). Failed partial attempts are retained
+as diagnostic evidence and excluded from the passing totals. The resulting
+main workflow supplies final CI verification for this workflow-only adjustment;
+no executable production, test, checker, or dependency file changed.
+
 ---
 
 # Completed plans (historical; no further authority)

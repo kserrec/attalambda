@@ -14,9 +14,18 @@ specification text remains byte-for-byte preserved before the new amendments.
 All ten jobs in [CI run 34182567747](https://github.com/kserrec/attalambda/actions/runs/34182567747)
 passed for final PR head `c3d61fd`, including Linux,
 both macOS architectures, Windows, and artifact cleanup. No review findings
-were posted at merge. Local main is synced; the follow-up commit only records
-the merge and updates source-status wording. Main's workflow shows post-merge
-verification. No implementation or merge work remains. Release publication
+were posted at merge. All ten jobs also passed for the merge commit in
+[run 34183948133](https://github.com/kserrec/attalambda/actions/runs/34183948133).
+The documentation-only follow-up `b59f8f5` passed every assertion but reached
+the source job's 20-minute limit during final structural checks; the other nine
+jobs passed. The CI follow-up raises only that overall limit to 30 minutes,
+with no changes to test deadlines, assertions, or purity/boundary checks.
+[PLAN.md](PLAN.md#post-merge-ci-job-allowance) records the diagnosis; the latest
+main workflow records follow-up verification. The complete local gate passed
+again with the same 45 files, 17,064 assertions, 39 pure modules, and boundaries;
+the plan records generated-artifact refresh and temporary-fixture permission
+needed for that run. No implementation or merge work
+remains. Release publication
 requires a separate instruction; published 0.5.0 remains the latest release,
 and no version, tag, or download metadata has changed.
 
