@@ -105,6 +105,19 @@ you are willing to expose.
 
 ## Release notes
 
+Version 0.6.0 adds pure value-to-String conversion and generic `print`.
+`value-to-string` renders tagged values, including nested Lists, Options,
+Results, Maps, and Errors. The eleven type-specific functions use the same
+display rules. For example, `(print (cons 1 (cons TRUE NIL)))` writes
+`[1, TRUE]`. `print` returns stdout's Result and adds no newline; use
+`(stdout "\n")` for a line separator. `stdout` continues to emit String bytes
+directly, while `(print "hello")` includes the display quotes: `"hello"`.
+
+String display escapes non-ASCII bytes separately, and Maps retain their stored
+order. Display is not a serialization format. Passing a raw function directly
+or inside data has unspecified behavior. Rendering remains pure unary lambda
+calculus; printing uses the existing stdout capability.
+
 Version 0.5.0 adds `(rec name argument ... = body)` for pure self recursion.
 Change a self-recursive declaration from `def` to `rec`; ordinary `def`
 must now be acyclic. Direct or indirect recursive module bindings are rejected

@@ -1,33 +1,29 @@
 # Session handoff
 
-Milestone 6 generic pure printing is complete and merged into main.
-All seven authorized implementation phases are complete; [PLAN.md](PLAN.md)
-records the work and evidence. [PR #4](https://github.com/kserrec/attalambda/pull/4)
-merged with Kyle's explicit approval at `2026-09-08T03:33:50Z` as
-`e088e1fc22463c1118127badcdc066c4f8b6cef6`. Its tree exactly equals approved
-head `c3d61fd7a3baf75ba1e44f9fb27457ef67bc1ca6`.
-Local Racket CS 8.10 and CI Racket CS 9.3 each passed
-45 files, 17,064 assertions, 39 pure modules, and the boundary inventory.
-The API example passed in an isolated installation; 185 local documentation
-links and all five specification hashes were verified. Historical canonical
-specification text remains byte-for-byte preserved before the new amendments.
-All ten jobs in [CI run 34182567747](https://github.com/kserrec/attalambda/actions/runs/34182567747)
-passed for final PR head `c3d61fd`, including Linux,
-both macOS architectures, Windows, and artifact cleanup. No review findings
-were posted at merge. All ten jobs also passed for the merge commit in
-[run 34183948133](https://github.com/kserrec/attalambda/actions/runs/34183948133).
-The documentation-only follow-up `b59f8f5` passed every assertion but reached
-the source job's 20-minute limit during final structural checks; the other nine
-jobs passed. The CI follow-up raises only that overall limit to 30 minutes,
-with no changes to test deadlines, assertions, or purity/boundary checks.
-[PLAN.md](PLAN.md#post-merge-ci-job-allowance) records the diagnosis; the latest
-main workflow records follow-up verification. The complete local gate passed
-again with the same 45 files, 17,064 assertions, 39 pure modules, and boundaries;
-the plan records generated-artifact refresh and temporary-fixture permission
-needed for that run. No implementation or merge work
-remains. Release publication
-requires a separate instruction; published 0.5.0 remains the latest release,
-and no version, tag, or download metadata has changed.
+Kyle explicitly authorized publishing AttaLambda 0.6.0 on 2026-09-08. Execute
+both phases of the release plan at the top of [PLAN.md](PLAN.md) autonomously;
+no additional publication confirmation is required. The plan authorizes the
+verified Linux x86-64 archive and SHA256SUMS, annotated v0.6.0 tag, GitHub
+Release publication, fresh public-download checks, and final documentation.
+
+Starting main: `0f85683d3b8747078b532d88bc0ccecfb7ac610b`. The printing milestone
+is complete and PR #4 is merged. All ten checks passed in
+[CI run 34188023243](https://github.com/kserrec/attalambda/actions/runs/34188023243),
+including 45 files, 17,064 assertions, 39 pure modules, and complete boundaries.
+The current work adds only the 0.6.0 / 0.6 version state, release documentation,
+and a packaged Linux printing check; pure computation and host authority remain
+unchanged. Release notes are [docs/releases/0.6.0.md](docs/releases/0.6.0.md).
+
+Phase 1 release inputs are verified: focused checks passed 581 assertions,
+and `env TMPDIR=/tmp ./run-all-tests.sh` passed all 45 files and 17,065
+assertions, 39 pure modules, and complete boundaries in one run. Logs are
+`/tmp/attalambda-060-focused.log` and `/tmp/attalambda-060-full-suite.log`.
+The preparation commit is the input for Phase 2. Build that clean commit with
+the cached Racket CS 9.3 image, run the isolated Linux consumer, and wait for
+all preparation CI jobs before tagging/staging/publishing. Verify draft and
+fresh public bytes against the exact local assets, then record publication.
+GitHub's latest release was still 0.5.0 at orientation; README download links
+remain there until 0.6.0 is published. Preserve older releases, tags, and assets.
 
 ## Completed 0.5.0 release (historical)
 

@@ -324,6 +324,33 @@ PROGRAM
   check_captured_output '...............................' "packaged public API"
   printf 'packaged_public_api=passed\n'
 
+  local printing_source="$scratch_root/printing-api.attl"
+  cat > "$printing_source" <<'PROGRAM'
+#lang attalambda
+
+(def check condition = (stdout (if condition "." "!")))
+(def nested = (some (make-ok (cons 1 (cons TRUE (cons "hello" NIL))))))
+(check (string-eq (rat-to-string -7/3) "-7/3"))
+(check (string-eq (bool-to-string TRUE) "TRUE"))
+(check (string-eq (unit-to-string UNIT) "UNIT"))
+(check (string-eq (byte-to-string (make-byte 255)) "BYTE(255)"))
+(check (string-eq (char-to-string #\newline) "#\\newline"))
+(check (string-eq (string-to-string "é\n") "\"\\xC3\\xA9\\n\""))
+(check (string-eq (list-to-string (cons 1 (cons TRUE NIL))) "[1, TRUE]"))
+(check (string-eq (option-to-string (some 5)) "SOME(5)"))
+(check (string-eq (result-to-string (div 1 0)) "ERR(ERROR(DIVIDE-BY-ZERO))"))
+(check (string-eq (map-to-string (map-set (make-map string-eq) "answer" 42)) "{\"answer\": 42}"))
+(check (string-eq (error-to-string (head NIL)) "ERROR(EMPTY-LIST\n  -> head(result))"))
+(check (string-eq (value-to-string nested) "SOME(OK([1, TRUE, \"hello\"]))"))
+(check (is-ok (print nested)))
+(if FALSE (print "unused") UNIT)
+(stdout "hello")
+(print "hello")
+PROGRAM
+  timeout 20 "$attalambda" "$printing_source" >"$stdout_file" 2>"$stderr_file"
+  check_captured_output '............SOME(OK([1, TRUE, "hello"])).hello"hello"' "packaged printing API"
+  printf 'packaged_printing_api=passed\n'
+
   local completion_work="$scratch_root/completion-work"
   mkdir -p -- "$completion_work"
   check_program_status() {

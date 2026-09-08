@@ -1,3 +1,89 @@
+# Release 0.6.0 — Generic pure printing
+
+Status: authorized and in progress on main. Kyle explicitly requested publication
+on 2026-09-08 after confirming that the printing implementation was merged but
+not yet released. Continue through both release phases without another approval
+pause. This new request authorizes version 0.6.0, its verified Linux x86-64
+archive and SHA256SUMS, annotated tag v0.6.0 at the clean build commit, GitHub
+Release publication, public-download verification, and current release records.
+The completed implementation plan below remains historical evidence.
+
+## Verified starting state and scope
+
+Clean main is `0f85683d3b8747078b532d88bc0ccecfb7ac610b`. PR #4 is merged and
+all ten jobs in CI run 34188023243 passed (45 source files, 17,064 assertions,
+39 pure modules, and complete boundaries). VERSION contains 0.5.0; info.rkt
+projects it to 0.5. GitHub's latest public release is v0.5.0. No 0.6.0 release
+notes exist. The existing Linux consumer checks 31 public-API cases but does
+not yet exercise the printing API in the packaged executable.
+
+Modify the closed version allowlists, version metadata, runner/version tests,
+Linux consumer, bundled guide, and release/status documentation. Create
+`docs/releases/0.6.0.md`. The pure core, effects, runtime/codec, host protocol,
+representations, macros, public API, specification texts, dependency set, legal
+bytes, and purity enforcement remain behaviorally unchanged. Only Linux x86-64
+is published; macOS and Windows remain internal CI portability checks. Preserve
+all older releases, tags, and assets. Use the existing cached full Racket CS 9.3
+image and the existing isolated Ubuntu consumer; no new release framework.
+
+## Phase 1 — Prepare and verify the release inputs
+
+- [x] Step 1.1 — Add exactly 0.6.0 / package 0.6 to all closed version paths;
+  update current runner expectations while retaining historical accepted states
+  and rejection tests. Record the new state in the distribution contract.
+- [x] Step 1.2 — Write accurate release notes and bundled printing guidance.
+  Add a public-only Linux consumer program exercising all thirteen printing
+  callables, recursive data, Error text, byte escaping, effect results, and
+  exact output without an implicit newline. Keep published download links at
+  0.5.0 until the new release exists.
+- [x] Step 1.3 — Run focused version/distribution/boundary tests, exercise the
+  documented program, then run the full source and structural gates. Commit
+  and push one verified preparation phase on main; inspect its CI. Capture the
+  exact clean build commit before proceeding.
+
+Phase 1 result: version 0.6.0 / package 0.6 is accepted only in the existing
+closed version paths, with historical states preserved. The new Linux consumer
+uses all thirteen printing callables and checks recursive data, Error text,
+UTF-8 byte escaping, lazy output, returned Result, and exact bytes without an
+implicit newline. Its source and the release-note example passed in an isolated
+installation. The focused version/boundary/distribution/example run passed
+581 assertions (`/tmp/attalambda-060-focused.log`). The complete source gate
+passed all 45 files and 17,065 assertions in one run, with 39-module expanded
+purity and complete boundaries (`/tmp/attalambda-060-full-suite.log`).
+Use `env TMPDIR=/tmp` for local checks: the initial request for tests outside
+the sandbox was rejected, and selecting the permitted temporary directory let
+all tests pass inside the sandbox without changing test behavior or deadlines.
+All 32 local links in the four changed Markdown documents resolve. Canonical
+specification and legal hashes match the starting revision. The pure core,
+effects, runtime, facade, macros, and specification text have no diff. This
+verified preparation commit is the clean input for Phase 2; CI must pass before
+publication, alongside the exact archive's independent consumer result.
+
+## Phase 2 — Build, publish, and verify 0.6.0
+
+- [ ] Step 2.1 — Build the final archive and SHA256SUMS from the clean prepared
+  commit with the existing Racket CS 9.3 builder. Run the isolated no-Racket,
+  no-checkout Linux consumer, including printing, guide, file/TCP/HTTP, process
+  statuses, and relocation. Require all preparation CI jobs to pass. Record
+  exact provenance, archive inventory, sizes, and both hashes.
+- [ ] Step 2.2 — Create the annotated v0.6.0 tag at that build commit, stage a
+  GitHub Release with exactly the verified two assets, and compare downloaded
+  draft bytes with the originals. Publish as the latest stable release, then
+  fetch both public URLs without authentication and verify hashes, manifest,
+  version, and packaged printing. No repeated permission request is needed:
+  publication is the explicit task Kyle authorized above.
+- [ ] Step 2.3 — Update README downloads, API/specification status, release
+  notes, acceptance evidence, release ledger, AGENTS.md, and handoff to the
+  observed published result. Mark the phases complete, validate local links
+  and release metadata, and confirm the publication-record diff changes no
+  archive input. Commit/push the records and leave main clean and synced.
+  Prior verified source checks apply to identical executable/test inputs;
+  inspect the resulting CI without repeating unchanged local suites.
+
+---
+
+# Completed printing implementation (historical)
+
 # Milestone 6 — Generic pure value rendering and printing
 
 Status: all seven implementation phases complete and merged into main through
