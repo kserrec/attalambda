@@ -86,6 +86,8 @@
                   STRING-TAIL
                   STRING-PREFIX?
                   STRING-CONTAINS?)
+         (only-in "../core/to-string.rkt"
+                  error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string)
          (only-in "../core/typed-logic.rkt"
                   TRUE
                   FALSE
@@ -243,6 +245,7 @@
          NIL
          UNIT
          NONE
+         error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string
          make-ok make-err is-ok is-err unwrap-ok unwrap-err
          EMPTY-STRING
          stdout read-file write-file

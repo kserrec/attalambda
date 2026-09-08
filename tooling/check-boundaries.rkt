@@ -360,6 +360,7 @@
 
 (define language-direct-public-bindings
   '(TRUE FALSE NIL UNIT NONE
+     error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string
      make-ok make-err is-ok is-err unwrap-ok unwrap-err
      EMPTY-STRING stdout read-file write-file
      tcp-connect tcp-listen tcp-accept tcp-read tcp-write tcp-close
@@ -417,6 +418,8 @@
      (only-in "../core/strings.rkt"
               raw-make-string
               ,@string-imported-bindings)
+     (only-in "../core/to-string.rkt"
+              error-to-string bool-to-string list-to-string result-to-string char-to-string string-to-string rat-to-string unit-to-string byte-to-string option-to-string map-to-string value-to-string)
      (only-in "../core/typed-logic.rkt"
               TRUE FALSE NOT AND OR XOR
               (typed-if language-if))

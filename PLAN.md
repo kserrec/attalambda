@@ -141,13 +141,31 @@ extend the rendering matrix and exact core inventory; this plan records scope.
 
 ## Phase 4 — Public pure API
 
-- [ ] Step 4.1 — Export exactly the eleven lowercase per-type renderers and
+- [x] Step 4.1 — Export exactly the eleven lowercase per-type renderers and
   value-to-string through the language facade. Pin corresponding exact boundary
   imports/exports; preserve private raw helpers and the current public surface.
-- [ ] Step 4.2 — Execute source-language acceptance for every renderer, String
+- [x] Step 4.2 — Execute source-language acceptance for every renderer, String
   result typing, recursive dispatch, wrong inputs and no effects. Check aliases,
   hygiene, private helper isolation and existing language behavior. Run the full
   gate; commit/push.
+
+Phase 4 exports exactly twelve canonical pure renderers through selected
+facade imports and the pinned public surface. No runtime binding, injection,
+syntax rule or core algorithm changes. The new installed-language tests
+exercise all eleven per-type renderers, generic dispatch, exact String return
+contracts, incoming/wrong Errors, lack of effects, aliasing, lexical hygiene,
+and rejected private/uppercase names. The first combined 43-check fixture
+exceeded 20 seconds; an isolated probe measured 33.0 seconds compiling and
+2.0 seconds executing, with all 43 checks passing. Those identical checks
+are now grouped into one program per renderer under the unchanged deadline;
+no production repair or assertion removal is involved. The boundary checker
+passes the precise new imports/exports. Phase 3 was pushed as `7fb056f`.
+Phase 4 focused verification passes all 69 harness assertions and all 43
+embedded language contract checks under the unchanged deadlines. Full verification passed all 44 files with 16123 assertions in one run,
+38-module expanded purity and the complete boundary inventory. Evidence:
+`/tmp/attalambda-printing-phase-4.log`. Executable changes are only selected
+pure imports/public exports and the exact facade allowlists; the new test
+file covers installed source programs. This plan records the verification.
 
 ## Phase 5 — Print through existing stdout
 
