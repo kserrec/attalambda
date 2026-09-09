@@ -1,3 +1,154 @@
+# Minimal cleanup
+
+Status: cleanup work complete, including all three PR review corrections.
+Phases 1 and 2 are implemented; Phase 3 was
+assessed and skipped under the spec's size limit. Branch `minimal-cleanup`
+starts from clean, synced main `9708ab7`.
+Contract: [supplied cleanup spec](docs/minimal-cleanup-spec.md).
+Keep the three changes independent and small; this is not a general refactor.
+
+## Verified starting state and scope
+
+`runner/attalambda.rkt` completes symlink targets against the working directory
+and validates VERSION against an explicit historical list. Existing runner
+tests cover absolute parent symlinks, source symlink rejection, and dotenv
+paths, but have no relative parent-symlink regression. The boundary checker's
+`strict-vocabulary-violations` checks all source symbols, including local names.
+
+Modify only the runner, focused tests, and the necessary boundary checks.
+Create the saved cleanup spec and update this plan. Language semantics, public
+APIs, runtime/effects/core behavior, purity checks, host capabilities, VERSION,
+package-version projection, dependencies, and release behavior stay unchanged.
+Kyle subsequently authorized completing this spec without further `next`
+prompts, pushing it, opening the PR, addressing every review comment requiring
+code changes, and merging to main after the PR checks pass. Stop immediately
+after that merge; no release or further project work is authorized.
+Delivery: [PR #5](https://github.com/kserrec/attalambda/pull/5).
+
+## Phase 1 — Fix relative symlink resolution
+
+- [x] Step 1.1 — Add one regression with a relative directory symlink, a valid
+  program beneath its target, and a different process working directory;
+  observe the existing failure before changing production code.
+- [x] Step 1.2 — Resolve relative targets against the symlink's directory.
+  Preserve the resolver's loop detection and all source security checks;
+  adjust the exact import check only if the fix needs it.
+- [x] Step 1.3 — Run runner tests, then the full suite including purity and
+  boundary checks. Record the result, commit, and push this phase.
+- [x] Step 1.4 — Correct the relative-loop regression found during PR review:
+  normalize each already-walked component before loop detection, retaining
+  physical parent traversal through symlinks. Add focused regressions, run
+  runner tests and the full suite, and push the verified correction.
+- [x] Step 1.5 — Permit repeated visits after a symlink target has finished
+  resolving, while retaining cycle detection during target expansion. Test a
+  valid revisit and a cycle with a growing suffix, then verify and push.
+
+Phase 1 result: the new relative-parent-symlink regression failed with status
+66 before the fix. The resolver now supplies the symlink's containing directory
+to `path->complete-path`; only the required runtime import and its exact
+boundary expectation changed alongside it. Existing security tests are unchanged.
+Focused runner and boundary tests passed 228 and 138 assertions, respectively.
+The complete suite passed all 45 files and 17,069 assertions, plus expanded
+purity for 39 production modules and the complete boundary check. The initial
+full run was interrupted during `milestone-two-acceptance-test.rkt`; with code
+unchanged, verification resumed at that file and completed the remaining tests
+and both scans. Logs: `/tmp/attalambda-cleanup-phase1-full.log` and
+`/tmp/attalambda-cleanup-phase1-resumed.log`.
+
+## Phase 2 — Validate version format
+
+- [x] Step 2.1 — Replace only the runner's historical alternation with
+  MAJOR.MINOR.PATCH validation, retaining the project's -dev and -rc.N forms.
+  Keep VERSION reading/embedding, output, and package projection unchanged.
+- [x] Step 2.2 — Add a hypothetical future-version case; retain current
+  version tests and malformed-version rejection.
+- [x] Step 2.3 — Run runner tests, then the full suite and both structural
+  checks. Record the result, commit, and push this phase.
+- [x] Step 2.4 — Reject full-sized VERSION reads so a valid 64-byte prefix
+  cannot hide trailing data. Keep the read itself unchanged, test the size
+  boundary, and verify/push together with the PR's loop correction.
+
+Phase 2 result: one runner regular expression now validates three numeric
+version components without leading zeros, with optional `-dev` or `-rc.N`.
+An isolated `0.6.1` probe failed before the change and succeeds afterward.
+Existing version tests are retained; added cases cover future stable,
+development, and release-candidate versions plus malformed formats. All 261
+runner assertions passed. The complete suite passed all 45 files and 17,102
+assertions, plus 39-module purity and complete boundaries. VERSION reading,
+embedding, and CLI output keep their existing implementation; release metadata
+and package projection are unchanged. Only the validation expression, runner tests/comment, and
+this plan changed. Logs: `/tmp/attalambda-cleanup-phase2-focused.log` and
+`/tmp/attalambda-cleanup-phase2-full.log`.
+
+## Phase 3 — Remove unnecessary local-name policing, if small (skipped)
+
+- [x] Step 3.1 — Determine whether local binding names can be excluded from
+  vocabulary checks with a small change. Skip this phase with a concrete
+  reason if it would require a redesign; do not broaden the scope.
+- [x] Step 3.2 — If feasible, make that narrow change and add one harmless
+  local-rename fixture. Preserve languages, imports, exports, privileged names,
+  forbidden capabilities, mutation rules, runtime/codec/host separation,
+  runner loading, effects, classification, and security-sensitive structure.
+- [x] Step 3.3 — Run boundary tests including existing prohibited-capability
+  and import fixtures, then the full suite and both structural checks.
+  Record the result or skip reason, commit, and push this phase.
+
+Phase 3 assessment: intentionally skipped; Step 3.2's conditional implementation
+and new regression do not apply. An isolated copy of `readers/bool.rkt` passes
+its boundary check, but changing only the `value` parameter and its reference
+to `previously-unseen-local` produces `unapproved-reader-identifier`.
+`strict-vocabulary-violations` consumes `module-symbols`, which recursively
+flattens all symbols without binding scope. A general exemption would need new
+scope analysis for local definitions, lambda/let forms, loop bindings, and
+macro syntax. Merely adding all bound spellings to the vocabulary would also
+exempt out-of-scope references to those spellings. That security-sensitive
+analysis exceeds this minimal cleanup; the spec explicitly says to preserve
+the checker instead. No vocabulary, capability, import, structural, or purity
+restriction was removed, and no source or test file changed in this phase.
+All 138 boundary assertions passed again
+(`/tmp/attalambda-cleanup-phase3-boundary.log`). Phase 2's complete 45-file,
+17,102-assertion suite and both structural checks apply to identical executable
+and test inputs; the PR runs the complete checks again before merge.
+
+## PR review corrections
+
+The first two actionable findings on PR #5 were reproduced and corrected. Relative
+loop targets containing `.` or `..` produced ever-growing lexical paths;
+normalizing each already-walked component makes loop keys stable while
+preserving physical parent traversal through symlinks. The widened version
+format also admitted a valid-looking 64-byte prefix followed by unseen junk;
+rejecting a filled buffer establishes EOF without changing the original read.
+Tests cover both loop spellings, physical parent traversal, an accepted
+63-byte VERSION, and rejected 64-byte reads with and without trailing data.
+
+That correction's focused runner suite passes 283 assertions. The complete suite passes
+all 45 files and 17,124 assertions, plus purity for 39 production modules and
+the complete boundary checker. Logs:
+`/tmp/attalambda-cleanup-pr-focused-final.log` and
+`/tmp/attalambda-cleanup-pr-full-final.log`.
+The earlier partial run was stopped when the second review finding arrived;
+these final results cover both corrections together. No checker restriction,
+release metadata, package projection, core/effect/runtime code, or public API
+changed in this follow-up. PR checks and a fresh review of the corrected
+commit are required before the authorized merge, after which work stops.
+
+The fresh review found a valid repeated symlink visit rejected as a loop.
+An isolated `link/../../link/program.attl` probe returned status 66 while the
+direct target ran successfully. The resolver retained completed links in its
+loop history. Step 1.5 limits that history to active target expansions, with a
+completion marker before each original path suffix. The valid revisit now runs;
+a cycle whose remaining suffix grows still returns status 66. All 291 focused
+runner assertions pass. The final complete suite passes all 45 files and
+17,132 assertions, plus purity for 39 production modules and the complete
+boundary check. Logs: `/tmp/attalambda-cleanup-revisit-focused.log` and
+`/tmp/attalambda-cleanup-revisit-full.log`. This correction changes only the
+resolver, its focused regression coverage, and this plan. A fresh PR review and
+all checks must pass before merging; stop after the merge.
+
+---
+
+# Completed release 0.6.0 (historical)
+
 # Release 0.6.0 — Generic pure printing
 
 Status: complete. AttaLambda 0.6.0 is published and its public Linux download is

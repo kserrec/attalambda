@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require (only-in racket/file file-type-bits regular-file-type-bits)
-         (only-in racket/path path-get-extension)
+         (only-in racket/path path-get-extension path-only)
          (only-in racket/port port->bytes)
          (for-syntax racket/base
                      (only-in racket/path path-only)))
@@ -32,7 +32,9 @@
       #:mode 'binary))
   (define matched
     (and (bytes? content)
-         (regexp-match #px#"^(0[.]6[.]0|0[.]5[.]0|0[.]4[.]0|0[.]3[.]0(?:-dev)?|0[.]2[.]0(?:-dev|-rc[.]1)?)\n$"
+         ;; A full read does not establish EOF; never embed a truncated prefix.
+         (not (= (bytes-length content) 64))
+         (regexp-match #px#"^((?:0|[1-9][0-9]*)(?:[.](?:0|[1-9][0-9]*)){2}(?:-dev|-rc[.](?:0|[1-9][0-9]*))?)\n$"
                        content)))
   (unless matched
     (raise-syntax-error #f "invalid product version metadata" stx))
@@ -67,11 +69,16 @@
     (cond
       [(null? remaining)
        (and resolved (simplify-path resolved #f))]
+      [(not (car remaining))
+       ;; The target is complete; a later visit to this link is not a cycle.
+       (loop (cdr remaining) resolved (cdr seen))]
       [else
        (define next
-         (if resolved
-             (build-path resolved (car remaining))
-             (car remaining)))
+         (simplify-path
+          (if resolved
+              (build-path resolved (car remaining))
+              (car remaining))
+          #f))
        (cond
          [(link-exists? next)
           (if (member next seen equal?)
@@ -79,8 +86,8 @@
               (loop
                (append
                 (explode-path
-                 (path->complete-path (resolve-path next)))
-                (cdr remaining))
+                 (path->complete-path (resolve-path next) (path-only next)))
+                (cons #f (cdr remaining)))
                #f
                (cons next seen)))]
          [else

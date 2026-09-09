@@ -101,8 +101,8 @@
      "run"
      "source file name must end in lowercase .attl"))
 
-   ;; VERSION remains the sole CLI version source. Expansion embeds only an
-   ;; approved state so the future native executable needs no runtime copy.
+   ;; VERSION remains the sole CLI version source. Expansion validates its
+   ;; format and embeds it so the native executable needs no runtime copy.
    (define product-version-file
      (build-path package-source "VERSION"))
    (write-exact-bytes product-version-file #"0.2.0-rc.1\n")
@@ -113,6 +113,20 @@
    (check-command-success
     (run '("--version"))
     #"AttaLambda 0.2.0\n")
+   (for ([version-case
+          (in-list '((#"0.6.1\n" #"AttaLambda 0.6.1\n")
+                     (#"1.2.3-dev\n" #"AttaLambda 1.2.3-dev\n")
+                     (#"12.34.56-rc.2\n" #"AttaLambda 12.34.56-rc.2\n")))])
+     (write-exact-bytes product-version-file (car version-case))
+     (check-command-success
+      (run '("--version"))
+      (cadr version-case)))
+   ;; The unchanged 64-byte read must reach EOF before accepting a version.
+   (define long-version (bytes-append #"1.2." (make-bytes 58 49)))
+   (write-exact-bytes product-version-file (bytes-append long-version #"\n"))
+   (check-command-success
+    (run '("--version"))
+    (bytes-append #"AttaLambda " long-version #"\n"))
    (write-exact-bytes product-version-file #"unsupported\n")
    (define invalid-version-build
      (run '("--version")))
@@ -130,6 +144,20 @@
                     (command-result-stderr invalid-version-build)
                     #\?))
     (result-diagnostic invalid-version-build))
+   (for ([invalid-version
+          (in-list (list #"0.6\n"
+                         #"0.6.1.2\n"
+                         #"00.6.1\n"
+                         #"0.6.1-rc.01\n"
+                         #"0.6.1-preview\n"
+                         #"0.6.1"
+                         #"0.6.1\n\n"
+                         (bytes-append long-version #"1\n")
+                         (bytes-append long-version #"1\ntrailing-junk\n")))])
+     (write-exact-bytes product-version-file invalid-version)
+     (check-command-failure
+      (run '("--version"))
+      #rx"invalid product version metadata"))
    (write-exact-bytes product-version-file #"0.6.0\n")
 
    ;; Validation precedence rejects names and metadata before source content.
@@ -295,6 +323,53 @@
    (check-command-success
     (run (list (path->string
                 (build-path allowed-parent-link "program.attl"))))
+    #"parent link allowed")
+
+   ;; Returning through a completed link target is not a symbolic-link loop.
+   (check-command-success
+    (run (list (path->string
+                (build-path allowed-parent-link 'up "allowed-parent"
+                            "program.attl")))
+         #:current-directory temporary-root)
+    #"parent link allowed")
+
+   ;; Normalize only after walking each component: a symlink followed by
+   ;; ".." refers to the target's parent, not the link's lexical parent.
+   (define nested-target (build-path allowed-parent-target "nested"))
+   (make-directory nested-target)
+   (make-file-or-directory-link
+    nested-target (build-path working-directory "nested-link"))
+   (make-file-or-directory-link
+    "nested-link/.." (build-path working-directory "target-parent"))
+   (check-command-success
+    (run (list (path->string
+                (build-path working-directory "target-parent" "program.attl")))
+         #:current-directory temporary-root)
+    #"parent link allowed")
+
+   ;; Relative loop targets must not grow distinct spellings indefinitely.
+   (for ([loop-case (in-list '(("dot-loop" "./dot-loop")
+                              ("up-loop" "allowed-parent-target/../up-loop")
+                              ("suffix-loop" "./suffix-loop/nested")))])
+     (define loop-source
+       (build-path working-directory (car loop-case) "program.attl"))
+     (make-file-or-directory-link
+      (cadr loop-case) (build-path working-directory (car loop-case)))
+     (check-runner-failure
+      (run (list (path->string loop-source)))
+      66
+      (source-diagnostic (path->string loop-source)
+                         "source path could not be inspected")))
+
+   ;; A relative directory-link target belongs to the link's directory,
+   ;; independent of the launcher's working directory.
+   (define relative-parent-link
+     (build-path working-directory "relative-parent"))
+   (make-file-or-directory-link "allowed-parent-target" relative-parent-link)
+   (check-command-success
+    (run (list (path->string
+                (build-path relative-parent-link "program.attl")))
+         #:current-directory temporary-root)
     #"parent link allowed")
 
    ;; Paths containing spaces and non-ASCII characters retain the existing
