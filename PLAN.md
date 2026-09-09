@@ -1,6 +1,6 @@
 # Minimal cleanup
 
-Status: Phase 1 complete; Phase 2 is next. Branch `minimal-cleanup` starts from
+Status: Phases 1 and 2 complete; Phase 3 is next. Branch `minimal-cleanup` starts from
 clean, synced main `9708ab7`.
 Contract: [supplied cleanup spec](docs/minimal-cleanup-spec.md).
 Keep the three changes independent and small; this is not a general refactor.
@@ -44,13 +44,25 @@ and both scans. Logs: `/tmp/attalambda-cleanup-phase1-full.log` and
 
 ## Phase 2 — Validate version format
 
-- [ ] Step 2.1 — Replace only the runner's historical alternation with
+- [x] Step 2.1 — Replace only the runner's historical alternation with
   MAJOR.MINOR.PATCH validation, retaining the project's -dev and -rc.N forms.
   Keep VERSION reading/embedding, output, and package projection unchanged.
-- [ ] Step 2.2 — Add a hypothetical future-version case; retain current
+- [x] Step 2.2 — Add a hypothetical future-version case; retain current
   version tests and malformed-version rejection.
-- [ ] Step 2.3 — Run runner tests, then the full suite and both structural
+- [x] Step 2.3 — Run runner tests, then the full suite and both structural
   checks. Record the result, commit, and push this phase.
+
+Phase 2 result: one runner regular expression now validates three numeric
+version components without leading zeros, with optional `-dev` or `-rc.N`.
+An isolated `0.6.1` probe failed before the change and succeeds afterward.
+Existing version tests are retained; added cases cover future stable,
+development, and release-candidate versions plus malformed formats. All 261
+runner assertions passed. The complete suite passed all 45 files and 17,102
+assertions, plus 39-module purity and complete boundaries. VERSION reading,
+embedding, and CLI output keep their existing implementation; release metadata
+and package projection are unchanged. Only the validation expression, runner tests/comment, and
+this plan changed. Logs: `/tmp/attalambda-cleanup-phase2-focused.log` and
+`/tmp/attalambda-cleanup-phase2-full.log`.
 
 ## Phase 3 — Remove unnecessary local-name policing, if small
 

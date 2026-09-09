@@ -101,8 +101,8 @@
      "run"
      "source file name must end in lowercase .attl"))
 
-   ;; VERSION remains the sole CLI version source. Expansion embeds only an
-   ;; approved state so the future native executable needs no runtime copy.
+   ;; VERSION remains the sole CLI version source. Expansion validates its
+   ;; format and embeds it so the native executable needs no runtime copy.
    (define product-version-file
      (build-path package-source "VERSION"))
    (write-exact-bytes product-version-file #"0.2.0-rc.1\n")
@@ -113,6 +113,14 @@
    (check-command-success
     (run '("--version"))
     #"AttaLambda 0.2.0\n")
+   (for ([version-case
+          (in-list '((#"0.6.1\n" #"AttaLambda 0.6.1\n")
+                     (#"1.2.3-dev\n" #"AttaLambda 1.2.3-dev\n")
+                     (#"12.34.56-rc.2\n" #"AttaLambda 12.34.56-rc.2\n")))])
+     (write-exact-bytes product-version-file (car version-case))
+     (check-command-success
+      (run '("--version"))
+      (cadr version-case)))
    (write-exact-bytes product-version-file #"unsupported\n")
    (define invalid-version-build
      (run '("--version")))
@@ -130,6 +138,18 @@
                     (command-result-stderr invalid-version-build)
                     #\?))
     (result-diagnostic invalid-version-build))
+   (for ([invalid-version
+          (in-list '(#"0.6\n"
+                     #"0.6.1.2\n"
+                     #"00.6.1\n"
+                     #"0.6.1-rc.01\n"
+                     #"0.6.1-preview\n"
+                     #"0.6.1"
+                     #"0.6.1\n\n"))])
+     (write-exact-bytes product-version-file invalid-version)
+     (check-command-failure
+      (run '("--version"))
+      #rx"invalid product version metadata"))
    (write-exact-bytes product-version-file #"0.6.0\n")
 
    ;; Validation precedence rejects names and metadata before source content.
