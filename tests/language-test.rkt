@@ -631,17 +631,17 @@ PROBE
                     20)
        expected-message))
 
-    (define multi-lambda-program
-      (build-path temporary-root "multi-lambda.rkt"))
+    (define zero-lambda-program
+      (build-path temporary-root "zero-lambda.rkt"))
     (write-source
-     multi-lambda-program
-     "#lang attalambda\n(lambda (left right) left)\n")
+     zero-lambda-program
+     "#lang attalambda\n(lambda () 1)\n")
     (check-command-failure
      (run-command isolated-environment
                   racket-executable
-                  (list (path->string multi-lambda-program))
+                  (list (path->string zero-lambda-program))
                   20)
-     #rx"expected \\(lambda \\(argument\\) body\\)")
+     #rx"expected .*lambda.*at least one identifier")
 
     (for ([source
            (in-list

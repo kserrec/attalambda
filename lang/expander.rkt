@@ -5,7 +5,7 @@
                   [void language-discard])
          (only-in "../macros/macros.rkt"
                   def
-                  [lambda-let language-let])
+                  [lambda-let language-unary-let])
          (only-in "../core/fix.rkt"
                   [raw-fix language-fix])
          (only-in "../core/byte.rkt"
@@ -158,6 +158,8 @@
                      [language-lambda lambda]
                      [language-rec rec]
                      [language-let let]
+                     [language-list list]
+                     [language-cond cond]
                      [language-if if]
                      [language-cons cons]
                      [language-host host]
@@ -308,15 +310,22 @@
            '()))]
     [else
      (syntax-case expression ()
-       [(head (argument) body)
+       [(head (argument ...) body)
         (and (identifier? #'head)
              (free-identifier=? #'head #'language-lambda)
-             (identifier? #'argument)
+             (andmap identifier? (syntax->list #'(argument ...)))
              (not (language-bound-name #'head (append bound names))))
-        (language-dependencies #'body names (cons #'argument bound))]
+        (language-dependencies #'body names
+                               (append (syntax->list #'(argument ...)) bound))]
+       [(head . remaining)
+        (and (identifier? #'head)
+             (ormap (lambda (candidate) (free-identifier=? #'head candidate))
+                    (list #'language-let #'language-list #'language-cond))
+             (not (language-bound-name #'head (append bound names))))
+        (language-dependencies (language-sugar-expression expression) names bound)]
        [(head name equals value body)
         (and (identifier? #'head)
-             (free-identifier=? #'head #'language-let)
+             (free-identifier=? #'head #'language-unary-let)
              (identifier? #'name)
              (eq? (syntax-e #'equals) '=)
              (not (language-bound-name #'head (append bound names))))
@@ -419,18 +428,49 @@
       "expected a function and at least one argument"
       stx)]))
 
-;; Lambda abstraction itself stays unary. `def` and `rec` provide currying
-;; sugar for convenient named functions with any source arity.
+;; These source conveniences disappear before object-language computation.
+;; Dependency analysis uses the same lowering for sequential binders and else.
+(define-for-syntax (language-sugar-expression stx)
+  (syntax-case stx (language-lambda language-let language-list language-cond)
+    [(language-lambda (first remaining ...) body)
+     (andmap identifier? (syntax->list #'(first remaining ...)))
+     (language-curried-lambdas (syntax->list #'(first remaining ...)) #'body)]
+    [(language-let name equals value body)
+     (and (identifier? #'name) (eq? (syntax-e #'equals) '=))
+     #'(language-unary-let name = value body)]
+    [(language-let () body) #'body]
+    [(language-let ((name value) remaining ...) body)
+     (identifier? #'name)
+     #`(language-unary-let name = value
+         #,(language-sugar-expression #'(language-let (remaining ...) body)))]
+    [(language-list) #'NIL]
+    [(language-list first remaining ...)
+     #`((language-cons first)
+        #,(language-sugar-expression #'(language-list remaining ...)))]
+    [(language-cond (condition body))
+     (eq? (syntax-e #'condition) 'else)
+     #'body]
+    [(language-cond (condition body) first remaining ...)
+     (not (eq? (syntax-e #'condition) 'else))
+     #`(((language-if condition) body)
+        #,(language-sugar-expression #'(language-cond first remaining ...)))]
+    [(language-lambda . remaining)
+     (raise-syntax-error #f "expected (lambda (argument ...) body) with at least one identifier" stx)]
+    [(language-let . remaining)
+     (raise-syntax-error #f "expected (let name = value body) or (let ((name value) ...) body)" stx)]
+    [(language-list . remaining)
+     (raise-syntax-error #f "expected (list expression ...)" stx)]
+    [(language-cond . remaining)
+     (raise-syntax-error #f "expected (cond (condition result) ... (else result)); else must be last" stx)]))
+
 (define-syntax (language-lambda stx)
-  (syntax-case stx ()
-    [(_ (argument) body)
-     (identifier? #'argument)
-     #'(lambda (argument) body)]
-    [_
-     (raise-syntax-error
-      #f
-      "expected (lambda (argument) body)"
-      stx)]))
+  (language-sugar-expression stx))
+(define-syntax (language-let stx)
+  (language-sugar-expression stx))
+(define-syntax (language-list stx)
+  (language-sugar-expression stx))
+(define-syntax (language-cond stx)
+  (language-sugar-expression stx))
 
 (define-for-syntax (language-list-expression elements)
   (if (null? elements)

@@ -1,3 +1,93 @@
+# Small Lisp sugar and release 0.7.0
+
+Status: implementation and local verification complete; PR delivery is in progress.
+Kyle authorized the supplied sugar contract,
+a pull request merged to main, and another release on 2026-09-09. This request
+supersedes the completed cleanup plan's stop-after-merge limit.
+Contract: [supplied sugar specification](docs/small-lisp-sugar-spec.md).
+
+## Verified starting state and scope
+
+Clean main starts at `d523bbb` (merged cleanup PR #5). VERSION is 0.6.0 and
+GitHub's latest stable release is v0.6.0. The existing expander permits unary
+lambda and single-name let, has a currying helper for rec, and checks source
+binding dependencies before expansion. List and cond syntax do not exist.
+
+Modify `lang/expander.rkt`, exact boundary vocabulary, focused tests, syntax
+and release docs, version projections, and the existing Linux consumer.
+Create this saved contract, sugar tests, and 0.7.0 notes. Core, effects,
+runtime, host, representations, dependencies, and purity enforcement remain
+behaviorally unchanged. Multi-binding let is sequential; empty let returns its
+body. Cond requires a final else. Keep production changes around 80 lines.
+The release retains Linux x86-64 as the only supported public binary.
+
+## Phase 1 — Implement and verify the four sugars
+
+- [x] Step 1.1 — Save the contract and implement mechanical syntax lowering,
+  including the existing recursion analysis's binding scopes.
+- [x] Step 1.2 — Test behavior, malformed syntax, partial application,
+  laziness, shadowing, recursion rejection, and actual expanded purity.
+- [x] Step 1.3 — Update the syntax contract and release inputs to 0.7.0;
+  exercise all four sugars in the packaged Linux consumer.
+- [ ] Step 1.4 — Review the diff, run the full suite and both gates, record
+  evidence, commit and push the verified feature branch, and open the PR.
+
+Focused result: all 157 sugar assertions pass, including actual expanded
+expressions accepted by the unchanged purity expression checker and the
+expander's exact boundary gate. The expander diff is 56 added and 16 removed
+lines. Test development corrected two test-only issues: an omitted reader
+module wrapper and an assumption that typed cons never forces tail elements.
+The final test compares its demand with hand-written cons; no production fix
+was needed. Evidence: `/tmp/attalambda-sugar-focused-final.log`.
+
+Integration result: existing language, runner, boundary, and distribution
+suites pass all 832 assertions (`/tmp/attalambda-sugar-integration.log`). The
+Linux preview built with full Racket CS 9.3 and passed the isolated Ubuntu
+consumer, including packaged sugars, existing API/printing, guide, files,
+TCP/HTTP, exit statuses, and relocation. Racket/raco were absent and external
+networking disabled. It is an internal uncommitted preview, not publishable.
+Archive: `/tmp/attalambda-070-sugar-preview/attalambda-0.7.0-linux-x86_64.tar.gz`,
+14,164,528 bytes, SHA-256
+`b13ce46cdce0d9a24d17ac127dc2e72713a39c594ab6799c5ad34d18cfaf977a`.
+Logs: `/tmp/attalambda-070-preview-build-final.log` and
+`/tmp/attalambda-070-preview-consumer.log`. The first container mount `/src`
+collided with embedded `syntax/srcloc`; using `/attalambda-sugar-070-source`
+passed the unchanged build-path gate. No build-script or legal-byte fix was
+needed. The stock image also needed its existing prerequisite git installed
+inside the disposable container. No host installation changed.
+
+Final local result: all 46 source suites pass 17,290 assertions, followed
+by the expanded purity proof for 39 production modules and the complete
+boundary inventory (`/tmp/attalambda-sugar-full.log`). The completed diff was
+reviewed against the supplied spec and direct binding/expansion interactions;
+no production correction was needed after the initial implementation. Core,
+effects, runtime, macros, and runner have empty diffs, and legal bytes are
+unchanged. Step 1.4 remains open only for commit/push/PR delivery.
+Kyle explicitly allowed Git writes after the initial permission rejection;
+`small-lisp-sugar` now starts from the fetched, unchanged main revision.
+The remote main revision was independently verified as the same `d523bbb` via
+GitHub's API. All session-owned containers have exited. No process is left
+running after local checks finish.
+
+## Phase 2 — Merge and publish the verified release
+
+- [ ] Step 2.1 — Address actionable PR review feedback and require all CI
+  checks to pass; merge the reviewed PR to main.
+- [ ] Step 2.2 — Build the clean merged revision with full Racket CS 9.3;
+  verify the exact archive with the isolated no-Racket Linux consumer.
+- [ ] Step 2.3 — Tag the exact build revision, stage the two verified assets,
+  compare draft downloads, publish 0.7.0, and verify public downloads.
+- [ ] Step 2.4 — Persist release provenance and completion in the existing
+  docs and handoff, commit/push those records, and leave main clean.
+
+Git access: Kyle explicitly allowed Git writes on 2026-09-09 after the first
+escalation was rejected. Fetch and branch creation succeeded on retry. The
+original request already authorizes the PR, merge to main, and 0.7.0 release.
+
+---
+
+# Completed minimal cleanup (historical)
+
 # Minimal cleanup
 
 Status: cleanup work complete, including all three PR review corrections.

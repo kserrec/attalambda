@@ -378,7 +378,7 @@
   `((require
      (for-syntax racket/base)
      (only-in racket/base (void language-discard))
-     (only-in "../macros/macros.rkt" def (lambda-let language-let))
+     (only-in "../macros/macros.rkt" def (lambda-let language-unary-let))
      (only-in "../core/fix.rkt" (raw-fix language-fix))
      (only-in "../core/byte.rkt"
               MAKE-BYTE BYTE-VALUE BYTE-EQ BYTE-LT BYTE-LTE BYTE-GT BYTE-GTE
@@ -483,6 +483,8 @@
      (language-lambda lambda)
      (language-rec rec)
      (language-let let)
+     (language-list list)
+     (language-cond cond)
      (language-if if)
      (language-cons cons)
      (language-host host)
@@ -589,6 +591,9 @@
     language-rec
     language-application
     language-lambda
+    language-let
+    language-list
+    language-cond
     language-datum))
 
 (define expected-language-for-syntax-definitions
@@ -598,6 +603,7 @@
     language-definition-parts
     language-dependencies
     language-check-definitions
+    language-sugar-expression
     language-list-expression
     language-bit-expressions
     language-magnitude-expression
@@ -642,6 +648,8 @@
       language-rec rec raw-fix language-fix
       language-curried-lambdas language-bound-name language-definition-parts
       language-dependencies language-check-definitions
+      language-sugar-expression language-unary-let language-list language-cond
+      condition
       arguments name names candidate bound bound-identifier=? free-identifier=? ormap
       list quote andmap eq? equals expression part apply
       define definitions parts collect cadr caddr graph definition forms
@@ -693,7 +701,8 @@
     (#"0.3.0\n" . "0.3")
     (#"0.4.0\n" . "0.4")
     (#"0.5.0\n" . "0.5")
-    (#"0.6.0\n" . "0.6")))
+    (#"0.6.0\n" . "0.6")
+    (#"0.7.0\n" . "0.7")))
 
 (define runner-forbidden-version-literals
   (append-map

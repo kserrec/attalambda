@@ -319,6 +319,7 @@ try {
         "0.4.0`n" { $productVersion = '0.4.0'; $expectedPackageVersion = '0.4' }
         "0.5.0`n" { $productVersion = '0.5.0'; $expectedPackageVersion = '0.5' }
         "0.6.0`n" { $productVersion = '0.6.0'; $expectedPackageVersion = '0.6' }
+        "0.7.0`n" { $productVersion = '0.7.0'; $expectedPackageVersion = '0.7' }
         default { Fail 'VERSION is outside the approved milestone states or lacks one terminal LF' }
     }
     $infoText = [IO.File]::ReadAllText($infoFile)

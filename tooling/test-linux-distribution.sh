@@ -351,6 +351,25 @@ PROGRAM
   check_captured_output '............SOME(OK([1, TRUE, "hello"])).hello"hello"' "packaged printing API"
   printf 'packaged_printing_api=passed\n'
 
+  local sugar_source="$scratch_root/small-lisp-sugar.attl"
+  cat > "$sugar_source" <<'PROGRAM'
+#lang attalambda
+(rec loop x = (loop x))
+(def sum = (lambda (x y z) (add x (add y z))))
+(def plus-two = (sum 2))
+(print (list))
+(print (list (list 1 2) (list 3 4)))
+(print (list (plus-two 3 4)
+             (let ((x 2) (y (add x 3))) y)
+             (let x = 6 x)
+             ((lambda (x) x) 7)))
+(stdout (cond (FALSE (loop NIL)) (TRUE "lazy") (else (loop NIL))))
+(print (cond (FALSE 0) (else 8)))
+PROGRAM
+  timeout 20 "$attalambda" "$sugar_source" >"$stdout_file" 2>"$stderr_file"
+  check_captured_output '[][[1, 2], [3, 4]][9, 5, 6, 7]lazy8' "packaged small Lisp sugar"
+  printf 'packaged_small_lisp_sugar=passed\n'
+
   local completion_work="$scratch_root/completion-work"
   mkdir -p -- "$completion_work"
   check_program_status() {

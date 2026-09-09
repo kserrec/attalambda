@@ -611,3 +611,17 @@ the language facade, resolve host collisions through module boundaries and
 selective export renaming, and add no uppercase aliases. The pure diagnostic
 helper `raw-error-diagnostic-string` is internal. Existing naming and host
 isolation rules remain in force outside this explicitly extended API.
+
+---
+
+# Small Lisp Sugar Amendment (2026-09-09)
+
+The [Small Lisp Sugar contract](../small-lisp-sugar-spec.md) adds public syntax
+names list and cond and extends lambda and let without aliases. Generated
+constructors, NIL, conditional, and unary binding forms retain their original
+bindings under user shadowing. Cond recognizes the spelling else only as its
+mandatory final clause marker, even when an ordinary variable has that name.
+Each binding in multi-binding let scopes over later bindings and the body;
+repeated names shadow earlier ones, as do nested lambda parameters. This
+amendment supersedes earlier source-arity examples only; canonical naming,
+strict typing, representations, and host isolation remain in force.
