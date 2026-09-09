@@ -1,7 +1,7 @@
 #lang racket/base
 
 (require (only-in racket/file file-type-bits regular-file-type-bits)
-         (only-in racket/path path-get-extension)
+         (only-in racket/path path-get-extension path-only)
          (only-in racket/port port->bytes)
          (for-syntax racket/base
                      (only-in racket/path path-only)))
@@ -79,7 +79,7 @@
               (loop
                (append
                 (explode-path
-                 (path->complete-path (resolve-path next)))
+                 (path->complete-path (resolve-path next) (path-only next)))
                 (cdr remaining))
                #f
                (cons next seen)))]

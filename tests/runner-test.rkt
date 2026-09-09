@@ -297,6 +297,17 @@
                 (build-path allowed-parent-link "program.attl"))))
     #"parent link allowed")
 
+   ;; A relative directory-link target belongs to the link's directory,
+   ;; independent of the launcher's working directory.
+   (define relative-parent-link
+     (build-path working-directory "relative-parent"))
+   (make-file-or-directory-link "allowed-parent-target" relative-parent-link)
+   (check-command-success
+    (run (list (path->string
+                (build-path relative-parent-link "program.attl")))
+         #:current-directory temporary-root)
+    #"parent link allowed")
+
    ;; Paths containing spaces and non-ASCII characters retain the existing
    ;; reader/expander semantics, including CRLF declarations and UTF-8 String
    ;; lowering.

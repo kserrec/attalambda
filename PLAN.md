@@ -1,3 +1,74 @@
+# Minimal cleanup
+
+Status: Phase 1 complete; Phase 2 is next. Branch `minimal-cleanup` starts from
+clean, synced main `9708ab7`.
+Contract: [supplied cleanup spec](docs/minimal-cleanup-spec.md).
+Keep the three changes independent and small; this is not a general refactor.
+
+## Verified starting state and scope
+
+`runner/attalambda.rkt` completes symlink targets against the working directory
+and validates VERSION against an explicit historical list. Existing runner
+tests cover absolute parent symlinks, source symlink rejection, and dotenv
+paths, but have no relative parent-symlink regression. The boundary checker's
+`strict-vocabulary-violations` checks all source symbols, including local names.
+
+Modify only the runner, focused tests, and the necessary boundary checks.
+Create the saved cleanup spec and update this plan. Language semantics, public
+APIs, runtime/effects/core behavior, purity checks, host capabilities, VERSION,
+package-version projection, dependencies, and release behavior stay unchanged.
+No merge or release is part of this work.
+
+## Phase 1 — Fix relative symlink resolution
+
+- [x] Step 1.1 — Add one regression with a relative directory symlink, a valid
+  program beneath its target, and a different process working directory;
+  observe the existing failure before changing production code.
+- [x] Step 1.2 — Resolve relative targets against the symlink's directory.
+  Preserve the resolver's loop detection and all source security checks;
+  adjust the exact import check only if the fix needs it.
+- [x] Step 1.3 — Run runner tests, then the full suite including purity and
+  boundary checks. Record the result, commit, and push this phase.
+
+Phase 1 result: the new relative-parent-symlink regression failed with status
+66 before the fix. The resolver now supplies the symlink's containing directory
+to `path->complete-path`; only the required runtime import and its exact
+boundary expectation changed alongside it. Existing security tests are unchanged.
+Focused runner and boundary tests passed 228 and 138 assertions, respectively.
+The complete suite passed all 45 files and 17,069 assertions, plus expanded
+purity for 39 production modules and the complete boundary check. The initial
+full run was interrupted during `milestone-two-acceptance-test.rkt`; with code
+unchanged, verification resumed at that file and completed the remaining tests
+and both scans. Logs: `/tmp/attalambda-cleanup-phase1-full.log` and
+`/tmp/attalambda-cleanup-phase1-resumed.log`.
+
+## Phase 2 — Validate version format
+
+- [ ] Step 2.1 — Replace only the runner's historical alternation with
+  MAJOR.MINOR.PATCH validation, retaining the project's -dev and -rc.N forms.
+  Keep VERSION reading/embedding, output, and package projection unchanged.
+- [ ] Step 2.2 — Add a hypothetical future-version case; retain current
+  version tests and malformed-version rejection.
+- [ ] Step 2.3 — Run runner tests, then the full suite and both structural
+  checks. Record the result, commit, and push this phase.
+
+## Phase 3 — Remove unnecessary local-name policing, if small
+
+- [ ] Step 3.1 — Determine whether local binding names can be excluded from
+  vocabulary checks with a small change. Skip this phase with a concrete
+  reason if it would require a redesign; do not broaden the scope.
+- [ ] Step 3.2 — If feasible, make that narrow change and add one harmless
+  local-rename fixture. Preserve languages, imports, exports, privileged names,
+  forbidden capabilities, mutation rules, runtime/codec/host separation,
+  runner loading, effects, classification, and security-sensitive structure.
+- [ ] Step 3.3 — Run boundary tests including existing prohibited-capability
+  and import fixtures, then the full suite and both structural checks.
+  Record the result or skip reason, commit, and push this phase.
+
+---
+
+# Completed release 0.6.0 (historical)
+
 # Release 0.6.0 — Generic pure printing
 
 Status: complete. AttaLambda 0.6.0 is published and its public Linux download is
