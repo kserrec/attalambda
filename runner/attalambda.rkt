@@ -32,6 +32,8 @@
       #:mode 'binary))
   (define matched
     (and (bytes? content)
+         ;; A full read does not establish EOF; never embed a truncated prefix.
+         (not (= (bytes-length content) 64))
          (regexp-match #px#"^((?:0|[1-9][0-9]*)(?:[.](?:0|[1-9][0-9]*)){2}(?:-dev|-rc[.](?:0|[1-9][0-9]*))?)\n$"
                        content)))
   (unless matched
@@ -69,9 +71,11 @@
        (and resolved (simplify-path resolved #f))]
       [else
        (define next
-         (if resolved
-             (build-path resolved (car remaining))
-             (car remaining)))
+         (simplify-path
+          (if resolved
+              (build-path resolved (car remaining))
+              (car remaining))
+          #f))
        (cond
          [(link-exists? next)
           (if (member next seen equal?)
