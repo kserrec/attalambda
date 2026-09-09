@@ -69,6 +69,9 @@
     (cond
       [(null? remaining)
        (and resolved (simplify-path resolved #f))]
+      [(not (car remaining))
+       ;; The target is complete; a later visit to this link is not a cycle.
+       (loop (cdr remaining) resolved (cdr seen))]
       [else
        (define next
          (simplify-path
@@ -84,7 +87,7 @@
                (append
                 (explode-path
                  (path->complete-path (resolve-path next) (path-only next)))
-                (cdr remaining))
+                (cons #f (cdr remaining)))
                #f
                (cons next seen)))]
          [else

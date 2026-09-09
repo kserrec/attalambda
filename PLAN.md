@@ -1,6 +1,6 @@
 # Minimal cleanup
 
-Status: cleanup work complete, including the PR review corrections.
+Status: cleanup work complete, including all three PR review corrections.
 Phases 1 and 2 are implemented; Phase 3 was
 assessed and skipped under the spec's size limit. Branch `minimal-cleanup`
 starts from clean, synced main `9708ab7`.
@@ -39,6 +39,9 @@ Delivery: [PR #5](https://github.com/kserrec/attalambda/pull/5).
   normalize each already-walked component before loop detection, retaining
   physical parent traversal through symlinks. Add focused regressions, run
   runner tests and the full suite, and push the verified correction.
+- [x] Step 1.5 — Permit repeated visits after a symlink target has finished
+  resolving, while retaining cycle detection during target expansion. Test a
+  valid revisit and a cycle with a growing suffix, then verify and push.
 
 Phase 1 result: the new relative-parent-symlink regression failed with status
 66 before the fix. The resolver now supplies the symlink's containing directory
@@ -109,7 +112,7 @@ and test inputs; the PR runs the complete checks again before merge.
 
 ## PR review corrections
 
-Both actionable findings on PR #5 were reproduced and corrected. Relative
+The first two actionable findings on PR #5 were reproduced and corrected. Relative
 loop targets containing `.` or `..` produced ever-growing lexical paths;
 normalizing each already-walked component makes loop keys stable while
 preserving physical parent traversal through symlinks. The widened version
@@ -118,7 +121,7 @@ rejecting a filled buffer establishes EOF without changing the original read.
 Tests cover both loop spellings, physical parent traversal, an accepted
 63-byte VERSION, and rejected 64-byte reads with and without trailing data.
 
-The final focused runner suite passes 283 assertions. The complete suite passes
+That correction's focused runner suite passes 283 assertions. The complete suite passes
 all 45 files and 17,124 assertions, plus purity for 39 production modules and
 the complete boundary checker. Logs:
 `/tmp/attalambda-cleanup-pr-focused-final.log` and
@@ -128,6 +131,19 @@ these final results cover both corrections together. No checker restriction,
 release metadata, package projection, core/effect/runtime code, or public API
 changed in this follow-up. PR checks and a fresh review of the corrected
 commit are required before the authorized merge, after which work stops.
+
+The fresh review found a valid repeated symlink visit rejected as a loop.
+An isolated `link/../../link/program.attl` probe returned status 66 while the
+direct target ran successfully. The resolver retained completed links in its
+loop history. Step 1.5 limits that history to active target expansions, with a
+completion marker before each original path suffix. The valid revisit now runs;
+a cycle whose remaining suffix grows still returns status 66. All 291 focused
+runner assertions pass. The final complete suite passes all 45 files and
+17,132 assertions, plus purity for 39 production modules and the complete
+boundary check. Logs: `/tmp/attalambda-cleanup-revisit-focused.log` and
+`/tmp/attalambda-cleanup-revisit-full.log`. This correction changes only the
+resolver, its focused regression coverage, and this plan. A fresh PR review and
+all checks must pass before merging; stop after the merge.
 
 ---
 

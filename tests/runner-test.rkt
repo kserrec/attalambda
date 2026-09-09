@@ -325,6 +325,14 @@
                 (build-path allowed-parent-link "program.attl"))))
     #"parent link allowed")
 
+   ;; Returning through a completed link target is not a symbolic-link loop.
+   (check-command-success
+    (run (list (path->string
+                (build-path allowed-parent-link 'up "allowed-parent"
+                            "program.attl")))
+         #:current-directory temporary-root)
+    #"parent link allowed")
+
    ;; Normalize only after walking each component: a symlink followed by
    ;; ".." refers to the target's parent, not the link's lexical parent.
    (define nested-target (build-path allowed-parent-target "nested"))
@@ -341,7 +349,8 @@
 
    ;; Relative loop targets must not grow distinct spellings indefinitely.
    (for ([loop-case (in-list '(("dot-loop" "./dot-loop")
-                              ("up-loop" "allowed-parent-target/../up-loop")))])
+                              ("up-loop" "allowed-parent-target/../up-loop")
+                              ("suffix-loop" "./suffix-loop/nested")))])
      (define loop-source
        (build-path working-directory (car loop-case) "program.attl"))
      (make-file-or-directory-link
