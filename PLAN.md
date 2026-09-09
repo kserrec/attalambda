@@ -1,7 +1,8 @@
 # Minimal cleanup
 
-Status: Phases 1 and 2 complete; Phase 3 is next. Branch `minimal-cleanup` starts from
-clean, synced main `9708ab7`.
+Status: cleanup work complete. Phases 1 and 2 are implemented; Phase 3 was
+assessed and skipped under the spec's size limit. Branch `minimal-cleanup`
+starts from clean, synced main `9708ab7`.
 Contract: [supplied cleanup spec](docs/minimal-cleanup-spec.md).
 Keep the three changes independent and small; this is not a general refactor.
 
@@ -17,7 +18,10 @@ Modify only the runner, focused tests, and the necessary boundary checks.
 Create the saved cleanup spec and update this plan. Language semantics, public
 APIs, runtime/effects/core behavior, purity checks, host capabilities, VERSION,
 package-version projection, dependencies, and release behavior stay unchanged.
-No merge or release is part of this work.
+Kyle subsequently authorized completing this spec without further `next`
+prompts, pushing it, opening the PR, addressing every review comment requiring
+code changes, and merging to main after the PR checks pass. Stop immediately
+after that merge; no release or further project work is authorized.
 
 ## Phase 1 — Fix relative symlink resolution
 
@@ -64,18 +68,35 @@ and package projection are unchanged. Only the validation expression, runner tes
 this plan changed. Logs: `/tmp/attalambda-cleanup-phase2-focused.log` and
 `/tmp/attalambda-cleanup-phase2-full.log`.
 
-## Phase 3 — Remove unnecessary local-name policing, if small
+## Phase 3 — Remove unnecessary local-name policing, if small (skipped)
 
-- [ ] Step 3.1 — Determine whether local binding names can be excluded from
+- [x] Step 3.1 — Determine whether local binding names can be excluded from
   vocabulary checks with a small change. Skip this phase with a concrete
   reason if it would require a redesign; do not broaden the scope.
-- [ ] Step 3.2 — If feasible, make that narrow change and add one harmless
+- [x] Step 3.2 — If feasible, make that narrow change and add one harmless
   local-rename fixture. Preserve languages, imports, exports, privileged names,
   forbidden capabilities, mutation rules, runtime/codec/host separation,
   runner loading, effects, classification, and security-sensitive structure.
-- [ ] Step 3.3 — Run boundary tests including existing prohibited-capability
+- [x] Step 3.3 — Run boundary tests including existing prohibited-capability
   and import fixtures, then the full suite and both structural checks.
   Record the result or skip reason, commit, and push this phase.
+
+Phase 3 assessment: intentionally skipped; Step 3.2's conditional implementation
+and new regression do not apply. An isolated copy of `readers/bool.rkt` passes
+its boundary check, but changing only the `value` parameter and its reference
+to `previously-unseen-local` produces `unapproved-reader-identifier`.
+`strict-vocabulary-violations` consumes `module-symbols`, which recursively
+flattens all symbols without binding scope. A general exemption would need new
+scope analysis for local definitions, lambda/let forms, loop bindings, and
+macro syntax. Merely adding all bound spellings to the vocabulary would also
+exempt out-of-scope references to those spellings. That security-sensitive
+analysis exceeds this minimal cleanup; the spec explicitly says to preserve
+the checker instead. No vocabulary, capability, import, structural, or purity
+restriction was removed, and no source or test file changed in this phase.
+All 138 boundary assertions passed again
+(`/tmp/attalambda-cleanup-phase3-boundary.log`). Phase 2's complete 45-file,
+17,102-assertion suite and both structural checks apply to identical executable
+and test inputs; the PR runs the complete checks again before merge.
 
 ---
 
