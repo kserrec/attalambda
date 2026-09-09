@@ -111,8 +111,8 @@ raw-function addendum SHA-256
 
 The Small Lisp Sugar Amendments (2026-09-09) incorporate the
 [supplied sugar specification](../small-lisp-sugar-spec.md). They extend only
-source notation; every expanded lambda remains unary. Implementation and
-release preparation are tracked in PLAN.md; 0.7.0 is not yet published. Earlier
+source notation; every expanded lambda remains unary. They are implemented
+and published in [0.7.0](../releases/0.7.0.md); PLAN.md records verification. Earlier
 specification bytes are preserved. Before these amendments, the hashes were
 `c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27`,
 `49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91`,

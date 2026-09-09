@@ -1,16 +1,17 @@
 # Standalone distribution
 
 This document records the current launcher and binary-distribution contract,
-then preserves the evidence for the five public releases. The language itself
+then preserves the evidence for the public releases. The language itself
 is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current published release is 0.6.0, with twelve pure value renderers and
-generic `print` through the existing stdout capability. It retains pure `rec`,
+The current published release is 0.7.0, adding four small Lisp sugars that
+expand into existing unary-lambda terms. It retains twelve pure value renderers
+and generic `print` through the existing stdout capability, pure `rec`,
 rejection of recursive module bindings, explicit exit, lowercase public
 callables, ASCII Char literals, and the complete List library. The
-[0.6.0 release notes](../releases/0.6.0.md) describe printing and compatibility;
+[0.7.0 release notes](../releases/0.7.0.md) describe syntax and compatibility;
 the release ledger records published artifacts.
 
 ## Current public support
@@ -277,6 +278,46 @@ Each publication needs Kyle's explicit approval for the exact commit, tag,
 files, checksums, support claims, and public action.
 
 ## Public release ledger
+
+### AttaLambda 0.7.0 — 2026-09-09
+
+Kyle authorized the four Small Lisp Sugar forms, PR #6 merged to main, and
+publication. PR #6 merged as `ab8c9b28bf544fe368695b40a33b1a254d1cf8dc`;
+its tree equals the tree of reviewed head
+`8e18f043607b1295b4ae6b765ebfbc9213347c74`.
+All ten jobs passed in [PR CI](https://github.com/kserrec/attalambda/actions/runs/34340037249).
+Both local and CI source gates pass 46 suites, 17,290 assertions, 39 pure
+production modules, and complete boundaries. Automated PR review completed
+without actionable findings. The expander diff is 56 added and 16 removed
+lines; core, effects, runtime, host, representations, dependencies, the purity
+checker, and legal bytes retain their prior implementation.
+
+The clean merged revision built with full Racket CS 9.3 image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+Unsigned annotated tag `v0.7.0` (object `4d69bcba41bc667cef53f6d260f213880f3e5e2d`) peels
+to that exact build commit. GitHub Release `385434426` was published
+at `2026-09-09T10:54:27Z` and marked latest: <https://github.com/kserrec/attalambda/releases/tag/v0.7.0>.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.7.0-linux-x86_64.tar.gz` | `14,163,954` | `af3e14784f7e6c885db38a055ab2d9faeaf7bf5a4e3a475d21e53055aa184f28` |
+| `SHA256SUMS` | `103` | `49a79635332eb7144c82f7fd43413294a17b7f0c6fa8e5bffcf1753cc6fdd389` |
+
+Asset IDs are `552566835` and `552566828`, respectively.
+GitHub digests, authenticated draft downloads, and unauthenticated public
+downloads match the verified originals. The final archive and public copy
+both pass the isolated digest-pinned Ubuntu consumer without Racket, a
+checkout, or external networking: the four sugars, existing API/printing,
+guide, files, TCP/HTTP, exit statuses, and relocation all pass. The archive
+contains 11 regular files, including two runtime files. Linux x86-64 remains
+the sole supported public binary. All older releases and assets are preserved.
+The earlier uncommitted preview was not published. These later publication
+records change documentation only, outside the tagged archive inputs.
+
+Local evidence: `/tmp/attalambda-0.7.0-release/`,
+`/tmp/attalambda-0.7.0-draft-download/`, `/tmp/attalambda-0.7.0-public-download/`,
+and `/tmp/attalambda-070-release-state.json`. Build, consumer, public-consumer,
+source-suite, and CI logs are recorded in PLAN.md.
 
 ### AttaLambda 0.6.0 — 2026-09-08
 

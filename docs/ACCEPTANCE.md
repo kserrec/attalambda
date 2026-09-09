@@ -7,16 +7,19 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
-The 0.7.0 sugar working tree passes 46 suites with 17,290 assertions,
+The published 0.7.0 source passes 46 suites with 17,290 assertions,
 39-module expanded purity, and the full boundary scan. The 157 sugar
 assertions include actual frontend-expanded terms judged by the existing
 purity expression checker, syntax rejection, scoping/recursion, laziness,
 partial application, and equivalence to existing forms. The Racket CS 9.3
-Linux preview passes the isolated no-Racket consumer, including packaged sugar
-and existing API/printing, file/network, exit, and relocation checks. This is
-local preparation evidence: PR delivery is in progress, and 0.7.0 has not
-yet been merged or published. PLAN.md records exact logs and the
-internal archive hash; a clean merged build is required before publication.
+Linux release archive and fresh public download each pass the isolated
+no-Racket consumer, including packaged sugar and existing API/printing,
+file/network, exit, and relocation checks. This is
+published-release evidence: PR #6 merged as `ab8c9b28bf544fe368695b40a33b1a254d1cf8dc` and
+[0.7.0](https://github.com/kserrec/attalambda/releases/tag/v0.7.0) is published and verified. All ten jobs passed in
+[PR CI](https://github.com/kserrec/attalambda/actions/runs/34340037249); the merged
+tree equals the reviewed and tested PR tree.
+PLAN.md and the release ledger record exact provenance and logs.
 
 Run [`run-all-tests.sh`](../run-all-tests.sh) for the source acceptance gate.
 It runs every test suite, the expanded purity proof, and the repository-wide

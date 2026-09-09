@@ -1,6 +1,6 @@
 # Small Lisp sugar and release 0.7.0
 
-Status: implementation and local verification complete; PR delivery is in progress.
+Status: complete. PR #6 is merged, and AttaLambda 0.7.0 is published and verified.
 Kyle authorized the supplied sugar contract,
 a pull request merged to main, and another release on 2026-09-09. This request
 supersedes the completed cleanup plan's stop-after-merge limit.
@@ -29,7 +29,7 @@ The release retains Linux x86-64 as the only supported public binary.
   laziness, shadowing, recursion rejection, and actual expanded purity.
 - [x] Step 1.3 — Update the syntax contract and release inputs to 0.7.0;
   exercise all four sugars in the packaged Linux consumer.
-- [ ] Step 1.4 — Review the diff, run the full suite and both gates, record
+- [x] Step 1.4 — Review the diff, run the full suite and both gates, record
   evidence, commit and push the verified feature branch, and open the PR.
 
 Focused result: all 157 sugar assertions pass, including actual expanded
@@ -62,27 +62,48 @@ boundary inventory (`/tmp/attalambda-sugar-full.log`). The completed diff was
 reviewed against the supplied spec and direct binding/expansion interactions;
 no production correction was needed after the initial implementation. Core,
 effects, runtime, macros, and runner have empty diffs, and legal bytes are
-unchanged. Step 1.4 remains open only for commit/push/PR delivery.
+unchanged. Phase 1 was committed as `8e18f04`, pushed, and opened as PR #6.
 Kyle explicitly allowed Git writes after the initial permission rejection;
-`small-lisp-sugar` now starts from the fetched, unchanged main revision.
+`small-lisp-sugar` was created from the fetched, unchanged main revision.
 The remote main revision was independently verified as the same `d523bbb` via
 GitHub's API. All session-owned containers have exited. No process is left
 running after local checks finish.
 
 ## Phase 2 — Merge and publish the verified release
 
-- [ ] Step 2.1 — Address actionable PR review feedback and require all CI
+- [x] Step 2.1 — Address actionable PR review feedback and require all CI
   checks to pass; merge the reviewed PR to main.
-- [ ] Step 2.2 — Build the clean merged revision with full Racket CS 9.3;
+- [x] Step 2.2 — Build the clean merged revision with full Racket CS 9.3;
   verify the exact archive with the isolated no-Racket Linux consumer.
-- [ ] Step 2.3 — Tag the exact build revision, stage the two verified assets,
+- [x] Step 2.3 — Tag the exact build revision, stage the two verified assets,
   compare draft downloads, publish 0.7.0, and verify public downloads.
-- [ ] Step 2.4 — Persist release provenance and completion in the existing
+- [x] Step 2.4 — Persist release provenance and completion in the existing
   docs and handoff, commit/push those records, and leave main clean.
 
 Git access: Kyle explicitly allowed Git writes on 2026-09-09 after the first
 escalation was rejected. Fetch and branch creation succeeded on retry. The
 original request already authorizes the PR, merge to main, and 0.7.0 release.
+
+Phase 2 result: PR #6 passed all ten checks and automated review, then merged
+as `ab8c9b28bf544fe368695b40a33b1a254d1cf8dc`. Its tree equals the tree of the
+reviewed and CI-tested PR head. The clean merged build and isolated consumer
+passed. Tag `v0.7.0` points to that build commit; release `385434426`
+was published at `2026-09-09T10:54:27Z` after exact draft-download verification.
+Fresh unauthenticated public downloads match both original hashes and pass
+the complete isolated consumer. The release is latest, contains exactly the
+Linux archive and SHA256SUMS, and preserves every older release and asset.
+Archive SHA-256: `af3e14784f7e6c885db38a055ab2d9faeaf7bf5a4e3a475d21e53055aa184f28`.
+Checksum-manifest SHA-256: `49a79635332eb7144c82f7fd43413294a17b7f0c6fa8e5bffcf1753cc6fdd389`.
+Exact asset IDs, sizes, tag object, and provenance are in the release ledger.
+
+Evidence: `/tmp/attalambda-070-build.log`, `/tmp/attalambda-070-consumer.log`,
+`/tmp/attalambda-070-public-consumer.log`, `/tmp/attalambda-070-pr-ci.log`,
+and `/tmp/attalambda-070-release-state.json`.
+Publication records change only documentation outside archive inputs; prior
+source/CI/consumer evidence applies to identical executable and test inputs.
+All local links and specification/legal hashes were checked before committing
+these records. No implementation, review, merge, or publication work remains.
+Future work needs a new instruction.
 
 ---
 

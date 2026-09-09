@@ -1,7 +1,7 @@
 # Public API
 
-This reference describes the 0.7.0 source API, adding four small syntax sugars
-to the published 0.6.0 API. See the [0.7.0 notes](releases/0.7.0.md) for syntax
+This reference describes the published 0.7.0 API. Older 0.6.0 binaries lack
+the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
 printing examples and compatibility. Older 0.5.0 binaries include pure recursion
 and the complete List library but lack the rendering functions below. The

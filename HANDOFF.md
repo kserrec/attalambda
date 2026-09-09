@@ -1,30 +1,28 @@
-# Small Lisp sugar — verified, delivery in progress
+# Small Lisp sugar and release 0.7.0 — complete
 
-Updated 2026-09-09; stale when the PR or release status changes.
-Kyle authorized the sugar specification, a PR merged to main, and another
-release, then explicitly allowed Git writes after the initial rejection.
-Fetch and creation of `small-lisp-sugar` succeeded. Its base is unchanged main
-`d523bbb`. [PLAN.md](PLAN.md) records the active phases and exact local evidence.
+Updated 2026-09-09; superseded only by new project work. Kyle authorized the
+sugar implementation, PR, merge to main, and release. All work is complete;
+no permission or manual check is pending. Future work needs a new instruction.
 
-All 46 source suites pass 17,290 assertions, expanded purity passes 39
-production modules, and the complete boundary inventory passes. Focused sugar
-and existing integration tests pass 157 and 832 assertions respectively.
-The Racket CS 9.3 Linux preview passed the isolated no-Racket consumer,
-including all four sugars and the existing API, printing, files/network,
-statuses, and relocation. The preview was built with uncommitted changes and
-must not be published.
+[PR #6](https://github.com/kserrec/attalambda/pull/6) merged as
+`ab8c9b28bf544fe368695b40a33b1a254d1cf8dc` after all ten CI jobs and automated review passed.
+Its tree equals the tree of reviewed head
+`8e18f043607b1295b4ae6b765ebfbc9213347c74`. Local and CI source gates each pass
+46 suites, 17,290 assertions, 39-module expanded purity, and complete boundaries.
 
-Next: commit and push this verified branch, open its PR, require CI and review
-completion, merge to main, then build and consume that clean merged revision.
-Tag the exact clean build commit, verify draft asset bytes, publish 0.7.0,
-verify public downloads, and commit/push publication records. No further
-product or publication approval is needed. Preserve all older releases.
+[AttaLambda 0.7.0](https://github.com/kserrec/attalambda/releases/tag/v0.7.0) was published at `2026-09-09T10:54:27Z` and marked
+latest. Unsigned annotated tag `v0.7.0` points to the exact clean merged commit
+used for the Racket CS 9.3 Linux archive. The final archive and a fresh public
+download each passed the isolated no-Racket consumer, including the four
+sugars, existing API/printing, files/network, statuses, guide, and relocation.
+Archive SHA-256: `af3e14784f7e6c885db38a055ab2d9faeaf7bf5a4e3a475d21e53055aa184f28`.
+Linux x86-64 remains the only supported binary; all older releases are preserved.
 
-Use `env TMPDIR=/tmp` for local tests. The full Racket CS 9.3 container image
-needs git installed inside its disposable container. Mount the source at
-`/attalambda-sugar-070-source`; `/src` collides with embedded `syntax/srcloc`.
-Keep all build and consumer gates unchanged. Source/test inputs have not
-changed since the complete verification; subsequent edits are status docs.
+[PLAN.md](PLAN.md) and the [release ledger](docs/design/standalone-distribution.md)
+record exact commits, tag/asset IDs, sizes, hashes, and logs. Publication records
+change only documentation outside the tagged build inputs. The earlier
+uncommitted preview was not published. No session-owned process or container
+remains running. The publication-record commit leaves main clean and pushed.
 
 ---
 
