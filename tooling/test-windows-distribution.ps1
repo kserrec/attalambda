@@ -484,7 +484,7 @@ try {
     Assert-RegularNonsymlinkFile $archivePath 'transferred archive'
     Assert-RegularNonsymlinkFile $checksumPath 'transferred SHA256SUMS'
 
-    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
+    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0|0[.]7[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
     if (-not $nameMatch.Success) {
         Fail 'archive filename contains an unapproved product version or target'
     }

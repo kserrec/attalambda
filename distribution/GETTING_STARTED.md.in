@@ -86,6 +86,27 @@ Error nor Result Err is automatically printed or translated into process
 failure. A performed exit does not return, so later effects do not run; an
 exit in an unselected branch remains unforced.
 
+## Small Lisp sugar
+
+Version 0.7.0 adds four source conveniences. This program prints
+`[5, 6]small` without a trailing newline:
+
+```racket
+#lang attalambda
+(def sum = (lambda (x y) (add x y)))
+(print (list (sum 2 3) (let ((x 2) (y (add x 4))) y)))
+(stdout (cond ((lt 2 3) "small") (else "large")))
+```
+
+`list` expands to existing typed `cons` and `NIL`; `(list)` is `NIL`.
+Lambdas accept one or more identifiers and curry into unary lambdas, so partial
+application works. Multi-binding `let` nests sequentially: later bindings can
+use earlier ones, and `(let () body)` returns the body. Existing unary lambda
+and `(let name = value body)` forms remain valid. `cond` requires a final
+`else` and exactly one condition and result per preceding clause. It uses the
+existing strict typed `if` and leaves unselected branches unforced. No runtime
+value, operation, representation, or host capability is added.
+
 ## Authority and safety
 
 AttaLambda does not sandbox programs. A program runs with the launching

@@ -7,6 +7,17 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
+The 0.7.0 sugar working tree passes 46 suites with 17,290 assertions,
+39-module expanded purity, and the full boundary scan. The 157 sugar
+assertions include actual frontend-expanded terms judged by the existing
+purity expression checker, syntax rejection, scoping/recursion, laziness,
+partial application, and equivalence to existing forms. The Racket CS 9.3
+Linux preview passes the isolated no-Racket consumer, including packaged sugar
+and existing API/printing, file/network, exit, and relocation checks. This is
+local preparation evidence: PR delivery is in progress, and 0.7.0 has not
+yet been merged or published. PLAN.md records exact logs and the
+internal archive hash; a clean merged build is required before publication.
+
 Run [`run-all-tests.sh`](../run-all-tests.sh) for the source acceptance gate.
 It runs every test suite, the expanded purity proof, and the repository-wide
 boundary inventory. Release 0.6.0 passed 45 suites with 17,065 assertions,

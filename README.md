@@ -17,6 +17,12 @@ This is a complete AttaLambda program:
 (stdout "Hello from AttaLambda.\n")
 ```
 
+The working source also includes the four small Lisp sugars prepared for
+0.7.0: `list`, multi-parameter `lambda`, sequential multi-binding `let`, and
+`cond` with a required final `else`. They compile to existing unary-lambda
+terms. The public 0.6.0 download below does not yet include them; see the
+[0.7.0 preparation notes](docs/releases/0.7.0.md).
+
 ## Try it on Linux
 
 AttaLambda 0.6.0 is available as a self-contained Linux x86-64 archive. It

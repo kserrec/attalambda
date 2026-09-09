@@ -156,8 +156,12 @@ guarantee.
 [`lang/reader.rkt`](lang/reader.rkt) delegates Lisp reading to
 `syntax/module-reader`. [`lang/expander.rkt`](lang/expander.rkt) owns the public
 surface. Its application transformer curries source calls, its `lambda`
-transformer permits one parameter, and its datum transformer turns only exact
-Rat and String literals into canonical lambda terms. The two files in
+transformer curries one or more parameters into unary lambdas, and its datum
+transformer turns exact Rat, String, and ASCII Char literals into canonical
+lambda terms. The shared sugar helper lowers `list` to typed cons/NIL,
+sequential `let` to unary lets, and `cond` to typed if with a required final
+else. Dependency analysis shares that lowering to preserve lexical scopes.
+The two files in
 [`macros/`](macros) provide the smaller expansion machinery used by production
 modules. Their different lexical contexts are deliberate.
 

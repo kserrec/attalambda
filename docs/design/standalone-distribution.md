@@ -195,10 +195,11 @@ different syntax, so build tooling checks this closed projection:
 | `0.4.0` | `0.4` |
 | `0.5.0` | `0.5` |
 | `0.6.0` | `0.6` |
+| `0.7.0` | `0.7` |
 
-A new version state requires an explicit plan change. The 0.6.0 release plan
-authorizes exactly 0.6.0 for generic pure printing, including its Linux archive
-and publication. Earlier releases remain historical evidence; they do not
+A new version state requires an explicit plan change. The small Lisp sugar
+release plan authorizes exactly 0.7.0 for the four syntax conveniences,
+including its Linux archive and publication. Earlier releases remain historical evidence; they do not
 authorize a future version. The release ledger separates prepared inputs from
 observed publication.
 

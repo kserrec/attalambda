@@ -681,3 +681,15 @@ Do not detect, tag, inspect, stringify, or safely reject arbitrary functions.
 Their printing behavior is unspecified even when nested, with no guaranteed
 Error. Unknown-tag fallback is defined only for well-formed tagged objects.
 Retain or strengthen expanded purity, source inventory, and boundary checks.
+
+---
+
+# Small Lisp Sugar Amendment (2026-09-09)
+
+The [Small Lisp Sugar contract](../small-lisp-sugar-spec.md) changes source
+notation only. Every resulting abstraction remains unary and untyped;
+object-language computation remains variables, unary lambdas, and application.
+Typed cons and if preserve their existing checks, Error behavior, and demand
+on expressions. Definition dependency analysis must preserve sequential let
+scope and all lambda parameter scopes, and must continue rejecting module
+cycles. No core/runtime/host change or weakening of either gate is permitted.

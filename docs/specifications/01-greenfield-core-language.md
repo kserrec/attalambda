@@ -2499,3 +2499,15 @@ Raw functions, directly or nested in data, have unspecified printing behavior;
 no structured Error is guaranteed. The unknown-tag placeholder applies only
 to well-formed tagged objects. No new runtime type, function detection,
 reflection, implicit output, newline operation, or host capability is added.
+
+---
+
+# Small Lisp Sugar Amendment (2026-09-09)
+
+The [supplied Small Lisp Sugar specification](../small-lisp-sugar-spec.md)
+adds exactly list, multi-parameter lambda, sequential multi-binding let, and
+cond as source conveniences. They lower to existing typed cons/NIL, nested
+unary lambdas, nested unary lets, and typed if. Empty let returns its body;
+cond requires a final else and exactly two expressions per ordinary clause.
+Zero-parameter lambdas remain invalid. Existing forms retain their behavior.
+No runtime behavior, types, values, representation, or host operation is added.

@@ -63,9 +63,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91` |
-| `03-canonical-public-naming-and-host-isolation.md` | `5a5bd4cb2447aa667a1a130c71471f3651a8639997759870a523a06cace921f7` |
+| `01-greenfield-core-language.md` | `382e2ff41b46deff3f5dd9d519d47e323155016d6ea6e59c3009301de5bf9386` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `4ad64530f84bb96fb37424318a631b022a7cc7ec9a0f44e0f4a4ed3ed3834be3` |
+| `03-canonical-public-naming-and-host-isolation.md` | `c97a8e9527fe495b27c03f879f49773e7da51bf7762751a9beecfc1e1f2f5142` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -108,3 +108,12 @@ bytes. The saved supplied contracts remain verbatim: printing SHA-256
 `125120685fc1d2df8161f53fd152ac9f43c2bd9fd5784400bb42dcdbd4bc9291`;
 raw-function addendum SHA-256
 `2f89c6672905c06dd53344008bac9a101990a88f44ced4f56907de30db1597cf`.
+
+The Small Lisp Sugar Amendments (2026-09-09) incorporate the
+[supplied sugar specification](../small-lisp-sugar-spec.md). They extend only
+source notation; every expanded lambda remains unary. Implementation and
+release preparation are tracked in PLAN.md; 0.7.0 is not yet published. Earlier
+specification bytes are preserved. Before these amendments, the hashes were
+`c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27`,
+`49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91`,
+`5a5bd4cb2447aa667a1a130c71471f3651a8639997759870a523a06cace921f7` respectively.

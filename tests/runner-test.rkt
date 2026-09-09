@@ -76,7 +76,7 @@
    (check-command-success (run '("--help")) expected-help)
    (check-command-success
     (run '("--version"))
-    #"AttaLambda 0.6.0\n")
+    #"AttaLambda 0.7.0\n")
 
    (for ([arguments
           (in-list '(()
@@ -158,7 +158,7 @@
      (check-command-failure
       (run '("--version"))
       #rx"invalid product version metadata"))
-   (write-exact-bytes product-version-file #"0.6.0\n")
+   (write-exact-bytes product-version-file #"0.7.0\n")
 
    ;; Validation precedence rejects names and metadata before source content.
    ;; None of the dotenv-spelled paths below is created or opened.
@@ -490,7 +490,7 @@
    (define invalid-syntax-source
      (build-path working-directory "invalid-syntax.attl"))
    (write-source invalid-syntax-source
-                 "#lang attalambda\n(lambda (left right) left)\n")
+                 "#lang attalambda\n(lambda () 1)\n")
    (check-runner-failure
     (run '("invalid-syntax.attl"))
     65

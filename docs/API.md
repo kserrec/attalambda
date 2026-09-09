@@ -1,7 +1,8 @@
 # Public API
 
-This reference describes the published 0.6.0 API, including generic pure value
-rendering and printing. See the [0.6.0 release notes](releases/0.6.0.md) for
+This reference describes the 0.7.0 source API, adding four small syntax sugars
+to the published 0.6.0 API. See the [0.7.0 notes](releases/0.7.0.md) for syntax
+and the [0.6.0 release notes](releases/0.6.0.md) for
 printing examples and compatibility. Older 0.5.0 binaries include pure recursion
 and the complete List library but lack the rendering functions below. The
 [0.5.0 migration notes](releases/0.5.0.md) cover recursive `def` changes.
@@ -14,8 +15,8 @@ Verification is recorded in [PLAN.md](../PLAN.md) and the
 
 Programs begin with `#lang attalambda`. Functions with multiple parameters
 are curried: supplying one argument returns the function awaiting the next.
-Every lambda has one parameter. Wrong tagged arguments return structured Error
-values with the public operation's name; an early Error absorbs the remaining
+Every expanded lambda has one parameter. Wrong tagged arguments return
+structured Error values with the public operation's name; an early Error absorbs the remaining
 arguments.
 Expected computational failures return Result Err. There is no implicit
 printing or conversion from Error to a process exit status.
@@ -25,10 +26,14 @@ printing or conversion from Error to a process exit status.
 | Form | Meaning |
 | --- | --- |
 | `(lambda (value) body)` | Unary function. |
+| `(lambda (first second ...) body)` | One or more identifier parameters, curried to nested unary lambdas. |
 | `(def name = value)` | Named acyclic value. |
 | `(def name first second = body)` | Named acyclic definition; arguments curry to unary lambdas. |
 | `(rec name first second = body)` | Pure self-recursive definition; syntax over the lambda fixed-point combinator. |
 | `(let name = value body)` | Unary-lambda application sugar. |
+| `(let ((name value) ...) body)` | Sequential nested lets; later values can use earlier bindings. Empty bindings return the body. |
+| `(list expression ...)` | Nested existing typed `cons` ending in `NIL`; `(list)` is `NIL`. |
+| `(cond (condition result) ... (else result))` | Nested existing typed `if`; exactly one result per clause and a required final `else`. |
 | `(function first second)` | Curried application, equivalent to `((function first) second)`. |
 | `-7/3`, `0`, `42` | Canonical exact Rat literals; inexact and complex literals are rejected. |
 | `"hello"` | String literal, one byte-sized Char per UTF-8 byte. |
@@ -47,6 +52,19 @@ rejected, including cycles involving `rec`. Local `lambda` parameters,
 `def`/`rec` arguments, and `let` names shadow top-level names normally; a
 `let` name is in scope only in its body, not its value expression. Resulting
 computation remains untyped unary lambda calculus.
+
+The four 0.7.0 sugars change presentation only. For example,
+`(let ((x 2) (y (add x 3))) y)` is `(let x = 2 (let y = (add x 3) y))`.
+Each binding is visible only to later bindings and the body; repeated names
+shadow earlier names. Multi-parameter lambdas likewise nest in source order,
+including repeated parameter names. Zero-parameter lambdas remain invalid.
+`cond` reserves the spelling `else` in its final clause. It requires Bool
+conditions, propagates Errors exactly like `if`, and never evaluates an
+unselected result or later condition. It has no implicit default or extra
+Scheme clause features. `list` preserves existing typed `cons` evaluation,
+including the checks that can force elements or tails when the List is used.
+Sugar-generated `cons`, `NIL`, `if`, and unary-lambda bindings are hygienic:
+user bindings with those names do not replace the generated operations.
 
 The constants are `TRUE`, `FALSE`, `NIL`, `UNIT`, `NONE`, `EMPTY-STRING`,
 and the four HTTP status constants listed below. Individual named Chars are
