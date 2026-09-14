@@ -11,15 +11,22 @@ Wrong tagged arguments produce TypeMismatch, and incoming Error values bubble
 with the normal `read-line` argument frame, before any host call.
 
 On demand it reads one line from the launching process's standard input,
-blocking until a line separator, end of input, or read failure. Success is
-`Ok(Some(String))`. A blank line is `Ok(Some(EMPTY-STRING))`. End of input
-before any bytes is `Ok(NONE)`; a final nonempty unterminated line is returned
+using Racket's `read-bytes-line` in `any` mode, including its blocking behavior.
+Success is `Ok(Some(String))`. A blank line is `Ok(Some(EMPTY-STRING))`.
+End of input before any bytes is `Ok(NONE)`; a final nonempty unterminated line is returned
 once as Some, followed by NONE on the next read. A subsequent request retries
 the stream normally; no EOF flag or input registry is maintained.
 
-LF, CRLF, and CR are line separators; CRLF is one separator. Only that
-separator is removed. Every other byte, including spaces, tabs, NUL, and
-bytes 128 through 255, is preserved as an existing byte-sized Char. No
+LF, CRLF, and CR are line separators; CRLF is one separator. After CR, the
+native reader waits for another byte or end of input to determine whether
+LF follows. A following LF is consumed as part of CRLF; any other following
+byte remains for the next line. A bare CR on a still-open stream therefore
+does not guarantee immediate completion. Senders that wait for a reply
+should finish their line with LF or a complete CRLF. This is the accepted
+native behavior; no custom buffering or line reader is added.
+
+Only the separator is removed. Every other byte, including spaces, tabs,
+NUL, and bytes 128 through 255, is preserved as an existing byte-sized Char. No
 Unicode decoding, trimming, parsing, evaluation, or numeric conversion occurs.
 Like whole-file input, line input has no fixed length limit. Native
 allocation failures become `Err(HostFailure(read-line, resource-exhausted))`;

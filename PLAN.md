@@ -79,7 +79,108 @@ example, and current architecture/host/source availability notes. Core,
 macros, runner, VERSION, and package metadata have empty diffs. Dependencies
 and existing operations retain their behavior; the shared host and codec
 files are modified as described above. No merge, release, or binary publication is part
-of this phase. The source feature is ready for branch review.
+of this phase. The focused review and authorized documentation/test follow-up
+are recorded below.
+
+## Focused bughunt — 2026-09-14
+
+Kyle authorized a focused correctness review of `71232f7..fff9956` and its
+direct interactions. Close-read coverage includes the new input wrapper,
+protocol, codec, facade, host input/shared validation and dispatch paths,
+generalized checker, Option/Result, both input suites, the contract and
+canonical amendments. The review also traced the changed boundary/purity
+checks and tests, runner source execution, and related documentation changes.
+Unrelated native operation bodies were skimmed. The remaining language
+algorithms, unrelated suites, and binary packaging were outside this pass.
+An independent reviewer reproduced the behavior below. The initial review
+made no executable or test changes.
+
+**Observed behavior: native CR lookahead; accepted, not a runtime defect.**
+`runtime/host.rkt:256` uses `read-bytes-line` in `any` mode. Send `first\r`
+through an open pipe and wait for a response without sending another byte:
+the read remains pending. Sending a subsequent LF, ordinary byte, CR, or EOF
+allows it to return `first`; subsequent line contents are correct. Control
+probes with LF and complete CRLF return while the writer remains open.
+This can stall a CR-delimited request/response exchange over pipes. The
+original review called it a confirmed defect and a specification conflict;
+that classification was too strong. It interpreted reading "until a line
+separator" as promising immediate completion after CR, even though the
+contract expressly selects Racket's `any` mode. The waiting is proven; a
+need to replace Racket's reader was not established.
+
+Kyle authorized retaining the existing reader, clarifying the contract/API
+wording, and adding delayed-input regression tests. The accepted behavior
+is Racket's `read-bytes-line` in `any` mode, including looking ahead after CR
+to recognize CRLF. This resolution adds no production code, state, host
+capabilities, or purity exceptions. No contract decision remains pending.
+
+Reproduction drivers are `/tmp/attalambda-input-delayed-cr-probe.rkt` and
+`/tmp/attalambda-input-recovery-probe.rkt`. Each uses an open pipe, a reader
+thread, a 250 ms observation window, then supplies the remaining input and
+checks the resulting line. The recovery probe also confirms fresh reads
+recover after transient EOF and I/O failure on the same still-open port.
+Phase 2 turns the delayed-input driver into bounded regression tests covering
+CR followed later by LF, another byte, CR, and EOF, with LF/complete-CRLF
+controls. The recovery probe found no defect and does not require a fix.
+
+Fresh verification: `TMPDIR=/tmp raco test tests/stdin-test.rkt` passes
+223 assertions and `TMPDIR=/tmp raco test tests/input-language-test.rkt`
+passes 76 assertions. `TMPDIR=/tmp racket tooling/check-purity.rkt` passes
+all 40 production modules, and `TMPDIR=/tmp racket tooling/check-boundaries.rkt`
+passes the full source inventory and host/language boundaries. The earlier
+complete-suite result above remains the baseline; it was not rerun for this
+review. No other confirmed or unresolved likely defects were found within
+the stated coverage. All initial review-owned processes exited.
+
+## Phase 2 — Clarify and test the accepted native behavior
+
+Modify this plan record, `docs/terminal-input-spec.md`, and `docs/API.md`;
+create `tests/stdin-stream-test.rkt`. Runtime behavior, canonical specification
+files, dependencies, purity enforcement, and release artifacts stay unchanged.
+
+- [x] Step 2.1 — Correct the review classification and explicitly document
+  native line-reading behavior, including the wait after a bare CR.
+- [x] Step 2.2 — Convert the delayed-input probe into bounded tests of the
+  actual wrapper and host, including line contents after each delayed suffix.
+- [x] Step 2.3 — Run focused and complete verification, obtain a fresh cold
+  review, record results, and commit/push this phase on `terminal-input`.
+
+Focused verification: all 15 cases in `tests/stdin-stream-test.rkt` pass
+(`/tmp/attalambda-stdin-stream-focused.log`). The suite covers empty/nonempty
+lines, LF/complete-CRLF controls, delayed CR suffixes, partial lines, following
+line contents, repeated EOF, and leaving input open. It waits for observed
+pipe consumption before asserting that a read is pending and gives every
+read a deadline. Cleanup explicitly closes both pipe ports and uses a
+custodian to stop reader threads, including on assertion failure. The cold
+review proved that the first test draft incorrectly relied on custodian
+shutdown to close pipe ports; that assumption was corrected in the harness.
+A permanent failure-path case deliberately interrupts a waiting reader, then
+verifies that both ports are closed and the reader thread is dead.
+
+The fresh cold review found no remaining issues after that correction. In an
+isolated copy, alternate native newline modes fail 10 of the 14 stream cases,
+and readers that never consume input fail all 14 consumption guards.
+Removing either explicit pipe close independently fails the permanent
+cleanup regression. Instrumented success and forced-failure runs verify all
+captured ports close and reader workers stop. The reviewed test file's SHA-256
+is `2ce21fa9baceda16504e07e625bd7d4d60574af0cccf06693fbb26dd215dd2b5`;
+probe copies are under `/tmp/attalambda-input-cold-review-h4vubzhm`.
+
+Final verification: `TMPDIR=/tmp ./run-all-tests.sh` passes all 49 suites
+(17,611 reported tests, including the 15 new compound test cases), followed
+by the expanded purity check for all 40 production modules and the complete
+source inventory/boundary gate. Log: `/tmp/attalambda-input-native-full.log`.
+All eight local document links resolve and `git diff --check` passes.
+The complete run includes the final, cold-reviewed test file; the cleanup
+correction was made before that run reached the new suite.
+
+Final scope: three documentation files and one new test suite. Production
+modules, the three canonical specification files and their index, purity
+enforcement, dependencies, VERSION, and release metadata have empty diffs
+against `fff9956`. This follow-up preserves native input behavior and closes
+the focused review without a remaining runtime finding or design decision.
+The verified phase is recorded on `terminal-input`; no merge or release is
+part of this work.
 
 ---
 

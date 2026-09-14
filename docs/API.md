@@ -287,13 +287,19 @@ failure calls the host. Without explicit exit, normal completion is status 0.
 
 ### Terminal line input (unreleased)
 
-`read-line` waits for a line separator, end of input, or failure. LF, CRLF,
+`read-line` follows Racket's native byte-line reader in `any` mode. LF, CRLF,
 and CR are separators and are removed; other bytes are preserved, including
 leading/trailing spaces and tabs. A blank line produces Some of the empty
 String. A final line without a separator is returned before the next read
 reports NONE. Reading writes no prompt and works with redirected files and
 pipes as well as a terminal. Strings remain byte-based: input performs no
 Unicode decoding, trimming, or parsing.
+
+After CR, reading waits for another byte or end of input to determine
+whether LF follows. A following LF completes the same separator; any other
+byte belongs to the next line. A sender that keeps its stream open and waits
+for a reply should end its line with LF or a complete CRLF, rather than CR
+alone. No custom line reader or extra input state is used.
 
 The exact example below is exercised by the input integration suite through
 both the source language and the command-line runner:
