@@ -2511,3 +2511,17 @@ unary lambdas, nested unary lets, and typed if. Empty let returns its body;
 cond requires a final else and exactly two expressions per ordinary clause.
 Zero-parameter lambdas remain invalid. Existing forms retain their behavior.
 No runtime behavior, types, values, representation, or host operation is added.
+
+# Terminal Line Input Amendment (2026-09-14)
+
+The [Terminal line input contract](../terminal-input-spec.md), authorized by
+Kyle on 2026-09-14, adds public `read-line UNIT` and the exact internal host
+request `["read-line"]`. On demand, success is Ok(Some(String)) or Ok(NONE)
+at end of input; blank lines are Some of the empty String. LF, CRLF, and CR
+are separators, removed from the result; every other byte is preserved.
+Expected read failures are Err(HostFailure), while contract failures remain
+Error. Prompting is separate, pending reads stay lazy, and repeated demand
+of one result reuses its answer. Fresh calls read successive lines.
+The linked contract specifies full failure, sequencing, and boundary rules.
+This amendment supersedes earlier closed operation sets only to add line
+input. No type, representation, parser, or REPL is added.

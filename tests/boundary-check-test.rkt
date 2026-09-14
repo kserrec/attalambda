@@ -194,6 +194,8 @@
                     exact->object-rat
                     object-rat->exact
                     object-unit
+                    object-none
+                    object-some
                     object-ok
                     object-err))))
       (write-datum
@@ -490,6 +492,15 @@
         (def use value = (exit value))))
     '(unapproved-effect-identifier))
 
+   ;; A pure input wrapper can invoke only its injected host, not a reader.
+   (check-effect
+    '(module example "../macros/lazy-with-macros.rkt"
+       (#%module-begin
+        (require "../macros/macros.rkt")
+        (provide use)
+        (def use value = (read-bytes-line value))))
+    '(unapproved-effect-identifier))
+
    (check-effect
     '(module example "../macros/lazy-with-macros.rkt"
        (#%module-begin
@@ -608,12 +619,21 @@
                   exact->object-rat
                   object-rat->exact
                   object-unit
+                  object-none
+                  object-some
                   object-ok
                   object-err)
          ,extra)))
 
    (write-datum codec
                 (codec-datum '(define leak (display "effect"))))
+   (check-equal?
+    (kinds (file-boundary-violations codec 'codec root))
+    '(forbidden-codec-capability))
+
+   ;; Adding host line input grants no input capability to the codec.
+   (write-datum codec
+                (codec-datum '(define leak (read-bytes-line))))
    (check-equal?
     (kinds (file-boundary-violations codec 'codec root))
     '(forbidden-codec-capability))
@@ -1052,6 +1072,10 @@
              (define-syntax (language-lambda stx)
                (syntax #hash((function . exit))))
              (define-for-syntax (language-definition-form? form bound) (print 1))
+             (define-for-syntax (language-definition-form? form bound) (read-line))
+             (define-syntax (language-lambda stx) (syntax (read-line)))
+             (define-syntax (language-lambda stx) (syntax #hash((function . read-line))))
+             (define-for-syntax (language-definition-form? form bound) (read-bytes-line))
              (define-syntax (language-lambda stx) (syntax (print 1)))
              (define-syntax (language-lambda stx)
                (syntax #hash((function . print))))))])

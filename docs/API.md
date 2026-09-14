@@ -1,6 +1,7 @@
 # Public API
 
-This reference describes the published 0.7.0 API. Older 0.6.0 binaries lack
+This reference describes the source API, including unreleased `read-line`.
+The published 0.7.0 binary does not include line input. Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
 printing examples and compatibility. Older 0.5.0 binaries include pure recursion
@@ -259,6 +260,7 @@ SOME(OK([1, TRUE]))
 | Application | Successful outcome |
 | --- | --- |
 | `stdout string` | Write and flush bytes; Ok UNIT. |
+| `read-line UNIT` | Read one line from standard input; Ok(Some(String)) or Ok(NONE) at end of input. Unreleased. |
 | `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Added in 0.6.0. |
 | `read-file path` | Ok containing the complete List of Byte. |
 | `write-file path bytes` | Replace file contents from List of Byte; Ok UNIT. |
@@ -282,6 +284,53 @@ the [host boundary contract](design/host-boundary.md#closed-operation-table).
 Expected external failures return Result Err. `exit` accepts only Rat 0 or 1:
 other Rats return InvalidCount, wrong types return TypeMismatch, and neither
 failure calls the host. Without explicit exit, normal completion is status 0.
+
+### Terminal line input (unreleased)
+
+`read-line` waits for a line separator, end of input, or failure. LF, CRLF,
+and CR are separators and are removed; other bytes are preserved, including
+leading/trailing spaces and tabs. A blank line produces Some of the empty
+String. A final line without a separator is returned before the next read
+reports NONE. Reading writes no prompt and works with redirected files and
+pipes as well as a terminal. Strings remain byte-based: input performs no
+Unicode decoding, trimming, or parsing.
+
+The exact example below is exercised by the input integration suite through
+both the source language and the command-line runner:
+
+<!-- terminal-input-example -->
+```racket
+#lang attalambda
+
+(stdout "What is your name? ")
+(def response = (read-line UNIT))
+(if (is-ok response)
+    (option-case (unwrap-ok response)
+      (lambda (name)
+        (stdout (string-append "Hello, " (string-append name ".\n"))))
+      (stdout "\nNo input.\n"))
+    (exit 1))
+```
+<!-- /terminal-input-example -->
+
+The Unit argument preserves unary application. A wrong type or incoming
+Error is rejected before reading. Expected failures return
+Err(HostFailure(read-line, io-failure)); allocation failures use
+resource-exhausted. No native exception message or port name is exposed.
+Like whole-file input, there is no fixed line-length limit.
+
+Reads follow the existing lazy effect rules. A saved result reads at most
+once when demanded; an unused result reads nothing. Put a fresh call inside
+the body of a function to read again on its next invocation. Top-level
+expressions run in source order, so stdout displays and flushes the example's
+prompt first. Inside a function, check an output Result with `if (is-ok ...)`
+before entering the branch that reads or recurs. A lazy let binding by itself
+does not force an effect or establish order between independent effects.
+
+This operation supplies input for a future REPL. Expression assembly and
+evaluation, continuation prompts, history, and retained definitions remain
+separate future work. The [full contract](terminal-input-spec.md) records
+the public and internal request boundaries.
 
 HTTP status constants are `HTTP-STATUS-OK` (200),
 `HTTP-STATUS-BAD-REQUEST` (400), `HTTP-STATUS-NOT-FOUND` (404), and

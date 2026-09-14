@@ -1,4 +1,89 @@
-# Small Lisp sugar and release 0.7.0
+# Terminal line input
+
+Status: implemented and verified on `terminal-input`, starting from clean `main` at
+`71232f7`. Kyle authorized implementation on 2026-09-14 after agreeing that
+program input should provide a reusable foundation for a later REPL.
+Contract: [terminal input](docs/terminal-input-spec.md). No merge or release
+is authorized by this plan; published 0.7.0 remains unchanged.
+
+## Verified starting state and scope
+
+`effects/protocol.rkt` and `runtime/host.rkt` support ten operations: stdout,
+files, blocking TCP, and exit. There is no standard-input operation or wrapper.
+`lang/expander.rkt` injects the sole host and forces top-level expressions in
+order. Existing tests prove that a forced effect result is cached. The codec
+constructs Result and String values but has no Option constructors. The
+existing Option type already distinguishes SOME from NONE. The related
+`all_the_lambdas` repository has no production stdin/line-input implementation
+to reuse; its input references are subprocess test plumbing.
+
+Modify the protocol, host, codec, language facade, exact boundary enforcement,
+focused tests, API/architecture/host docs, and canonical specification addenda.
+Create `effects/stdin.rkt`, focused input suites, and the contract below;
+put the runnable example in the API documentation and test that exact example.
+Core, representations, evaluator, macros, runner, dependencies, existing
+operations, VERSION, and published artifacts remain behaviorally unchanged.
+
+## Phase 1 — Implement and verify line input
+
+- [x] Step 1.1 — Save the contract and append scoped canonical amendments,
+  preserving all earlier specification bytes and updating their hashes.
+- [x] Step 1.2 — Add the pure unary Unit wrapper and zero-argument request
+  schema; add deterministic Option construction and native byte-line input.
+- [x] Step 1.3 — Expose only public `read-line`, inject the host once, and
+  extend exact boundary checks without granting native input elsewhere.
+- [x] Step 1.4 — Test typing, propagation, laziness, fresh/cached reads,
+  line endings, byte preservation, EOF, failures, request rejection, and
+  source/runner interaction using automated pipes and isolated package homes.
+- [x] Step 1.5 — Document the unreleased API and runnable example, including
+  effect ordering and the future REPL boundary. Review the completed diff.
+- [x] Step 1.6 — Run focused suites, the complete suite, expanded purity,
+  and boundary inventory; record evidence, commit, and push this branch.
+
+Focused result: all 444 assertions in stdin, input-language, and boundary
+suites pass (`/tmp/attalambda-input-focused-final.log`). The source and runner
+tests prove prompt-before-input ordering, waiting on partial lines, recursive
+fresh reads, saved-answer reuse, EOF and blank-line distinction, unselected
+branches, byte preservation, and private binding isolation. Unit tests also
+exercise direct defensive dispatch and synthetic I/O/allocation failures.
+Expanded purity passes all 40 production modules
+(`/tmp/attalambda-input-purity.log`). All earlier canonical specification bytes
+are preserved and their updated index hashes match; local document links resolve.
+
+Test development corrected only harness assumptions: the native custodian
+parameter's exact name, structured host-error checks instead of unsupported
+formatted spellings, and local rather than module-wide shadowing for an alias
+test. No production correction was needed. The multi-file raco runner needed
+approved sandbox escalation for its `/var/tmp` scratch files; the final run
+passed without changing implementation to address that environment limit.
+
+Final result: all 48 source suites pass 17,596 assertions, followed by the
+expanded purity proof for all 40 production modules and the complete boundary
+inventory. Logs: `/tmp/attalambda-input-full.log` (31 completed suites) and
+`/tmp/attalambda-input-full-resumed.log` (the remaining 17 suites and both
+gates). The first run reached an existing purity fixture using read-only
+`/var/tmp`. Escalation for the remaining script was denied; inspecting the
+fixture confirmed it needs only a directory outside the repository. Setting
+`TMPDIR=/tmp` preserved that condition and allowed verification inside the
+sandbox. The resumed purity suite also exposed its old expected count of nine
+effect modules; updating that single assertion to ten retained every expanded
+purity check. No other test or production code changed during the full run,
+so the earlier 31 passing suites remain applicable.
+
+Final diff review: executable changes add only the Unit-triggered input
+wrapper, protocol entry, native line read, deterministic Option constructors,
+public binding, and exact boundary vocabulary/enforcement. Tests add the two
+input suites, native-input rejection cases, and the effect inventory count.
+Documentation adds the contract, scoped specification amendments, tested API
+example, and current architecture/host/source availability notes. Core,
+macros, runner, VERSION, and package metadata have empty diffs. Dependencies
+and existing operations retain their behavior; the shared host and codec
+files are modified as described above. No merge, release, or binary publication is part
+of this phase. The source feature is ready for branch review.
+
+---
+
+# Completed small Lisp sugar and release 0.7.0 (historical)
 
 Status: complete. PR #6 is merged, and AttaLambda 0.7.0 is published and verified.
 Kyle authorized the supplied sugar contract,

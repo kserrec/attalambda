@@ -46,7 +46,7 @@
 
 (define forbidden-codec-capabilities
   '(current-input-port current-output-port current-error-port
-    read read-byte read-bytes read-line write write-byte write-bytes
+    read read-byte read-bytes read-line read-bytes-line write write-byte write-bytes
     display print printf eprintf flush-output
     open-input-file open-output-file call-with-input-file
     call-with-output-file file->bytes file->string
@@ -75,7 +75,7 @@
 ;; These spellings denote pure wrappers at the language boundary. Exact
 ;; imports/definitions and export-only occurrence checks retain native bans.
 (define forbidden-language-capabilities
-  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit print)
+  (remove* '(tcp-connect tcp-listen tcp-accept tcp-close exit print read-line)
            forbidden-codec-capabilities))
 
 ;; The runner is trusted only to decide whether and how the host process loads
@@ -221,7 +221,8 @@
 ;; Adding even an otherwise unknown identifier to either trusted runtime file
 ;; requires a deliberate update here in the same phase that approves it.
 (define phase16-codec-vocabulary
-  '(#%module-begin * + - / <= = > NIL abs and apply argument bit bits
+  '(#%module-begin * + - / <= = > NIL NONE abs and apply argument bit bits
+    object-none object-some raw-make-some
     bits-value bottom
     advance-tortoise? boolean? build-object-byte build-object-char
     build-vector byte->object-char bytes bytes->immutable-bytes
@@ -261,6 +262,8 @@
 
 (define phase16-host-vocabulary
   '(#%module-begin + < <= = > EMPTY-STRING add1 address-in-use-code amount
+    any current-input-port read-bytes-line read-line-operation perform-read-line
+    object-none object-some
     and argument argument-count arguments attempt-close backlog begin bound-port broken-pipe-code buffer
     bytes-length bytes->object-string bytes->string/utf-8 bytes=? cadr caddr
     cadddr call-with-output-file car case cdr cleanup-new-connection
@@ -349,6 +352,8 @@
             exact->object-rat
             object-rat->exact
             object-unit
+            object-none
+            object-some
             object-ok
             object-err))
 
@@ -463,6 +468,8 @@
      (only-in "../effects/print.rkt" (make-print language-make-print))
      (only-in "../effects/stdout.rkt"
               (make-stdout language-make-stdout))
+     (only-in "../effects/stdin.rkt"
+              (make-read-line language-make-read-line))
      (only-in "../effects/tcp.rkt"
               (make-tcp-connect language-make-tcp-connect)
               (make-tcp-listen language-make-tcp-listen)
@@ -490,6 +497,7 @@
      (language-host host)
      (language-exit exit)
      (language-print print)
+     (language-read-line read-line)
      (HEAD head)
      (TAIL tail)
      (IS-NIL is-nil)
@@ -575,6 +583,7 @@
 
 (define expected-language-runtime-definitions
   '((def stdout = (language-make-stdout language-host))
+    (def language-read-line = (language-make-read-line language-host))
     (def language-print = (language-make-print stdout))
     (def read-file = (language-make-read-file language-host))
     (def write-file = (language-make-write-file language-host))
@@ -665,6 +674,7 @@
       language-if language-lambda language-let language-list-expression
       language-exit language-make-exit make-exit exit
       language-make-read-file language-make-stdout
+      language-read-line language-make-read-line make-read-line read-line
       language-print language-make-print make-print print
       language-make-tcp-accept language-make-tcp-close
       language-make-tcp-connect language-make-tcp-listen
@@ -1441,6 +1451,11 @@
    (if (= (datum-occurrence-count 'print (module-info-forms info)) 1)
        '()
        (list (violation path 'forbidden-language-capability 'print)))
+   ;; Public read-line is only an export alias; native reads remain forbidden
+   ;; in transformers and generated expressions as well as runtime helpers.
+   (if (= (datum-occurrence-count 'read-line (module-info-forms info)) 1)
+       '()
+       (list (violation path 'forbidden-language-capability 'read-line)))
    (symbol-violations path
                       symbols
                       forbidden-language-capabilities

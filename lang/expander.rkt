@@ -140,6 +140,8 @@
                   [make-print language-make-print])
          (only-in "../effects/stdout.rkt"
                   [make-stdout language-make-stdout])
+         (only-in "../effects/stdin.rkt"
+                  [make-read-line language-make-read-line])
          (only-in "../effects/tcp.rkt"
                   [make-tcp-connect language-make-tcp-connect]
                   [make-tcp-listen language-make-tcp-listen]
@@ -165,6 +167,7 @@
                      [language-host host]
                      [language-exit exit]
                      [language-print print]
+                     [language-read-line read-line]
                      [HEAD head]
                      [TAIL tail]
                      [IS-NIL is-nil]
@@ -540,6 +543,9 @@
 ;; ordinary lambda values; only language-host is privileged.
 (def stdout =
   (language-make-stdout language-host))
+
+(def language-read-line =
+  (language-make-read-line language-host))
 
 (def language-print =
   (language-make-print stdout))

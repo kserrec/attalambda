@@ -61,6 +61,11 @@ Authenticode signing are not distributed.
 
 ## Run it from source
 
+The `terminal-input` branch also includes unreleased `(read-line UNIT)` for
+programs that ask a question and wait for an answer. See the tested
+[terminal input example](docs/API.md#terminal-line-input-unreleased).
+Published 0.7.0 downloads do not include this operation.
+
 You need Racket. The install command registers the checkout in your user-level
 Racket package registry and does not require administrator access:
 
@@ -95,9 +100,10 @@ To run the complete test and structural-purity suite:
   literals.
 - Errors are ordinary structured values. Expected computational failures use
   `Result`; contract and representation failures use `Error`.
-- Output, files, blocking TCP, and explicit process exit are available through
-  one host boundary. Pure HTTP framing, parsing, response rendering, and
-  routing sit above that boundary as ordinary language computation.
+- Output, standard-input lines (unreleased), files, blocking TCP, and explicit
+  process exit are available through one host boundary. Pure HTTP framing,
+  parsing, response rendering, and routing sit above that boundary as ordinary
+  language computation.
 - Automated structural checks reject host computation, hidden privileged
   imports, non-unary lambdas, and unknown source locations in production
   paths.
@@ -159,7 +165,7 @@ intentionally repeats neither.
 | Path | Purpose |
 | --- | --- |
 | [`core/`](core) | Pure representations, raw algorithms, and strict typed operations. |
-| [`effects/`](effects) | Pure requests and wrappers for output, files, TCP, exit, and HTTP. |
+| [`effects/`](effects) | Pure requests and wrappers for output, line input, files, TCP, exit, and HTTP. |
 | [`runtime/codec.rkt`](runtime/codec.rkt) | Deterministic conversion between lambda values and private host data. |
 | [`runtime/host.rkt`](runtime/host.rkt) | The sole privileged `host`; start at `dispatch-request`. |
 | [`lang/expander.rkt`](lang/expander.rkt) | Public exports, literal expansion, currying, and one-time host injection. |

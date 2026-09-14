@@ -25,6 +25,7 @@
          host-failure-kind
          host-function-name
          stdout-function-name
+         read-line-function-name
          read-file-function-name
          write-file-function-name
          tcp-connect-function-name
@@ -35,6 +36,7 @@
          tcp-close-function-name
          exit-function-name
          stdout-operation
+         read-line-operation
          read-file-operation
          write-file-operation
          tcp-connect-operation
@@ -85,6 +87,7 @@
 
 (define-function-name host-function-name host)
 (define-function-name stdout-function-name stdout)
+(define-function-name read-line-function-name read-line)
 (define-function-name read-file-function-name read-file)
 (define-function-name write-file-function-name write-file)
 (define-function-name tcp-connect-function-name tcp-connect)
@@ -95,6 +98,7 @@
 (define-function-name tcp-close-function-name tcp-close)
 (define-function-name exit-function-name exit)
 (define-function-name stdout-operation stdout)
+(define-function-name read-line-operation read-line)
 (define-function-name read-file-operation read-file)
 (define-function-name write-file-operation write-file)
 (define-function-name tcp-connect-operation tcp-connect)
@@ -508,7 +512,9 @@
            ((raw-cons
              ((raw-make-operation-entry exit-operation)
               raw-exit-schema))
-            NIL)))))))))))
+            ((raw-cons
+              ((raw-make-operation-entry read-line-operation) NIL))
+             NIL))))))))))))
 
 (def raw-dispatch-known-operation-step recur dispatcher request operation arguments entries =
   (((raw-if

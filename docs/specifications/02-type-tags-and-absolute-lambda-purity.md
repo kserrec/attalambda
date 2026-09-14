@@ -693,3 +693,15 @@ Typed cons and if preserve their existing checks, Error behavior, and demand
 on expressions. Definition dependency analysis must preserve sequential let
 scope and all lambda parameter scopes, and must continue rejecting module
 cycles. No core/runtime/host change or weakening of either gate is permitted.
+
+# Terminal Line Input Amendment (2026-09-14)
+
+The [Terminal line input contract](../terminal-input-spec.md) extends the
+sole host exception with reading one byte-preserving line from standard input.
+Only `runtime/host.rkt` may use `current-input-port` and `read-bytes-line` for
+this effect. The codec may construct existing Option values deterministically;
+it gains no effect authority. The Unit wrapper and zero-argument request
+validation remain pure unary-lambda computation through the generalized
+checker and schema walker. The language facade injects the same sole host.
+All other purity rules and structural enforcement remain in force; this
+amendment overrides earlier ten-operation limits only for this eleventh effect.

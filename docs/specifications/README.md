@@ -63,9 +63,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `382e2ff41b46deff3f5dd9d519d47e323155016d6ea6e59c3009301de5bf9386` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `4ad64530f84bb96fb37424318a631b022a7cc7ec9a0f44e0f4a4ed3ed3834be3` |
-| `03-canonical-public-naming-and-host-isolation.md` | `c97a8e9527fe495b27c03f879f49773e7da51bf7762751a9beecfc1e1f2f5142` |
+| `01-greenfield-core-language.md` | `cf91183a48194707c48f33d4dde83030475b34c8c2e72ad3491e588e642459a1` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `63acc294b842f9bb7d01495fa5239b84d9cfcea8bcc6ab56c0f3d7048d7ef6c7` |
+| `03-canonical-public-naming-and-host-isolation.md` | `1afb240d197d268b1b7e8e73d8396c3420aa8132d195ccf17ea61e45e846d8cd` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -117,3 +117,12 @@ specification bytes are preserved. Before these amendments, the hashes were
 `c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27`,
 `49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91`,
 `5a5bd4cb2447aa667a1a130c71471f3651a8639997759870a523a06cace921f7` respectively.
+
+The Terminal Line Input Amendments (2026-09-14) incorporate the
+[authorized input contract](../terminal-input-spec.md). They add only unary
+`read-line UNIT` and its standard-input host operation, preserving every
+earlier specification byte. Implementation is tracked in PLAN.md; this
+feature is not present in the published 0.7.0 binary. Before these amendments,
+the respective hashes were `382e2ff41b46deff3f5dd9d519d47e323155016d6ea6e59c3009301de5bf9386`,
+`4ad64530f84bb96fb37424318a631b022a7cc7ec9a0f44e0f4a4ed3ed3834be3`,
+`c97a8e9527fe495b27c03f879f49773e7da51bf7762751a9beecfc1e1f2f5142`.

@@ -880,7 +880,7 @@
   (files-violations (production-files-under effects-directory)))
 
 (check-equal? (length effects-results)
-              9)
+              10)
 (for ([entry (in-list effects-results)])
   (check-equal? (cdr entry)
                 '()

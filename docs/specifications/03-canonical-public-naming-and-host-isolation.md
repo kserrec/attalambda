@@ -625,3 +625,14 @@ Each binding in multi-binding let scopes over later bindings and the body;
 repeated names shadow earlier ones, as do nested lambda parameters. This
 amendment supersedes earlier source-arity examples only; canonical naming,
 strict typing, representations, and host isolation remain in force.
+
+# Terminal Line Input Amendment (2026-09-14)
+
+The [Terminal line input contract](../terminal-input-spec.md) adds exactly
+the public callable name `read-line`, used as `(read-line UNIT)`. Its private
+facade binding is `language-read-line`, renamed only on export so the native
+Racket reader stays unavailable. `effects/stdin.rkt` supplies the pure
+`make-read-line-request` and host-injected `make-read-line` builders.
+The internal operation String is `"read-line"`; its request has no arguments.
+No uppercase alias, raw reader, prompt helper, terminal handle, or REPL name
+is added. Existing public spellings and isolation requirements remain in force.

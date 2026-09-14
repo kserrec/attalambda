@@ -29,8 +29,8 @@ tooling. Two runtime files have narrower roles:
   representations and private Racket bytes, integers, lists, and exact
   rationals. It performs no external effect and owns no mutable state.
 - [`runtime/host.rkt`](runtime/host.rkt) alone defines `host`. It may perform
-  the approved standard-output, file, blocking TCP, and explicit process-exit
-  operations and own the TCP handle registry.
+  the approved standard-output, standard-input line, file, blocking TCP, and
+  explicit process-exit operations and own the TCP handle registry.
 
 Only `runtime/host.rkt` performs the approved native effects, only the language
 facade imports that host, and only the host imports the codec. Readers can
@@ -65,8 +65,16 @@ effects/protocol <- runtime/host
 The diagram shows module dependency, not authority. `effects/` receives the
 host as an ordinary unary argument; it never imports `runtime/`. The language
 facade is the single place that imports the real host and injects it into the
-ten direct effect wrappers. Generic `print` receives the already-created
+eleven direct effect wrappers. Generic `print` receives the already-created
 stdout wrapper and does not receive another host injection.
+
+The unreleased `read-line UNIT` wrapper in `effects/stdin.rkt` constructs the
+zero-argument request `["read-line"]`. The host reads a byte line from its
+current standard-input port and converts it through the codec to
+Ok(Some(String)) or Ok(NONE). Only the host touches the port; deterministic
+Option construction uses existing core terms. Prompting and sequencing remain
+ordinary program choices. The [input contract](docs/terminal-input-spec.md)
+defines separators, failures, demand, and the future REPL boundary.
 
 ## Pure value rendering and printing
 
