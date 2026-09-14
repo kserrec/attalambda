@@ -2525,3 +2525,16 @@ of one result reuses its answer. Fresh calls read successive lines.
 The linked contract specifies full failure, sequencing, and boundary rules.
 This amendment supersedes earlier closed operation sets only to add line
 input. No type, representation, parser, or REPL is added.
+
+
+# Interactive Tooling Amendment (2026-09-14)
+
+The [Interactive AttaLambda contract](../interactive-implementation-spec.md)
+authorizes a terminal and transcript REPL around the existing checked language.
+Its source entries use the existing Lisp syntax and expansion rules, retain lazy
+module bindings without replay, and use snapshot redefinition. The six shell
+commands and automatic echo are tooling operations, not language primitives.
+The contract specifies source/input ownership, failure statuses, non-rollback,
+loading, reset, bounded inert history, and the verified candidate gate. This
+amendment overrides earlier absence of a REPL only within that contract's scope.
+The runtime-input operation, representations and pure computation remain unchanged.

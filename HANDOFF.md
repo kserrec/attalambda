@@ -1,3 +1,29 @@
+# Interactive AttaLambda — in progress
+
+Updated 2026-09-14. This active record supersedes the completed release handoffs
+below. Kyle authorized autonomous phases 0–11, commits/pushes and a PR; no merge,
+tag or publication. Contract: [docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
+Branch: `interactive-attalambda`, based on input `62d0f0c`; source version remains
+0.7.0 until Phase 9. PLAN.md contains the complete active checklist and evidence.
+
+Phase 0 complete: baseline passes 49 suites/17,611 reported tests, 40-module
+purity and full boundaries; canonical bytes/hashes/active links checked. Next: **1.1,
+real CS 9.3 Expeditor startup/close and controlled failure using a bounded PTY**.
+No production REPL code exists yet. Follow the next unchecked step; never repeat
+commits, pushes, loads or effects already recorded as complete. Before resuming,
+reconcile Git status and active processes with this record. This handoff goes
+stale whenever a later phase updates PLAN.md without updating this entry.
+
+Evidence: `/tmp/attalambda-interactive-baseline.log`. Isolated CS 9.3 runtime:
+`/tmp/attalambda-racket93/bin`; isolated user home `/tmp/attalambda-racket93-user`.
+Approved final build uses cached `racket/racket:9.3-full` Docker image. All artifact,
+current-head CI/review and final terminal acceptance remain pending. Do not claim
+candidate or release completion from the source baseline result.
+
+---
+
+## Historical completed release handoffs
+
 # Small Lisp sugar and release 0.7.0 — complete
 
 Updated 2026-09-09; superseded only by new project work. Kyle authorized the

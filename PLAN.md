@@ -1,3 +1,223 @@
+# Interactive AttaLambda — active milestone
+
+Kyle authorized phases 0–11 of the [supplied contract](docs/interactive-implementation-spec.md)
+on 2026-09-14, including isolated dependencies, tests/builds, milestone commits/pushes,
+and a pull request. **No merge, tag, or publication is authorized.** The endpoint is
+the verified candidate in Checkpoint 11. Phase 12 is conditional and inactive.
+Execute steps serially, subdividing oversized steps before implementation. Each
+phase closes only after focused checks, the full suite, both structural gates,
+and its scoped review. Historical plans below grant no additional authority.
+
+## Starting state and scope
+
+Clean input branch `terminal-input`: `62d0f0cf7e042bd6478024697c460c9fc88b50f7`.
+Local/remote main: `71232f7fb47f8daad61e6a7a6bcf4a5477532352`. Latest release:
+[v0.7.0](https://github.com/kserrec/attalambda/releases/tag/v0.7.0), published
+2026-09-09T10:54:27Z; tag object `4d69bcba41bc667cef53f6d260f213880f3e5e2d`.
+No existing interactive PR or intervening source work was found. The milestone
+branch is `interactive-attalambda`, starting at the complete input implementation.
+
+Modify the existing expander, runner, exact boundary checks, package/distribution
+inputs, tests, version metadata (in Phase 9), and current documentation. Create
+restricted source/session/editor/history helpers only where a demonstrated boundary
+needs them, focused regressions and PTY fixtures, and the saved contract. Core,
+effects, runtime input, codec, representations, language computation, and old file
+execution remain behaviorally unchanged. Existing input code is preserved. Generated
+interaction exports stay private. Every new source has an exact classification.
+Never inspect dotenv contents or add Graphify output; never overwrite unrelated work.
+
+## Evidence and exact next step
+
+Phase 0 records context/ref/environment checks and preserves canonical bytes.
+Untouched source verification: `TMPDIR=/tmp ./run-all-tests.sh`, Racket CS 8.10,
+log `/tmp/attalambda-interactive-baseline.log`: exit 0, all 49 suites, 17,611 reported tests,
+40-module expanded purity, and complete source inventory/boundaries pass.
+Approved release runtime: cached `racket/racket:9.3-full`, image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+Docker and Python PTY facilities are available. Its Expeditor 1.2 depends on base
+>=8.15.0.10 and syntax-color-lib >=1.3; use CS 9.3 for integration and release.
+Local isolated development runtime is under `/tmp/attalambda-racket93`.
+No personal Racket configuration is changed. The relocated library cache and package
+command index were mapped/copied from the same image; `raco make` and package discovery
+now pass. A Python-controlled PTY running CS 9.3 proved input, normal exit, terminal
+state preservation, and explicit descriptor cleanup. Build/consumer acceptance is pending.
+
+Independent read-only Checkpoint 0 review (`baseline_review`) close-read the contract,
+active records, runner, expander definition/dependency/sugar path and exact runner
+boundary/source inventory. It found no scope conflict. It requires only the scoped
+canonical tooling amendments below and fresh host instantiation for reset. Other
+algorithms and packaging execution were outside its scope; no implementation was
+presented as reviewed. Available bughunt instructions supply proof/coverage discipline;
+terminal and release checkpoints use the contract's explicit evidence procedures.
+
+Phase 0 output checks: `python3 /tmp/attalambda-check-interactive-docs.py` passes
+all three prior-byte preservation/hash checks, exact saved-contract comparison and
+active documentation links. The first link probe included an unavailable historical
+Downloads link; its scope was corrected to active records, preserving history.
+The independent reviewer checked the amendment text and preservation procedure.
+Only documentation changes in this phase; production and test inputs match the
+untouched passing baseline.
+
+**Next unfinished step: 1.1 — prove real Expeditor startup/close and controlled failure
+on CS 9.3 with a bounded PTY probe.** No entry/session/editor implementation exists yet.
+
+### Phase 0 — Establish a safe, reproducible starting point
+
+**Purpose:** know the actual repository state and toolchain before changing it.
+
+- [x] **0.1 — Read the governing project context.** Read `AGENTS.md`, the active plan, specification index, input contract, and current release ledger. Record applicable restrictions and the intended milestone workflow; do not treat completed historical plans as current instructions. **Check:** the short baseline record identifies the correct language authority and the input feature to preserve.
+- [x] **0.2 — Resolve current source and release refs.** Inspect repository status, current branch, input branch, main, latest release/tag, and any relevant existing PR. Compare ancestry to the pinned baseline without inspecting dotenv contents. **Check:** record exact SHAs, relevant intervening changes, and whether work already exists; never create a duplicate milestone blindly.
+- [x] **0.3 — Establish the execution environment.** Confirm source-test tooling, Racket version, the project's supported build runtime, and available container/PTY facilities. Discover relevant available skills. Use isolated temporary package/user homes for probes; do not modify the owner's normal Racket configuration. **Check:** run the untouched full suite and both gates, separating observed failures from historical evidence.
+- [x] **0.4 — Establish the milestone workspace.** When implementation/Git actions are authorized, create or reuse one milestone branch containing the input work without rewriting it. Preserve unrelated working changes. **Check:** compare its base and initial diff to the recorded source; no release artifact, tag, or main-branch write has occurred.
+- [x] **0.5 — Install the active plan and scoped amendments.** Save this contract in a suitable docs location, link the active phase list from `PLAN.md`, and add only necessary canonical tooling-boundary amendments using the repository's existing preservation/hash procedure. **Check:** old specification content is preserved, index hashes and local links match, and the new active plan grants no accidental publication authority.
+
+**Checkpoint 0 — Baseline/authority review.** Use repository-onboarding or planning review if available; otherwise compare the baseline and proposed scope directly. Close this phase only with a reproducible environment and no unexplained baseline failures affecting the milestone. A missing final packaging environment may be recorded for later provisioning, but must not be disguised as a passed consumer test.
+
+### Phase 1 — Prove the two risky integrations early
+
+**Purpose:** validate library behavior before committing to substantial UI or session plumbing. Keep probes tiny and isolated; retain useful regressions, not a second implementation.
+
+- [ ] **1.1 — Open and close the real editor.** In the supported Racket build runtime, initialize Expeditor with explicit safe hooks and `atta>`; accept one entry and close it. Exercise initialization failure through a controlled test seam. **Check:** terminal state is restored and the editor does not load user initialization files.
+- [ ] **1.2 — Prove editor-to-program input handoff.** Extend the probe with an entry handler that invokes the existing AttaLambda input path through a tiny fixture, then returns to editing. Do not build a general evaluator yet. **Check:** one answer reaches the program exactly once, is not added as source history, and the next expression can be edited.
+- [ ] **1.3 — Exercise type-ahead and cancellation in the probe.** Drive the probe through a PTY using ordinary typing, a multiline source paste, an answer sent after the accepted entry, and interruption during a blocked read. **Check:** distinguish already accepted source from pending program bytes; prove no dropped/duplicated bytes and no stuck terminal mode. Use event-based readiness and bounded cleanup, not sleeps as proof.
+- [ ] **1.4 — Prove module-instance retention.** Build the smallest trusted test harness with two fresh Racket modules using existing lazy AttaLambda values. Retrieve a lazy binding without forcing it and reference it from another module. **Check:** a saved effect runs once on demand, not on export discovery or import, and later use shares the same answer.
+- [ ] **1.5 — Prove lexical rebinding and reset isolation.** Extend only that harness with an old closure, a replacement binding, and a fresh session namespace. **Check:** the snapshot example produces `2` and `11`, and a new session does not share the previous stateful host instance. This is a plumbing proof, not permission to bypass the production expander.
+- [ ] **1.6 — Record the proven implementation choices.** Select documented editor hooks, source/program-port handling, and module-instance strategy from the evidence. Identify any narrow compatibility adaptation actually needed. **Check:** there is one intended engine and one intended editor adapter; no custom interpreter, terminal driver, or language change has slipped in.
+
+**Checkpoint 1 — Integration feasibility review.** Use a focused architecture review and terminal-integration review. A cold reviewer should challenge stdin ownership, accidental forcing, captured bindings, and runtime sharing. Do not proceed with a handoff known to lose bytes or a reset known to share old host state. Resolve the minimal mechanism here rather than hiding the problem until packaging.
+
+### Phase 2 — Implement one restricted source reader
+
+**Purpose:** obtain well-defined entries without changing the language grammar.
+
+- [ ] **2.1 — Parse a completed buffer with locations.** Add one helper that reads the entire supplied source buffer under the fixed safe reader configuration and returns located forms or a structured diagnostic. **Check:** exact Rats, strings, ASCII character literals, nested forms, and multiple forms parse without executing code; unsupported datums still fail at their existing stage.
+- [ ] **2.2 — Classify completeness and errors.** Distinguish empty/comment-only input, incomplete input, complete input, and genuine read failure using the native reader's behavior. **Check:** comments, escaped quotes, character literals containing delimiters, incomplete strings/block comments, and mismatched delimiters are classified correctly. Do not count parentheses manually.
+- [ ] **2.3 — Assemble plain source entries incrementally.** Collect source lines only until the current buffer is complete, preserving positions and consuming its own terminator. Decode only collected source bytes. **Check:** a following answer line remains available on the same input port, including when the pipe writer stays open.
+- [ ] **2.4 — Parse commands without evaluation.** Add fresh-entry recognition and exact argument validation for the six commands, reusing restricted string parsing for `:load`. **Check:** command-like text inside comments, strings, incomplete source, and program answers is not intercepted; trailing extra command arguments are rejected.
+- [ ] **2.5 — Connect editor readiness to this reader.** Use the same safe parser/completeness logic for Expeditor acceptance and the fallback. Prevent the editor's default reader or error path from bypassing extension restrictions or sanitized diagnostics. **Check:** a malicious reader directive is rejected during completeness checking as well as submission, and no fixture reader module executes.
+
+**Checkpoint 2 — Reader correctness and extension-boundary review.** Run adversarial reader cases and affected existing reader/runner tests. Inspect all places that parse source, command arguments, and later history data; each must use an explicit restricted configuration. Confirm that terminal input remains in the host, while source input remains tooling.
+
+### Phase 3 — Add the smallest private interaction path
+
+**Purpose:** evaluate a checked entry and retrieve results without duplicating language semantics.
+
+- [ ] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
+- [ ] **3.2 — Expose lazy user bindings privately.** Add generated exports or equivalent trusted access for definitions from an interaction module. Keep the public language export surface unchanged. **Check:** discovering exports and retrieving a definition do not demand an input/output effect hidden in its body.
+- [ ] **3.3 — Expose ordered expression results privately.** Generate result bindings that preserve the original lazy expressions and their source order. Keep native transport metadata outside object-language terms. **Check:** module instantiation alone does not prematurely force these results, while ordinary file modules still execute their normal force-and-discard path.
+- [ ] **3.4 — Evaluate one checked module in a session.** Add the minimal runner-side declaration/instantiation/result-demand path. Use fresh module names and the safe AttaLambda source context. **Check:** arithmetic produces the expected encoded value, expressions are demanded in order, and an expansion error anywhere in the entry prevents all its effects.
+- [ ] **3.5 — Render supported results through the existing renderer.** Connect the pure `value-to-string` path and observation-side String reader, retaining the already computed result. **Check:** exact fractions, nested Lists/Options/Results, Maps, Errors, Strings, and Unit use canonical rendering, with no second evaluation and no codec import.
+- [ ] **3.6 — Classify the new scaffolding precisely.** Extend boundary expectations for the new files/imports/exports and their narrowly required capabilities. **Check:** unknown source locations, unapproved production imports, and user attempts to access native `eval`, `require`, or port operations still fail closed.
+- [ ] **3.7 — Check real generated terms for purity.** Feed actual interactive expansions through the existing purity-checking approach, isolating native module scaffolding as existing frontend tests do. **Check:** representative literal, sugar, `def`, and `rec` bodies contain only the allowed expanded computation; a deliberately forbidden computation fixture is rejected.
+
+**Checkpoint 3 — Language-equivalence and purity review.** Use a focused code/architecture review. Compare file and interactive expansion paths and their tests. Reject copied recursion logic, privileged scope accidentally attached to user source, eager transport conversions, and public export leakage. Close only after the full suite and both structural gates pass.
+
+### Phase 4 — Retain definitions with precise session semantics
+
+**Purpose:** grow from one entry to a persistent session without replay or mutable globals.
+
+- [ ] **4.1 — Retain and import committed binding identities.** Maintain the visible-name map and import references to existing module instances into the next entry. **Check:** definitions, functions, and retained partial applications remain usable across several entries without rerunning earlier expressions.
+- [ ] **4.2 — Implement snapshot redefinition.** New entries replace visible name mappings, not old language bindings. Resolve generated imports so local replacements do not conflict. **Check:** the `x`/`plus-x` example passes, old delayed expressions retain their environment, and duplicate definitions within one entry retain current rejection behavior.
+- [ ] **4.3 — Preserve name and recursion rules across entries.** Test unknown earlier names, permitted same-entry forward dependencies, recursive `def`, mutual cycles, and `rec`. **Check:** `(def x = (add x 1))` is rejected even with an earlier `x`; hidden dependencies in sugar do not bypass the checks.
+- [ ] **4.4 — Preserve shadowing and hygiene.** Exercise shadowed public function/syntax names, including declaration-name shadowing where the current language permits it, across multiple entries. **Check:** recognition follows bindings rather than raw symbol spelling, and user names cannot capture generated result/import/export identifiers.
+- [ ] **4.5 — Commit new names as one small transition.** Prepare an entry's new map separately and publish it only after required execution/rendering succeeds; protect only the brief commit operation against partial interruption. **Check:** read/expansion/native/render failures expose none of the entry's new names, preserve previous names, and do not claim to roll back completed effects.
+- [ ] **4.6 — Expose non-evaluating name metadata.** Provide the sorted committed name set for `:names` and completion, excluding private exports. **Check:** listing names never forces a saved read, lazy error, or function body, and failed-entry names never appear.
+
+**Checkpoint 4 — State and laziness review.** Use a code review focused on instance reuse and binding publication. The strongest tests should deliberately include observable effects and failing entries, not just arithmetic. Verify the implementation neither concatenates history nor changes closures to read mutable top-level cells.
+
+### Phase 5 — Integrate input, cancellation, and session lifetime
+
+**Purpose:** make interactive execution recoverable without changing existing input semantics.
+
+- [ ] **5.1 — Wire original process ports and session runtime ownership.** Initialize the shared runtime under session lifetime and parameterize actual entry execution with the correct process ports. **Check:** temporary parsing ports never become program stdin, and one session has one consistent host instance.
+- [ ] **5.2 — Integrate one live program read.** Connect the source engine to `(read-line UNIT)` through open pipes, then through the early editor adapter. **Check:** source terminators are consumed correctly, a partial answer blocks, one answer is returned exactly once, and the next source entry is readable.
+- [ ] **5.3 — Prove lazy input reuse.** Retain a definition whose body reads input, inspect its name, demand it twice, and invoke a function containing a fresh read twice. **Check:** name inspection does not read; the retained answer is reused; fresh calls consume successive answers; an unselected branch performs no read. Reuse existing typing/byte/EOF/newline tests rather than rebuilding that operation.
+- [ ] **5.4 — Add break-aware recovery.** Handle prompt cancellation and cancellation during expansion, infinite computation, rendering, and blocked input. **Check:** each returns to a usable interactive prompt and an unrelated earlier definition still works. Verify diagnostic context and terminal restoration; do not impose a universal computation timeout.
+- [ ] **5.5 — Scope resources created by an entry.** Add the narrow custodian/worker ownership required by the proven design. **Check:** a failed entry's new listener closes, a previously committed unrelated listener survives, original standard ports remain open, and no cancelled worker continues reading or writing.
+- [ ] **5.6 — Implement reset as genuine session replacement.** Shut down the old session and discard its namespace, visible-name map, runtime instance, and stored diagnostics. Retain shell preferences. **Check:** old names disappear, a listening port can be rebound, the new host registry is fresh, and input/history/echo ownership is still correct.
+- [ ] **5.7 — Close cleanly on all exit paths.** Route ordinary quit/EOF, fatal failure, and valid language exit through the necessary cleanup, preserving language exit statuses. **Check:** terminal mode is restored and session resources close after normal success, `(exit 0)`, `(exit 1)`, and an injected native failure. Test processes must be isolated from the test runner.
+- [ ] **5.8 — Measure repeated-use and reset behavior.** Run a modest reproducible workload, initially about 200 small entries mixing definitions, expressions, and rejected entries, across several reset cycles. **Check:** no worker/port accumulation, old session objects become reclaimable after references are dropped, and memory/latency observations show no unexplained severe growth. Record measurements without brittle universal timing/RSS thresholds; fix concrete retention bugs, not theoretical infinite-session limits.
+
+**Checkpoint 5 — Effects, interruption, and lifetime review.** Use systematic debugging for any failures, followed by a cold review of the port/custodian/namespace paths. Tests must include failure-path cleanup and actual PTY behavior. Explicitly check forced promises are not replayed after interruption and that cleanup does not accidentally close the shared session runtime initialized for earlier entries.
+
+### Phase 6 — Load files and reuse diagnostics
+
+**Purpose:** integrate standalone files without weakening the existing launcher.
+
+- [ ] **6.1 — Extract only genuinely shared validation.** Refactor source validation so the file runner can retain its terminating behavior while the REPL receives structured failures. **Check:** existing file-mode path, encoding, declaration, status, and diagnostic tests still pass exactly where their contract is fixed.
+- [ ] **6.2 — Load a fresh standalone instance.** Read the validated file body with the fixed reader, preserve file locations, and use the private export path without ambient REPL imports. **Check:** file effects execute once in normal order, bare expressions are not auto-echoed, and undefined file names cannot be supplied implicitly by the session.
+- [ ] **6.3 — Publish loaded definitions on success.** Integrate the loaded module's definitions through the same snapshot/publication mechanism. **Check:** names are available afterward, failed files publish none, and loading the same path again deliberately reruns it while old closures retain old bindings.
+- [ ] **6.4 — Test file and working-directory boundaries.** Exercise quoted paths with spaces, relative paths, invalid extensions/declarations/UTF-8, rejected symlinks, and dotenv-path rejection without reading dotenv contents. **Check:** working directory and program-relative I/O semantics remain unchanged; rejected loads leave the session usable.
+- [ ] **6.5 — Consolidate sanitized error presentation.** Share small classification/location helpers where beneficial; keep phase-specific diagnostics and the existing file launcher behavior. **Check:** malformed source, unknown names, recursion rejection, missing file, rendering failure, and unexpected native failure produce useful bounded diagnostics without leaking arbitrary native internals.
+
+**Checkpoint 6 — Compatibility and boundary review.** Use a focused regression/code review of validation and loading. Prefer proving the shared helper preserves existing behavior over broad runner cleanup. Re-run the existing file runner/integration suites plus the new load tests and both gates.
+
+### Phase 7 — Assemble the command loop and echo/status policy
+
+**Purpose:** expose the working engine through the final CLI before full editing polish.
+
+- [ ] **7.1 — Add CLI dispatch without altering file mode.** Implement only the supported command forms and terminal/transcript selection. **Check:** both flag orders work, invalid combinations return `64`, default nonterminal invocation does not consume source, and existing `--help`, `--version`, and file mode retain their contracts except the documented new help text.
+- [ ] **7.2 — Connect the plain loop and commands.** Use the shared reader/session engine and implement `:help`, `:names`, `:load`, `:reset`, and `:quit`. **Check:** a full plain session exercises each command, command errors recover, and reset retains shell preferences while replacing evaluation state.
+- [ ] **7.3 — Add explicit echo control.** Implement `:echo on/off` as one shell preference, default on. With echo off, use normal file-style demand and skip all renderer/type-probing paths. **Check:** supported values print canonically when on; the raw-function example in §3.5 does not invoke `f` until explicit application; explicit output remains immediate in either mode.
+- [ ] **7.4 — Keep stdout and UI separate.** Add the small banner/prompt/result/diagnostic output helpers, including separator behavior after a program writes without a newline. **Check:** `atta>` is used consistently, stdout redirection contains no UI, prompts reach the terminal before blocking reads, and echo-off emits no synthetic result text.
+- [ ] **7.5 — Implement transcript status tracking.** Add the sticky recovered-failure flag and explicit EOF/interruption/exit precedence from §3.7. **Check:** a bad entry followed by a good one still ends with status `1`; reset does not clear the flag; language Error/Err values alone do not set it; unfinished EOF returns `65`; explicit language exit retains its own status.
+- [ ] **7.6 — Test the complete incremental transcript path.** Feed source, program answers, blank answers, multiple source forms, a recoverable error, and fresh source through an open pipe without closing the writer prematurely. **Check:** exact answer/source boundaries and expected results/statuses hold with no prompts, escapes, or history access.
+
+**Checkpoint 7 — End-to-end plain REPL review.** Use a behavioral code review against the fixed contract. At this point the feature works without advanced editing. Inspect especially echo-off for accidental tag probing and transcript handling for read-ahead or hidden process-status failures.
+
+### Phase 8 — Complete terminal editing and bounded history
+
+**Purpose:** polish one working engine, not add another execution path.
+
+- [ ] **8.1 — Integrate the proven editor adapter.** Promote the early editor probe into the real loop using the shared safe reader. Declare the actual direct package dependencies and corresponding narrow boundary changes. **Check:** advanced and fallback modes produce equivalent entry semantics and the library still does not execute Racket initialization files.
+- [ ] **8.2 — Configure multiline editing and indentation.** Select appropriate documented lexer/indentation/parenthesis hooks without importing the entire Racket REPL. **Check:** nested expressions, comments, escaped strings, cursor movement, and multi-form paste work; no second parser or custom terminal escape engine is introduced.
+- [ ] **8.3 — Add non-evaluating completion.** Derive visible language names from actual public exports and combine them with committed user names through a supported editor mechanism. **Check:** newly defined/redefined/loaded names appear, reset removes user names, failed names never appear, and lazy definitions are not forced. Filter private scaffolding, not legitimate public language exports.
+- [ ] **8.4 — Implement bounded inert history reading.** Choose one simple data format and safe application-data path; enforce the entry and byte bounds before unbounded parsing/allocation. **Check:** valid multiline entries round-trip, oversized/corrupt/unsafe files are ignored safely, reader directives cannot execute, and `--no-history` performs no persistent read.
+- [ ] **8.5 — Implement best-effort history persistence.** Save submitted source/commands with appropriate permissions and atomic replacement where supported. Skip oversized entries rather than rejecting their execution. **Check:** program answers are absent, an unwritable target does not break the session, a failed save does not corrupt an existing valid file, and `--no-history` performs no persistent write.
+- [ ] **8.6 — Finalize editor failure and fallback paths.** Handle unrecognized terminals, controlled initialization failure, EOF, interrupt, and process exit without exposing the editor's internal errors as language values. **Check:** no terminal-mode residue, no duplicate input reader, and the plain fallback retains multiline source support; advanced features are required on the supported normal Linux terminal, not silently waived.
+- [ ] **8.7 — Run full PTY acceptance.** Drive the actual executable through editing, history recall, completion, multiline paste, program input, Ctrl+C, Ctrl+D, and explicit exit. **Check:** terminal state is restored on every termination path and the source/program handoff still passes after history/completion integration. Exercise source entered before and after blocked reads.
+
+**Checkpoint 8 — Terminal usability and history review.** Use terminal-integration review plus a narrow privacy/boundary review of history and startup behavior. The complete program, not just the probe, must pass real PTY tests. No general penetration-testing framework or new account/service integration is needed.
+
+### Phase 9 — Reconcile documentation and distribution inputs
+
+**Purpose:** make the implemented feature accurately documented and packageable.
+
+- [ ] **9.1 — Run a contract-to-test audit.** Map every acceptance row in §6 to an existing test, new test, or explicit artifact check. **Check:** critical behaviors have executable evidence; observational memory measurements and unperformed platform checks are labeled honestly, not converted into claims of proof.
+- [ ] **9.2 — Update user documentation and executable examples.** Update README/API/help/release notes for runtime input, `atta>`, commands, snapshot redefinition, lazy effects, echo-off, load semantics, and transcript status behavior. **Check:** execute the documented examples, confirm uppercase canonical rendering, and remove obsolete references to `att>` or special literal-lambda printing.
+- [ ] **9.3 — Reconcile architecture and specification records.** Document the narrow REPL-tooling exception, shared expansion path, unchanged host-input contract, source inventory, and dependency direction. Update canonical amendment/index evidence as required. **Check:** docs describe observed code separately from remaining release work and contain no blanket purity exception for arbitrary runner modules.
+- [ ] **9.4 — Prepare candidate version metadata.** After confirming `0.8.0` is still unused and appropriate, update `VERSION`, package projection `0.8`, and every exact version acceptance table/test that actually depends on them. **Check:** Linux and existing internal portability scripts agree; do not broaden version validators generically just to avoid listing the new supported state. If the version was taken by intervening work, do not reuse its tag or overwrite artifacts.
+- [ ] **9.5 — Include the editor and new runner modules in distribution.** Adjust only the dependency/bundling inputs needed by the existing build machinery, including any modules reached through dynamic lookup. **Check:** declared package closure and bundled modules cover the real code path, with no dependence on a developer package home or unbundled source checkout.
+- [ ] **9.6 — Preserve notices and packaging integrity.** Add any required notices for newly bundled dependencies through the existing notice/hash process without deleting prior notices or weakening checks. **Check:** version, notices, archive layout, and source-selection validations all remain explicit and reproducible.
+- [ ] **9.7 — Extend the existing Linux consumer tests.** Add REPL and runtime-input cases to the current consumer workflow, using external test-only PTY tooling when needed. **Check:** the consumer still proves there is no system Racket/raco and covers default/explicit REPL, fallback/transcript, editing, input, cancellation, load/reset, and the old examples. Preserve existing internal portability evidence without claiming new public platforms.
+
+**Checkpoint 9 — Documentation and packaging review.** Use release-readiness review. Check executable docs and static packaging coverage before the final clean build. The full suite and existing CI configuration must include the new tests or invoke them explicitly; a successful old test count alone is not evidence of the new feature.
+
+### Phase 10 — Review and freeze the candidate source
+
+**Purpose:** close implementation review and establish the clean source revision used by the artifact phase.
+
+- [ ] **10.1 — Perform a cold implementation review.** Review the current complete milestone diff, this contract, and tests using a separate read-only reviewer when available. Focus on purity, effects/laziness, imports/shadowing, cancellation, stdin, loading, history, and scope. **Check:** each finding has evidence and a severity/rationale; do not manufacture changes when no defect is found.
+- [ ] **10.2 — Resolve confirmed findings in small units.** For each actual finding, add a regression or reproducible check, patch only the responsible code, and rerun focused checks. Split independent fixes into separate numbered substeps. **Check:** no unresolved correctness or security-boundary blocker remains; rejected suggestions have an evidence-based explanation.
+- [ ] **10.3 — Run final source verification.** Run the entire suite, expanded purity, boundary inventory, and PTY cases on the final candidate inputs. Review dotenv-safe diff/whitespace checks and generated-file exclusions. **Check:** record the runtime, commands, logs, actual results, and any outstanding artifact-only checks.
+
+**Checkpoint 10 — Source freeze.** Use a final scope and code review; close the verified phase with its commit/push when authorized. Record the resulting exact candidate commit without claiming the archive is already verified. Do not amend executable inputs during artifact testing without returning to the responsible implementation step and refreshing affected evidence.
+
+### Phase 11 — Build and verify the exact release candidate
+
+**Purpose:** test the artifact from the frozen source, then record artifact-only evidence separately.
+
+- [ ] **11.1 — Build from the clean candidate revision.** Use the repository's approved Racket CS build runtime and existing Linux build script, with a fresh output directory outside the checkout. Do not use `--allow-dirty` for the candidate artifact. **Check:** record the clean source revision, product/package versions, build command, artifact names, and checksums.
+- [ ] **11.2 — Consume the exact artifact without development dependencies.** Run the existing isolated Linux consumer on the output directory, including real terminal tests and relocation to a path with spaces. **Check:** the extracted executable supports both new feature themes without external Racket, source checkout, personal packages, or user initialization files. Artifact failures require a fix, refreshed source verification as affected, and a new clean build.
+- [ ] **11.3 — Reconcile delivery state and handoff.** Verify that the reviewed source, tested source, clean build revision, and recorded artifact actually correspond. Open or update the milestone PR when authorized, verify current-head checks/review, and record any pending external checks without calling them passed. **Check:** provide the concise handoff in §7; stop at the candidate unless explicit merge/publication authority is present.
+
+**Checkpoint 11 — Final release-candidate gate.** Use release verification and a final scope review. Close this phase with a documentation-only evidence commit when authorized; preserve the exact earlier build SHA rather than relabeling the archive as built from the later record commit. No executable-input change may rely solely on stale evidence. If only publication-record documentation changes afterward, state why prior artifact evidence still applies. Leave no owned test workers, listeners, containers, or temporary source modifications running or staged accidentally.
+
+
+---
+
+# Historical plan — terminal input
+
 # Terminal line input
 
 Status: implemented and verified on `terminal-input`, starting from clean `main` at

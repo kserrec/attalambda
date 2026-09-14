@@ -636,3 +636,17 @@ Racket reader stays unavailable. `effects/stdin.rkt` supplies the pure
 The internal operation String is `"read-line"`; its request has no arguments.
 No uppercase alias, raw reader, prompt helper, terminal handle, or REPL name
 is added. Existing public spellings and isolation requirements remain in force.
+
+
+# Interactive Tooling Amendment (2026-09-14)
+
+The [Interactive AttaLambda contract](../interactive-implementation-spec.md)
+fixes the fresh shell prompt as `atta> ` and the executable as `attalambda`.
+The six shell commands are `:help`, `:names`, `:load`, `:echo`, `:reset`, and
+`:quit`; they are recognized only at a fresh source entry, outside expression
+syntax and program answers. Source files remain `.attl`. Public expression
+names, values, sugar and binding hygiene retain their existing contracts.
+Generated interaction exports and module plumbing remain private. User source
+must not acquire native evaluator, import, port, registry or codec identities
+from the runner. This amendment changes shell naming only and does not extend
+the public language export surface or the existing host operation inventory.
