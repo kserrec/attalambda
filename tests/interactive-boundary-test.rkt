@@ -4,6 +4,8 @@
          "../tooling/check-boundaries.rkt")
 
 (define-runtime-path session-source "../runner/session.rkt")
+(define-runtime-path diagnostics-source "../runner/diagnostics.rkt")
+(define-runtime-path source-file-source "../runner/source-file.rkt")
 (define directory (make-temporary-file "attalambda-session-boundary-~a" 'directory))
 (define target (build-path directory "session.rkt"))
 (define original
@@ -14,10 +16,10 @@
         [(pair? datum) (cons (replace (car datum) before after)
                             (replace (cdr datum) before after))]
         [else datum]))
-(define (check datum)
+(define (check datum [class 'session])
   (call-with-output-file target #:exists 'truncate
     (lambda (output) (write datum output)))
-  (file-boundary-violations target 'session directory))
+  (file-boundary-violations target class directory))
 
 (dynamic-wind
  void
@@ -29,6 +31,8 @@
               ((datum->syntax #f (cons (quote #%module-begin) forms))
                (datum->syntax (quote-syntax here) (cons (quote #%module-begin) forms)))
               ((eval expanded) (eval forms))
+              ((evaluate-entry current parsed void #:imports (quote ()))
+               (evaluate-entry current parsed void))
               ((parameterize-break #f (set-session-bindings! current candidate) (set! successful? #t))
                (begin (set-session-bindings! current candidate) (set! successful? #t)))
               ((parameterize-break #f (set-session-bindings! current candidate) (set! successful? #t))
@@ -52,5 +56,47 @@
                    (dynamic-require "racket/base" (quote eval)))])
        (define changed
          (append (take original 3) (list (append (fourth original) (list form)))))
-       (check-not-equal? (check changed) '() (format "rejected capability: ~s" form)))))
+       (check-not-equal? (check changed) '() (format "rejected capability: ~s" form))))
+   (test-case "diagnostic boundary excludes native details and preserves unwind control flow"
+     (define original-diagnostics
+       (call-with-input-file diagnostics-source
+         (lambda (input) (parameterize ([read-accept-reader #t]) (read input)))))
+     (check-equal? (check original-diagnostics 'diagnostics) '())
+     (for ([mutation
+            '(((raise (failure->source-problem failure (quote render)))
+               (failure->source-problem failure (quote render)))
+              (exn:fail? exn?)
+              ((same-source? (syntax-source expression) expected-source)
+               (same-source? (read) expected-source))
+              ((same-source? (syntax-source expression) expected-source)
+               (same-source? (expand expression) expected-source))
+              ((syntax-failure-reason matched) (exn-message failure))
+              ((require (only-in "source-file.rkt" source-problem source-problem? source-problem-reason
+                                 source-problem-line source-problem-column
+                                 syntax-failure-expression syntax-failure-reason))
+               (require "../runtime/codec.rkt")))])
+       (define changed (replace original-diagnostics (car mutation) (cadr mutation)))
+       (check-not-equal? changed original-diagnostics)
+       (check-not-equal? (check changed 'diagnostics) '())))
+   (test-case "file validation readers stay on their explicit port behind the complete preflight"
+     (define original-file
+       (call-with-input-file source-file-source
+         (lambda (input) (parameterize ([read-accept-reader #t]) (read input)))))
+     (check-equal? (check original-file 'source-file) '())
+     (for ([mutation
+            '(((read-byte input) (read-byte))
+              ((read-bytes (bytes-length language-declaration) input)
+               (read-bytes (bytes-length language-declaration)))
+              ((port->bytes input) (port->bytes))
+              ((define supplied-path (string->path source-name))
+               (define supplied-path
+                 (let ([path (string->path source-name)])
+                   (source-preflight-result path) path)))
+              ((define declaration (read-bytes (bytes-length language-declaration) input))
+               (define declaration
+                 (let ([declaration (read-bytes (bytes-length language-declaration) input)])
+                   (read-byte) declaration))))])
+       (define changed (replace original-file (car mutation) (cadr mutation)))
+       (check-not-equal? changed original-file)
+       (check-not-equal? (check changed 'source-file) '()))))
  (lambda () (delete-directory/files directory)))

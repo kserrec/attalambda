@@ -98,66 +98,31 @@
     make-hash make-hasheq make-weak-hash register registry))
 
 (define runner-vocabulary
-  '(#%datum #%module-begin = and append arguments binary bitwise-and build-path
-    bytes->string/utf-8 bytes-length bytes? cadr call-with-input-file car cdr
-    column command-misuse-status complete-path cond cons content
-    current-command-line-arguments datum->syntax declaration define
-    datum-failure-expression? define-syntax define-values directory?
-    directory-exists? display dotenv-component?
-    dotenv-path? dynamic-require else embedded-product-version eof-object?
-    eprintf eq? equal? exit exn:fail:contract?
-    exn:fail:filesystem:missing-module-path
-    exn:fail:filesystem:missing-module? exn:fail:filesystem?
-    exn:fail:read-srclocs exn:fail:read? exn:fail:syntax-exprs
-    exn:fail:syntax? exn:fail? explode-path expression expressions failure
-    file-exists? file-or-directory-stat file-type-bits for-syntax for/or
-    format hash-ref help-text identifier? if in-list input invalid-declaration
-    invalid-encoding invalid-source-status lambda language-declaration length
-    let line link-exists? location locations loop main matched member
-    missing-path mode name newline next not null? only-in or pair? parent part path
-    path->complete-path path->string path-get-extension path-only path?
-    port->bytes preflight-result product-version quote racket/base racket/file
-    racket/path racket/port raise-syntax-error read-byte read-bytes reason
-    regexp-match regexp-match? regular-file-type-bits regular-file? remaining
-    requested-source-missing? require
-    resolve-parent-path resolve-path resolved resolved-parent resolved-source
-    run-source seen simplify-path source source-name source-path
-    source-preflight-result split-path srcloc-column srcloc-line status stop
-    string->path string-append string-downcase stx supplied-path syntax-column
-    syntax-e syntax-failure-expression syntax-failure-reason syntax-line
-    syntax-property attalambda-recursion self cycle
-    syntax-source syntax? terminator unavailable-source-status
-    unexpected-failure-status unless up valid validate-source value
-    vector->list when with-handlers))
+  '(#%module-begin = and arguments binary build-path bytes->string/utf-8 bytes-length
+    bytes? cadr call-with-input-file car column command-misuse-status cond content
+    current-command-line-arguments datum->syntax define define-syntax display dynamic-require
+    else embedded-product-version eprintf eq? equal? exit
+    exn:fail:filesystem:missing-module-path exn:fail:filesystem:missing-module?
+    exn:fail:filesystem? exn:fail:read-srclocs exn:fail:read? exn:fail:syntax? exn:fail?
+    expression failure for-syntax help-text if input inspect-source-file inspected invalid
+    invalid-source-status lambda length line location locations main matched missing-path
+    newline not only-in pair? path->complete-path path-only path? product-version quote
+    racket/base racket/path raise-syntax-error read-bytes reason regexp-match regexp-match?
+    requested-source-missing? require run-source simplify-path source source-name source-path
+    source-problem-column source-problem-kind source-problem-line source-problem-reason
+    source-problem? srcloc-column srcloc-line status stop string-append stx syntax-column
+    syntax-failure-expression syntax-failure-reason syntax-line syntax-source
+    unavailable-source-status unexpected-failure-status unless up validate-source
+    validated-source-path vector->list when with-handlers))
 
 (define expected-runner-requires
-  '((require (only-in racket/file file-type-bits regular-file-type-bits)
-             (only-in racket/path path-get-extension path-only)
-             (only-in racket/port port->bytes)
-             (for-syntax racket/base
-                         (only-in racket/path path-only)))))
+  '((require "source-file.rkt"
+             (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
-  '(command-misuse-status
-    invalid-source-status
-    unavailable-source-status
-    unexpected-failure-status
-    help-text
-    language-declaration
-    embedded-product-version
-    stop
-    dotenv-component?
-    dotenv-path?
-    resolve-parent-path
-    source-preflight-result
-    regular-file?
-    validate-source
-    syntax-failure-expression
-    datum-failure-expression?
-    syntax-failure-reason
-    requested-source-missing?
-    run-source
-    main))
+  '(command-misuse-status invalid-source-status unavailable-source-status
+    unexpected-failure-status help-text embedded-product-version stop validate-source
+    requested-source-missing? run-source main))
 
 (define expected-runner-status-definitions
   '((define command-misuse-status 64)
@@ -166,8 +131,7 @@
     (define unexpected-failure-status 70)))
 
 (define expected-runner-input-targets
-  '((build-path (path-only source) (quote up) "VERSION")
-    source))
+  '((build-path (path-only source) (quote up) "VERSION")))
 
 ;; Readers may turn completed values into host values for tests and people,
 ;; but they are not another effects layer. Host control flow and data are
@@ -1636,18 +1600,8 @@
        (list (violation path
                         'invalid-runner-status-definitions
                         status-definitions)))
-   (if (and (equal? (call-first-arguments
-                     'call-with-input-file
-                     (module-info-forms info))
-                    expected-runner-input-targets)
-            (= (datum-occurrence-count
-                '(source-preflight-result resolved-source)
-                (module-info-forms info))
-               1)
-            (= (datum-occurrence-count
-                '(bytes->string/utf-8 (port->bytes input) #f)
-                (module-info-forms info))
-               1))
+   (if (equal? (call-first-arguments 'call-with-input-file (module-info-forms info))
+               expected-runner-input-targets)
        '()
        (list (violation path
                         'invalid-runner-input-targets
@@ -1675,7 +1629,7 @@
             (= (count (lambda (name)
                         (eq? name 'call-with-input-file))
                       symbols)
-               2))
+               1))
        '()
        (list (violation path
                         'invalid-runner-entry-or-loader
@@ -1691,6 +1645,165 @@
                                  project-root
                                  runner-vocabulary
                                  'unapproved-runner-identifier)))
+
+;; File inspection is a separate closed class; it cannot execute source or
+;; perform program I/O. Its sole content read remains behind the path preflight.
+(define expected-source-file-preflight
+  '(define (source-preflight-result source)
+  (call-with-input-file source
+    (lambda (input)
+      (port-count-lines! input)
+      (define declaration
+        (read-bytes (bytes-length language-declaration) input))
+      (define terminator (read-byte input))
+      (if (and (equal? declaration language-declaration)
+               (or (eof-object? terminator)
+                   (= terminator 10)
+                   (and (= terminator 13)
+                        (equal? (read-byte input) 10))))
+          (with-handlers ([exn:fail:contract? (lambda (_) 'invalid-encoding)])
+            (define-values (line column position) (port-next-location input))
+            (define text (bytes->string/utf-8 (port->bytes input) #f))
+            (validated-source source text line column position))
+          'invalid-declaration))
+    #:mode 'binary)))
+
+(define expected-source-file-inspection
+  '(define (inspect-source-file source-name)
+  (with-handlers ([source-problem? values]
+                  [exn:fail? (lambda (_)
+                               (source-problem 'unavailable
+                                               "source path could not be inspected" #f #f))])
+    (define (reject kind reason) (raise (source-problem kind reason #f #f)))
+    (define supplied-path (string->path source-name))
+    (when (dotenv-path? supplied-path)
+      (reject 'unavailable "refused source path because dotenv files are never read"))
+    (unless (equal? (path-get-extension supplied-path) #".attl")
+      (reject 'invalid "source file name must end in lowercase .attl"))
+    (define complete-path (path->complete-path supplied-path))
+    (when (link-exists? complete-path)
+      (reject 'unavailable "refused symbolic-link source; choose a regular .attl file"))
+    (define-values (parent name directory?) (split-path complete-path))
+    (define resolved-parent (resolve-parent-path parent))
+    (unless resolved-parent
+      (reject 'unavailable "source path could not be inspected"))
+    (when (dotenv-path? resolved-parent)
+      (reject 'unavailable "refused source path because dotenv files are never read"))
+    (define resolved-source (build-path resolved-parent name))
+    (unless (or (file-exists? resolved-source) (directory-exists? resolved-source))
+      (reject 'unavailable "source file was not found"))
+    (unless (regular-file? resolved-source)
+      (reject 'unavailable "source path is not a regular file"))
+    (define preflight-result
+      (with-handlers ([exn:fail? (lambda (_)
+                                  (reject 'unavailable "source file could not be read"))])
+        (source-preflight-result resolved-source)))
+    (cond
+      [(eq? preflight-result 'invalid-declaration)
+       (reject 'invalid "line 1 must be exactly #lang attalambda")]
+      [(eq? preflight-result 'invalid-encoding)
+       (reject 'invalid "source is not valid UTF-8")])
+    (struct-copy validated-source preflight-result [path supplied-path]))))
+
+(define source-file-vocabulary
+  '(#%datum #%module-begin = _ and append attalambda-recursion binary bitwise-and
+    build-path bytes->string/utf-8 bytes-length call-with-input-file car cdr column
+    complete-path cond cons cycle datum-failure-expression? declaration define
+    define-values directory-exists? directory? dotenv-component? dotenv-path? else
+    eof-object? eq? equal? exn:fail:contract? exn:fail:syntax-exprs exn:fail? explode-path
+    expression expressions failure file-exists? file-or-directory-stat file-type-bits
+    for/or format hash-ref identifier? if in-list input inspect-source-file invalid
+    invalid-declaration invalid-encoding kind lambda language-declaration let line
+    link-exists? loop member mode name next not null? only-in or pair? parent part path
+    path->complete-path path->string path-get-extension path-only path? port->bytes
+    port-count-lines! port-next-location position preflight-result provide quote
+    racket/file racket/path racket/port raise read-byte read-bytes reason regexp-match?
+    regular-file-type-bits regular-file? reject remaining require resolve-parent-path
+    resolve-path resolved resolved-parent resolved-source seen self simplify-path source
+    source-name source-preflight-result source-problem source-problem? split-path
+    string->path string-downcase struct struct-copy struct-out supplied-path syntax-e
+    syntax-failure-expression syntax-failure-reason syntax-property syntax? terminator
+    text unavailable unless validated-source value values when with-handlers))
+
+(define (source-file-violations path info project-root)
+  (define forms (module-info-forms info))
+  (define symbols (module-symbols info))
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-source-file-language)
+   (exact-require-violations
+    path info '((require (only-in racket/file file-type-bits regular-file-type-bits)
+                         (only-in racket/path path-get-extension path-only)
+                         (only-in racket/port port->bytes)))
+    'invalid-source-file-imports)
+   (exact-provide-violations
+    path info '(provide (struct-out validated-source) (struct-out source-problem)
+                         inspect-source-file syntax-failure-expression syntax-failure-reason)
+    'invalid-source-file-exports)
+   (if (and (equal? (filter-map top-level-binding-name forms)
+                    '(language-declaration dotenv-component? dotenv-path? resolve-parent-path
+                      source-preflight-result regular-file? inspect-source-file
+                      syntax-failure-expression datum-failure-expression? syntax-failure-reason))
+            (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
+                    '((struct validated-source (path text line column position) #:transparent)
+                      (struct source-problem (kind reason line column) #:transparent))))
+       '() (list (violation path 'invalid-source-file-scaffolding 'module)))
+   (if (and (equal? (call-first-arguments 'call-with-input-file forms) '(source))
+            (= (datum-occurrence-count '(source-preflight-result resolved-source) forms) 1)
+            (= (datum-occurrence-count '(bytes->string/utf-8 (port->bytes input) #f) forms) 1)
+            (= (datum-occurrence-count expected-source-file-preflight forms) 1)
+            (= (datum-occurrence-count expected-source-file-inspection forms) 1))
+       '() (list (violation path 'invalid-source-file-input-targets 'preflight)))
+   (for/list ([operation '(call-with-input-file read-byte read-bytes port->bytes source-preflight-result)]
+              ;; port->bytes occurs once in the exact import and once in its call.
+              [expected '(1 2 1 2 2)]
+              #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
+     (violation path 'invalid-source-file-operation operation))
+   (strict-vocabulary-violations path project-root source-file-vocabulary
+                                 'unapproved-source-file-identifier)))
+
+(define diagnostics-vocabulary
+  '(< action actual and apply call-with-render-diagnostics car cc cf char->integer
+    char-general-category character column cond define diagnostic-fragment else eq?
+    equal? exn:fail:read-srclocs exn:fail:read? exn:fail:syntax? exn:fail? expand
+    expected expected-source expression failure failure->source-problem for/list
+    format format-source-problem if in-string invalid lambda limit line location
+    locations matched memq min native number->string only-in pair? path->string path?
+    phase problem provide quote raise read reason render rendering require same-source?
+    size source source-name source-problem source-problem-column source-problem-line
+    source-problem-reason source-problem? srcloc-column srcloc-line srcloc-source string
+    string-append string-length string? symbol->string symbol? syntax-column
+    syntax-failure-expression syntax-failure-reason syntax-line syntax-source text
+    with-handlers zl zp))
+
+(define (diagnostics-violations path info project-root)
+  (define forms (module-info-forms info))
+  (define symbols (module-symbols info))
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-diagnostics-language)
+   (exact-require-violations
+    path info '((require (only-in "source-file.rkt" source-problem source-problem? source-problem-reason
+                                 source-problem-line source-problem-column
+                                 syntax-failure-expression syntax-failure-reason)))
+    'invalid-diagnostics-imports)
+   (exact-provide-violations
+    path info '(provide failure->source-problem format-source-problem call-with-render-diagnostics)
+    'invalid-diagnostics-exports)
+   (if (and (equal? (filter-map top-level-binding-name forms)
+                    '(same-source? failure->source-problem diagnostic-fragment
+                                   format-source-problem call-with-render-diagnostics))
+            (= (datum-occurrence-count
+                '(define (call-with-render-diagnostics action)
+                   (with-handlers ([exn:fail? (lambda (failure)
+                                              (raise (failure->source-problem failure 'render)))])
+                     (action))) forms) 1))
+       '() (list (violation path 'invalid-diagnostics-scaffolding 'module)))
+   ;; These labels also name native capabilities. They are data only here.
+   (for/list ([label '(read expand)]
+              #:unless (and (= (count (lambda (name) (eq? name label)) symbols) 1)
+                            (= (datum-occurrence-count (list 'quote label) forms) 1)))
+     (violation path 'invalid-diagnostics-phase-token label))
+   (strict-vocabulary-violations path project-root diagnostics-vocabulary
+                                 'unapproved-diagnostics-identifier)))
 
 ;; Exact private source tooling: native reading of collected source buffers and
 ;; incremental reads from its injected source port. No evaluator or file access.
@@ -1796,7 +1909,11 @@
     input output error current-input-port current-output-port current-error-port
     session-input session-output session-error child successful? set! dynamic-wind
     initialize-session reset-session! previous installed? set-session-namespace!
-    set-session-custodian! session-exit status exit-handler))
+    set-session-custodian! session-exit status exit-handler
+    load-source-file source-name inspected inspect-source-file source-problem? cond else
+    parse-source-buffer validated-source-path validated-source-text validated-source-line
+    validated-source-column validated-source-position source-problem invalid
+    source-buffer-message source-buffer-line source-buffer-column))
 
 (define expected-session-reset
   '(define (reset-session! current)
@@ -1840,7 +1957,8 @@
                       (filter (lambda (name) (memq name names)) result-names)))))
 
 (define expected-session-publication
-  '(define (evaluate-entry current parsed [consume void])
+  '(define (evaluate-entry current parsed [consume void]
+                           #:imports [imports (hash-values (session-bindings current))])
      (define successful? #f)
      (define child (make-custodian (session-custodian current)))
      (dynamic-wind
@@ -1851,7 +1969,7 @@
                        [current-output-port (session-output current)]
                        [current-error-port (session-error current)]
                        [exit-handler (lambda (status) (raise (session-exit status)))])
-          (define entry (prepare-entry current parsed))
+          (define entry (prepare-entry current parsed imports))
           (define candidate
             (for/fold ([bindings (session-bindings current)])
                       ([name (in-list (checked-entry-definitions entry))])
@@ -1862,23 +1980,40 @@
             (set! successful? #t))))
       (lambda () (unless successful? (custodian-shutdown-all child))))))
 
+(define expected-session-load
+  '(define (load-source-file current source-name)
+     (define inspected (inspect-source-file source-name))
+     (cond
+       [(source-problem? inspected) inspected]
+       [else
+        (define parsed
+          (parse-source-buffer (validated-source-path inspected)
+                               (validated-source-text inspected)
+                               #:line (validated-source-line inspected)
+                               #:column (validated-source-column inspected)
+                               #:position (validated-source-position inspected)))
+        (if (memq (source-buffer-status parsed) '(empty complete))
+            (evaluate-entry current parsed void #:imports '())
+            (source-problem 'invalid (source-buffer-message parsed)
+                            (source-buffer-line parsed) (source-buffer-column parsed)))])))
+
 (define (session-violations path info project-root)
   (define forms (module-info-forms info))
   (define symbols (module-symbols info))
   (append
    (exact-language-violations path info 'racket/base 'unexpected-session-language)
    (exact-require-violations
-    path info '((require racket/promise racket/runtime-path "source-reader.rkt"
+    path info '((require racket/promise racket/runtime-path "source-reader.rkt" "source-file.rkt"
                           "../readers/string.rkt"))
     'invalid-session-imports)
    (exact-provide-violations
     path info '(provide (struct-out session) (struct-out checked-entry) (struct-out session-exit)
                          open-session close-session prepare-entry demand-entry render-result evaluate-entry
-                         session-names reset-session!)
+                         session-names reset-session! load-source-file)
     'invalid-session-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(language-path initialize-session open-session close-session reset-session! prepare-entry
-                                    demand-entry render-result evaluate-entry session-names))
+                                    demand-entry render-result evaluate-entry session-names load-source-file))
             (= (datum-occurrence-count
                 '(define-runtime-path language-path "../lang/expander.rkt") forms) 1)
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
@@ -1888,7 +2023,8 @@
                        (struct session-exit (status) #:transparent)))
             (= (datum-occurrence-count expected-session-preparation forms) 1)
             (= (datum-occurrence-count expected-session-publication forms) 1)
-            (= (datum-occurrence-count expected-session-reset forms) 1))
+            (= (datum-occurrence-count expected-session-reset forms) 1)
+            (= (datum-occurrence-count expected-session-load forms) 1))
        '() (list (violation path 'invalid-session-scaffolding 'module)))
    (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
                                make-base-namespace make-custodian dynamic-require
@@ -1979,6 +2115,8 @@
           [(application) (application-violations source info)]
           [(runner) (runner-violations source info root)]
           [(source-reader) (source-reader-violations source info root)]
+          [(source-file) (source-file-violations source info root)]
+          [(diagnostics) (diagnostics-violations source info root)]
           [(session) (session-violations source info root)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
@@ -2064,6 +2202,10 @@
     [(equal? first-part "examples") 'application]
     [(equal? source (normalized (build-path root "runner" "source-reader.rkt")))
      'source-reader]
+    [(equal? source (normalized (build-path root "runner" "source-file.rkt")))
+     'source-file]
+    [(equal? source (normalized (build-path root "runner" "diagnostics.rkt")))
+     'diagnostics]
     [(equal? source (normalized (build-path root "runner" "session.rkt")))
      'session]
     [(equal? first-part "runner") 'runner]
@@ -2326,6 +2468,10 @@
        (normalized (build-path runner-directory "source-reader.rkt")))
      (define session
        (normalized (build-path runner-directory "session.rkt")))
+     (define source-file
+       (normalized (build-path runner-directory "source-file.rkt")))
+     (define diagnostics
+       (normalized (build-path runner-directory "diagnostics.rkt")))
      (define macro-shell
        (normalized (build-path macros-directory "lazy-with-macros.rkt")))
      (define macro-definitions
@@ -2381,6 +2527,8 @@
       (file-boundary-violations runner 'runner root)
       (file-boundary-violations source-reader 'source-reader root)
       (file-boundary-violations session 'session root)
+      (file-boundary-violations source-file 'source-file root)
+      (file-boundary-violations diagnostics 'diagnostics root)
       (file-boundary-violations package-info 'package-info root)
       (append-map (lambda (path)
                     (file-boundary-violations path 'reader root))
@@ -2420,7 +2568,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader session) equal?))
+                 #:unless (member path (list runner source-reader session source-file diagnostics) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

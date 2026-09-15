@@ -157,6 +157,10 @@
                  (build-path root "runner" "source-reader.rkt"))
       (copy-file (build-path project-root "runner" "session.rkt")
                  (build-path root "runner" "session.rkt"))
+      (copy-file (build-path project-root "runner" "source-file.rkt")
+                 (build-path root "runner" "source-file.rkt"))
+      (copy-file (build-path project-root "runner" "diagnostics.rkt")
+                 (build-path root "runner" "diagnostics.rkt"))
       (for ([name (in-list '("hello.attl"
                              "stdout.attl"
                              "file-round-trip.attl"
@@ -223,8 +227,8 @@
  (sort (remove-duplicates
         (map source-classification-class project-classifications))
        symbol<?)
- '(application codec effect host language-expander language-reader macro
-   macro-shell package-info pure-core reader runner session source-reader test tooling))
+ '(application codec diagnostics effect host language-expander language-reader macro
+   macro-shell package-info pure-core reader runner session source-file source-reader test tooling))
 
 (check-equal?
  (count (lambda (classification)
@@ -1260,17 +1264,19 @@
     '())
    (write-datum runner-file clean-runner-datum)
 
+   (define source-file (build-path root "runner" "source-file.rkt"))
+   (define clean-source-file-datum (read-datum source-file))
    (write-datum
-    runner-file
+    source-file
     (replace-datum
      '(bytes->string/utf-8 (port->bytes input) #f)
      '(bytes->string/utf-8 #"" #f)
-     clean-runner-datum))
+     clean-source-file-datum))
    (check-not-false
-    (member 'invalid-runner-input-targets
+    (member 'invalid-source-file-input-targets
             (kinds
-             (file-boundary-violations runner-file 'runner root))))
-   (write-datum runner-file clean-runner-datum)
+             (file-boundary-violations source-file 'source-file root))))
+   (write-datum source-file clean-source-file-datum)
 
    (write-datum
     runner-file

@@ -58,7 +58,7 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 6.1 — shared file validation and compatibility.**
+**Next unfinished step: 7.1 — command-line dispatch and terminal/transcript selection.**
 The private source reader exists; the definition checker accepts retained-name context.
 The minimal session helper is present; the CLI loop is pending.
 
@@ -170,12 +170,12 @@ remain 7/1. It independently passed all fourteen module assertions and checked
 custodian/input cleanup. No new findings in the scoped feasibility review.
 The full phase suite is running on CS 9.3. Its initial attempt stopped before
 assertions on ignored 8.10 compiled reader caches. Compiling the complete test/gate
-set with CS 9.3 succeeded (`/tmp/attalambda-interactive-phase 1-compile.log`);
+set with CS 9.3 succeeded (`/tmp/attalambda-interactive-phase1-compile.log`);
 this changes no tracked source. A later boundary test exposed the dynamically
 loaded `lang/reader.rkt` cache, which was outside static test dependencies. After
 `raco make lang/reader.rkt`, the focused boundary suite passes 145 assertions
-(`/tmp/attalambda-interactive-phase 1-boundary.log`). The full suite has restarted.
-The preserved cache-failure log is `/tmp/attalambda-interactive-phase 1-reader-cache-failure.log`.
+(`/tmp/attalambda-interactive-phase1-boundary.log`). The full suite has restarted.
+The preserved cache-failure log is `/tmp/attalambda-interactive-phase1-reader-cache-failure.log`.
 
 **Checkpoint 1 — Integration feasibility review.** Use a focused architecture review and terminal-integration review. A cold reviewer should challenge stdin ownership, accidental forcing, captured bindings, and runtime sharing. Do not proceed with a handoff known to lose bytes or a reset known to share old host state. Resolve the minimal mechanism here rather than hiding the problem until packaging.
 
@@ -183,7 +183,7 @@ Checkpoint 1 complete: `PATH=/tmp/attalambda-racket93/bin:$PATH
 PLTUSERHOME=/tmp/attalambda-racket93-user TMPDIR=/tmp ./run-all-tests.sh` exits 0:
 all 51 suites, 17,626 reported Racket tests plus the eight Python PTY cases,
 40-module expanded purity, and complete boundary inventory pass. Full log:
-`/tmp/attalambda-interactive-phase 1-full.log`. Independent correction/module
+`/tmp/attalambda-interactive-phase1-full.log`. Independent correction/module
 review has no remaining findings. `git diff --check` passes. Executable language,
 effect, runtime, codec and launcher sources are untouched; this phase adds test
 probes/harness and their declared build dependencies, exact metadata expectations,
@@ -235,7 +235,7 @@ invocation failed before assertions in the relocated runtime's process mode;
 individual invocations, matching the normal full-suite script, pass. No test
 content or deadline was weakened to accommodate that environment failure.
 Independent review and full phase verification are running before the phase commit;
-full log `/tmp/attalambda-interactive-phase 2-full.log`.
+full log `/tmp/attalambda-interactive-phase2-full.log`.
 
 Independent Phase 2 review found two gaps, now closed. Native Unicode whitespace
 was not recognized by command trimming/splitting; commands now use
@@ -261,7 +261,7 @@ sources are unchanged.
 
 Checkpoint 2 complete: the full CS 9.3 command recorded above exits 0 with
 52 suites, 17,637 reported Racket tests plus nine Python PTY cases, 40-module purity
-and complete boundaries (`/tmp/attalambda-interactive-phase 2-full.log`). The final
+and complete boundaries (`/tmp/attalambda-interactive-phase2-full.log`). The final
 exact-block gate refinement also passed focused 11-reader/145-boundary reruns and
 independent original counterexamples. `git diff --check` passes. Changes create
 one private source helper, its focused tests, shared fixture readiness and exact
@@ -284,9 +284,9 @@ superseded imports before graph analysis so a prior x cannot hide a new self-ref
 Use actual expanded define-values bodies for purity, including generated results.
 The transformer prototype uses `#lang lazy`; comparisons show quote/require/
 only-in/provide retain native bindings, so no extra native imports are needed.
-Probe files: `/tmp/attalambda-phase 3-name-probe.rkt`,
-`/tmp/attalambda-phase 3-user-import-probe.rkt`, and
-`/tmp/attalambda-phase 3-property-{lang,probe}.rkt`. No production interaction path yet.
+Probe files: `/tmp/attalambda-phase3-name-probe.rkt`,
+`/tmp/attalambda-phase3-user-import-probe.rkt`, and
+`/tmp/attalambda-phase3-property-{lang,probe}.rkt`. No production interaction path yet.
 
 - [x] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
 3.1 complete: existing language suite passes 193 checks and sugar suite passes
@@ -347,7 +347,7 @@ classes/source-reader were skimmed; retention/cancellation/UI/artifacts are outs
 this phase. Its 28 additional scope/hygiene/shared-effect assertions are now
 permanent regressions. Final independent reruns pass four expansion and seven
 session cases; session boundary mutations also pass. The first full suite used
-`/tmp/attalambda-interactive-phase 3-full.log`; its corrected rerun is recorded below.
+`/tmp/attalambda-interactive-phase3-full.log`; its corrected rerun is recorded below.
 
 The initial full phase run stopped in host-test: the isolated package staging
 list copied the new session helper but omitted readers/string.rkt. The exact
@@ -355,9 +355,9 @@ missing-module diagnostic proves the staging closure is incomplete. Added
 `readers` to the fresh-install helper and all three matching distribution staging
 lists; this narrow prerequisite moves forward from Phase 9, without any version
 change or artifact claim. Focused host/distribution reruns precede the full rerun.
-Initial failure log is retained at `/tmp/attalambda-interactive-phase 3-full.log`.
+Initial failure log is retained at `/tmp/attalambda-interactive-phase3-full.log`.
 Focused correction checks pass: host 81, distribution 209, and both shell-builder
-syntax checks. Full rerun log: `/tmp/attalambda-interactive-phase 3-final-full.log`.
+syntax checks. Full rerun log: `/tmp/attalambda-interactive-phase3-final-full.log`.
 Independent cold follow-up traced the String reader dependency closure, inspected
 all four staging-list changes and searched their siblings. It found no remaining
 omission or weakened dotenv/symlink/compiled-file exclusion. Version and release
@@ -368,7 +368,7 @@ capabilities are unchanged; final artifact/platform checks remain Phase 9–11 w
 
 Checkpoint 3 complete: the final full CS 9.3 rerun exits 0 with 55 suites,
 17,649 reported Racket tests plus nine Python PTY cases, 40-module expanded
-purity and all source boundaries (`/tmp/attalambda-interactive-phase 3-final-full.log`).
+purity and all source boundaries (`/tmp/attalambda-interactive-phase3-final-full.log`).
 Independent reviews and `git diff --check` pass. Executable changes add private
 module expansion/session/result observation and the exact tooling class; package
 staging now includes observation readers. New tests cover private expansion,
@@ -453,7 +453,7 @@ committed hash keys, exposes no private result exports or failed names, and
 leaves saved input, lazy Error and function body untouched. An extra closing
 parenthesis in the newly added test was identified by the native reader at line217
 and corrected before this passing run. Independent `state_review` and the full
-phase suite/gates are in progress; log `/tmp/attalambda-interactive-phase 4-full.log`.
+phase suite/gates are in progress; log `/tmp/attalambda-interactive-phase4-full.log`.
 
 **Checkpoint 4 — State and laziness review.** Use a code review focused on instance reuse and binding publication. The strongest tests should deliberately include observable effects and failing entries, not just arithmetic. Verify the implementation neither concatenates history nor changes closures to read mutable top-level cells.
 
@@ -469,7 +469,7 @@ earlier binary-Nat file, before its state-test invocation.
 
 Checkpoint 4 complete: full CS 9.3 suite exits 0, all 56 suites, 17,662 reported
 Racket tests plus nine Python PTY cases, 40-module purity and full boundaries.
-Log: `/tmp/attalambda-interactive-phase 4-full.log`. `git diff --check` passes.
+Log: `/tmp/attalambda-interactive-phase4-full.log`. `git diff --check` passes.
 Executable changes: immutable visible binding identities, single protected
 publication, and pure private forward-reference suspension. Test changes: state,
 actual private expansion and publication-boundary regressions. Documentation:
@@ -574,9 +574,8 @@ the complete session, exact gate, input/lifetime/memory tests, state delta and
 editor fixture/PTY additions against contract§§3.6–4.3. Independent checks pass:
 8 lifetime, 3 input and 1 boundary groups and all 5 new PTY cases. Memory test was reviewed,
 not rerun alongside the local measurement. No extra hunter required retention.
-The full suite is running in exec56431/monitor303, log
-`/tmp/attalambda-interactive-phase 5-full.log`. Await its exit/gates before committing
-or implementing Phase 6. Focused 13 state groups/1 boundary group and diff whitespace checks pass.
+The full suite completed as recorded below. Focused state/boundary and diff
+whitespace checks pass.
 
 Checkpoint 5 complete: full CS 9.3 verification exits 0 with all 59 suites,
 17,674 reported Racket tests plus 14 Python PTY cases, 40 production purity
@@ -588,23 +587,108 @@ session tooling; exact gate updated. Tests: input/lifetime/memory regressions,
 state/boundary updates and five real-PTY integration cases in the existing fixture.
 Documentation records measured evidence and remaining work. Object language,
 effects, codec/host and existing file execution behavior remain unchanged from
-the authorized input baseline. No Phase 6 implementation has started.
+the authorized input baseline. Phase 5 commit `4f29dd1` is pushed. Step 6.1 follows.
 
 ### Phase 6 — Load files and reuse diagnostics
 
 **Purpose:** integrate standalone files without weakening the existing launcher.
 
-- [ ] **6.1 — Extract only genuinely shared validation.** Refactor source validation so the file runner can retain its terminating behavior while the REPL receives structured failures. **Check:** existing file-mode path, encoding, declaration, status, and diagnostic tests still pass exactly where their contract is fixed.
-- [ ] **6.2 — Load a fresh standalone instance.** Read the validated file body with the fixed reader, preserve file locations, and use the private export path without ambient REPL imports. **Check:** file effects execute once in normal order, bare expressions are not auto-echoed, and undefined file names cannot be supplied implicitly by the session.
-- [ ] **6.3 — Publish loaded definitions on success.** Integrate the loaded module's definitions through the same snapshot/publication mechanism. **Check:** names are available afterward, failed files publish none, and loading the same path again deliberately reruns it while old closures retain old bindings.
-- [ ] **6.4 — Test file and working-directory boundaries.** Exercise quoted paths with spaces, relative paths, invalid extensions/declarations/UTF-8, rejected symlinks, and dotenv-path rejection without reading dotenv contents. **Check:** working directory and program-relative I/O semantics remain unchanged; rejected loads leave the session usable.
-- [ ] **6.5 — Consolidate sanitized error presentation.** Share small classification/location helpers where beneficial; keep phase-specific diagnostics and the existing file launcher behavior. **Check:** malformed source, unknown names, recursion rejection, missing file, rendering failure, and unexpected native failure produce useful bounded diagnostics without leaking arbitrary native internals.
+Execution subdivisions: 6.1 first extracts the existing validation and small
+syntax-diagnostic selectors, then verifies unchanged CLI behavior and the new
+structured result/body coordinates. 6.2 adds an explicit empty-import evaluator
+option and the single checked load route. No file is reopened after validation.
+Step 6.1 verification passed; new source-file class is exact and runner filesystem
+capabilities were reduced. Session composes validation and reading without gaining
+native filesystem primitives; its load route is pinned by the boundary checker.
+
+- [x] **6.1 — Extract only genuinely shared validation.** Refactor source validation so the file runner can retain its terminating behavior while the REPL receives structured failures. **Check:** existing file-mode path, encoding, declaration, status, and diagnostic tests still pass exactly where their contract is fixed.
+6.1 complete: source-file.rkt returns the exact validated body and source position;
+the original launcher retains its terminating policy and dynamic-require behavior.
+Three new helper groups, 291 runner assertions, 145 boundary assertions and the
+complete boundary gate pass (/tmp/attalambda-interactive-6.1-*.log). Source-file
+has an exact class; the runner's old validation capabilities are removed.
+- [x] **6.2 — Load a fresh standalone instance.** Read the validated file body with the fixed reader, preserve file locations, and use the private export path without ambient REPL imports. **Check:** file effects execute once in normal order, bare expressions are not auto-echoed, and undefined file names cannot be supplied implicitly by the session.
+6.2 complete: load-source-file parses the validated body with its original path
+and coordinates, then calls the same evaluator with empty imports and void consumer.
+Five file groups and the exact session boundary mutations pass
+(/tmp/attalambda-interactive-6.2-{file,boundary}.log): ordered effects, no raw-function
+observation, no ambient-name resolution, whole-file expansion before effects,
+CRLF locations and rejected reader/lang/compiled directives.
+- [x] **6.3 — Publish loaded definitions on success.** Integrate the loaded module's definitions through the same snapshot/publication mechanism. **Check:** names are available afterward, failed files publish none, and loading the same path again deliberately reruns it while old closures retain old bindings.
+6.3 complete: eight file groups pass (/tmp/attalambda-interactive-6.3-file.log).
+Three same-path loads have distinct module identities and exactly three effects;
+old closures/delayed values retain old snapshots. Read/expansion/recursion failures
+and a real interrupted program read publish nothing; prior output survives the
+interrupt and old bindings remain usable. Error/Err results permit publication.
+- [x] **6.4 — Test file and working-directory boundaries.** Exercise quoted paths with spaces, relative paths, invalid extensions/declarations/UTF-8, rejected symlinks, and dotenv-path rejection without reading dotenv contents. **Check:** working directory and program-relative I/O semantics remain unchanged; rejected loads leave the session usable.
+6.4 complete: ten file groups and the complete boundary gate pass
+(/tmp/attalambda-interactive-6.4-{file,gate}-final.log). Guarded source reads prove
+one read per load. Literal Unicode/space/shell-looking paths, allowed parent links,
+relative program writes and unchanged working directory pass. Rejected dotenv/final
+symlink loads perform zero content reads; all rejected loads preserve old names.
+The initial focused run caught a missing parenthesis in the new test's for form;
+the exact syntax correction precedes these passing reruns. No product fix was inferred.
+- [x] **6.5 — Consolidate sanitized error presentation.** Share small classification/location helpers where beneficial; keep phase-specific diagnostics and the existing file launcher behavior. **Check:** malformed source, unknown names, recursion rejection, missing file, rendering failure, and unexpected native failure produce useful bounded diagnostics without leaking arbitrary native internals.
+6.5 implementation: new pure diagnostics.rkt reuses source-problem and the existing
+syntax selectors, bounds/escapes dynamic text, trusts only caller-matching locations,
+and offers an opt-in rendering wrapper that raises through transaction cleanup.
+Five diagnostic groups pass (/tmp/attalambda-interactive-6.5-diagnostics.log).
+No default session exception or existing CLI message changed. Final controller
+phase/context and presentation wiring remains Phase 7; native/render diagnostics
+name the entry/file without inventing per-result coordinates. Two boundary mutation
+groups, 145 existing boundary assertions and the complete gate pass in
+/tmp/attalambda-interactive-6.5-{mutations,boundary,gate}.log.
 
 **Checkpoint 6 — Compatibility and boundary review.** Use a focused regression/code review of validation and loading. Prefer proving the shared helper preserves existing behavior over broad runner cleanup. Re-run the existing file runner/integration suites plus the new load tests and both gates.
+
+Checkpoint 6 complete: the full CS 9.3 run exits0 with61 suites,17,691 reported
+Racket tests,14 Python PTY cases,40 production purity modules and complete source
+boundaries (/tmp/attalambda-interactive-phase6-full.log). Independent review and
+repair verification are complete; git diff --check passes. The phase is being
+committed/pushed; reconcile Git before starting7.1 after an interruption.
+
+Executable changes: shared validation and sanitized diagnostics are new helpers;
+the existing launcher delegates validation, and the session executes fresh isolated
+loads through its existing publication transaction. Tests add ten file groups,
+five diagnostic groups and stronger boundary mutations; tooling pins exact new
+classes and sensitive operations. Documentation updates PLAN/HANDOFF and records
+independent preparation. Core/effects/runtime/lang/readers, package metadata and
+VERSION have no diff from Phase 5. File-launch compatibility remains291 assertions.
+
+Cold review proved two structural-gate gaps, with no unmutated execution defect:
+source-file allowed omitted read ports and an extra content preflight before path
+validation; diagnostics allowed native calls using read/expand phase-label tokens.
+The disposable hunter consumed one simulated stdin byte through the first mutation
+and eleven through the diagnostic read mutation. Source-file now pins both complete
+inspection/preflight blocks and exact native-operation counts; diagnostic labels are
+quoted data only. Three permanent mutation groups and the full boundary gate pass
+(/tmp/attalambda-interactive-phase6-review-{mutations,gate}-final.log).
+An initial count omitted port->bytes's explicit import; observed import-plus-call
+count is two and is now fixed. Independent repair review confirms both findings
+closed, with no additional confirmed issue; all original hunter mutations, three
+updated boundary groups and complete inventory gate pass independently
+(/tmp/attalambda-phase6-review-{hunter,boundary,gate}-fixed.log). The already
+running full suite had only reached unchanged acceptance/binary-nat tests before
+these gate/test repairs; its later boundary checks test the repaired implementation.
 
 ### Phase 7 — Assemble the command loop and echo/status policy
 
 **Purpose:** expose the working engine through the final CLI before full editing polish.
+
+Read-only preparation during Phase 6 verification: editor_probe_review proved that
+stdout location counters cannot alone implement separator boundaries. Bare CR and
+LF have identical reported locations, and Expeditor's fresh-line changes the stdout
+counter while descriptor 1 is routed to stderr, even when stdout itself is a pipe.
+terminal-port? also changes during dup2, so terminal status must be captured before
+editing. A minimal immediate forwarding port tracking only the last accepted output
+byte is proven for 7.4; no output capture or implementation change has occurred.
+The 28-line public make-output-port candidate is
+/tmp/attalambda-phase7-forward-output-review.rkt. Five focused partial/nonblocking/
+break/flush/byte tests and five engine/PTY scenarios pass in the adjacent
+forward-output-test.rkt and forward-integration.{rkt,py} probes. It retains only
+accepted-byte count/last byte, forwards immediately, and leaves original stdout
+open. Keep stdout-result separation distinct from visual stderr-prompt separation.
+The editor continues to use original ports; no line counting is needed.
 
 - [ ] **7.1 — Add CLI dispatch without altering file mode.** Implement only the supported command forms and terminal/transcript selection. **Check:** both flag orders work, invalid combinations return `64`, default nonterminal invocation does not consume source, and existing `--help`, `--version`, and file mode retain their contracts except the documented new help text.
 - [ ] **7.2 — Connect the plain loop and commands.** Use the shared reader/session engine and implement `:help`, `:names`, `:load`, `:reset`, and `:quit`. **Check:** a full plain session exercises each command, command errors recover, and reset retains shell preferences while replacing evaluation state.

@@ -6,27 +6,34 @@ publication.** Contract: [docs/interactive-implementation-spec.md](docs/interact
 Branch `interactive-attalambda`, based on input `62d0f0c`. Version stays0.7.0 until
 Phase 9. PLAN contains the serial checklist and detailed evidence.
 
-Phases 0–4 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`, `ba3d4c5`.
-Phase 5 is implemented but uncommitted. **Next: finish Checkpoint 5 full suite/gates,
-then commit/push; only then begin6.1.** Reconcile status before resuming. Do not
+Phases 0–5 are committed and pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`,
+`ba3d4c5`, `4f29dd1`. Phase 6 is verified and being committed/pushed now.
+**Next: Step 7.1 — command-line dispatch and terminal/transcript selection.**
+Reconcile status before resuming; do not
 repeat completed effects, probes, commits or pushes.
 
 ## Current verification
 
-Full Phase 5 verification completed with exit 0: 59 suites, 17,674 reported
+Full Phase 6 verification completed with exit 0: 61 suites, 17,691 reported
 Racket tests, 14 Python PTY cases, 40 production purity modules and complete
-boundaries. Log `/tmp/attalambda-interactive-phase5-full.log`. No suite/monitor
-remains running. Cold `lifetime_cold_review` found no proven findings and
-independently passed lifetime/input/boundary and all five new PTY cases. Memory
-was close-read but not rerun alongside the measurement. No new hunter required
-retention. Commit/push this verified phase, then proceed with 6.1.
+boundaries. Log /tmp/attalambda-interactive-phase6-full.log. Exec87292 and monitor
+cell355 are finished. Independent file_load_cold_review closed both proven gate
+findings after rerunning the original hunters, three boundary groups and complete
+gate; no additional confirmed issue. Core/effects/runtime/lang/readers, package
+metadata and VERSION have no diff from Phase 5. git diff --check passes.
+
+Phase 6 memory observations: three 200-entry cycles take11.05/10.70/14.21seconds;
+retained heap131.26/131.46/131.51MB, reset121.17/121.23/121.27MB versus121.22MB initial.
+Descriptors remain7; weak-reference/reset/close assertions pass. These measurements
+are observations, not universal latency or memory promises. Prior Phase 5 evidence
+remains below for comparison.
 
 Memory log `/tmp/attalambda-interactive-5.8-memory.log`: three 200-entry sessions,
 about9.15/9.13/9.21seconds; retained heap131.16/131.39/131.45MB and reset heap
 121.07/121.15/121.15MB versus121.18MB initial; descriptors stay 7. Weak references to
 old namespace/maps clear on each reset and final close; no owned thread/port growth.
 Observations are not universal performance promises. Prior Phase 4 full log
-`/tmp/attalambda-interactive-phase 4-full.log`:56suites,17,662 Racket-reported tests,
+`/tmp/attalambda-interactive-phase4-full.log`:56suites,17,662 Racket-reported tests,
 9PTY cases,40 purity modules and complete boundaries, exit0.
 
 ## Implemented session behavior
@@ -88,16 +95,110 @@ gets no filesystem capability. Session retains closed native loader targets/sing
 publication. Caller working directory and program-relative I/O never change.
 Final launcher distinguishes expansion/render/native errors without arbitrary native
 messages/paths; missing-source vs missing-installation remains file-launch logic.
-No Phase 6 implementation or helper creation has happened yet.
+Step 6.1 is implemented: new runner/source-file.rkt owns shared validation and
+small syntax-diagnostic selectors; existing runner calls it without changing CLI
+policy. Exact source-file class and runner capability reduction are implemented.
+Three file-helper cases, 291 existing runner assertions, 145 boundary assertions
+and the complete boundary gate pass; logs /tmp/attalambda-interactive-6.1-*.log.
+Runner-test exec94234 finished with exit 0; no Phase 6 full suite has started.
+Step 6.2 is complete: session load-source-file composes the exact validated body,
+restricted parser and shared evaluate-entry with explicit empty imports and void
+consumer. Boundary pins this route; it adds no native filesystem primitive.
+Five file groups and session-boundary mutations pass in 6.2-{file,boundary}.log.
+Step 6.3 passes eight file groups in /tmp/attalambda-interactive-6.3-file.log:
+reload identities/effects, old snapshots, failed publication and real cancelled
+input after output, plus successful Error/Err publication. No implementation
+change was needed beyond the shared transaction already implemented in 6.2.
+Step 6.4 passes ten file groups and complete gate; 6.4-{file,gate}-final.log.
+Initial new-test syntax failure is corrected; product behavior was not changed.
+Step 6.5 adds diagnostics.rkt (pure classification/formatting plus opt-in renderer
+unwind wrapper). Five diagnostic groups pass in 6.5-diagnostics.log. Exact new
+boundary class/mutations pass (two mutation groups, 145 assertions, complete gate).
+Default engine
+exceptions and file CLI messages stay intact; Phase 7 wires controller diagnostics.
+Checkpoint 6 is complete; the phase is being committed/pushed. Reconcile Git
+before continuing so an interrupted commit or push is never repeated blindly.
+The two cold-review findings concerned gate rejection only: omitted-port/early
+preflight mutations and executable diagnostic read/expand labels. Exact protected
+blocks/use counts and permanent mutation tests now reject them. Independent final
+logs: /tmp/attalambda-phase6-review-{hunter,boundary,gate}-fixed.log. No product
+implementation changed for those repairs. The first revised count omitted the
+port->bytes import; the observed import-plus-call count of two is now enforced.
 
-Phase 8 read-only API review is running with editor_probe_review: installed
-Expeditor main does not export its private completer or history-limit parameters.
-Candidate supported approach uses an empty metadata-only completion namespace
-and fresh public editor state per read from shell-owned history (up to 1,000),
-so private internal history trimming cannot discard the shell history. Await
-its exact primary-source findings before implementing Phase 8. A blank-Enter
-probe passed: it retains editing and only repositions the cursor; do not expect
-a newly printed prompt as the readiness signal. No repository change from that probe.
+The earlier documentation-only spacing edit had altered some /tmp phase log
+spellings; those paths and the stale Phase 5 next-step text are corrected now.
+
+Phase 8 read-only editor_probe_review is complete. Use a fresh empty metadata-only
+completion namespace each prompt; removing bindings with namespace-undefine-variable!
+leaves stale identifier mappings. Public hooks and placeholder bindings never force
+values or expose native names. Keep shell-owned history (up to 1,000) and reopen
+public Expeditor state for each read: PTY probes reached entries 999/1,000, whereas
+the library's returned history trims to 256. Do not import private parameters.
+API: https://docs.racket-lang.org/expeditor/Expeditor_API.html and
+https://docs.racket-lang.org/reference/Namespaces.html.
+
+The existing and fresh-editor fixtures both fail 3/3 when source, its program
+answer and the following source arrive in one write before acceptance: Racket's
+stdin buffer retains the next line while Expeditor reads descriptor 0 directly.
+After evaluation, if byte-ready? on original stdin, collect the next entry with
+the existing read-source-entry on that same port; otherwise use Expeditor.
+This minimal non-replay handoff passed complete queued source, incomplete source
+with and without LF, two program reads, and program Ctrl+D followed by editing.
+Already-buffered incomplete entries finish through the plain collector; subsequent
+ordinary prompts regain advanced editing. Section 3.6 permits this demonstrated
+minimal adaptation; retain all cases in actual CLI PTY tests in Phase 8.
+Evidence: /tmp/attalambda-phase8-{editor-api,gated-editor-api,pending}-review.rkt.
+Blank Enter retains editing and repositions the cursor; use the returned value
+for EOF, not prompt repainting. Review made no repository changes.
+Completion follow-up: the library's common native identifier list only ranks
+already available candidates. Seven PTYs in /tmp/attalambda-phase8-common-name-review.py
+prove native prefixes do not complete, positive metadata names do, and promises
+remain unforced. No private completer hook or upstream adaptation is needed.
+
+Phase 7.4 read-only preparation: port-count-lines!/port-next-location alone fails
+separator tracking. Bare CR and LF report identical locations, and Expeditor's
+fresh-line alters stdout's counter while fd1 is routed to stderr (even with piped
+stdout). terminal-port? changes during dup2; snapshot original status beforehand.
+editor_probe_review proved the 28-line public make-output-port candidate at
+/tmp/attalambda-phase7-forward-output-review.rkt for session program output only.
+It forwards immediately and retains accepted-byte count/last byte, with close=void
+preserving original stdout. Five focused tests (forward-output-test.rkt) and five
+engine/PTY scenarios (forward-integration.{rkt,py}) pass: partial/nonblocking writes,
+cancelled blocking write, exact CR/LF/UTF8, flush/error metadata, immediate prompts,
+echo-off and editor handoff with terminal/piped stdout. Keep stdout-result boundary
+and visual-prompt separation distinct; editor uses original ports. No whole-output
+capture, repo implementation change or test waiver. Counter failure evidence:
+/tmp/attalambda-phase7-editor-{True,False}.log. Primary API documentation:
+https://docs.racket-lang.org/reference/Byte_and_String_Output.html and
+https://docs.racket-lang.org/reference/customport.html.
+
+Phase 8 history read-only preparation is complete (reader_design_review).
+Recommend one private history helper, newest-first, with magic/version + u16 count
++ u32 UTF8 byte lengths. Cap count1000 and complete encoded file1048576 bytes;
+strictly reject invalid UTF8/framing/trailing bytes. A native data reader can amplify
+11 bytes (#1000000(0)) into a million-element vector even with extensions disabled,
+so do not use unrestricted native read for a supposedly bounded history file.
+Use string-utf-8-length to skip oversized source before allocating encoded bytes.
+History disabled/transcript paths return before path lookup, stat, encoding or writes.
+
+Path recommendation: (find-system-path 'pref-dir)/attalambda/history-v1; PLTUSERHOME
+isolates it under the existing temporary Racket home. Check no-follow metadata for
+existing ancestors, reject symlinks/non-directories/unsafe writable ancestors; only
+the root-owned sticky system-temp ancestor is allowed for isolated /tmp fixtures.
+Create missing directories0700; require app directory0700 and private regular
+single-link history before reading. Check stat size then cap actual read1048577
+to cover growth. Reject unsafe leaves before content reads; never chmod unsafe
+existing paths. Atomic temporary files default0664 here, so set temporary mode0600
+before writing. Use an atomic helper rename-failure handler that re-raises, preserving
+the prior target rather than a fallback rename dance. Persistence failure is best
+effort; breaks retain their normal control flow. Public metadata proves modes/types/
+links/size, not an independent current-UID comparison; no UID-witness/FFI subsystem
+is required. Windows stat modes do not establish ACL privacy; keep optional history
+policy separate from internal file-launch portability. Probe:
+/tmp/attalambda-history-api-probe.rkt (private fixtures /tmp/attalambda-history-api-5m2q98p4).
+Retain tests for framing/count/byte edges, directive inertness, growth, links/FIFO/
+directories/modes, midwrite/rename preservation and zero filesystem access when off.
+Continue the already proven shell-owned1000-entry editor history; no private imports.
 
 ## Environment / remaining endpoint
 

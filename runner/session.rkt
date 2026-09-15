@@ -1,12 +1,12 @@
 #lang racket/base
 
 ;; Private checked module execution. Source carries no runner lexical context.
-(require racket/promise racket/runtime-path "source-reader.rkt"
+(require racket/promise racket/runtime-path "source-reader.rkt" "source-file.rkt"
          "../readers/string.rkt")
 
 (provide (struct-out session) (struct-out checked-entry) (struct-out session-exit)
          open-session close-session prepare-entry demand-entry render-result evaluate-entry
-         session-names reset-session!)
+         session-names reset-session! load-source-file)
 
 (define-runtime-path language-path "../lang/expander.rkt")
 (struct session ([namespace #:mutable] [custodian #:mutable] input output error
@@ -97,7 +97,8 @@
 
 ;; Keep only visible binding identities. Each compiled module captures its own
 ;; imports; replacing this shell map cannot mutate an earlier language closure.
-(define (evaluate-entry current parsed [consume void])
+(define (evaluate-entry current parsed [consume void]
+                        #:imports [imports (hash-values (session-bindings current))])
   (define successful? #f)
   (define child (make-custodian (session-custodian current)))
   (dynamic-wind
@@ -108,7 +109,7 @@
                     [current-output-port (session-output current)]
                     [current-error-port (session-error current)]
                     [exit-handler (lambda (status) (raise (session-exit status)))])
-       (define entry (prepare-entry current parsed))
+       (define entry (prepare-entry current parsed imports))
        (define candidate
          (for/fold ([bindings (session-bindings current)])
                    ([name (in-list (checked-entry-definitions entry))])
@@ -122,3 +123,22 @@
 
 (define (session-names current)
   (sort (hash-keys (session-bindings current)) symbol<?))
+
+;; The validator supplies the body from its single read. Loads have fresh module
+;; identities, only public imports, and ordinary file demand without observation.
+;; Validation/read failures are data; execution failures unwind the shared entry.
+(define (load-source-file current source-name)
+  (define inspected (inspect-source-file source-name))
+  (cond
+    [(source-problem? inspected) inspected]
+    [else
+     (define parsed
+       (parse-source-buffer (validated-source-path inspected)
+                            (validated-source-text inspected)
+                            #:line (validated-source-line inspected)
+                            #:column (validated-source-column inspected)
+                            #:position (validated-source-position inspected)))
+     (if (memq (source-buffer-status parsed) '(empty complete))
+         (evaluate-entry current parsed void #:imports '())
+         (source-problem 'invalid (source-buffer-message parsed)
+                         (source-buffer-line parsed) (source-buffer-column parsed)))]))
