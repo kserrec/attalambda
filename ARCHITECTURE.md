@@ -71,7 +71,7 @@ facade is the single place that imports the real host and injects it into the
 eleven direct effect wrappers. Generic `print` receives the already-created
 stdout wrapper and does not receive another host injection.
 
-The unreleased `read-line UNIT` wrapper in `effects/stdin.rkt` constructs the
+The `read-line UNIT` wrapper in `effects/stdin.rkt` constructs the
 zero-argument request `["read-line"]`. The host reads a byte line from its
 current standard-input port and converts it through the codec to
 Ok(Some(String)) or Ok(NONE). Only the host reads program answers; deterministic

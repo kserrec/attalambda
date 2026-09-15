@@ -19,30 +19,30 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.7.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.8.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.7.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.8.0>
 
-Version 0.7.0 adds `list`, multi-parameter `lambda`, sequential multi-binding
-`let`, and `cond` with a required final `else`. These four conveniences expand
-to existing unary-lambda terms. Pure value rendering and `print`, exact rational
+Version 0.8.0 adds `(read-line UNIT)` and the `atta>` interactive shell, with
+lazy definitions, multiline editing, completion, history, and file loading.
+Existing Lisp syntax, pure value rendering and `print`, exact rational
 arithmetic, the complete List API, and the pure `rec` rules remain available.
 The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
-See the [0.7.0 release notes](docs/releases/0.7.0.md) for syntax examples
+See the [0.8.0 release notes](docs/releases/0.8.0.md) for the new features
 and compatibility.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.7.0/attalambda-0.7.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.7.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.8.0/attalambda-0.8.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.8.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.7.0-linux-x86_64.tar.gz
-cd attalambda-0.7.0-linux-x86_64
+tar -xzf attalambda-0.8.0-linux-x86_64.tar.gz
+cd attalambda-0.8.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -50,9 +50,14 @@ cd attalambda-0.7.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.7.0
+AttaLambda 0.8.0
 Hello from AttaLambda.
 ```
+
+Run `./bin/attalambda` in a terminal to start the shell; enter `:help` for its
+commands and `:quit` to leave. See the tested
+[terminal input example](docs/API.md#terminal-line-input) and
+[interactive guide](docs/API.md#interactive-shell).
 
 Linux x86-64 is the only supported binary target. Users should not have to
 bypass operating-system security protections to try the language, so macOS
@@ -61,13 +66,10 @@ Authenticode signing are not distributed.
 
 ## Run it from source
 
-The `interactive-attalambda` milestone branch includes unreleased runtime line
-input and the `atta>` interactive shell. The full source suite and exact clean
-Linux archive pass their tests, including terminal interaction and relocation.
-[HANDOFF.md](HANDOFF.md) records source/build revisions and final delivery checks.
-Published 0.7.0 downloads include neither feature. See the tested
-[terminal input example](docs/API.md#terminal-line-input-unreleased) and
-[interactive guide](docs/API.md#interactive-shell-unreleased).
+The `main` branch includes the released runtime input and interactive shell.
+The full source suite and fresh public Linux download pass their tests,
+including terminal interaction and relocation. [HANDOFF.md](HANDOFF.md) records
+the tagged build revision and the later publication records.
 
 Use an isolated Racket CS 9.3 installation with the milestone's
 [reviewed dependency corrections](tooling/patches/README.md). They preserve shared
@@ -77,7 +79,7 @@ installation; do not apply it to a personal or system runtime. The install comma
 below registers the checkout in that environment's Racket package registry:
 
 ```sh
-git clone --branch interactive-attalambda https://github.com/kserrec/attalambda.git
+git clone --branch main https://github.com/kserrec/attalambda.git
 cd attalambda
 racket tooling/prepare-racket-runtime.rkt --apply
 racket tooling/prepare-racket-runtime.rkt --check
@@ -85,12 +87,13 @@ raco pkg install --auto --name attalambda .
 racket runner/attalambda.rkt examples/hello.attl
 ```
 
-This milestone is tested with the corrected Racket CS 9.3 and Linux Python 3 for terminal
+This release is tested with the corrected Racket CS 9.3 and Linux Python 3 for terminal
 acceptance. Runtime dependencies are `base`, `lazy`, `expeditor-lib`, and
 `syntax-color-lib`; tests also use `rackunit-lib` and `net-lib`. The maintained
 Expeditor and lexer packages supply terminal editing and S-expression handling.
 Their transitive Parser Tools and Option Contract packages are included in
-the distribution notices.
+the distribution notices. Python is test tooling only and is absent from the
+standalone archive.
 
 Start the source shell in a terminal with `racket runner/attalambda.rkt`.
 Type expressions without `#lang attalambda`; use `:help` for the six commands.
@@ -119,7 +122,7 @@ To run the complete test and structural-purity suite:
   literals.
 - Errors are ordinary structured values. Expected computational failures use
   `Result`; contract and representation failures use `Error`.
-- Output, standard-input lines (unreleased), files, blocking TCP, and explicit
+- Output, standard-input lines, files, blocking TCP, and explicit
   process exit are available through one host boundary. Pure HTTP framing,
   parsing, response rendering, and routing sit above that boundary as ordinary
   language computation.
@@ -131,7 +134,7 @@ The goal is not to hide Racket behind a new syntax. It is to make the boundary
 between lambda-calculus computation and host authority small, visible, and
 testable.
 
-On this branch, `(exit 0)` reports successful completion and `(exit 1)` reports
+`(exit 0)` reports successful completion and `(exit 1)` reports
 unsuccessful completion. Only Rat 0 or 1 is accepted: another type returns
 TypeMismatch Error; another Rat returns InvalidCount Error, without calling
 the host. Pure AttaLambda chooses and validates the status; only the host
@@ -168,9 +171,9 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-Version 0.7.0 is the sixth public release. It adds four syntax sugars over
-the existing pure lambda calculus. It includes pure value renderers and
-generic `print` through the existing stdout boundary. See
+Version 0.8.0 is the seventh public release. It adds runtime line input and
+an interactive shell while preserving the existing pure lambda calculus.
+It includes pure value renderers and generic `print` through the stdout boundary. See
 [Value Rendering and Printing](docs/API.md#value-rendering-and-printing).
 The purity rule against recursive module bindings continues to apply. Rat
 remains the only public number type; Unit, Byte, Option, Map, and byte-based

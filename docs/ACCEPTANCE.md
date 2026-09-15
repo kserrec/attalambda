@@ -7,13 +7,14 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
-## Unreleased interactive milestone
+## Published 0.8.0 — Interactive AttaLambda
 
-The clean build revision is `3ae392629ecfb380d3dd31451c33fd5617d53f51`. The
+The clean merged build revision is `f309199baa170ba5b12ff6b18b60dc49c114a8a1`. The
 complete corrected Racket CS 9.3 source suite passes 69 test files / 26,845
 assertions, 43 shared Python terminal methods, 6 source-only visual methods,
 40 production purity modules and the complete source boundary inventory.
-The frozen-source CI terminal groups took 51.387s and 3.902s; all ten CI jobs pass.
+The merged-source CI terminal groups took 48.887s and 3.627s; all ten
+[CI jobs](https://github.com/kserrec/attalambda/actions/runs/35017215218) pass.
 [HANDOFF.md](../HANDOFF.md) records the current-head CI and final delivery state.
 
 The checks cover lazy binding snapshots, generated-module purity, input sharing,
@@ -22,22 +23,26 @@ status, inert bounded history, completion and terminal restoration. The 18-row
 contract map is in [PLAN.md](../PLAN.md). Independent current-source, completion,
 visual-editor and dependency-preparation reviews closed their confirmed findings.
 
-The exact 19,602,521-byte Linux archive passes the isolated consumer: all 25
-CLI/transcript methods at both paths in 67.185s and 78.388s, runtime input and
+The exact 19,602,535-byte Linux archive passes the isolated consumer: all 25
+CLI/transcript methods at both paths in 99.417s and 57.933s, runtime input and
 snapshot transcripts, guide examples, provenance, dependencies and relocation.
 There is no external Racket or source checkout in the consumer and no Python in
 the archive. The native terminal test locale is C.UTF-8; surrounding archive byte
-checks retain C. Both owned containers and the transfer directory were removed.
-[Candidate notes](releases/0.8.0.md) record all three exact artifact hashes.
+checks retain C. Builder/consumer containers and transfer directories were removed.
+Fresh unauthenticated public downloads return HTTP 200 and match both uploaded
+hashes. The actual downloaded archive passes the same complete consumer, with
+25 methods in 52.529s and 59.059s before/after relocation. Its container and
+transfer directory were also removed. [Release notes](releases/0.8.0.md) record
+all three exact artifact hashes and the published release identity.
 
-Three 200-entry sessions kept 7 descriptors. Latest local retained heaps were
+Three Phase 9 local 200-entry sessions kept 7 descriptors. Their retained heaps were
 125,518,000, 125,715,392 and 125,670,160 bytes; reset heaps were 115,860,096,
 115,845,952 and 115,864,736 bytes versus 116,036,976 initially. These are
 observations, not universal memory or performance guarantees. Earlier baseline
-and development-artifact evidence stays historical in PLAN.md. No release is
-published from this branch.
+and development-artifact evidence stays historical in PLAN.md. PR #7 is merged;
+0.8.0 was published on 2026-09-15. Older releases and their assets are preserved.
 
-## Published baseline
+## Earlier published baselines
 
 The published 0.7.0 source passes 46 suites with 17,290 assertions,
 39-module expanded purity, and the full boundary scan. The 157 sugar

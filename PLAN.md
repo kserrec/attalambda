@@ -1,9 +1,12 @@
-# Interactive AttaLambda — active milestone
+# Interactive AttaLambda — published 0.8.0
 
 Kyle authorized phases 0–11 of the [supplied contract](docs/interactive-implementation-spec.md)
 on 2026-09-14, including isolated dependencies, tests/builds, milestone commits/pushes,
-and a pull request. **No merge, tag, or publication is authorized.** The endpoint is
-the verified candidate in Checkpoint 11. Phase 12 is conditional and inactive.
+and a pull request. That candidate checkpoint is complete. Kyle subsequently
+authorized Phase 12 with “lets do it” after merge, rebuild/verification, tag,
+publication and public-download verification were explicitly described. Phase 12
+is authorized for 0.8.0 only; its public-download verification has passed.
+Older releases and assets remain intact.
 Execute steps serially, subdividing oversized steps before implementation. Each
 phase closes only after focused checks, the full suite, both structural gates,
 and its scoped review. Historical plans below grant no additional authority.
@@ -28,19 +31,29 @@ Never inspect dotenv contents or add Graphify output; never overwrite unrelated 
 
 ## Evidence and exact next step
 
-**Phases 0–11 implementation and candidate gates pass at the frozen build
-revision. Next: commit/push this documentation-only evidence checkpoint, verify
-that final head's checks/review, and save the post-commit receipt named in HANDOFF.**
-Build source `3ae392629ecfb380d3dd31451c33fd5617d53f51`, clean tree
-`550b4ae2c255929cff90d7fa823161030c7d7681`. CI35010700799 passes all ten jobs,
-including the complete 69-file / 26,845-assertion source suite, 43 shared terminal
-methods in 51.387s, 6 visual methods in 3.902s and both structural gates.
-The exact Linux archive and the same 25 consumer methods at both paths pass;
-source and artifact reviews have no actionable findings. The final record changes
-only docs, preserves the earlier build SHA, and does not authorize publication.
-Full CI log/summary: `/tmp/attalambda-phase10-ci-complete.log` and
-`/tmp/attalambda-phase10-ci-summary.json`. Artifact review:
-`/tmp/attalambda-final-artifact-review-t48v0bdw/review.md`.
+**0.8.0 is published and its fresh public download is verified.** The remaining
+publication-record commit/push, exact-head CI and final review are reconciled
+after this file is committed in `/tmp/attalambda-080-release-state.json`.
+Its `next_unfinished_step` and `status` govern resumption; `status=complete`
+means no unfinished release step. This avoids attributing the archive to a
+later documentation commit or recursively committing its own hash.
+Release389458950 was published at2026-09-15T20:32:24Z and is latest:
+https://github.com/kserrec/attalambda/releases/tag/v0.8.0 . Annotated tag object
+8628ca652e7ebf9ff3932d332fc57b611e3fd023 points to the clean merged/build source
+f309199baa170ba5b12ff6b18b60dc49c114a8a1. All ten merged CI jobs pass.
+The local release consumer passes both25-method runs; independent artifact review
+is closed. Both uploaded digests and authenticated draft downloads match the
+verified local files. Fresh unauthenticated public files returned200 and match
+both hashes. Their local0664 modes reflected host umask002; the consumer's exact
+0644 precondition stopped before starting a container. Removing group-write on
+these two owned files preserves all bytes and checks. The failed receipt is
+retained. The unchanged public consumer passes all 25 methods once at both
+paths in 52.529s and 59.059s. Independent public review is closed at
+`/tmp/attalambda-080-public-review-1tngp_s6/review.md`. All six earlier releases,
+twelve assets and six tags are preserved. Owned containers/transfers are removed.
+Live effect receipt: `/tmp/attalambda-080-release-state.json`; do not repeat
+publication or reuse an active consumer/output path. The old3ae3926 candidate
+remains historical. No new product source or dependencies changed.
 
 The Phase 9 complete run `/tmp/attalambda-interactive-phase9-full.log` finished 0:
 69 Racket test files, 26,845 assertions, 43 shared terminal methods in 71.605s,
@@ -1890,6 +1903,99 @@ tag or publication is authorized; the exact candidate is retained locally.
 
 **Checkpoint 11 — Final release-candidate gate.** Use release verification and a final scope review. Close this phase with a documentation-only evidence commit when authorized; preserve the exact earlier build SHA rather than relabeling the archive as built from the later record commit. No executable-input change may rely solely on stale evidence. If only publication-record documentation changes afterward, state why prior artifact evidence still applies. Leave no owned test workers, listeners, containers, or temporary source modifications running or staged accidentally.
 
+
+## Phase 12 — Publish AttaLambda 0.8.0 (authorized)
+
+Kyle authorized this phase with “lets do it” after the release procedure was
+explicitly described: merge PR #7, verify merged source, build/consume it, tag,
+publish and verify public downloads. This supersedes the earlier candidate-only
+stop; the saved specification remains unchanged. No new product scope or
+platform is added. Historical release assets must remain intact.
+
+Live effect receipt: `/tmp/attalambda-080-release-state.json`. During the clean
+merged-source build, the existing handoff's post-commit receipt points to this
+continuation. Repository publication records are applied after that build so
+the clean merge is the exact archive source; no dirty build or altered source
+identity is permitted.
+
+- [x] 12.1 — Current PR head fd8bafa and main baseline71232f7 verified; all ten
+  exact-head CI jobs pass; completed independent reviews have no findings;
+  v0.8.0 tag/release absent; older releases/assets snapshotted.
+- [x] 12.2 — Merge exact reviewed PR head using an expected-SHA guard. Verify
+  actual merge tree and all merged-head checks before proceeding.
+- [x] 12.3 — Fresh clean merged-source build and existing isolated Linux
+  consumer, including all25 CLI/transcript methods at both extraction paths.
+- [x] 12.4 — Create unsigned annotated tag at exact build commit, push that
+  tag only, create draft with --verify-tag, upload exact archive/checksum once,
+  and compare authenticated draft downloads to the verified local bytes.
+- [x] 12.5 — Publish only that verified draft, mark latest, download fresh
+  public files without authentication, compare both hashes and run the same
+  consumer on the actual downloaded copy. Preserve all earlier releases/assets.
+- 12.6 — Record IDs, dates, source/tag/archive identities, public-copy tests,
+  cleanup and release-ledger/README/API state. Independently review and verify,
+  then commit/push documents only on main. The post-commit receipt
+  `/tmp/attalambda-080-release-state.json` closes this step only after final
+  record-head CI, exact-head review and clean Git state pass. Do not relabel
+  the archive or create a self-referential evidence commit.
+
+12.2a completed: PR #7 merge f309199baa170ba5b12ff6b18b60dc49c114a8a1 has tree
+0ed67ac08a6f0fc2696741791e272b407d30f5c6, exactly equal to reviewed fd8bafa.
+Local main fast-forwarded cleanly. Merged CI35017215218 passes all ten jobs:
+69 Racket files/26,845 assertions;43 shared terminal methods48.887s;6 visual
+methods3.627s;40 pure modules and complete boundaries. Full log/summary at
+`/tmp/attalambda-080-merged-ci-complete.log` and
+`/tmp/attalambda-080-merged-ci-summary.json`.
+Release drivers are literal path-only variants of the independently verified
+candidate drivers. Output `/tmp/attalambda-0.8.0-release` is fresh; image pins,
+420s build/900s consumer bounds, expected-SHA and clean-tree checks, exact
+manifest/checksum/script identities and cleanup are preserved. A separate public
+consumer reads `/tmp/attalambda-0.8.0-public-download` and compares against the
+original release build receipt; it cannot silently retest the original archive.
+
+12.3a completed: release build driver finished0 with clean f309199 source.
+Archive19,602,535 bytes; SHA256
+`f1b8b49ba659485e089ffcf38d1d5999016131de65e21177bb922fa86013d3fc`;
+manifest SHA256 `359b53bfca5c0cd11ed42f5528c3e8ea2bb60093b895d962cb45c689eeb3afc9`;
+SHA256SUMS SHA256 `9129165ef63481b39a35a47035ab7bff72e194427e7811ef179481639a8d4fde`.
+Log:`/tmp/attalambda-080-release-build01.log`; receipt:
+`/tmp/attalambda-0.8.0-release/build-report.json`. Exact consumer passes all25 methods at both paths in99.417s and57.933s;
+container and transfer are removed. Log/report:
+`/tmp/attalambda-080-release-consumer01.log` and`.json`; parsed summary:
+`/tmp/attalambda-080-local-consumer-summary.json`. Independent review is closed.
+Repository edits after the clean build are publication records only.
+
+12.3b completed: independent release-artifact review closes without findings at
+`/tmp/attalambda-080-release-artifact-review-c3bw_6tv/review.md`, with exact
+provenance, method identities at both paths and observed cleanup.
+12.4 completed: unsigned annotated tag8628ca652e7ebf9ff3932d332fc57b611e3fd023
+peels to clean buildf309199. Draft389458950 assets566456157 (archive) and566456156
+(SHA256SUMS) match expected sizes/hashes. Authenticated draft downloads match
+byte for byte: `/tmp/attalambda-080-draft-verification.json`. Initial lookup by
+tag returned404 for this draft; authenticated release listing located exactly
+one matching draft by tag/target/body, then immutable-ID reads verified it.
+No duplicate draft was created and no asset was overwritten.
+12.5 completed: published verified draft at2026-09-15T20:32:24Z, latest0.8.0.
+Public GETs are unauthenticated, with curl-q disabling personal configuration,
+and return200 for19,602,535 archive bytes and103 checksum bytes. Both hashes
+match the local release. Local umask002 produced0664 mode; the wrapper's unchanged
+0644 precondition stopped before container execution. Only those two public-file
+modes were corrected; first failed receipt is preserved at
+`/tmp/attalambda-080-public-consumer01-precondition-failure.json`. Unchanged
+public-copy consumer passed all 25 methods once at each path in 52.529s and
+59.059s, with no skips. Runtime input, snapshot transcripts, guide/API/file/TCP,
+exit and relocation gates passed. Its container and transfer were removed.
+`/tmp/attalambda-080-public-final-verification.json` binds the public log/receipt,
+tag/latest readbacks and preservation of six earlier releases, twelve assets
+and six tags. Public review:
+`/tmp/attalambda-080-public-review-1tngp_s6/review.md`, no actionable findings.
+
+12.6 publication records describe observed 0.8.0 delivery in README/API,
+architecture/host-boundary status, release notes, acceptance, current project
+instructions, distribution ledger and this plan/handoff. Older release-ledger
+sections retain their bytes. Canonical documents, the saved interactive
+contract, both marked executable API examples and all product/test/build inputs
+are preserved. Final checks/review and the resulting record commit are bound
+in the post-commit receipt rather than relabeling the earlier archive.
 
 ---
 

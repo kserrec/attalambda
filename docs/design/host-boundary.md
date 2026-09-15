@@ -1,8 +1,8 @@
 # Host boundary design
 
 Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05;
-terminal line input authorized 2026-09-14 and retained in `interactive-attalambda`.
-Line input is unreleased; the 0.7.0 binary retains its ten operations.
+terminal line input authorized 2026-09-14 and published in 0.8.0 on 2026-09-15.
+The 0.8.0 binary includes all eleven operations. The older 0.7.0 binary has ten.
 
 This document records the exact current contract for AttaLambda's one
 outside-world boundary. The three canonical

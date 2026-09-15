@@ -6,12 +6,12 @@ is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current published release is 0.7.0, adding four small Lisp sugars that
-expand into existing unary-lambda terms. It retains twelve pure value renderers
+The current published release is 0.8.0, adding runtime line input and the
+interactive shell. It retains the four small Lisp sugars, twelve pure value renderers
 and generic `print` through the existing stdout capability, pure `rec`,
 rejection of recursive module bindings, explicit exit, lowercase public
 callables, ASCII Char literals, and the complete List library. The
-[0.7.0 release notes](../releases/0.7.0.md) describe syntax and compatibility;
+[0.8.0 release notes](../releases/0.8.0.md) describe input, shell and compatibility;
 the release ledger records published artifacts.
 
 ## Current public support
@@ -53,12 +53,12 @@ attalambda --help
 attalambda --version
 ```
 
-The shell forms are implemented in the unreleased interactive milestone. The
-exact Linux candidate passes isolated terminal and relocation checks; the
-[handoff](../../HANDOFF.md) records final delivery checks. Published 0.7.0
+The shell forms are released in 0.8.0. The exact Linux archive and fresh public
+download pass isolated terminal and relocation checks; the
+[handoff](../../HANDOFF.md) records delivery evidence. Older 0.7.0
 supports only file/help/version. `--repl` explicitly permits transcripts;
 without it, no-file startup requires terminal stdin and stderr. See the
-[shell contract and statuses](../API.md#interactive-shell-unreleased).
+[shell contract and statuses](../API.md#interactive-shell).
 
 There are no aliases, short flags, program arguments, compiler, or package-manager
 modes. A source path beginning with `-` must use
@@ -229,11 +229,11 @@ different syntax, so build tooling checks this closed projection:
 | `0.7.0` | `0.7` |
 | `0.8.0` | `0.8` |
 
-A new version state requires an explicit plan change. The interactive milestone
-authorizes prepared 0.8.0 metadata and a verified Linux candidate, with no merge,
-tag, or publication. Earlier releases remain historical evidence; they do not
-authorize another release. The release ledger separates prepared inputs from
-observed publication.
+A new version state requires an explicit plan change. Kyle separately authorized
+the interactive milestone's merge, tag and 0.8.0 publication after its verified
+candidate checkpoint. That release is now published and its public download
+verified. Completed releases do not authorize another release. The ledger
+separates prepared inputs from observed publication.
 
 ## Build, archive, and consumer contract
 
@@ -297,9 +297,9 @@ then runs that exact image ID without network access, as a non-root user with
 a read-only root filesystem and the existing capability/process/memory limits.
 The consumer has no Racket command or source checkout and receives only the
 archive, checksum, self-contained shell harness, and `interactive_pty.py`.
-The final clean candidate from `3ae3926` passes this isolated consumer, including
-all 25 terminal/transcript methods at both extraction paths. The
-[candidate notes](../releases/0.8.0.md) record its exact hashes and the
+The clean merged release from `f309199` and its fresh public download pass this
+isolated consumer, including all 25 terminal/transcript methods at both
+extraction paths. The [release notes](../releases/0.8.0.md) record its exact hashes and the
 [handoff](../../HANDOFF.md) records runtime, commands and completed review.
 Existing checks verify the checksum,
 layout, permissions, manifest, legal bytes, guide commands, version/help,
@@ -329,6 +329,62 @@ Each publication needs Kyle's explicit approval for the exact commit, tag,
 files, checksums, support claims, and public action.
 
 ## Public release ledger
+
+### AttaLambda 0.8.0 — 2026-09-15
+
+After the verified interactive candidate, Kyle explicitly authorized merge,
+rebuild/verification, tag, publication and public-download verification.
+PR #7 merged as `f309199baa170ba5b12ff6b18b60dc49c114a8a1`; its tree
+`0ed67ac08a6f0fc2696741791e272b407d30f5c6` equals reviewed PR head
+`fd8bafa4b2c38d67046febe44b250e8c82a927f8`.
+All ten [merged CI jobs](https://github.com/kserrec/attalambda/actions/runs/35017215218)
+pass: 69 Racket test files, 26,845 assertions, 43 shared terminal methods,
+6 visual methods, 40 pure production modules and the full boundary inventory.
+Independent source, dependency-preparation, exact artifact and terminal reviews
+closed without outstanding findings.
+
+The clean merged source built with full Racket CS 9.3 image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`
+and its reviewed, hash-pinned promise/editor corrections. Unsigned annotated tag
+`v0.8.0`, object `8628ca652e7ebf9ff3932d332fc57b611e3fd023`, peels to that
+exact build commit. GitHub Release `389458950` was published at
+`2026-09-15T20:32:24Z` and marked latest:
+<https://github.com/kserrec/attalambda/releases/tag/v0.8.0>.
+
+| Asset | Bytes | SHA-256 |
+| --- | ---: | --- |
+| `attalambda-0.8.0-linux-x86_64.tar.gz` | `19,602,535` | `f1b8b49ba659485e089ffcf38d1d5999016131de65e21177bb922fa86013d3fc` |
+| `SHA256SUMS` | `103` | `9129165ef63481b39a35a47035ab7bff72e194427e7811ef179481639a8d4fde` |
+
+Asset IDs are `566456157` and `566456156`, respectively. Internal manifest
+SHA-256 is `359b53bfca5c0cd11ed42f5528c3e8ea2bb60093b895d962cb45c689eeb3afc9`.
+The archive contains 11 regular files, two runtime files, and 68,881,444
+unpacked regular-file bytes. It contains no Python. GitHub digests,
+authenticated draft downloads and fresh unauthenticated public downloads match
+the verified originals. Both public requests returned HTTP 200.
+
+The local archive and actual public copy pass the existing isolated Linux
+consumer without external Racket, a checkout, or external networking. All 25
+CLI/transcript methods run once at each path: local 99.417s/57.933s, public
+52.529s/59.059s. Runtime input, binding snapshots, guide, APIs, file/network,
+exit and relocation checks pass. The pinned consumer uses Python 3.12.3's
+standard library only; the terminal locale is C.UTF-8. All owned containers
+and transfer directories are removed. The public wrapper initially rejected
+downloaded-file mode 0664 from host umask 002 before starting a container;
+correcting only those two files to 0644 preserved their bytes and every check.
+The unchanged wrapper then completed the full public consumer.
+
+The six earlier releases, twelve assets and six tags retain their saved
+identities, metadata and digests. Linux x86-64 remains the sole supported public
+binary. The pre-merge candidate was not published. Later publication-record
+commits change documentation only and do not relabel the tagged build source.
+
+Local evidence: `/tmp/attalambda-0.8.0-release/`,
+`/tmp/attalambda-0.8.0-draft-download/`, `/tmp/attalambda-0.8.0-public-download/`,
+`/tmp/attalambda-080-release-state.json`,
+`/tmp/attalambda-080-public-final-verification.json`, and
+`/tmp/attalambda-080-public-consumer01.log`. PLAN.md and HANDOFF.md record the
+source/build/consumer reviews, commands, pins and final documentation checks.
 
 ### AttaLambda 0.7.0 — 2026-09-09
 

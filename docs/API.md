@@ -1,9 +1,9 @@
 # Public API
 
-This reference describes the source API and implemented interactive shell,
-including unreleased `read-line`. The full source suite and exact Linux archive
-pass their tests; [the handoff](../HANDOFF.md) records final delivery checks.
-The published 0.7.0 binary includes neither shell nor line input.
+This reference describes the released 0.8.0 API and interactive shell,
+including `read-line`. The full source suite and fresh public Linux download
+pass their tests; [the handoff](../HANDOFF.md) records delivery evidence.
+The older 0.7.0 binary includes neither shell nor line input.
 Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
@@ -265,7 +265,7 @@ SOME(OK([1, TRUE]))
 | Application | Successful outcome |
 | --- | --- |
 | `stdout string` | Write and flush bytes; Ok UNIT. |
-| `read-line UNIT` | Read one line from standard input; Ok(Some(String)) or Ok(NONE) at end of input. Unreleased. |
+| `read-line UNIT` | Read one line from standard input; Ok(Some(String)) or Ok(NONE) at end of input. |
 | `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Added in 0.6.0. |
 | `read-file path` | Ok containing the complete List of Byte. |
 | `write-file path bytes` | Replace file contents from List of Byte; Ok UNIT. |
@@ -290,7 +290,9 @@ Expected external failures return Result Err. `exit` accepts only Rat 0 or 1:
 other Rats return InvalidCount, wrong types return TypeMismatch, and neither
 failure calls the host. Without explicit exit, normal completion is status 0.
 
-### Terminal line input (unreleased)
+<a id="terminal-line-input-unreleased"></a>
+
+### Terminal line input
 
 `read-line` follows Racket's native byte-line reader in `any` mode. LF, CRLF,
 and CR are separators and are removed; other bytes are preserved, including
@@ -350,11 +352,13 @@ existing diagnostic names `http-path-handler`, `http-serve-one`, and
 `http-server` for the functions they construct; these names are lowercase.
 The existing HTTP grammar, request-size cap, and cleanup rules are unchanged.
 
-## Interactive shell (unreleased)
+<a id="interactive-shell-unreleased"></a>
 
-These behaviors are implemented and source-tested on `interactive-attalambda`.
-The full source suite and exact Linux archive pass their tests;
-see [PLAN.md](../PLAN.md). The published 0.7.0 executable has no shell.
+## Interactive shell
+
+These behaviors are released in 0.8.0. The full source suite and fresh public
+Linux download pass their tests; see [PLAN.md](../PLAN.md).
+The older 0.7.0 executable has no shell.
 
 Tab completion includes public language names and successfully committed user
 definitions, including loaded names. Redefinition updates the visible bindings;
