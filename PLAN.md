@@ -58,8 +58,8 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 1.1 — prove real Expeditor startup/close and controlled failure
-on CS 9.3 with a bounded PTY probe.** No entry/session/editor implementation exists yet.
+**Next unfinished step: 2.1 — the restricted located source-buffer parser.** Only test
+probes exist; there is no production entry/session/editor implementation yet.
 
 ### Phase 0 — Establish a safe, reproducible starting point
 
@@ -77,18 +77,131 @@ on CS 9.3 with a bounded PTY probe.** No entry/session/editor implementation exi
 
 **Purpose:** validate library behavior before committing to substantial UI or session plumbing. Keep probes tiny and isolated; retain useful regressions, not a second implementation.
 
-- [ ] **1.1 — Open and close the real editor.** In the supported Racket build runtime, initialize Expeditor with explicit safe hooks and `atta>`; accept one entry and close it. Exercise initialization failure through a controlled test seam. **Check:** terminal state is restored and the editor does not load user initialization files.
-- [ ] **1.2 — Prove editor-to-program input handoff.** Extend the probe with an entry handler that invokes the existing AttaLambda input path through a tiny fixture, then returns to editing. Do not build a general evaluator yet. **Check:** one answer reaches the program exactly once, is not added as source history, and the next expression can be edited.
-- [ ] **1.3 — Exercise type-ahead and cancellation in the probe.** Drive the probe through a PTY using ordinary typing, a multiline source paste, an answer sent after the accepted entry, and interruption during a blocked read. **Check:** distinguish already accepted source from pending program bytes; prove no dropped/duplicated bytes and no stuck terminal mode. Use event-based readiness and bounded cleanup, not sleeps as proof.
-- [ ] **1.4 — Prove module-instance retention.** Build the smallest trusted test harness with two fresh Racket modules using existing lazy AttaLambda values. Retrieve a lazy binding without forcing it and reference it from another module. **Check:** a saved effect runs once on demand, not on export discovery or import, and later use shares the same answer.
-- [ ] **1.5 — Prove lexical rebinding and reset isolation.** Extend only that harness with an old closure, a replacement binding, and a fresh session namespace. **Check:** the snapshot example produces `2` and `11`, and a new session does not share the previous stateful host instance. This is a plumbing proof, not permission to bypass the production expander.
-- [ ] **1.6 — Record the proven implementation choices.** Select documented editor hooks, source/program-port handling, and module-instance strategy from the evidence. Identify any narrow compatibility adaptation actually needed. **Check:** there is one intended engine and one intended editor adapter; no custom interpreter, terminal driver, or language change has slipped in.
+Execution subdivisions: 1.1a creates the bounded reusable Python PTY harness and
+test-only editor fixture; 1.1b verifies startup, acceptance, controlled open failure,
+terminal restoration and no initialization-file execution. 1.3a covers paste and
+pending bytes; 1.3b covers interruption and intentional harness-failure cleanup.
+1.4a establishes lazy transport; 1.4b verifies cached input across module imports.
+Test-only editor dependencies are declared with the probe; Phase 8 moves actual
+production dependencies into `deps`. All integration work uses CS 9.3.
+
+1.1 evidence/deviation: the first PTY probe observed `expeditor-open` returning
+false when `current-output-port` is stderr. Fresh-process controls in both the
+relocated runtime and stock 9.3 container return true with stdout and false with
+stderr. Racket v9.3 `racket/src/ChezScheme/c/expeditor.c:811–824` explicitly rejects
+output descriptors other than 1 (and requires input descriptor 0). The documented
+port API alone cannot implement the fixed stderr UI contract. Substep 1.1c therefore
+proves a narrow dup/dup2/close adapter that routes native stdout to stderr only
+during editing and restores it before execution, including failure/break paths.
+It adds no terminal driver, new input channel, or program effect. Exact native
+capabilities must be classified if promoted in Phase 8. The first probe failure
+log is `/tmp/attalambda-interactive-1.1.log`; native source snapshots are in
+`/tmp/attalambda-racket93-terminal.ss` and `/tmp/attalambda-racket93-expeditor.c`.
+
+- [x] **1.1 — Open and close the real editor.** In the supported Racket build runtime, initialize Expeditor with explicit safe hooks and `atta>`; accept one entry and close it. Exercise initialization failure through a controlled test seam. **Check:** terminal state is restored and the editor does not load user initialization files.
+1.1 complete: `ATTALAMBDA_TEST_RACKET=/tmp/attalambda-racket93/bin/racket python3
+tests/interactive_pty.py -v` passes 3 cases (1.839 s), log
+`/tmp/attalambda-interactive-1.1-final.log`. Real editing, controlled failure,
+synthetic initialization non-execution, terminal state and redirected stdout
+restoration pass. Changed test paths: `tests/interactive_pty.py`,
+`tests/fixtures/interactive-editor-probe.rkt`, `tests/helpers/editor-descriptors.rkt`.
+`info.rkt` and the exact package metadata boundary declare test dependencies.
+Expeditor handles a deep terminal protocol; Python uses no external dependency.
+Uncompiled source sizes in the approved image are 208 KiB (expeditor-lib) and
+152 KiB (syntax-color-lib); base/syntax-color are its dependency closure. Final
+bundled size/notices are still a Phase 9 check, not claimed here.
+
+- [x] **1.2 — Prove editor-to-program input handoff.** Extend the probe with an entry handler that invokes the existing AttaLambda input path through a tiny fixture, then returns to editing. Do not build a general evaluator yet. **Check:** one answer reaches the program exactly once, is not added as source history, and the next expression can be edited.
+1.2 complete: the actual public input wrapper, pure renderer and String reader
+return `OK(SOME("unique-answer"))` once, restore editing and exclude the answer
+from history. Focused case `EditorProbe.test_program_input_then_editing` passes,
+log `/tmp/attalambda-interactive-1.2-final.log`. Startup failures were observed
+8.10 `.zo`/9.3 runtime mismatches; `raco make tests/fixtures/interactive-editor-probe.rkt`
+with CS 9.3 rebuilt ignored outputs and fixed loading. The later failure was only
+the test expecting oldest-first history; observed Expeditor order is newest-first.
+No input/renderer production code changed and no deadline increased.
+
+- [x] **1.3 — Exercise type-ahead and cancellation in the probe.** Drive the probe through a PTY using ordinary typing, a multiline source paste, an answer sent after the accepted entry, and interruption during a blocked read. **Check:** distinguish already accepted source from pending program bytes; prove no dropped/duplicated bytes and no stuck terminal mode. Use event-based readiness and bounded cleanup, not sleeps as proof.
+1.3 complete: two pending-byte/paste cases pass in 1.083 s
+(`/tmp/attalambda-interactive-1.3a.log`); source/blocked-read cancellation passes
+(`/tmp/attalambda-interactive-1.3b-final.log`). The intentional harness failure
+case closes its waiting process, PTY endpoints, process-event descriptor and stdout
+pipe. Initial cancellation assertions were corrected to actual native behavior:
+parenthesis flashing inserts cursor controls; Ctrl+C clears a nonempty entry
+in place rather than raising a break. Both source and program cancellation remain
+covered without time-based readiness assumptions. No input buffering adaptation
+was needed for the tested type-ahead/paste path.
+
+- [x] **1.4 — Prove module-instance retention.** Build the smallest trusted test harness with two fresh Racket modules using existing lazy AttaLambda values. Retrieve a lazy binding without forcing it and reference it from another module. **Check:** a saved effect runs once on demand, not on export discovery or import, and later use shares the same answer.
+1.4 complete: `PATH=/tmp/attalambda-racket93/bin:$PATH
+PLTUSERHOME=/tmp/attalambda-racket93-user TMPDIR=/tmp raco test
+tests/interactive-modules-test.rkt` passes 7 assertions, log
+`/tmp/attalambda-interactive-1.4.log`. Two trusted lazy modules preserve one saved
+read across export discovery, import, and repeated demand. Input position remains
+zero until demand and advances by exactly one answer. This test fixture does not
+replace or bypass the planned checked production expansion path.
+
+- [x] **1.5 — Prove lexical rebinding and reset isolation.** Extend only that harness with an old closure, a replacement binding, and a fresh session namespace. **Check:** the snapshot example produces `2` and `11`, and a new session does not share the previous stateful host instance. This is a plumbing proof, not permission to bypass the production expander.
+- [x] **1.6 — Record the proven implementation choices.** Select documented editor hooks, source/program-port handling, and module-instance strategy from the evidence. Identify any narrow compatibility adaptation actually needed. **Check:** there is one intended engine and one intended editor adapter; no custom interpreter, terminal driver, or language change has slipped in.
+
+1.5 complete: the same module fixture passes 14 assertions, including the old
+closure returning `2`, the replacement returning `11`, a real ephemeral listener
+in the original host registry, and an empty distinct registry in a fresh namespace.
+Log: `/tmp/attalambda-interactive-1.5.log`; both custodians close in cleanup.
+
+1.6 choices: one checked module per entry, actual lazy exports and lexical imports,
+one fresh namespace/runtime graph per session, and explicit Expeditor reader,
+readiness, lexer and post-skipper hooks. Never call its initialization convenience
+function. Native input handoff passed without a replay buffer. Only the proven
+stdout-to-stderr descriptor adaptation is needed. These are integration proofs;
+private checked expansion, persistent history and packaged behavior remain pending.
+
+Checkpoint 1 review found a real fixture defect: recurrence inside an exception
+handler inherited disabled breaks, so the second blocked read ignored Ctrl+C in
+3/3 independent probes. The handler now returns before recurrence. The permanent
+PTY cancellation case repeats cancellation twice; all eight cases pass in 6.117 s
+(`/tmp/attalambda-interactive-1.3-review.log`). The ordinary-suite wrapper
+`tests/interactive-editor-test.rkt` compiles for the selected runtime and runs those
+bounded Linux checks; it passes (`/tmp/attalambda-interactive-editor-gate.log`).
+Independent reviewer `editor_probe_review` verified the correction with twenty
+consecutive cancellations and a fresh successful read; descriptor/thread counts
+remain 7/1. It independently passed all fourteen module assertions and checked
+custodian/input cleanup. No new findings in the scoped feasibility review.
+The full phase suite is running on CS 9.3. Its initial attempt stopped before
+assertions on ignored 8.10 compiled reader caches. Compiling the complete test/gate
+set with CS 9.3 succeeded (`/tmp/attalambda-interactive-phase1-compile.log`);
+this changes no tracked source. A later boundary test exposed the dynamically
+loaded `lang/reader.rkt` cache, which was outside static test dependencies. After
+`raco make lang/reader.rkt`, the focused boundary suite passes 145 assertions
+(`/tmp/attalambda-interactive-phase1-boundary.log`). The full suite has restarted.
+The preserved cache-failure log is `/tmp/attalambda-interactive-phase1-reader-cache-failure.log`.
 
 **Checkpoint 1 — Integration feasibility review.** Use a focused architecture review and terminal-integration review. A cold reviewer should challenge stdin ownership, accidental forcing, captured bindings, and runtime sharing. Do not proceed with a handoff known to lose bytes or a reset known to share old host state. Resolve the minimal mechanism here rather than hiding the problem until packaging.
+
+Checkpoint 1 complete: `PATH=/tmp/attalambda-racket93/bin:$PATH
+PLTUSERHOME=/tmp/attalambda-racket93-user TMPDIR=/tmp ./run-all-tests.sh` exits 0:
+all 51 suites, 17,626 reported Racket tests plus the eight Python PTY cases,
+40-module expanded purity, and complete boundary inventory pass. Full log:
+`/tmp/attalambda-interactive-phase1-full.log`. Independent correction/module
+review has no remaining findings. `git diff --check` passes. Executable language,
+effect, runtime, codec and launcher sources are untouched; this phase adds test
+probes/harness and their declared build dependencies, exact metadata expectations,
+Python-cache exclusion and evidence records. Phase 2 starts after this phase commit.
 
 ### Phase 2 — Implement one restricted source reader
 
 **Purpose:** obtain well-defined entries without changing the language grammar.
+
+Read-only design review (`reader_design_review`) verified native CS 9.3 behavior.
+Use default reading parameterization plus explicit fixed readtable and extension
+restrictions; parse fresh buffer ports, retaining original nested syntax locations.
+Preserve source terminator bytes, strict-decode only collected bytes, and provide
+buffer-end locations when native incomplete errors have no location. Expeditor's
+reader hook must return inert data, not raise raw errors that it displays itself;
+consume the whole buffer with post-skipper zero. Add hostile ambient parameters,
+datum comments/here-strings/bar symbols, open-pipe invalid-UTF-8 answer preservation,
+and quoted-spelling-only load argument tests. The launcher remains unchanged until
+Phase 6; classify the exact reader helper now without broadening all runner files.
 
 - [ ] **2.1 — Parse a completed buffer with locations.** Add one helper that reads the entire supplied source buffer under the fixed safe reader configuration and returns located forms or a structured diagnostic. **Check:** exact Rats, strings, ASCII character literals, nested forms, and multiple forms parse without executing code; unsupported datums still fail at their existing stage.
 - [ ] **2.2 — Classify completeness and errors.** Distinguish empty/comment-only input, incomplete input, complete input, and genuine read failure using the native reader's behavior. **Check:** comments, escaped quotes, character literals containing delimiters, incomplete strings/block comments, and mismatched delimiters are classified correctly. Do not count parentheses manually.

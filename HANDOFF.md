@@ -6,9 +6,17 @@ tag or publication. Contract: [docs/interactive-implementation-spec.md](docs/int
 Branch: `interactive-attalambda`, based on input `62d0f0c`; source version remains
 0.7.0 until Phase 9. PLAN.md contains the complete active checklist and evidence.
 
-Phase 0 complete: baseline passes 49 suites/17,611 reported tests, 40-module
-purity and full boundaries; canonical bytes/hashes/active links checked. Next: **1.1,
-real CS 9.3 Expeditor startup/close and controlled failure using a bounded PTY**.
+Phases 0–1 complete. Phase 1 full source verification exits 0: 51 suites,
+17,626 reported Racket tests plus eight Python PTY cases, 40-module expanded purity
+and complete boundaries. Independent review verified twenty consecutive
+cancellations, stable descriptors/threads, lazy input sharing, lexical snapshots,
+fresh registries and cleanup; no remaining finding. Next: **2.1, implement the
+restricted located source-buffer parser**, following the review notes in PLAN.
+Full evidence: `/tmp/attalambda-interactive-phase1-full.log`.
+Ignored 8.10 caches from the initial baseline were rebuilt for 9.3 or removed;
+use only the selected 9.3 runtime throughout the remaining milestone.
+CS 9.3 natively requires stdout descriptor 1; the test-only descriptor adapter
+routes it to stderr during editing and restores it afterward. PLAN records proof.
 No production REPL code exists yet. Follow the next unchecked step; never repeat
 commits, pushes, loads or effects already recorded as complete. Before resuming,
 reconcile Git status and active processes with this record. This handoff goes

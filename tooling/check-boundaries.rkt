@@ -730,7 +730,7 @@
 (define (expected-package-info-forms package-version)
   `((define collection "attalambda")
     (define deps (quote ("base" "lazy")))
-    (define build-deps (quote ("rackunit-lib" "net-lib")))
+    (define build-deps (quote ("rackunit-lib" "net-lib" "expeditor-lib" "syntax-color-lib")))
     (define license (quote Apache-2.0))
     (define pkg-desc
       "A pure unary-lambda language with one explicit host boundary")
