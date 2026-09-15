@@ -28,6 +28,40 @@ Never inspect dotenv contents or add Graphify output; never overwrite unrelated 
 
 ## Evidence and exact next step
 
+**Phase8 checkpoint passed; next effect is its scoped commit/push, then Phase9
+final documentation/packaging closure.** The complete current source run
+`/tmp/attalambda-interactive-phase8-final-full-02.log` finished0 (exec88594):69
+Racket test files,26845 reported assertions,43 shared terminal methods in88.934s,
+6 visual methods in6.702s,40 pure production modules and the full boundary gate.
+The first run's stale adapter fixture failed before loading the editor; all four
+Python-launched fixtures are now explicitly compiled and the focused failures,
+full rerun and independent wrapper review pass. No acceptance was waived.
+
+Completion, bounded history, source/program input, cancellation, standalone loading
+and output separation are implemented. The preserved-name editor correction and
+shared-promise correction are pinned in source/loaded runtime checks and all three
+builder/consumer manifest contracts. Python remains isolated standard-library-only
+testing. Required packaging/bootstrap/version/notices work was prepared alongside
+the earlier terminal blockage and is included as necessary tested prerequisites;
+Phase9 still closes its documentation and packaging checkpoint separately.
+
+Independent current-source review is closed at
+`/tmp/attalambda-phase10-independent-review.md`; its18-file hash manifest matches
+the current tree. Completion, Expeditor visual, preparation/provenance and final
+active documentation reviews are also closed (HANDOFF.md lists exact evidence).
+The separate-output-terminal finding is repaired and fails-before/passes-after;
+the stale compiled editor-main verifier finding has a permanent fresh-process
+regression. No open review finding remains. Final current-head CI and exact clean
+Linux artifact gates are still required; this is not a verified candidate.
+
+The consumer image is already prepared:
+`sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`.
+Development08 passed the isolated consumer at both paths but predates final
+completion/notice/output changes and is not the candidate. Reuse the prepared
+image; do not repeat completed development builds. No source suite, probe or
+container remains running. HANDOFF.md contains clean-candidate drivers prepared
+for Phase11, not yet executed. No merge, tag or publication is authorized.
+
 Phase 0 records context/ref/environment checks and preserves canonical bytes.
 Untouched source verification: `TMPDIR=/tmp ./run-all-tests.sh`, Racket CS 8.10,
 log `/tmp/attalambda-interactive-baseline.log`: exit 0, all 49 suites, 17,611 reported tests,
@@ -57,11 +91,6 @@ Downloads link; its scope was corrected to active records, preserving history.
 The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
-
-**Next unfinished step: 8.1 — integrate the proven editor adapter.**
-Phases 0–7 have passing source verification and scoped independent review.
-The checked session engine and complete plain CLI/transcript loop are implemented.
-Checkpoint 7 is ready for its commit/push; reconcile Git before proceeding.
 
 ### Phase 0 — Establish a safe, reproducible starting point
 
@@ -804,13 +833,339 @@ memory or latency bounds.
 
 **Purpose:** polish one working engine, not add another execution path.
 
-- [ ] **8.1 — Integrate the proven editor adapter.** Promote the early editor probe into the real loop using the shared safe reader. Declare the actual direct package dependencies and corresponding narrow boundary changes. **Check:** advanced and fallback modes produce equivalent entry semantics and the library still does not execute Racket initialization files.
-- [ ] **8.2 — Configure multiline editing and indentation.** Select appropriate documented lexer/indentation/parenthesis hooks without importing the entire Racket REPL. **Check:** nested expressions, comments, escaped strings, cursor movement, and multi-form paste work; no second parser or custom terminal escape engine is introduced.
-- [ ] **8.3 — Add non-evaluating completion.** Derive visible language names from actual public exports and combine them with committed user names through a supported editor mechanism. **Check:** newly defined/redefined/loaded names appear, reset removes user names, failed names never appear, and lazy definitions are not forced. Filter private scaffolding, not legitimate public language exports.
-- [ ] **8.4 — Implement bounded inert history reading.** Choose one simple data format and safe application-data path; enforce the entry and byte bounds before unbounded parsing/allocation. **Check:** valid multiline entries round-trip, oversized/corrupt/unsafe files are ignored safely, reader directives cannot execute, and `--no-history` performs no persistent read.
-- [ ] **8.5 — Implement best-effort history persistence.** Save submitted source/commands with appropriate permissions and atomic replacement where supported. Skip oversized entries rather than rejecting their execution. **Check:** program answers are absent, an unwritable target does not break the session, a failed save does not corrupt an existing valid file, and `--no-history` performs no persistent write.
-- [ ] **8.6 — Finalize editor failure and fallback paths.** Handle unrecognized terminals, controlled initialization failure, EOF, interrupt, and process exit without exposing the editor's internal errors as language values. **Check:** no terminal-mode residue, no duplicate input reader, and the plain fallback retains multiline source support; advanced features are required on the supported normal Linux terminal, not silently waived.
-- [ ] **8.7 — Run full PTY acceptance.** Drive the actual executable through editing, history recall, completion, multiline paste, program input, Ctrl+C, Ctrl+D, and explicit exit. **Check:** terminal state is restored on every termination path and the source/program handoff still passes after history/completion integration. Exercise source entered before and after blocked reads.
+Step8.1 is subdivided before implementation. 8.1a promotes the proven POSIX
+stdout-to-stderr descriptor adapter, repairs the evidenced flush-failure cleanup,
+classifies exactly its three foreign calls and retains the subprocess regression.
+8.1b adds the small Expeditor source-reader adapter with explicit safe hooks,
+fixed lazy loading and exact dependencies/boundaries. 8.1c wires it into the real
+CLI, retaining plain fallback and original-stdin pending-byte handoff, and verifies
+equivalent entry semantics, no initialization-file execution and terminal cleanup.
+Completion/history remain8.3–8.5; no second evaluator or terminal driver is added.
+
+8.1a complete:runner/editor-output.rkt replaces tests/helpers/editor-descriptors.rkt;
+the test editor imports the promoted adapter. Its proven final-flush cleanup now
+always restores/closes fd1 while retaining a propagating action failure/break.
+The new separate-process fixture verifies seven success/failure combinations,
+live fd1/fd2 destinations, unchanged descriptor counts and original stdout bytes.
+DescriptorProbe plus accept/close and redirected-stdout PTYs pass; five boundary
+mutation groups,145 boundary checks and complete gate pass. Logs:
+/tmp/attalambda-interactive-8.1a-{descriptor,redirect,mutants,boundary,gate}.log.
+The descriptor log includes one command-selection error from naming a nonexistent
+test_stdout_is_separate method; the actual test_redirected_stdout_is_restored
+passed in the redirect log. No product repair or test waiver for that invocation.
+Exact new class pins the complete small adapter, its foreign names/arguments and
+single export. Full phase verification remains after8.7.
+
+8.1b complete:runner/editor.rkt uses fixed lazy POSIX adapter loading and explicit
+public Expeditor hooks, the existing restricted reader and an empty metadata-only
+namespace. Real PTYs pass multi-form source, commands, reader-directive rejection,
+fresh EOF and controlled open failure, with restored redirected stdout and no
+synthetic initialization-file execution. Six boundary mutation groups,145 boundary
+checks and the complete gate pass; logs /tmp/attalambda-interactive-8.1b-*.log.
+The production CLI connection follows8.1c; completion remains8.3.
+
+Dependency decision:promote expeditor-lib and syntax-color-lib from build-deps to
+direct deps because the adapter imports the editor and maintained Racket lexer.
+Expeditor is required by the contract and owns the terminal protocol; replacing
+the lexer would create another parser. The approved CS9.3 packages add only
+parser-tools-lib and option-contract-lib beyond base. Measured installed source
+directories are166215/111875/255947/24750 bytes respectively; final archive delta
+is unmeasured until packaging. Existing runtime versions are retained; no separate
+advisory audit is claimed. No convenience dependency or user package-home change.
+
+- [x] **8.1 — Integrate the proven editor adapter.** Promote the early editor probe into the real loop using the shared safe reader. Declare the actual direct package dependencies and corresponding narrow boundary changes. **Check:** advanced and fallback modes produce equivalent entry semantics and the library still does not execute Racket initialization files.
+
+8.1c complete:repl.rkt loads the fixed editor module only for interactive mode,
+uses original input/output and returns to the same plain collector when original
+stdin already has buffered bytes. An unavailable editor selects plain interactive
+fallback for that shell. Transcript collection is unchanged. Ten existing actual
+CLI/transcript tests pass; three focused terminal cases additionally prove advanced
+cursor correction, program/answer/source type-ahead, normal terminal mode during
+program input, no synthetic init execution, and cancellation/recovery in both
+advanced and fallback modes. Six controller and six boundary mutation groups plus
+complete gate pass. Logs /tmp/attalambda-interactive-8.1c-*.log. Plain prompt tests
+retain their exact continuation assertions under an unrecognized terminal; advanced
+checks allow its native UI bytes between exact result bytes and the next prompt.
+No executable failure or acceptance waiver occurred. Full phase review remains8.7.
+
+- [x] **8.2 — Configure multiline editing and indentation.** Select appropriate documented lexer/indentation/parenthesis hooks without importing the entire Racket REPL. **Check:** nested expressions, comments, escaped strings, cursor movement, and multi-form paste work; no second parser or custom terminal escape engine is introduced.
+
+8.2 complete:explicit public parentheses/grouping/indentation hooks select the
+library's S-expression fallbacks with racket-lexer. Actual CLI nested let, block
+and line comments, escaped multiline String, cursor editing and multi-form paste
+pass in advanced and fallback modes. The adapter's submitted source contains the
+expected two-space indentation after Tab. Initial test incorrectly expected
+auto-indent during rapid paste; installed private/ee.rkt should-auto-indent?
+suppresses it when keystrokes are within50ms. The corrected test explicitly asks
+for indentation, with no sleep or production change. Logs8.2-editor.log (four
+other passing methods and this initial test failure),8.2-indent.log (corrected
+indentation pass),8.2-mutants.log (six groups),8.2-gate.log (pass).
+
+Initialization fixture correction:the legacy .expeditor.rkt sentinel was not the
+CS9.3 target under PLTUSERHOME. A read-only API probe gives
+PLTUSERHOME/.config/racket/expeditor.rkt and racketrc.rktl. Tests now create both
+actual files plus the legacy file in their isolated home. A positive control
+calling expeditor-configure executes the synthetic sentinel and fails as expected;
+the real adapter/CLI and existing editor probe succeed without executing it.
+Earlier no-init assertions alone did not prove the actual path; exact boundary
+checks already prohibited configuration loading. The updated tests supply that
+missing behavioral evidence.
+
+Independent8.1 adapter review reports no actionable current-configuration finding.
+Its primed-entry/color-enabled initial lexer failure is outside production:
+expeditor-open/ee-set-history! always start histnow empty, and color is disabled.
+Six additional PTYs with0/1/1000 history entries confirm no initial lexer callback,
+restored termios and clean stdout. Scratch /tmp/attalambda-phase8-fresh-history-review.*.
+The asynchronous initial-display signal window remains unverified, not a proved bug.
+
+- [x] **8.3 — Add non-evaluating completion.** Derive visible language names from actual public exports and combine them with committed user names through a supported editor mechanism. **Check:** newly defined/redefined/loaded names appear, reset removes user names, failed names never appear, and lazy definitions are not forced. Filter private scaffolding, not legitimate public language exports.
+
+8.3a is metadata-only plumbing: `session-completion-names` combines actual value
+and syntax exports with committed names, excluding only four module scaffolds.
+The initial14 state groups,7 boundary groups and complete boundary gate pass in
+`/tmp/attalambda-resumed-completion-{metadata,mutants,boundary}.log`.
+Independent review finds no actionable issue: all135 actual public names,
+all65 C0/DEL/C1 committed identifier cases, loaded lazy definitions, no demand,
+failed-entry exclusion and reset pass; four metadata mutations fail after an
+unchanged scratch baseline passes. Review evidence:
+`/tmp/attalambda-completion-metadata-review{,-state}.log`.
+The review's complete export-set and65-character hunters are now permanent focused
+state tests. All15 groups pass in `/tmp/attalambda-resumed-completion-hunters.log`
+(exec87774 finished0); no value is demanded by these metadata checks.
+8.3b remains the editor connection and actual completion acceptance; it depends
+on resolving the control-character contract question. No UI filtering is present.
+
+A scoped existing-library correction is now being prepared to preserve every
+name without needing that exception. Read-only analysis establishes stock Expeditor
+emits source control characters literally; history additionally expands tabs and
+drops CR, and its completion-list padding counts characters rather than displayed
+width. The empty symbol is a legitimate committed identifier; source spelling must
+use `||` instead of the empty result from the no-bar symbol printer.
+Before implementation, subdivide8.3b:8.3b1 applies a pinned correction only in the
+separate candidate Expeditor package, sharing safe control spelling with geometry,
+retaining actual source/history characters and explicit UI newlines;8.3b2 proves
+completion/recall/wrapping/cursor behavior with real PTYs, then promotes the patch
+and read-only build verification;8.3b3 connects metadata through the public
+namespace mechanism, with no value demand and source-spelling round trips;
+8.3b4 runs actual CLI completion, full tests/gates and independent review.
+No omission, new grammar, terminal driver or product private import is authorized
+or needed by the proposed library repair. Do not call it working before PTY proof.
+
+The isolated candidate now separates C0/DEL caret display and C1 ASCII hex display
+from unchanged source characters, shares visible widths with cursor geometry,
+preserves history tabs/CR, and wraps completion lists by visible width. Its first
+all-control completion/recall PTY run is in progress; do not change that candidate
+during the run. Before the next correction,8.3b1 additionally covers the proven
+narrow-prompt failure: original widths1/3/5 crash before input and leave raw mode,
+while fitting the same public prompt makes the same edit pass with full cleanup.
+Retain the configured prompt and derive a display prompt only when it exceeds the
+row, so widening restores it. Evidence:
+`/tmp/attalambda-phase8-{narrow-prompt,fitting-prompt}-results.json`.
+Widths smaller than one character's display use a one-cell placeholder while
+retaining the exact source; resize refreshes both row and one-cell layout caches.
+The initial130 public-API PTYs passed (65 completion and65 recalled source cases),
+including identity, no demand, stdout restoration and terminal cleanup:
+`/tmp/attalambda-expeditor-candidate-controls.{log,json}`. The subsequent fitting
+prompt candidate compiles and is under independent geometry/resize/list review.
+Independent spelling review found that leading `:` also needs a backslash so an
+actual name such as `:help` bypasses shell-command dispatch. With that correction,
+all549 unusual names round-trip through parse-source-entry;73 actual committed
+lazy names remain undemanded. Probe/log:
+`/tmp/attalambda-completion-spelling-review.{rkt,log}`.
+
+8.3b2 visual review found two stock multicell redraw defects: deleting a character
+that crosses a wrap mutates geometry before moving the physical cursor; inserting
+can leave stale glyphs in newly vacated row-end cells when row count stays equal.
+Untouched stock reproduces the same deletion bytes with ordinary `界`. Native
+indentation also hangs after removing a leading space because its old column lies
+beyond the new string before move-bol. Before editing, narrow the next correction
+to these source/physical-coordinate transitions: move to the old logical line
+start before modifying affected multicell lines, then reuse existing clear/redraw;
+perform indentation's move-bol before its mutation. Preserve captured splice and
+mark coordinates. Test same-line and multiline insertion/deletion, indentation,
+completion cycling, exact visual cursor state, resizes and cleanup. `indent-all`
+already anchors before modification and has no proved issue. Evidence:
+`/tmp/attalambda-expeditor-multicell-transition-visual.json` and
+`/tmp/attalambda-expeditor-indent-transition-review.py`.
+The old-geometry repair passes all24 visual cursor/grid checkpoints and three
+former indentation-hang siblings. A separate untouched-stock ASCII multiline
+failure is now proved: display-rest-of-entry prints a phantom prompt but passes
+physical column0 to the following line layout.8.3b2's next correction changes
+that argument to the actual prompt width; no further terminal mechanism is added.
+Evidence: `/tmp/attalambda-expeditor-multiline-ascii-results.json` and
+`/tmp/attalambda-expeditor-correction-indent-results.json`.
+That prompt-width argument fixes the ASCII/ordinary-width newline cases. Narrow
+leading multicell characters reveal why logical BOL is not a stable physical
+anchor: the first character can begin on the next row. The independent native
+full-redisplay control renders these exact width3/7/8 cases correctly. Replace the
+affected non-unicell incremental adaptation with existing clear-entry before
+mutation and existing redisplay after setting the new point and fresh viewport.
+Keep captured splice/mark coordinates, source/color data, configured prompt,
+history and key behavior. Ordinary one-cell edits retain their original path;
+the proved ASCII multiline prompt-width correction remains. This replaces the
+incomplete adaptation, without adding a terminal driver. Reviewer source/viewport
+assessment and proof: `/tmp/attalambda-expeditor-leading-wide-refresh-visual.json`.
+
+The following exception discussion is historical; a dependency repair preserving
+the contract is now in progress, so no exception is needed if its checks pass.
+Independent command_loop_cold_review confirms that omitting control-containing
+committed names changes the fixed3.9/8.3 promise. Public Expeditor insertion/display
+emits literal control bytes, and Racket identifiers have no ASCII hex escape that
+round-trips to ESC. Ordinary source-spelling adaptation works for spaces/bars/
+backslashes/numeric-looking names; incomplete |tw is merely an unsupported prefix,
+not an unavailable identifier. Kyle was asked whether completion alone may omit
+names containing U+0000–001F or U+007F–009F, retaining their source behavior and safe
+:names listing. No filtering is authorized or implemented yet. Do not infer an
+answer from elapsed time. Independent safe history work8.4/8.5 may continue under
+the explicit instruction to finish independent work when blocked;8.3 stays open.
+
+- [x] **8.4 — Implement bounded inert history reading.** Choose one simple data format and safe application-data path; enforce the entry and byte bounds before unbounded parsing/allocation. **Check:** valid multiline entries round-trip, oversized/corrupt/unsafe files are ignored safely, reader directives cannot execute, and `--no-history` performs no persistent read.
+
+Independent8.4 subdivisions before implementation:8.4a implements/tests a bounded
+binary history format in runner/history.rkt (fixed version header, unsigned entry
+count and UTF-8 byte lengths; no native data reader).8.4b adds best-effort reading
+under the platform preference directory with no-follow path/type/permission checks,
+a strict read cap, and an early disabled branch before filesystem discovery.
+8.5a will add atomic persistence;8.5b will connect shell-owned1000-entry navigation
+and source-only history. These helpers do not depend on the pending completion
+decision. Do not declare8.3 or the phase complete while that decision is pending.
+
+8.4a complete:runner/history.rkt and tests/interactive-history-test.rkt provide
+the inert framed format, exact1000/1MiB limits, strict UTF-8 and rejection of
+truncation/oversized count/declared length/version/trailing bytes. Encoding skips
+oversized entries and preserves newest-first order. Four focused groups,seven
+boundary mutation groups,145 boundary checks and complete gate pass in
+/tmp/attalambda-interactive-8.4a-{history,mutants,boundary,gate}.log. Exact source
+classification is added; no history filesystem access or shell integration yet.
+
+8.4b complete:read-history uses pref-dir/attalambda/history-v1, rejects dotenv path
+components and symlink/nondirectory ancestors, unsafe directory/file permissions,
+nonregular files/FIFOs/hardlinks and oversized files before a content-read attempt.
+Opened-file identity/type/permissions/size are rechecked before reading at most
+1048577 bytes. Disabled history returns before path discovery. Errors are best
+effort; interruption propagates. Eight focused groups,seven boundary mutation
+groups and complete gate pass in8.4b-{history,mutants,gate}-fixed.log. No shell
+history integration or persistence at that checkpoint. Independent read review
+closed with no actionable findings: all8 groups pass independently, and four
+open-time substitutions (inode, permissions, growth, FIFO) return empty history
+promptly. Evidence:/tmp/attalambda-phase8-history-{review,race-review}.log.
+
+Initial read tests rejected valid private files because this sandbox maps the
+filesystem root and /tmp owner to65534. Read-only stat proved the cause; the sticky
+ancestor exception now compares against the observed filesystem-root owner instead
+of hardcoded UID0. Non-root-owner sticky ancestors remain untrusted. The diagnostic
+probe initially omitted TMPDIR and tried read-only /var/tmp; an escalated retry was
+declined and was not run. The cause was established with metadata-only inspection,
+then ordinary sandboxed tests passed. No retry through another mutation path or
+system permission change occurred.
+
+- [x] **8.5 — Implement best-effort history persistence.** Save submitted source/commands with appropriate permissions and atomic replacement where supported. Skip oversized entries rather than rejecting their execution. **Check:** program answers are absent, an unwritable target does not break the session, a failed save does not corrupt an existing valid file, and `--no-history` performs no persistent write.
+
+8.5a passes11 history groups,7 boundary mutation groups and complete gate in
+/tmp/attalambda-interactive-8.5a-{history-fixed,mutants,gate}.log. New write-history
+uses the standard library's atomic output helper inside a validated private
+directory, sets temporary permissions before payload, rechecks the destination,
+and retains the old file/cleans temporary files on write, rename and break
+failures. Missing directories are created0700; existing unsafe targets remain
+untouched without content reads. Disabled writes perform no filesystem access.
+The initial test log contains a test-only extra closing parenthesis, corrected
+before the passing run. Independent writer/shared-helper review closed with no
+actionable findings; chmod failure/break and a destination permission change at
+the final recheck preserve old data and clean the temporary. Evidence:
+/tmp/attalambda-phase8-history-write-{review,hunters}.log.
+
+8.5b focused checks now pass:12 history groups,8 controller groups,1 lifecycle
+group covering10 fresh-process scenarios,7 boundary mutation groups, complete
+gate, and actual CLI source-only persistence, no-history recall, unsafe target
+recovery,1000-entry navigation, cancellation/exit and file load/reset cases.
+Logs:/tmp/attalambda-interactive-8.5b-{history,controller,lifecycle-fixed,
+mutants-fixed,gate-fixed,pty,pty-fixed}.log and8.6-pty.log. The initial pty.log
+contains a fixture-permission failure:Python parents=True created intermediate
+ancestors0775 under umask0002, correctly rejected by the reader. Explicit0700
+creation fixes the fixture; three independent two-prompt1000-recall runs also
+pass, without a production change (attalambda-history-safe-recall-review.py).
+
+Independent integration review found one real startup-erasure bug: cleanup
+saved the initial empty list when open-session failed or initial history reading
+was interrupted, consuming no source but replacing prior history. Repair tracks
+whether a nonempty source submission changed history and enables saving only
+then. This also preserves the old file on read failure followed by EOF or an
+untouched session. The promoted lifecycle regression fails before the repair
+(8.5b-lifecycle-before.log) and all10 scenarios pass afterward. Fresh cold review
+is closed:all10 scenarios and seven additional boundary probes pass, including
+partial-source interruption, completed source followed by interruption, early
+source/UI failure, submitted reader/expansion failure and emptyEOF with no prior
+file. Evidence:/tmp/attalambda-history-record-boundary-review.{rkt,py}.
+The lifecycle fixture now resolves the language directory from its own location,
+so fault injection does not require a checkout named attalambda. The first
+relocation-independent rerun (8.5b-lifecycle-final.log) exposed unsimplified '..'
+segments in define-runtime-path:the fault hook did not fire. A read-only API
+probe confirmed them; lexical normalization of both compared paths resolves the
+test-only issue.8.5b-lifecycle-portable.log passes all10 scenarios. All production
+findings in this scope are closed.
+
+- [x] **8.6 — Finalize editor failure and fallback paths.** Handle unrecognized terminals, controlled initialization failure, EOF, interrupt, and process exit without exposing the editor's internal errors as language values. **Check:** no terminal-mode residue, no duplicate input reader, and the plain fallback retains multiline source support; advanced features are required on the supported normal Linux terminal, not silently waived.
+
+Complete real terminal gate passes36 Python cases plus its Racket wrapper:
+/tmp/attalambda-interactive-8.6-editor-all.log, exit0. Controlled open refusal,
+unrecognized-TERM plain mode, explicit advanced-mode editing, multiline/paste,
+source/evaluation/render/input/load cancellation, source-to-program handoff,
+EOF/exit0/1, descriptor cleanup, original stdout separation,1000-entry history
+and inert initialization are covered.8.3 completion remains open; this is the
+implemented terminal gate, not evidence that completion or the candidate passed.
+
+- [x] **8.7 — Run full PTY acceptance.** Drive the actual executable through editing, history recall, completion, multiline paste, program input, Ctrl+C, Ctrl+D, and explicit exit. **Check:** terminal state is restored on every termination path and the source/program handoff still passes after history/completion integration. Exercise source entered before and after blocked reads.
+
+Independent9.1 coverage preparation identified four explicit §6.1 real-REPL
+transcripts that existed only at the helper level. Added them to
+tests/interactive-cli-test.rkt:binding snapshots/partial application/terminating
+rec, saved+fresh reads, recovery/reset/sticky status, and load expansion rejection
+before earlier effects. Initial8.7-transcripts.log passes15/16 groups; the failure
+is an assertion using "unknown name keep" instead of the observed canonical
+"unknown AttaLambda name: keep". Test-only correction is in
+8.7-transcripts-fixed.log. The final success-load fixture now checks exactly two
+markers/acknowledgments plus bare-expression silence across reload; all16 CLI
+groups pass in8.7-transcripts-final.log. Full source regression passed with exit0:
+66 test files,17,738 reported Racket tests,36 Python PTY cases,40 purity modules
+and the complete boundary gate. Log:
+/tmp/attalambda-interactive-phase8-independent-full.log. Three200-entry memory
+cycles took8.951/8.966/9.491seconds; retained125224776/125465232/125471920bytes,
+reset115127912/115220456/115228752 versus115308624initial. Descriptors stayed7.
+These are observations, not performance guarantees.8.3 still waits; do not
+close8.7 or Phase8 before completion integration and refreshed terminal evidence.
+
+Current8.3b4 verification record (supersedes intermediate correction notes above):
+actual completion is wired and the corrected lifecycle method passes in
+`/tmp/attalambda-completion-actual-cli-state.log`; the72 unusual/control CLI cases
+pass in`/tmp/attalambda-completion-actual-cli.log` (that original combined run
+fails only the now-corrected source-cancel diagnostic assertion). The independently
+reviewed actual helper corpus is permanent ininteractive-completion-test.rkt;
+9075 checks pass in`/tmp/attalambda-permanent-completion.log`. Permanent dependency
+preparation checks pass14 in`/tmp/attalambda-permanent-preparation.log`; its first
+run rejected an extra newline in the test's reverse-diff fixture, now corrected.
+The attempted multi-file raco invocation failed before loading any test because
+this copied runtime could not resolve compiler/test's process submodule. Individual
+raco invocations, as used by run-all-tests.sh, execute successfully; the failed
+multi-file invocation is not product evidence. Distribution checks pass217 in
+`/tmp/attalambda-final-dependency-distribution.log`.
+A cold tooling review then proved corrected main.rkt source could coexist with
+upstream compiled main.rkt while the old checker inspected only private modules.
+The checker now loads main and compares its newly imported width bindings, and
+checks Windows-sensitive string-unicell? behavior. Source/loaded --check passes
+in`/tmp/attalambda-final-runtime-loaded-check.log`; permanent stale-main hunter
+and applied-delta review follow before closure.
+
+Checkpoint8 closure evidence: all69 source files/26845 Racket assertions and both
+terminal suites (43+6 methods) pass with both structural gates in
+`/tmp/attalambda-interactive-phase8-final-full-02.log`. Exact command is the
+corrected isolated CS9.3 invocation in HANDOFF.md. Source diff whitespace and
+independent reviewed-file hashes pass. Three200-entry memory cycles retain
+125510688/125668432/125663616bytes and reset to115855184/115863840/115855568bytes
+versus116030592initial; descriptors stay7. These are observations, not guarantees.
+The repaired test wrapper compiles all four Python-launched fixtures before the
+two harnesses; the independent inventory review found no omitted fixture.
+The phase commit includes the proved runtime and packaging prerequisites needed
+by the terminal feature, with Phase9's final reconciliation still separate.
 
 **Checkpoint 8 — Terminal usability and history review.** Use terminal-integration review plus a narrow privacy/boundary review of history and startup behavior. The complete program, not just the probe, must pass real PTY tests. No general penetration-testing framework or new account/service integration is needed.
 
@@ -818,13 +1173,498 @@ memory or latency bounds.
 
 **Purpose:** make the implemented feature accurately documented and packageable.
 
+Independent preparation while8.3 awaits the explicit contract decision:9.1
+assertion mapping is below;9.5 package-path behavior is being checked with the
+existing build script in an isolated, explicitly dirty development build at
+/tmp/attalambda-interactive-development-probe-01. Log:
+/tmp/attalambda-interactive-development-build-01.log. VERSION remains0.7.0;
+this probe cannot satisfy the clean candidate requirement or justify publication.
+That full source baseline has passed; packaging repair can now proceed.
+
+Development build01 completed (exit0) but the exact extracted executable's
+`--repl --no-history` smoke exits70 with no stdout. The archive contains12 files,
+including only repl.rkt as a copied runtime source, without its required sibling
+modules. Logs:development-build-01.log, development-smoke-01.log and
+development-module-probe-01.log under /tmp/attalambda-interactive-*.
+This is an observed9.5 packaging defect, not a verified standalone candidate.
+Existing fixed dynamic module references use define-runtime-path (a runtime file
+declaration); the documented define-runtime-module-path-index declares module
+dependencies for embedding. Investigate/repair the complete fixed-module-path
+class after the running source baseline finishes, with a focused packaged
+regression and fresh independent review. Do not treat copying the whole source
+checkout or embedding arbitrary runner paths as an acceptable repair.
+
+Read-only embedding prototypes identify the fresh-namespace requirement:using
+one module-path index directly caches a reference that does not load the module
+into a second registry. Resolving to an ordinary file/symbol module reference
+works in source mode, but an embedded symbolic declaration lives in the original
+executable namespace and is absent from a fresh base namespace. The next bounded
+prototype uses documented namespace-attach-module-declaration (declarations only,
+never instances) to retain fresh host/input/resource state. That prototype now
+passes both source mode and a relocated distribution with all sources hidden:
+/tmp/attalambda-module-reference-review-soxj70_o/ and driver
+/tmp/attalambda-module-reference-review-v5.py. It proves two fresh registries and
+captured original inputs, shared identity across two generated entries per
+session, owned-port cleanup and preserved original inputs. An embedded poisoned
+helper remains uninstantiated on help/skip paths. No Windows execution claim.
+Recommended mechanical repair:four module-path-index declarations; resolve the
+session language to a normal file/quoted-symbol reference; attach declarations
+only for the embedded-symbol case before instantiating in each fresh namespace.
+The toy needed racket/runtime-config because of its racket/base module-begin;
+this is not evidence that the actual AttaLambda language needs a new dependency.
+The verified repair is now applied, pending focused source/packaged verification:
+four fixed module dependencies use module-path indexes; the session resolves its
+language once and attaches only embedded declarations before fresh instantiation.
+Exact boundary checks pin resolution/attachment/initialization and reject instance
+attachment or omission. Core/effects/runtime/lang/readers are behaviorally unchanged.
+
 - [ ] **9.1 — Run a contract-to-test audit.** Map every acceptance row in §6 to an existing test, new test, or explicit artifact check. **Check:** critical behaviors have executable evidence; observational memory measurements and unperformed platform checks are labeled honestly, not converted into claims of proof.
+
+Independent read-only audit prepared while8.3 is blocked; this maps assertions,
+not a new execution or final-artifact claim. command_loop_cold_review read all18
+rows and their test assertions; its four §6.1 integration gaps and exact reload
+marker gap are now covered by the16 passing CLI groups above. Completion and
+the final source/artifact checkpoints remain open. All *-test.rkt files are
+discovered by run-all-tests.sh; interactive-editor-test.rkt invokes the Python
+PTY harness without skipping the required Linux gate.
+
+| Acceptance | Executable evidence / remaining check |
+|---|---|
+| A01 selection/flags/file behavior | interactive-cli-test.rkt flag groups; CLIProbe default/redirected/fallback cases; runner-test.rkt file/help/version. Artifact rerun pending. |
+| A02 entries/comments/literals | interactive-reader-test.rkt; interactive-session-test.rkt whole-entry expansion rejection; CLIProbe multiline/comments/String/paste. |
+| A03 reader extension rejection | interactive-reader-test.rkt, interactive-file-test.rkt reader probes; interactive-history-test.rkt inert framing; interactive-boundary-test.rkt reader mutants. |
+| A04 retained state/snapshots | interactive-state-test.rkt partial applications, retained effects, rebinding; actual CLI snapshot/partial/rec group. |
+| A05 def/rec/hygiene | interactive-state-test.rkt cycles/shadowing/duplicates; interactive-session-test.rkt hygiene; interactive-expansion-test.rkt; actual CLI terminating rec. |
+| A06 purity/capabilities | interactive-expansion-test.rkt actual generated terms and negative control; interactive-boundary-test.rkt; boundary-check-test.rkt unknown imports/classes. Completion boundary pending. |
+| A07 rendering/effect sharing | interactive-session-test.rkt computed-result rendering/no repeat; interactive-cli-test.rkt echo-off raw functions and exact effect output. |
+| A08 saved/fresh input | interactive-input-test.rkt; stdin-test.rkt/stdin-stream-test.rkt/input-language-test.rkt byte/EOF/type/sharing cases; actual CLI saved/:names/repeated/fresh read group. |
+| A09 one input stream | interactive-input-test.rkt original-port/open-pipe assertions; TranscriptProbe live source/answers; CLIProbe advanced typeahead/immediate prompt/EOF. Artifact rerun pending. |
+| A10 cancellation | interactive-lifetime-test.rkt all stages; interactive-controller-test.rkt deterministic expansion/diagnostic interruption; CLIProbe advanced/plain cancellation and surviving binding. |
+| A11 failed publication/recovery | interactive-state-test.rkt reader/expand/native/render failure and cached-promise behavior; actual CLI keep/reset/sticky1 and Error/Err0 groups. |
+| A12 resource lifetime | interactive-lifetime-test.rkt failed-entry/reset/exit isolation; interactive-memory-test.rkt weak-reference/descriptor/worker checks; actual CLI reset/exit. |
+| A13 loading | interactive-file-test.rkt standalone/path/reload/snapshot/failed publication/cancel; exact-output CLI two-load markers/bare-expression silence and failed-load expansion; CLIProbe real repeated load/reset. |
+| A14 statuses | interactive-cli-test.rkt sticky1/incomplete65/explicit exit0,1/Error+Err0; TranscriptProbe interruption130. |
+| A15 completion/history | Names:interactive-state-test.rkt; history:interactive-history-test.rkt/lifecycle fixture and CLI persistence/recall/1000/cancel/no-history. Completion:interactive-completion-test.rkt and actual CLI completion methods; full current terminal gate pending. |
+| A16 terminal usability/restoration | CLIProbe advanced editing/paste/cancellation/EOF/exit; DescriptorProbe restoration including flush/break failures; full implemented PTY gate36 cases passes. Completion/artifact rerun pending. |
+| A17 measured repeated use | interactive-memory-test.rkt three200-entry sessions, observed elapsed/heap, weak old state reclamation and stable descriptors. Final measurements pending; no universal memory bound claimed. |
+| A18 standalone artifact | distribution-test.rkt plus tooling/test-linux-distribution.sh existing no-Racket/layout/notices/examples/relocation checks.9.5–9.7 must wire interactive/runtime-input/PTY cases before exact11.1–11.2 build/consumer gate. |
+
+§6.2 cleanup regression remains EditorProbe.test_harness_failure_closes_waiting_reader_and_descriptors
+and stdin-stream-test.rkt's failing-case teardown. These deliberately take the
+failure path; no generic testing framework is added.9.1 closes only after final
+completion assertions and packaging check locations are reconciled.
 - [ ] **9.2 — Update user documentation and executable examples.** Update README/API/help/release notes for runtime input, `atta>`, commands, snapshot redefinition, lazy effects, echo-off, load semantics, and transcript status behavior. **Check:** execute the documented examples, confirm uppercase canonical rendering, and remove obsolete references to `att>` or special literal-lambda printing.
+
+README/API/archive guide and new unreleased0.8.0 notes now describe implemented
+shell/input behavior, preserving the published0.7.0 links and explicitly leaving
+completion/candidate checks open. The marked API snapshot transcript executes
+verbatim:17CLI groups pass; the existing marked input example passes76 assertions.
+Distribution assertions pass216. Logs9-docs-{interactive-cli,input-language,
+distribution}.log. New consumer exact-input/snapshot checks and updated existing
+macOS/Windows help expectations are prepared but actual platform runs are pending.
+Independent documentation/consumer review closed after correcting current
+distribution version/notice/test-image metadata and the exact forwarded stdout
+description. Historical release-ledger bytes remain identical. The19 current
+source CLIProbe/TranscriptProbe methods pass in9-source-terminal.log (44.330s).
+The consumer's binary-input fixture passes source execution with exact expected
+bytes in9-consumer-input-source-fixed.log. Its first standalone probe omitted
+collection registration; a read-only collection-file-path probe proved the
+missing attalambda/lang collection, then a temporary -S collection alias supplied
+the ordinary source installation context. No production change was involved.
 - [ ] **9.3 — Reconcile architecture and specification records.** Document the narrow REPL-tooling exception, shared expansion path, unchanged host-input contract, source inventory, and dependency direction. Update canonical amendment/index evidence as required. **Check:** docs describe observed code separately from remaining release work and contain no blanket purity exception for arbitrary runner modules.
-- [ ] **9.4 — Prepare candidate version metadata.** After confirming `0.8.0` is still unused and appropriate, update `VERSION`, package projection `0.8`, and every exact version acceptance table/test that actually depends on them. **Check:** Linux and existing internal portability scripts agree; do not broaden version validators generically just to avoid listing the new supported state. If the version was taken by intervening work, do not reuse its tag or overwrite artifacts.
+
+Architecture, host/distribution design, specification index and acceptance map
+now distinguish exact tooling classes, shared checked expansion, fresh session
+instances, pure rendering/reader observation, original-input handoff, and inert
+history. No new canonical amendment was needed; existing canonical bytes/hashes
+remain. Source baseline evidence is explicitly before packaging changes and is
+not presented as current candidate evidence. Final review remains open.
+Both current structural gates pass in9-final-{boundary,purity}.log (40pure
+production modules). Scoped docs/capability review is closed; complete milestone
+cold review and final source verification remain Phase10 work.
+- [x] **9.4 — Prepare candidate version metadata.** After confirming `0.8.0` is still unused and appropriate, update `VERSION`, package projection `0.8`, and every exact version acceptance table/test that actually depends on them. **Check:** Linux and existing internal portability scripts agree; do not broaden version validators generically just to avoid listing the new supported state. If the version was taken by intervening work, do not reuse its tag or overwrite artifacts.
+
+Fresh remote/tag/release preflight still shows no0.8.0, main71232f7 and milestone
+9960d4b. VERSION0.8.0 and package0.8 are prepared; explicit Linux/macOS/Windows
+tables and version fixtures retain all prior approved states plus this one.
+Focused9.4 checks pass7interactive-boundary groups,146boundary assertions,
+291runner assertions and216distribution assertions. Logs9.4-*.log. All processes
+finished. No tag/publication.
 - [ ] **9.5 — Include the editor and new runner modules in distribution.** Adjust only the dependency/bundling inputs needed by the existing build machinery, including any modules reached through dynamic lookup. **Check:** declared package closure and bundled modules cover the real code path, with no dependence on a developer package home or unbundled source checkout.
+
+9.5 is split into fixed-module declaration/namespace repair (a), focused source
+and extracted-development validation (b), diagnosed embedded dependency
+initialization and isolation regression (b1), generated entry runtime-config
+dependency and standalone expansion regression (b2), then exact candidate confirmation
+at11 (c). Repair(a) passes7boundary/16CLI/8lifetime/1history-lifecycle/291runner/145
+boundary checks and the complete gate. Logs9.5-*.log. Cold review found the
+checker accepted extra reassignment of language-reference and local shadowing
+inside render-result. Both promoted mutations fail before the repair; pinning
+the renderer body and the two permitted set! occurrences closes them. Seven
+groups pass in9.5-reference-mutants-fixed.log. Independent cold recheck closes
+both original hunters and nine nearby assignment/shadow/instance siblings:
+/tmp/attalambda-reference-closure-review.rkt. No remaining finding in that class.
+
+Development build02 exited2 at the existing forbidden-build-path gate; no archive
+was produced. Independent bounded toy reproduction shows ten toolchain-root
+strings in embedded Expeditor/lexer syntax-parse diagnostic metadata, introduced
+by minimatch.rkt's quoted syntax-source. The fixed-index toy without these
+libraries contains no retained source/toolchain root. No gate or production
+reference change is justified by this separate toolchain-origin issue. The
+approved cached official CS9.3 build image uses the already-permitted system
+prefix. Its identical relocated toy passes with zero temporary prefixes and
+runs in clean Ubuntu without Racket or source, proving these system-prefix
+diagnostic strings are not source dependencies. Logs:
+/tmp/attalambda-phase9-runtimepath-{container-toy,clean-consumer-toy}.log.
+The cached build image lacks Git (read-only preflight exit127). Development
+build03 therefore installs Git only inside its disposable application-build
+container, using the original image, a read-only checkout mount and separate
+output mount. This is independent of the stopped Python consumer-image build;
+it makes no Docker buildx cache mutation. Build03 is running with --allow-dirty
+at /tmp/attalambda-interactive-development-probe-03; log development-build-03.log.
+Container a02522579a2f and exec58791 are owned by this run. Completion and
+candidate verification remain open.
+
+Build03 finished2 at the same path gate; its container is removed and no archive
+exists. The bounded library toy therefore did not cover every path in the whole
+program. No further production fix was guessed. Diagnostic build04 uses the
+same unchanged source/runtime and a /tmp-only grep instrumentation wrapper that
+preserves grep's result while recording the exact rejected needle/file and
+copying only that generated artifact file before normal cleanup. Output:
+/tmp/attalambda-interactive-development-probe-04; log development-build-04.log.
+Container ID is recorded in /tmp/attalambda-interactive-build04-container-id,
+with explicit timeout cleanup. This is diagnosis, not candidate verification.
+
+Build04 finished2 and its container is removed. Exact diagnosis is now proven:
+the generic mount name /source was the scanner needle; all28 matches in the
+captured executable are safe abbreviated .../runner/source-file.rkt or
+.../runner/source-reader.rkt filenames. There are zero /source/ directory,
+actual staging-directory, host checkout or temporary toolchain prefix matches.
+Evidence:/tmp/attalambda-interactive-build04-path-diagnosis.log and the captured
+rejected-path-file.bin. This was an invocation-name collision, not remaining
+source dependence. Build05 changes only the mount name to
+/attalambda-project-workspace, preserving the source and every build gate.
+It is running in exec13151,
+with container ID in /tmp/attalambda-interactive-build05-container-id, output
+/tmp/attalambda-interactive-development-probe-05 and development-build-05.log.
+Independent read-only recheck confirms14matches for each abbreviated basename
+and zero actual directory prefixes. Native grep positive controls with injected
+new-root and staging-root bytes still reject, so the invocation-only correction
+preserves the existing leakage acceptance criterion. No source/gate change.
+
+Build05 completed0, all unchanged packaging/path gates passed. Archive:
+/tmp/attalambda-interactive-development-probe-05/attalambda-0.8.0-linux-x86_64.tar.gz,
+SHA2563550e93fe904a8153d3015d0328a301af687d01eabb663a1b43cb9178c2c1165,
+19573173compressed/68824799unpacked bytes,11files/2runtime files. Manifest records
+HEAD9960d4b plus explicitly dirty source; this is not a candidate.
+Extraction:/tmp/attalambda-interactive-development-extract-05/attalambda-0.8.0-linux-x86_64.
+Actual extracted REPL startup still exits70 with sanitized launcher failure,
+both on host and in clean pinned Ubuntu without Racket/source. Version succeeds.
+Logs:development-05-clean-smoke.log and development-05-terminal.log; packaged
+terminal acceptance fails. Subsequent bounded diagnosis corrects the earlier
+module-load inference: loading actual embedded repl succeeds, then actual
+open-session fails at namespace-attach-module-declaration because embedded
+racket/tcp is not instantiated in language-origin. Racket9.3 attach.rkt lines91–101
+requires a source instance for cross-phase-persistent modules even for declaration
+transfer. The verified dependency edge is expander -> host -> racket/tcp;
+source sessions skip the embedded-only branch. Native evidence:
+/tmp/attalambda-real-repl-diagnostic-05.log and
+/tmp/attalambda-real-repl-diagnostic-azpjd_ko/embedded-open-session.stderr.
+9.5b1 now initializes the fixed embedded language in its origin once at module
+startup, outside session/entry custodians. Independent ownership review confirms
+no program I/O, ports, listeners or workers are created or captured by this
+initialization; ordinary session host instances remain separate. The cost is one
+retained unused origin graph. Exact bootstrap/loader count pins remain closed.
+New actual CLI listener/reset regression fails on build05 at known startup70 and
+passes source in4.200s; eight lifetime and seven boundary groups pass. Logs:
+9.5b1-{regression-before,regression-source,lifetime,boundary}.log. Development
+build06 is running with the same approved /usr runtime and distinctive mount,
+output /tmp/attalambda-interactive-development-probe-06 and build-06.log.
+Independent applied-delta review is closed with no findings: exact bootstrap,
+fixed loader permissions and mutations, handle reuse/reset, listener lifetime and
+bounded test cleanup were inspected. The complete current source suite is running
+in /tmp/attalambda-interactive-9.5b1-full-source.log; full boundary gate already
+passes in9.5b1-gate.log. Draft PR7 is open for committed phases0–7 only:
+https://github.com/kserrec/attalambda/pull/7 . Workflow34941424282 runs on9960d4b,
+not these uncommitted inputs; no current candidate claim follows. The earlier toy omitted this
+dependency; do not treat
+its success as actual language-closure verification. One real packaged startup
+smoke must pass before repeating broader terminal acceptance.
+Build06 finished0 with all packaging/path gates preserved. ArchiveSHA256
+3b357e38e9e7205467ef77f7060b365e12e81f67de2091fd53de5182e441512b,
+19573938compressed bytes,11files/2runtime files, dirty inputs atop9960d4b.
+Its container is removed. Empty and :quit transcripts pass0, proving the prior
+session-initialization failure is repaired. Literal41 now fails1 during source
+expansion with sanitized invalid-syntax text. The new actual registry regression
+also fails waiting for an expression result; bounded cleanup completes.
+Logs:development-06-{smoke,startup-scope}.log and9.5b1-regression-artifact.log.
+No full terminal/consumer rerun. The actual-module diagnostic establishes the new
+native error: collection not found for racket/runtime-config, generated by
+Racket9.3 pre-base.rkt:198–202 while expanding a fresh module. Source preparation
+passes; embedded load/open-session/empty pass; prepare-entry fails before eval.
+Evidence:/tmp/attalambda-real-repl-expansion-diagnostic.log and
+/tmp/attalambda-real-repl-expansion-k4ivvn5p/embedded-prepare-entry.stderr.
+The old toy explicitly required this library and therefore did not establish
+the real language closure. Before any product edit, one /tmp diagnostic embedding
+with only ++lib racket/runtime-config added left the identical failure. Direct
+binary inspection proves this module and its initial-namespace mapping were
+already present, correcting the earlier absent-code inference. The exact defect
+is the fresh registry's declaration/resolver visibility: compiler/embed.rkt
+maintains mappings per registry and copies only attached modules' mappings.
+The actual-session probe proves that attaching only runtime-config declarations
+after the existing language transfer makes parse/expand/evaluate/demand/render
+produce41. Its unchanged control still fails. Evidence:
+/tmp/attalambda-real-repl-expansion-attach-config.log and diagnostic root
+/tmp/attalambda-real-repl-expansion-gippplgh. No builder flag or new import is
+needed; the product attachment repair is pending.
+
+The current bootstrap source run finished1 at the terminal wrapper:
+9.5b1-full-source.log.36 of37 Python cases pass; plain fallback cancellation sees
+an extra interrupt on the next old entry after cancelling an entry containing
+read-line. The output marker does not establish that the read had started.
+No root cause yet. The unchanged exact case passes10/10 fresh-process repeats
+with stable hashes, logs /tmp/attalambda-plain-cancel-review-01.log through -10.log.
+editor_probe_review is investigating with handler-only /tmp instrumentation;
+no cancellation repair is applied. Remaining full suites/gates did not run.
+After characterization finished, the proven embedded runtime-config declaration
+transfer was applied after language attachment; no build flags/imports changed.
+Exact boundary pins and omission/wrong-target/instance mutations pass7 groups in
+9.5b2-boundary.log. Build07 runs in exec22886 via
+/tmp/attalambda-interactive-development-build07.py; applied-delta cold review
+closed with no findings, and the complete boundary gate passes in9.5b2-gate.log.
+Build07 finished0; unchanged packaging gates pass. Its archiveSHA256 is
+13d2ea303f01d213c86ee16fcefb1a9a7db904a336010ccb89037561acd6552b,
+19573804compressed/68825514unpacked bytes,11files/2runtime files, dirty inputs
+atop9960d4b. Literal41 transcript passes0; actual listener/reset regression passes
+in2.384s; all20 actual CLIProbe/TranscriptProbe artifact tests pass in34.942s.
+The binary's snapshot/saved-input/fresh-input/reset transcript also passes in
+the pinned Ubuntu base without Racket/source, at original and space-containing
+mount paths. Logs:development-07-{smoke,terminal,clean-smoke}.log and
+9.5b2-regression-artifact.log. All owned build/smoke containers are removed.
+This is development evidence, not the denied full isolated Python terminal
+consumer or clean candidate gate.
+
+Cancellation review's handler instrumentation reproduces a raw-render sibling:
+run20 reuses the identical break object and original marks in the next old entry.
+Logs:/tmp/attalambda-plain-cancel-instrumented-v4-20{,-breaks}.log. This20-run batch
+is not an unchanged-source rate estimate; the embedded-only configuration
+attachment changed during it after the earlier10 unchanged runs finished.
+Exact reader/promise cause remains unresolved after read-only investigation. No speculative
+cancellation repair. Keep it separate from the proven packaging fixes.
+
+Independent remaining source verification completed only the suites after the
+failed interactive-editor wrapper, through both final gates, in exec40286 via
+/tmp/attalambda-interactive-remaining-source.py. Ledger/log:
+/tmp/attalambda-interactive-9.{json,log} (the temporary script's with_suffix
+replaced the dotted suffix; these are its actual files). All44 remaining files,
+10114 reported Racket tests,40-module purity and the full boundary gate pass.
+The ledger has no current test; the process finished0. Do not restart it.
+This cannot erase the earlier
+terminal failure or count as a complete passing full-suite run.
+
+The read-only cancellation report is
+/tmp/attalambda-cancellation-diagnosis-review.md. Additional20 instrumented runs
+and40 shortened runs did not reproduce the cached break, so their planned
+post-failure observations did not execute. A100-trial tiny composable-promise
+control also did not reproduce corruption. None establishes a root cause or
+justifies a production patch. command_loop_cold_review completed one bounded
+20-process diagnostic preserving the original full priming sequence and handler
+timing; only a repeated exception would trigger reader/session promise scans,
+followed by echo-off/fresh-value/reset observations before cleanup. That batch
+finished20/20 exact full-method executions,100 nonrepeated exceptions, unchanged
+source/harness/instrumentation hashes, normal terminal restoration and complete
+process/descriptor/home cleanup. Neither the metadata scan nor post-failure
+sequence executed. This supplies no new cause and cannot close the failure.
+Evidence:/tmp/attalambda-cancel-repeat-metadata-69px5izf/review.md,
+results.json, driver.log and run-NN.{json,pty.log,breaks.log}; exec13053 finished.
+The initial scratch scanner parenthesis error was corrected before behavioral
+runs and recorded separately in setup-check.log. No product edit resulted.
+
+The independent partial-byte readiness prototype passes8 source/build07 scenarios:
+/tmp/attalambda-blocked-read-readiness-results.json and its review.md report.
+Two actual CLI tests are promoted into tests/interactive_pty.py. They stop the
+owned child, enqueue a non-newline byte, observe FIONREAD1, resume and observe0
+before cancellation. This establishes an active incomplete host read, not that
+the OS thread is necessarily already asleep. Two cancellations preserve old=41;
+a third read completes to OK(SOME("p")). A no-read computation retains the byte
+across10 fresh markers, rejecting output-only readiness. Both methods pass source
+in5.093s and build07 in5.081s: input-readiness-{source,artifact}.log.
+
+Cold review found a test-harness cleanup escape: resume() raising before the
+termination block skipped child reaping while closing parent descriptors. A real
+stopped child ignoring SIGHUP proves the leak; the promoted KeyboardInterrupt and
+OSError regression both fail before repair in
+/tmp/attalambda-terminal-resume-regression-before.log. A nested finally now always
+reaches bounded termination after resume. The three focused methods pass source
+in9.100s and build07 in9.102s:
+/tmp/attalambda-terminal-readiness-regression-{source,artifact}.log. Applied-delta
+cold review closes with four real-child failures before/after SIGCONT, checking
+exception identity, reaping, all descriptors EBADF and idempotent close. Adjacent
+write-failure and undrained-queue cleanup probes also pass. Evidence:
+/tmp/attalambda-terminal-resume-cleanup-fixed-review.py and
+/tmp/attalambda-terminal-readiness-failures-review.py. All owned children ended.
+The harness now has40 Python methods, including22 actual CLI/transcript methods;
+no40-method all-passing run is claimed. This changes tests only; no cancellation
+behavior in production is changed.
+
+Draft PR7 remains open againstmain at pushed9960d4b. Its body now distinguishes
+that revision's source pass/overall CI failure from local development evidence,
+and records the completion, cancellation and isolated-consumer blockers. The
+installed gh pr edit command failed its legacy projectCards GraphQL query before
+updating; the explicit REST pull-request body update succeeded. No branch push,
+merge, tag or publication occurred in this continuation. Canonical byte/hash,
+saved-contract and active-document link checks pass in
+/tmp/attalambda-interactive-handoff-integrity.log; dotenv-safe diff --check passes.
+
 - [ ] **9.6 — Preserve notices and packaging integrity.** Add any required notices for newly bundled dependencies through the existing notice/hash process without deleting prior notices or weakening checks. **Check:** version, notices, archive layout, and source-selection validations all remain explicit and reproducible.
+
+Read-only source-closure/notice preparation by command_loop_cold_review identifies
+four required package attributions; final archive closure remains unverified.
+Installed9.3 package metadata and concrete imports (editor→expeditor/racket-lexer;
+lexer→parser-tools/lex; lexer-contract→racket/contract/option) establish the scope.
+
+| Package | Version | Source revision (not the package checksum) |
+|---|---|---|
+| expeditor-lib |1.2|65e20a410bdc5f09c0682a1bb57cac2b68d73506|
+| syntax-color-lib |1.7|e1c5ac5115ed3e6c52430390e6bf9b39c8c7e3df|
+| parser-tools-lib |9.0|2f3638fa66c83d0c53f8aec7cc6cfd3775daf8a5|
+| option-contract-lib |1.0|50d72f706ef944689e21b65a6c94b3c819989c59|
+
+Each pinned info.rkt declares Apache-2.0 OR MIT. Preserve all15 existing inventory
+rows and license blocks. Expeditor's Boyer notice equals the already preserved
+notice verbatim; extend its attribution. Also preserve parser-tools' packaged
+legacy LGPL notice with a factual provenance note alongside the later pinned
+dual-license declaration:upstream commit4afd434f2fcd719132e7a5b2c263faf544f916ca
+added that declaration in2021; the legacy LICENSE.txt dates to2014. Sources:
+https://github.com/racket/parser-tools/commit/4afd434f2fcd719132e7a5b2c263faf544f916ca
+and the info.rkt/LICENSE.txt at the pinned parser-tools revision above. Existing
+full Apache/MIT/GPL/LGPL texts remain. data/integer-set resolves within Racket
+core, so no unobserved data-lib or test-only rackunit inventory row is warranted.
+After template edits, refresh all13 existing digest pins across the three
+builders, three consumers and distribution-test.rkt; preserve validation and add
+specific new-revision/retained-notice assertions. Template and13pins are now
+updated; new SHA256ab740853401a2d0b6c29153c6a10f65e28ad364adf45800b3495205553cb6216.
+All earlier license blocks remain, and7new revision/notice assertions are added.
+Focused distribution checks pass216. Independent file_load_cold_review verifies
+all15 prior inventory rows and22 verbatim blocks remain byte-identical; allfour
+package revisions/licenses/source URLs and the later2021dual-license provenance
+match installed and pinned upstream sources. Evidence:
+/tmp/attalambda-notice-review.{py,log}. Exact archive verification remains open.
 - [ ] **9.7 — Extend the existing Linux consumer tests.** Add REPL and runtime-input cases to the current consumer workflow, using external test-only PTY tooling when needed. **Check:** the consumer still proves there is no system Racket/raco and covers default/explicit REPL, fallback/transcript, editing, input, cancellation, load/reset, and the old examples. Preserve existing internal portability evidence without claiming new public platforms.
+
+Subdivide before implementation:9.7a prepares the existing pinned Ubuntu consumer
+with only test-side Python3 standard library;9.7b transfers the existing Python
+harness and invokes only CLIProbe/TranscriptProbe against the absolute extracted
+executable;9.7c adds exact runtime-input/documented-transcript checks and repeats
+terminal acceptance after relocation. Keep acceptance offline/read-only/non-root
+with no Racket, and record actual preparation image ID/package versions. The
+networked image preparation is separate from artifact execution. Independent
+inspection confirms Ubuntu already includes xterm-256color terminfo; no extra
+terminal dependency is needed. The19 current selected methods create all their
+fixtures in temporary directories and require no checkout or Racket fixtures.
+
+9.7a/b implementation:tooling/linux-consumer.Dockerfile adds only
+Ubuntu Python3 using an empty Docker build context. The consumer transfers only
+interactive_pty.py, runs CLIProbe/TranscriptProbe at both extraction paths using
+Python isolated mode, and records harness hash/classes/image/package evidence.
+Existing locked-down acceptance flags remain. Initial image preparation failed because
+Docker tried to write /home/serrecchia/.docker/buildx/activity outside the writable
+workspace; the exact escalated retry was rejected by the user (functions620).
+That first attempt built no image. Historical log:
+/tmp/attalambda-interactive-consumer-image-build.log.
+Kyle's later "keep the python testing and finish" instruction renewed preparation;
+the escalated retry was accepted and completed0 in exec24797. Image ID is recorded
+at the top of this plan and in `/tmp/attalambda-interactive-consumer-image-id-resume`.
+It installs14 Ubuntu packages,7.274MB download/27.9MB installed space, no pip tree.
+The existing build07 archive then ran in the prepared no-Racket consumer:
+21 of22 terminal methods passed in70.504seconds, with advanced cancellation failing
+before a second signal was sent. Relocated terminal acceptance did not run.
+Exec95739 finished1; owned container/transfer directory were removed.
+`/tmp/attalambda-resumed-development-consumer.{json,log}` preserves exact provenance.
+No full consumer pass or clean candidate is claimed.
+
+Independent cancellation diagnosis now proves shared completed-promise redirection
+can cache a later break in both actual reader and session NIL graphs. Public
+lazy/force constructs the completed chains; a read-only observer interrupts only
+after the vulnerable state appears. Reader isolation fails the session variant;
+automatic reset would discard committed definitions. Current upstream promise.rkt
+is byte-identical to installed9.3. No runtime or product cancellation edit was made.
+The earlier intermittent failure's exact promise remains unidentified. Evidence:
+`/tmp/attalambda-promise-observed-redirect/review.md`, manifest, scripts and logs.
+Next independent step is assessing a compliant repair, not repeating old batches.
+
+The bounded remedy review is complete: no supported runner-only mechanism was
+found. A killed worker also leaves the shared completed value with a reentrant
+promise failure. A narrow correction to the existing Racket9.3 promise invariant
+is a scoped dependency repair under2.2, not another evaluator or promise rollback.
+`/tmp/attalambda-promise-observed-redirect/runner-remedy-review.md` records the
+limits and obligations. Before editing, subdivide the repair:
+9.5c1 creates a separate isolated9.3 candidate correcting only redirection of
+already completed promises, with pinned original/patch hashes and independent
+read-only review. It must retain pending-thunk failure caching and tail-space
+behavior. 9.5c2 promotes class regressions and proves actual session/reader
+cancellation, lazy effects and focused terminal behavior. 9.5c3 makes the same
+reviewed patch reproducible in source/build environments and records patched9.3
+provenance, then runs required full source/upstream checks before any checkpoint.
+9.5c1/c2 isolated candidate now passes: original promise.rkt SHA256
+ad9009b58587dc5e326270e02d21788264abbc5b033cbef716521ff02663b628;
+corrected SHA256 bca5b526943be123c8f3fbad24d30556fe3ffea1dc60b6d9c28ec8875e27c7eb;
+patch SHA256179be1bbde34542758c87b364ae7717c7355cba58cb880875faf137c521ab1a9.
+`/tmp/attalambda-racket93-promise-candidate` is a separate runtime; original9.3
+remains unchanged. Upstream lazy promise tests pass261. Independent read-only
+review passes marker/cache/link preservation, pending-break caching without replay,
+and100000 tail steps with at most one sampled live current link and no historical
+links after completion. The first inner-only candidate exposed a root-marker
+overwrite through the reviewer's direct-force probe; the corrected candidate
+guards both sites. `/tmp/attalambda-promise-independent-review.md` records closure.
+Actual reader/session regressions fail before and pass after; old/fresh values,
+explicit output and cleanup survive. The real CLI advanced/plain cancellation
+method passes in3.212s. Logs are under `/tmp/attalambda-promise-` and enumerated in
+HANDOFF. Full40-method source terminal acceptance is running against this runtime.
+9.5c3 integration is present: exact patch plus explicit isolated preparation,
+read-only source/loaded-runtime check, source-suite preflight, CI preparation,
+and all builder/consumer provenance fields. Permanent dependency tests pass5
+groups on corrected9.3 and fail3 on original. All40 terminal methods pass92.721s.
+Distribution216 and full boundary gate pass. Actual preparation from original
+source bytes, fresh-process check, transformation/idempotence/unknown-byte refusal
+are verified; the initial rejection probe's broad catch was corrected before
+claiming that evidence. Current notices add only correction provenance:
+103062bytes, SHA256d0a5ba77357474e66701d1aab00d8546aa0e5ff9c4d265b5a1d5061d173b9131;
+13 pins updated. Full current source verification remains open. Corrected
+development build08 finished and its exact isolated consumer passed22 terminal
+methods at both extraction paths plus existing examples, relocation, runtime-input
+transcript and provenance checks. Exact artifact/log evidence is in HANDOFF.
+This evidence is not a candidate checkpoint.
+
+Phase9 cold review found two concrete remaining issues. Subdivide their correction
+as9.7d before edits: the Windows consumer's exact archive-name pattern still rejects
+0.8.0 although its builder accepts/creates that version; extract and exercise the
+actual consumer pattern against VERSION and invalid versions/targets before repair.
+The standalone design's exact help, missing-argument and misuse descriptions also
+disagree with observed launcher output; refresh those descriptions without changing
+launcher behavior. Evidence:
+`/tmp/attalambda-phase9-packaging-review-_n1ep3qp/results.json`.
+9.7d complete: actual extracted-pattern regression fails before1/217 and passes
+after217; logs `/tmp/attalambda-windows-version-hunter-{before,after}.log`.
+Independent applied-delta review checks the actual regex and exact help/reasons
+against captured launcher output, with unchanged launcher hash; no remaining
+proven finding. Report and closure:
+`/tmp/attalambda-phase9-packaging-review-_n1ep3qp/{review.md,repair-verification.json}`.
+This is static/cross-regex Windows evidence, not native Windows execution.
+The separate old macOS Intel path-gate failure cannot be causally diagnosed from
+its generic log: no matched bytes were recorded and no artifact survives. Old and
+current scan rules are identical. Before another native build,9.5d adds a bounded
+first-match diagnostic only inside the existing failing branch (needle/file in
+hex, file hash/size, byte offset and64 bytes of surrounding context). Preserve
+the original search, exclusions, exit2 and cleanup. This is diagnostic preparation,
+not a claim that the unobserved native failure is repaired. Review:
+`/tmp/attalambda-macos-intel-job104290767080-review.md`.
+9.5d diagnostic preparation complete: positive branch emits binary-safe first
+match evidence while retaining the exact gate failure. Shell syntax passes;
+an extracted-function probe checks literal metacharacters, NUL-containing artifact
+bytes, file/needle/hash/size/offset and153bytes of bounded context, preserving
+positive exit2 and negative exit0. Log:
+`/tmp/attalambda-macos-path-diagnostic-probe.log`. Native outcome remains pending.
 
 **Checkpoint 9 — Documentation and packaging review.** Use release-readiness review. Check executable docs and static packaging coverage before the final clean build. The full suite and existing CI configuration must include the new tests or invoke them explicitly; a successful old test count alone is not evidence of the new feature.
 
@@ -834,6 +1674,16 @@ memory or latency bounds.
 
 - [ ] **10.1 — Perform a cold implementation review.** Review the current complete milestone diff, this contract, and tests using a separate read-only reviewer when available. Focus on purity, effects/laziness, imports/shadowing, cancellation, stdin, loading, history, and scope. **Check:** each finding has evidence and a severity/rationale; do not manufacture changes when no defect is found.
 - [ ] **10.2 — Resolve confirmed findings in small units.** For each actual finding, add a regression or reproducible check, patch only the responsible code, and rerun focused checks. Split independent fixes into separate numbered substeps. **Check:** no unresolved correctness or security-boundary blocker remains; rejected suggestions have an evidence-based explanation.
+10.2a (before repair): independent current-source review proves stdout and stderr
+can be different terminals. The current shared-terminal flag checks only whether
+stdout is a terminal; a UI separator on stderr then suppresses the needed stdout
+separator. Actual two-PTY shell output is`prefix=> 41\r\n` instead of
+`prefix\r\n=> 41\r\n`. Proof:`/tmp/attalambda-phase10-separated-terminals.py`
+and`.log`. Add a permanent two-terminal CLI test (recognized/unrecognized terminal settings), then compare
+Racket's documented port-file-identity for the two open output ports before
+allowing one terminal's UI newline to satisfy the other's result boundary.
+Update the exact boundary pins; existing same-terminal and pipe tests must pass.
+
 - [ ] **10.3 — Run final source verification.** Run the entire suite, expanded purity, boundary inventory, and PTY cases on the final candidate inputs. Review dotenv-safe diff/whitespace checks and generated-file exclusions. **Check:** record the runtime, commands, logs, actual results, and any outstanding artifact-only checks.
 
 **Checkpoint 10 — Source freeze.** Use a final scope and code review; close the verified phase with its commit/push when authorized. Record the resulting exact candidate commit without claiming the archive is already verified. Do not amend executable inputs during artifact testing without returning to the responsible implementation step and refreshing affected evidence.
@@ -3703,3 +4553,10 @@ and `docs/ACCEPTANCE.md`, none of which enters the shipped package or Linux
 archive inputs; the accepted implementation artifact therefore does not need
 rebuilding. The branch is complete after that documentation-only commit is
 pushed. No tag, Release, upload, merge, or pull request was created.
+
+Patch-format whitespace check: the staged whole-diff check reports18 whitespace
+lines, all validated as unchanged unified-diff context in the two SHA-pinned
+dependency patches (blank context markers and existing upstream indentation).
+No added patch source line is implicated. Source whitespace passes with patch
+serialization paths excluded; exact patch application/source hashes remain checked.
+No source rule or acceptance test was weakened.

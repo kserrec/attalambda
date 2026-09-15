@@ -163,6 +163,12 @@
                  (build-path root "runner" "diagnostics.rkt"))
       (copy-file (build-path project-root "runner" "output.rkt")
                  (build-path root "runner" "output.rkt"))
+      (copy-file (build-path project-root "runner" "history.rkt")
+                 (build-path root "runner" "history.rkt"))
+      (copy-file (build-path project-root "runner" "editor.rkt")
+                 (build-path root "runner" "editor.rkt"))
+      (copy-file (build-path project-root "runner" "editor-output.rkt")
+                 (build-path root "runner" "editor-output.rkt"))
       (copy-file (build-path project-root "runner" "repl.rkt")
                  (build-path root "runner" "repl.rkt"))
       (for ([name (in-list '("hello.attl"
@@ -231,7 +237,7 @@
  (sort (remove-duplicates
         (map source-classification-class project-classifications))
        symbol<?)
- '(application codec diagnostics effect host language-expander language-reader macro
+ '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
    macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader test tooling))
 
 (check-equal?
@@ -1208,19 +1214,20 @@
                      (#"0.4.0\n" "0.4")
                      (#"0.5.0\n" "0.5")
                      (#"0.6.0\n" "0.6")
-                     (#"0.7.0\n" "0.7")))])
+                     (#"0.7.0\n" "0.7")
+                     (#"0.8.0\n" "0.8")))])
      (write-exact-bytes product-version-file (car version-pair))
      (write-datum
       package-info
       (replace-package-version clean-package-info-datum
                                (cadr version-pair)))
      (check-equal? (project-boundary-violations root) '()))
-   (write-exact-bytes product-version-file #"0.7.0\n")
+   (write-exact-bytes product-version-file #"0.8.0\n")
    (write-datum package-info clean-package-info-datum)
 
-   (write-exact-bytes product-version-file #"0.7.0")
+   (write-exact-bytes product-version-file #"0.8.0")
    (check-project-kind 'invalid-product-version)
-   (write-exact-bytes product-version-file #"0.7.0\n")
+   (write-exact-bytes product-version-file #"0.8.0\n")
 
    (define saved-version-file
      (build-path root "VERSION.backup"))
@@ -1228,7 +1235,7 @@
      (make-temporary-file "attalambda-version-target-~a"
                           #f
                           (path-only root)))
-   (write-exact-bytes version-target #"0.7.0\n")
+   (write-exact-bytes version-target #"0.8.0\n")
    (rename-file-or-directory product-version-file saved-version-file)
    (make-file-or-directory-link version-target product-version-file)
    (define-values (version-link-findings version-target-reads)

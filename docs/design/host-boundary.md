@@ -1,7 +1,7 @@
 # Host boundary design
 
 Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05;
-terminal line input authorized 2026-09-14 and implemented on `terminal-input`.
+terminal line input authorized 2026-09-14 and retained in `interactive-attalambda`.
 Line input is unreleased; the 0.7.0 binary retains its ten operations.
 
 This document records the exact current contract for AttaLambda's one
@@ -25,6 +25,15 @@ authoritative.
 - HTTP parsing, rendering, routing, and server decisions stay in `effects/`
   as pure computation over the TCP wrappers.
 - The host inherits the launching process's permissions. It is not a sandbox.
+
+The interactive shell uses the same eleven-operation host. While an entry runs,
+the session uses the original input port and the shell's immediate program-output
+forwarding port; program `read-line` still reads only when demanded. Shell source
+collection, terminal editing, and
+source-history storage are separately classified tooling, outside this program
+effect protocol. Reset closes the old session's resources and instantiates a
+fresh host registry. Entry interruption does not replay earlier effects or undo
+external writes. See [the architecture](../../ARCHITECTURE.md#frontend-runner-and-observation).
 
 The shortest implementation path is:
 

@@ -6,9 +6,22 @@
 
 (provide (struct-out session) (struct-out checked-entry) (struct-out session-exit)
          open-session close-session prepare-entry demand-entry render-result evaluate-entry
-         session-names reset-session! load-source-file)
+         session-names session-completion-names reset-session! load-source-file)
 
-(define-runtime-path language-path "../lang/expander.rkt")
+(define-runtime-module-path-index language-index "../lang/expander.rkt")
+(define language-origin (variable-reference->namespace (#%variable-reference)))
+(define language-name
+  (resolved-module-path-name (module-path-index-resolve language-index)))
+(define language-reference
+  (if (path? language-name)
+      `(file ,(path->string language-name))
+      `(quote ,language-name)))
+;; Declaration transfer needs instantiated cross-phase-persistent dependencies.
+;; Initialize the fixed embedded graph once, outside all session custodians.
+;; Its unused host registry opens no resources and is never attached to a session.
+(when (symbol? language-name)
+  (parameterize ([current-namespace language-origin])
+    (dynamic-require language-reference #f)))
 (struct session ([namespace #:mutable] [custodian #:mutable] input output error
                  [bindings #:mutable]) #:transparent)
 (struct checked-entry (module-name definitions result-names) #:transparent)
@@ -20,8 +33,15 @@
   (parameterize ([current-custodian owner])
     (define namespace (make-base-namespace))
     (parameterize ([current-namespace namespace])
+      ;; Transfer declarations, with Racket's shared persistent primitives;
+      ;; every session still instantiates its own ordinary modules and host state.
+      (when (symbol? language-name)
+        (namespace-attach-module-declaration language-origin language-reference)
+        ;; Racket's module-begin inserts this require while expanding each entry.
+        ;; Transfer its embedded public-name mapping into this fresh registry too.
+        (namespace-attach-module-declaration language-origin 'racket/runtime-config))
       ;; A new instance initializes the shared host before any entry work.
-      (dynamic-require language-path #f))
+      (dynamic-require language-reference #f))
     namespace))
 
 (define (open-session #:input [input (current-input-port)]
@@ -68,7 +88,7 @@
     (syntax-property (datum->syntax #f (cons '#%module-begin forms))
                      'attalambda-interaction (list imports result-names)))
   (define module-source
-    (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
+    (datum->syntax #f `(module ,name ,language-reference ,body)))
   (parameterize ([current-namespace (session-namespace current)])
     ;; Expand the whole entry before instantiation or any result demand.
     (on-phase 'expand)
@@ -95,7 +115,7 @@
 ;; String reader is the existing observation boundary, never the runtime codec.
 (define (render-result current result)
   (parameterize ([current-namespace (session-namespace current)])
-    (define renderer (force (dynamic-require language-path 'value-to-string)))
+    (define renderer (force (dynamic-require language-reference 'value-to-string)))
     (string-value->string (renderer result))))
 
 ;; Keep only visible binding identities. Each compiled module captures its own
@@ -127,6 +147,21 @@
 
 (define (session-names current)
   (sort (hash-keys (session-bindings current)) symbol<?))
+
+;; Export metadata supplies names without demanding language or user values.
+;; Only module scaffolding is excluded; every committed identifier is retained.
+(define (session-completion-names current)
+  (parameterize ([current-namespace (session-namespace current)])
+    (define-values (exports syntax-exports) (module->exports language-reference))
+    (define names
+      (for*/fold ([visible (session-bindings current)])
+                 ([group (in-list (list exports syntax-exports))]
+                  [item (in-list (let ([phase-zero (assoc 0 group)])
+                                   (if phase-zero (cdr phase-zero) '())))])
+        (if (memq (car item) '(#%app #%datum #%module-begin #%top))
+            visible
+            (hash-set visible (car item) #t))))
+    (sort (hash-keys names) symbol<?)))
 
 ;; The validator supplies the body from its single read. Loads have fresh module
 ;; identities, only public imports, and ordinary file demand without observation.

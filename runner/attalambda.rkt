@@ -8,7 +8,7 @@
 (define invalid-source-status 65)
 (define unavailable-source-status 66)
 (define unexpected-failure-status 70)
-(define-runtime-path repl-path "repl.rkt")
+(define-runtime-module-path-index repl-index "repl.rkt")
 
 (define help-text
   (string-append
@@ -129,7 +129,7 @@
      (with-handlers ([exn:fail? (lambda (_)
                                 (stop unexpected-failure-status #f
                                       "unexpected launcher failure; verify the AttaLambda installation"))])
-       (define run-repl (dynamic-require repl-path 'run-repl))
+       (define run-repl (dynamic-require repl-index 'run-repl))
        (exit (run-repl (embedded-product-version) interactive?
                        #:history? (not (member "--no-history" arguments)))))]
     [else

@@ -1,0 +1,35 @@
+--- a/racket/collects/racket/private/promise.rkt
++++ b/racket/collects/racket/private/promise.rkt
+@@ -59,7 +59,7 @@
+ (define (force/composable root)
+   (let ([v (pref root)])
+     (cond
+-      [(procedure? v)
++      [(and (procedure? v) (not (running? v)) (not (reraise? v)))
+        ;; mark the root as running: avoids cycles, and no need to keep banging
+        ;; the root promise value; it makes this non-r5rs, but the only
+        ;; practical uses of these things could be ones that use state to avoid
+@@ -74,8 +74,13 @@
+           (let loop ([v (v)]) ; does not handle multiple values!
+             (cond [(composable-promise? v)
+                    (let ([v* (pref v)])
+-                     (pset! v root) ; share with root
+-                     (cond [(procedure? v*) (loop (v*))]
++                     (cond [(procedure? v*)
++                            ;; Only pending computation may share the running
++                            ;; root. Completed values and existing links must
++                            ;; not inherit a break raised by this new demand.
++                            (unless (or (running? v*) (reraise? v*))
++                              (pset! v root))
++                            (loop (v*))]
+                            ;; it must be a list of one value (because
+                            ;; composable promises never hold multiple values),
+                            ;; or a composable promise
+@@ -95,6 +100,7 @@
+       [(composable-promise? v) (force/composable v)]
+       [(null? v) (values)]
+       [(promise? v) (force v)] ; non composable promise is forced as usual
++      [(or (running? v) (reraise? v)) (v)]
+       [else (error 'force "composable promise with invalid contents: ~e" v)])))
+ 
+ ;; convenient utility for any number of stored values or a raised value.

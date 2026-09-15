@@ -76,7 +76,7 @@
    (check-command-success (run '("--help")) expected-help)
    (check-command-success
     (run '("--version"))
-    #"AttaLambda 0.7.0\n")
+    #"AttaLambda 0.8.0\n")
 
    (for ([arguments
           (in-list '(()
@@ -160,7 +160,7 @@
      (check-command-failure
       (run '("--version"))
       #rx"invalid product version metadata"))
-   (write-exact-bytes product-version-file #"0.7.0\n")
+   (write-exact-bytes product-version-file #"0.8.0\n")
 
    ;; Validation precedence rejects names and metadata before source content.
    ;; None of the dotenv-spelled paths below is created or opened.

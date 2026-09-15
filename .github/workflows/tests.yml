@@ -32,6 +32,9 @@ jobs:
       - name: Verify bundled lazy package
         run: racket -e '(require lazy)'
 
+      - name: Prepare the job-owned Racket dependency corrections
+        run: racket tooling/prepare-racket-runtime.rkt --apply
+
       - name: Run test suite
         run: |
           set -euo pipefail
@@ -54,6 +57,9 @@ jobs:
           distribution: full
           version: '9.3'
           variant: CS
+
+      - name: Prepare the job-owned Racket dependency corrections
+        run: racket tooling/prepare-racket-runtime.rkt --apply
 
       - name: Build final Linux release archive
         run: ./tooling/build-linux-distribution.sh "$RUNNER_TEMP/attalambda-artifacts"
@@ -93,6 +99,9 @@ jobs:
           distribution: full
           version: '9.3'
           variant: CS
+
+      - name: Prepare the job-owned Racket dependency corrections
+        run: racket tooling/prepare-racket-runtime.rkt --apply
 
       - name: Build final native macOS release archive
         run: |
@@ -204,6 +213,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      - name: Prepare the job-owned Racket dependency corrections
+        shell: pwsh
+        run: |
+          racket tooling/prepare-racket-runtime.rkt --apply
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build final native Windows release archive
         shell: pwsh

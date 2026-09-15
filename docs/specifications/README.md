@@ -134,3 +134,10 @@ scaffolding, preserve absolute object-language purity and the sole host, and
 add no public language operation. Implementation and candidate verification are
 tracked in PLAN.md; publication remains unauthorized. Before these amendments,
 the respective hashes were `cf91183a48194707c48f33d4dde83030475b34c8c2e72ad3491e588e642459a1`, `63acc294b842f9bb7d01495fa5239b84d9cfcea8bcc6ab56c0f3d7048d7ef6c7`, `1afb240d197d268b1b7e8e73d8396c3420aa8132d195ccf17ea61e45e846d8cd`.
+
+Implementation record: the exact source classes and observed module/session
+mechanism are described in [ARCHITECTURE.md](../../ARCHITECTURE.md#frontend-runner-and-observation).
+The session uses fixed language declarations and fresh runtime instances;
+source, editor, history, and result observation remain separate tooling roles.
+Completion and standalone candidate verification remain open. No additional
+canonical amendment or change to the preceding contract is made by this record.

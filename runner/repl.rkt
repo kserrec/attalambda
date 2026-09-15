@@ -1,8 +1,11 @@
 #lang racket/base
 
 ;; Shell control flow stays outside each cancellable language entry.
-(require "source-reader.rkt" "source-file.rkt" "session.rkt" "diagnostics.rkt" "output.rkt")
+(require racket/runtime-path
+         "source-reader.rkt" "source-file.rkt" "session.rkt" "diagnostics.rkt" "output.rkt"
+         "history.rkt")
 (provide run-repl)
+(define-runtime-module-path-index editor-index "editor.rkt")
 
 (define help-text
   (string-append
@@ -25,10 +28,33 @@
   (define owner (make-custodian))
   (define-values (program-output result-output prepare-ui)
     (parameterize ([current-custodian owner])
-      (make-shell-output output error (and interactive? (terminal-port? output)))))
+      (make-shell-output output error
+                         (and interactive? (terminal-port? output)
+                              (= (port-file-identity output) (port-file-identity error))))))
   (define current #f)
+  (define editor-read #f)
+  (define persistent-history? (and interactive? history?))
+  (define history '())
+  (define history-changed? #f)
   (define failed? #f)
   (define echo? #t)
+  (define (read-plain source)
+    (when interactive? (display "atta> " error) (flush-output error))
+    (read-source-entry
+     input source
+     #:continue (lambda ()
+                  (when interactive? (display "...> " error) (flush-output error)))))
+  (define (read-entry source)
+    (when interactive? (prepare-ui))
+    (cond
+      ;; Program input can leave bytes in the original Racket port. Finish those
+      ;; through the same plain collector before returning ownership to fd0.
+      [(and editor-read (not (byte-ready? input)))
+       (define parsed (editor-read input output source history
+                                   #:names (session-completion-names current)))
+       (if parsed parsed
+           (begin (set! editor-read #f) (read-plain source)))]
+      [else (read-plain source)]))
   (define (show problem source)
     (prepare-ui)
     (display (format-source-problem source problem) error)
@@ -58,7 +84,9 @@
      (lambda ()
        (parameterize ([current-custodian owner])
          (set! current (open-session #:input input #:output program-output #:error error))
+         (set! history (read-history persistent-history?))
          (when interactive?
+           (set! editor-read (dynamic-require editor-index 'read-editor-entry))
            (fprintf error "AttaLambda ~a — :help for help\n" version)
            (flush-output error))
          (let loop ([number 1])
@@ -79,12 +107,21 @@
                                (when (memq phase '(source output command reset)) (raise failure))
                                (set! failed? #t)
                                (recover (failure->source-problem failure phase source) source))])
-               (when interactive? (prepare-ui) (display "atta> " error) (flush-output error))
-               (define parsed
-                 (read-source-entry
-                  input source
-                  #:continue (lambda ()
-                               (when interactive? (display "...> " error) (flush-output error)))))
+               (define parsed (read-entry source))
+               ;; Only the source collector's submitted buffers enter history.
+               ;; The unchanged host reads program answers directly from input.
+               (when (and interactive? (not (eof-object? parsed))
+                          (not (and (source-buffer? parsed)
+                                    (eq? (source-buffer-status parsed) 'unfinished-eof))))
+                 (define updated
+                   (remember-history history
+                                     (if (source-command? parsed)
+                                         (source-command-text parsed)
+                                         (source-buffer-text parsed))))
+                 (unless (eq? updated history)
+                   (parameterize-break #f
+                     (set! history updated)
+                     (set! history-changed? #t))))
                (cond
                  [(eof-object? parsed) (finish)]
                  [(source-command? parsed)
@@ -150,7 +187,11 @@
            (if (eq? outcome 'continue) (loop (add1 number)) outcome))))
      (lambda ()
        (dynamic-wind void
-                     (lambda () (when current (close-session current)))
+                     (lambda ()
+                       (when current (close-session current))
+                       ;; Initialization failure, interrupted loading, or a
+                       ;; session with no submissions must not replace history.
+                       (write-history (and persistent-history? history-changed?) history))
                      (lambda ()
                        (custodian-shutdown-all owner)
                        (close-output-port program-output)))))))

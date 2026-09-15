@@ -1,6 +1,9 @@
 #lang racket/base
 
-(require rackunit racket/promise "../runner/source-reader.rkt" "../runner/session.rkt")
+(require rackunit racket/list racket/promise racket/runtime-path
+         "../runner/source-reader.rkt" "../runner/session.rkt")
+
+(define-runtime-path language-source "../lang/expander.rkt")
 
 (define (with-state procedure)
   (define input (open-input-bytes #"one\ntwo\n"))
@@ -21,6 +24,62 @@
                         (set! shown (cons (render-result current value) shown)))
                       void))
   (reverse shown))
+
+(test-case "completion reads public and committed metadata without demanding effects"
+  (with-state
+   (lambda (current input output)
+     (define initial (session-completion-names current))
+     (for ([name '(lambda def let if cons host read-line add TRUE FALSE NIL)])
+       (check-not-false (memq name initial)))
+     (for ([name '(#%app #%datum #%module-begin #%top raw-true session-names)])
+       (check-false (memq name initial)))
+     (submit current "(def saved-answer = (read-line UNIT)) (def |two words| = (stdout \"once\"))")
+     (define before-demand (session-completion-names current))
+     (check-equal? before-demand (sort (append initial '(saved-answer |two words|)) symbol<?))
+     (check-equal? (file-position input) 0)
+     (check-equal? (get-output-bytes output) #"")
+     (check-exn exn:fail:syntax?
+                (lambda () (submit current "(def not-committed = absent-name)")))
+     (check-equal? (session-completion-names current) before-demand)
+     (submit current "(def saved-answer = (read-line UNIT))")
+     (check-equal? (session-completion-names current) before-demand)
+     (check-equal? (file-position input) 0)
+     (check-equal? (submit current "saved-answer") '("OK(SOME(\"one\"))"))
+     (reset-session! current)
+     (check-equal? (session-completion-names current) initial)
+     (check-equal? (file-position input) 4)
+     (check-equal? (get-output-bytes output) #""))))
+
+(test-case "completion retains the complete public export set and control-containing names"
+  (with-state
+   (lambda (current input output)
+     (define-values (values syntax)
+       (parameterize ([current-namespace (session-namespace current)])
+         (module->exports `(file ,(path->string language-source)))))
+     (define expected-public
+       (sort (remove-duplicates
+              (filter (lambda (name) (not (memq name '(#%app #%datum #%module-begin #%top))))
+                      (append (map car (cdr (assoc 0 values)))
+                              (map car (cdr (assoc 0 syntax))))))
+             symbol<?))
+     (check-equal? (session-completion-names current) expected-public)
+     (define controls (append (range 0 32) (range 127 160)))
+     (define expected-user
+       (for/list ([codepoint (in-list controls)])
+         (string->symbol (format "control~a~a-name" codepoint (integer->char codepoint)))))
+     (submit current
+             (apply string-append
+                    (for/list ([name (in-list expected-user)])
+                      (format "(def |~a| = (read-line UNIT))\n" name))))
+     (check-equal? (session-names current) (sort expected-user symbol<?))
+     (for ([repeat (in-range 3)])
+       (check-equal? (session-completion-names current)
+                     (sort (append expected-public expected-user) symbol<?)))
+     (check-equal? (file-position input) 0)
+     (check-equal? (get-output-bytes output) #"")
+     (reset-session! current)
+     (check-equal? (session-completion-names current) expected-public)
+     (check-equal? (file-position input) 0))))
 
 (test-case "later entries import actual definitions and partial applications"
   (with-state

@@ -7,7 +7,7 @@
          racket/promise
          racket/string
          syntax-color/racket-lexer
-         "../helpers/editor-descriptors.rkt"
+         "../../runner/editor-output.rkt"
          "../../runner/source-reader.rkt"
          "../../runner/session.rkt"
          (only-in "../../lang/expander.rkt" [read-line language-read-line]

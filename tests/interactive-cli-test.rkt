@@ -3,6 +3,7 @@
 (require rackunit racket/file racket/runtime-path "helpers/fresh-language.rkt")
 
 (define-runtime-path runner "../runner/attalambda.rkt")
+(define-runtime-path api-document "../docs/API.md")
 (define environment (environment-variables-copy (current-environment-variables)))
 (define (run arguments [input #""] #:directory [directory #f])
   (run-command environment racket-executable
@@ -39,6 +40,16 @@
                                #"(add 1/2 1/3)\n(def double x = (mult x 2))\n(double 21)\n")
                           #"=> 5/6\n=> 42\n"))
 
+(test-case "documented snapshot transcript executes verbatim"
+  (define matched
+    (regexp-match #px"(?s:<!-- interactive-snapshot-example -->\n```text\n(.*?)\n```\n<!-- /interactive-snapshot-example -->)"
+                  (file->string api-document)))
+  (check-not-false matched)
+  (check-command-success
+   (run '("--repl" "--no-history")
+        (string->bytes/utf-8 (string-append (cadr matched) "\n")))
+   #"=> 2\n=> 11\n"))
+
 (test-case "plain commands list lazy metadata, load standalone definitions, reset and quit"
   (define directory (make-temporary-file "attalambda-cli-load-~a" 'directory))
   (dynamic-wind
@@ -48,14 +59,15 @@
                    "#lang attalambda\n(stdout \"load-marker\\n\")\n(def base = 6)\n(def loaded n = (add base n))\n(add 2 3)\n")
      (define result
        (run '("--repl" "--no-history")
-            #":help\n(def z = (read-line UNIT)) (def a = 41)\n:names\n:load \"with spaces.attl\"\n(loaded 1)\n:names\n:reset\n:names\n(add 2 3)\n:quit\n(stdout \"never\")\n"
+            #":help\n(def z = (read-line UNIT)) (def a = 41)\n:names\n:load \"with spaces.attl\"\n(loaded 1)\n:load \"with spaces.attl\"\n:names\n:reset\n:names\n(add 2 3)\n:quit\n(stdout \"never\")\n"
             #:directory directory))
      (check-false (command-result-timed-out? result))
      (check-equal? (command-result-status result) 0 (result-diagnostic result))
-     (check-equal? (command-result-stdout result) #"load-marker\n=> 7\n=> 5\n")
+     (check-equal? (command-result-stdout result) #"load-marker\n=> 7\nload-marker\n=> 5\n")
      (define stderr (command-result-stderr result))
      (check-regexp-match #rx#"Untagged functions" stderr)
      (check-regexp-match #rx#"User definitions:\n  a\n  z\nLoaded source file.\n" stderr)
+     (check-equal? (length (regexp-match* #rx#"Loaded source file." stderr)) 2)
      (check-regexp-match #rx#"User definitions:\n  a\n  base\n  loaded\n  z\nSession reset.\nNo user definitions.\n" stderr)
      (check-false (regexp-match? #rx#"atta>|UNSAFE|never" stderr)))
    (lambda () (delete-directory/files directory))))
@@ -139,3 +151,54 @@
   (check-equal? (command-result-stdout result)
                 #"=> ERROR(EMPTY-LIST\n  -> head(result))\n=> ERR(ERROR(DIVIDE-BY-ZERO))\n")
   (check-equal? (command-result-stderr result) #"Session reset.\n"))
+
+(test-case "real REPL entries retain partial applications, recursive functions and binding snapshots"
+  (check-command-success
+   (run '("--repl")
+        #"(def x = 1)\n(def f ignored = x)\n(def shifted = (add x))\n(def x = 2)\n(f UNIT) x (shifted 4)\n(rec sum n = (if (eq n 0) 0 (add n (sum (sub n 1)))))\n(sum 3)\n:quit\n")
+   #"=> 1\n=> 2\n=> 5\n=> 6\n"))
+
+(test-case "saved input survives name listing and repeated demand while fresh reads remain distinct"
+  (define saved
+    (run '("--repl")
+         #"(def answer = (read-line UNIT))\n:names\nanswer\nKyle\nanswer\n:quit\n"))
+  (check-false (command-result-timed-out? saved))
+  (check-equal? (command-result-status saved) 0 (result-diagnostic saved))
+  (check-equal? (command-result-stdout saved)
+                #"=> OK(SOME(\"Kyle\"))\n=> OK(SOME(\"Kyle\"))\n")
+  (check-equal? (command-result-stderr saved) #"User definitions:\n  answer\n")
+  (check-command-success
+   (run '("--repl") #"(read-line UNIT)\nfirst\n(read-line UNIT)\nsecond\n:quit\n")
+   #"=> OK(SOME(\"first\"))\n=> OK(SOME(\"second\"))\n"))
+
+(test-case "recovery retains old names, reset removes them, and the transcript failure remains sticky"
+  (for ([probe-reset? '(#f #t)])
+    (define result
+      (run '("--repl")
+           (if probe-reset?
+               #"(def keep = 7)\nmissing_name\nkeep\n:reset\nkeep\n(add 1 2)\n:quit\n"
+               #"(def keep = 7)\nmissing_name\nkeep\n:reset\n(add 1 2)\n:quit\n")))
+    (check-false (command-result-timed-out? result))
+    (check-equal? (command-result-status result) 1 (result-diagnostic result))
+    (check-equal? (command-result-stdout result) #"=> 7\n=> 3\n")
+    (check-regexp-match #rx#"missing_name" (command-result-stderr result))
+    (check-regexp-match #rx#"Session reset." (command-result-stderr result))
+    (when probe-reset?
+      (check-regexp-match #rx#"unknown AttaLambda name: keep" (command-result-stderr result)))))
+
+(test-case "load expansion failure suppresses earlier file effects and publishes no names"
+  (define directory (make-temporary-file "attalambda-cli-rejected-load-~a" 'directory))
+  (dynamic-wind
+   void
+   (lambda ()
+     (write-source (build-path directory "rejected.attl")
+                   "#lang attalambda\n(stdout \"must-not-run\")\n(def partial = 9)\nmissing-in-file\n")
+     (define result
+       (run '("--repl") #":load \"rejected.attl\"\n:names\n(add 2 3)\n:quit\n"
+            #:directory directory))
+     (check-false (command-result-timed-out? result))
+     (check-equal? (command-result-status result) 1 (result-diagnostic result))
+     (check-equal? (command-result-stdout result) #"=> 5\n")
+     (check-regexp-match #rx#"missing-in-file" (command-result-stderr result))
+     (check-regexp-match #rx#"No user definitions." (command-result-stderr result)))
+   (lambda () (delete-directory/files directory))))

@@ -95,7 +95,7 @@
    "\n"
    "Transfer the final Linux release archive and its checksum into\n"
    "a locked-down Ubuntu 24.04 container with no Racket installation, then run the\n"
-   "Phase 29 guide, consumer, and relocation acceptance checks.\n"))
+   "guide, runtime-input, terminal, and relocation acceptance checks.\n"))
  #"")
 
 (check-exact-result
@@ -165,7 +165,7 @@
 (check-true (regexp-match? #rx"project_root/LICENSE" build-source))
 (check-true
  (regexp-match?
-  #rx"516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad"
+  #rx"d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024"
   build-source))
 (check-false (regexp-match? #rx"UNPUBLISHED-DEVELOPMENT-ARTIFACT" build-source))
 
@@ -206,7 +206,7 @@
 (check-true (regexp-match? #rx"project_root/LICENSE" macos-build-source))
 (check-true
  (regexp-match?
-  #rx"516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad"
+  #rx"d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024"
   macos-build-source))
 (check-false (regexp-match? #rx"UNPUBLISHED-DEVELOPMENT-ARTIFACT" macos-build-source))
 (check-false (regexp-match? #rx"--launcher" macos-build-source))
@@ -251,7 +251,7 @@
 (check-true (regexp-match? #rx"repository LICENSE" windows-build-source))
 (check-true
  (regexp-match?
-  #rx"516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad"
+  #rx"d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024"
   windows-build-source))
 (check-false (regexp-match? #rx"UNPUBLISHED-DEVELOPMENT-ARTIFACT" windows-build-source))
 (check-true (regexp-match? #rx"PLTUSERHOME" windows-build-source))
@@ -265,6 +265,20 @@
 
 (define windows-consumer-source
   (file->string windows-consumer-script))
+(test-case "Windows consumer accepts the built version and rejects other artifacts"
+  ;; This exact pattern uses syntax shared by .NET Regex and Racket pregexp.
+  ;; Exercise the consumer's rule, not a duplicate approval list in the test.
+  (define pattern
+    (cadr (regexp-match #px"\\[regex\\]::Match\\(\\$archiveName, '([^']+)'"
+                        windows-consumer-source)))
+  (define matcher (pregexp pattern))
+  (define product-version (string-trim (file->string (build-path project-root "VERSION"))))
+  (check-true (regexp-match? matcher
+                             (format "attalambda-~a-windows-x86_64.zip" product-version)))
+  (for ([name '("attalambda-0.9.0-windows-x86_64.zip"
+                "attalambda-0.8.0-linux-x86_64.zip"
+                "attalambda-0.8.0-windows-x86_64.zip.extra")])
+    (check-false (regexp-match? matcher name))))
 (check-true (regexp-match? #rx"consumer unexpectedly has a racket command" windows-consumer-source))
 (check-true (regexp-match? #rx"consumer unexpectedly has a source checkout" windows-consumer-source))
 (check-true (regexp-match? #rx"generated-after-packaging[.]attl" windows-consumer-source))
@@ -428,7 +442,19 @@
      (build-path distribution-directory "THIRD_PARTY_NOTICES.md.in")
    (lambda (input)
      (bytes->hex-string (sha256-bytes input))))
- "516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad")
+ "d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024")
+
+(define notice-source
+  (file->string (build-path distribution-directory "THIRD_PARTY_NOTICES.md.in")))
+(for ([required (in-list
+                 '("65e20a410bdc5f09c0682a1bb57cac2b68d73506"
+                   "e1c5ac5115ed3e6c52430390e6bf9b39c8c7e3df"
+                   "2f3638fa66c83d0c53f8aec7cc6cfd3775daf8a5"
+                   "50d72f706ef944689e21b65a6c94b3c819989c59"
+                   "Copyright (c) 1989, 1993, 1994 C. David Boyer"
+                   "Copyright (c) 2010-2014 PLT Design Inc."
+                   "4afd434f2fcd719132e7a5b2c263faf544f916ca"))])
+  (check-true (string-contains? notice-source required)))
 
 (check-false
  (or (file-exists? (build-path distribution-directory "LICENSE"))

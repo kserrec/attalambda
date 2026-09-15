@@ -7,6 +7,28 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
+## Unreleased interactive milestone
+
+The independent Phase8 source baseline passed 66 test files with 17,738 reported
+Racket tests, 36 Linux Python terminal cases, 40 production purity modules, and
+the complete source boundary inventory on Racket CS 9.3. This was a working-tree
+baseline before the subsequent fixed-module packaging and documentation changes;
+it is not current-candidate or standalone-artifact evidence. Focused later checks
+and the exact 18-row contract map are in [PLAN.md](../PLAN.md).
+
+The implemented checks cover lazy binding snapshots, generated-module purity,
+input sharing, cancellation, failure publication, resource lifetime, standalone
+loads, transcript status, inert bounded history, and terminal restoration.
+Completion preserves public and committed names, including control-containing
+identifiers, without demanding values. Its actual-helper corpus and CLI cases
+pass, along with the reviewed dependency regressions. The complete current source
+run is in progress. The exact Linux archive and current-head candidate checks have not
+passed. No new release is published. The baseline's three 200-entry sessions
+kept 7 descriptors and returned near the initial measured heap after reset;
+these observations are not a universal memory or performance guarantee.
+
+## Published baseline
+
 The published 0.7.0 source passes 46 suites with 17,290 assertions,
 39-module expanded purity, and the full boundary scan. The 157 sugar
 assertions include actual frontend-expanded terms judged by the existing

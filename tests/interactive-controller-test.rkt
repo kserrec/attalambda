@@ -27,6 +27,46 @@
   (define-values (input output) (make-pipe))
   (values (own input) (own output)))
 
+(test-case "transcript and no-history modes never access the history directory"
+  (define target (path->string (build-path (find-system-path 'pref-dir) "attalambda")))
+  (for ([interactive? '(#f #t)])
+    (bounded
+     (lambda (own)
+       (define accesses '())
+       (define guard
+         (make-security-guard
+          (current-security-guard)
+          (lambda (who path permissions)
+            (when (and path (regexp-match? (regexp (regexp-quote target)) (path->string path)))
+              (set! accesses (cons (list who path permissions) accesses))
+              (error 'test "history access forbidden")))
+          (lambda args (void))))
+       (define output (own (open-output-bytes)))
+       (define status
+         (parameterize ([current-security-guard guard]
+                        [current-input-port (own (open-input-string "(add 2 3)\n:quit\n"))]
+                        [current-output-port output]
+                        [current-error-port (own (open-output-bytes))])
+           (run-repl "test" interactive? #:history? (not interactive?))))
+       (check-equal? status 0)
+       (check-equal? (get-output-bytes output) #"=> 5\n")
+       (check-equal? accesses '())
+       status))))
+
+(test-case "the history byte limit does not reject a larger executable source entry"
+  (bounded
+   (lambda (own)
+     (define output (own (open-output-bytes)))
+     (define source (string-append "#|" (make-string 1048577 #\x) "|# (add 20 1)\n:quit\n"))
+     (define status
+       (parameterize ([current-input-port (own (open-input-string source))]
+                      [current-output-port output]
+                      [current-error-port (own (open-output-bytes))])
+         (run-repl "test" #t #:history? #f)))
+     (check-equal? status 0)
+     (check-equal? (get-output-bytes output) #"=> 21\n")
+     status)))
+
 (test-case "a permanent source-stream failure terminates after one read with sanitized status70"
   (bounded
    (lambda (own)

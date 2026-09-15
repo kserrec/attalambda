@@ -3,6 +3,7 @@
 set -euo pipefail
 
 project_root="$(cd "$(dirname "$0")" && pwd)"
+racket "$project_root/tooling/prepare-racket-runtime.rkt" --check
 test_files=()
 
 while IFS= read -r -d '' test_file; do

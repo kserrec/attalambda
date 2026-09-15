@@ -114,8 +114,8 @@
     syntax-failure-expression syntax-failure-reason syntax-line syntax-source
     unavailable-source-status unexpected-failure-status unless up validate-source
     validated-source-path vector->list when with-handlers
-    current-input-port current-error-port define-runtime-path interactive? member or
-    racket/runtime-path repl-path run-repl terminal-port?))
+    current-input-port current-error-port define-runtime-module-path-index interactive? member or
+    racket/runtime-path repl-index run-repl terminal-port?))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
@@ -123,7 +123,7 @@
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
-    unexpected-failure-status repl-path help-text embedded-product-version stop validate-source
+    unexpected-failure-status repl-index help-text embedded-product-version stop validate-source
     requested-source-missing? run-source main))
 
 (define expected-runner-status-definitions
@@ -680,7 +680,8 @@
     (#"0.4.0\n" . "0.4")
     (#"0.5.0\n" . "0.5")
     (#"0.6.0\n" . "0.6")
-    (#"0.7.0\n" . "0.7")))
+    (#"0.7.0\n" . "0.7")
+    (#"0.8.0\n" . "0.8")))
 
 (define runner-forbidden-version-literals
   (append-map
@@ -697,8 +698,8 @@
 
 (define (expected-package-info-forms package-version)
   `((define collection "attalambda")
-    (define deps (quote ("base" "lazy")))
-    (define build-deps (quote ("rackunit-lib" "net-lib" "expeditor-lib" "syntax-color-lib")))
+    (define deps (quote ("base" "lazy" "expeditor-lib" "syntax-color-lib")))
+    (define build-deps (quote ("rackunit-lib" "net-lib")))
     (define license (quote Apache-2.0))
     (define pkg-desc
       "A pure unary-lambda language with one explicit host boundary")
@@ -1555,7 +1556,7 @@
           (and (list? (cadr form))
                (= (length (cadr form)) 1)
                (caadr form))]
-         [(define-runtime-path)
+         [(define-runtime-path define-runtime-module-path-index)
           (and (symbol? (cadr form))
                (cadr form))]
          [(define-syntax)
@@ -1628,9 +1629,9 @@
                 '(dynamic-require source-path #f)
                 (module-info-forms info))
                1)
-            (= (datum-occurrence-count '(dynamic-require repl-path 'run-repl)
+            (= (datum-occurrence-count '(dynamic-require repl-index 'run-repl)
                                         (module-info-forms info)) 1)
-            (= (datum-occurrence-count '(define-runtime-path repl-path "repl.rkt")
+            (= (datum-occurrence-count '(define-runtime-module-path-index repl-index "repl.rkt")
                                         (module-info-forms info)) 1)
             (= (count (lambda (name) (eq? name 'current-input-port)) symbols) 1)
             (= (datum-occurrence-count '(terminal-port? (current-input-port))
@@ -1902,9 +1903,9 @@
   '(#%module-begin _ and assoc attalambda-interaction body car cdr checked-entry
     checked-entry-module-name checked-entry-result-names close-session complete cons
     consume current current-custodian current-namespace custodian custodian-shutdown-all
-    datum->syntax define define-runtime-path define-values definitions demand-entry
+    datum->syntax define define-runtime-module-path-index define-values definitions demand-entry
     dynamic-require empty entry eval exn? expand expanded exports failure file filter for
-    force forms gensym if imports in-list lambda language-path list make-base-namespace
+    force forms gensym if imports in-list lambda language-index language-name language-origin language-reference list make-base-namespace
     make-custodian map memq module module->exports module-name module-source name names
     namespace not open-session owner parameterize parsed path path->string phase-zero
     prepare-entry provide quasiquote quote racket/promise racket/runtime-path raise
@@ -1914,7 +1915,8 @@
     unless unquote value-to-string void with-handlers
     bindings candidate checked-entry-definitions evaluate-entry for/fold hash-set
     hash-values hasheq parameterize-break session-bindings set-session-bindings!
-    hash-keys session-names sort symbol<?
+    hash-keys session-names session-completion-names sort symbol<?
+    for*/fold visible group item let #%app #%datum #%top
     input output error current-input-port current-output-port current-error-port
     session-input session-output session-error child successful? set! dynamic-wind
     initialize-session reset-session! previous installed? set-session-namespace!
@@ -1922,7 +1924,46 @@
     load-source-file source-name inspected inspect-source-file source-problem? cond else on-phase evaluate
     parse-source-buffer validated-source-path validated-source-text validated-source-line
     validated-source-column validated-source-position source-problem invalid
-    source-buffer-message source-buffer-line source-buffer-column))
+    source-buffer-message source-buffer-line source-buffer-column
+    #%variable-reference variable-reference->namespace resolved-module-path-name
+    module-path-index-resolve path? symbol? when namespace-attach-module-declaration
+    racket/runtime-config))
+
+(define expected-session-bootstrap
+  '(when (symbol? language-name)
+     (parameterize ([current-namespace language-origin])
+       (dynamic-require language-reference #f))))
+
+(define expected-session-initialization
+  '(define (initialize-session owner)
+     (parameterize ([current-custodian owner])
+       (define namespace (make-base-namespace))
+       (parameterize ([current-namespace namespace])
+         (when (symbol? language-name)
+           (namespace-attach-module-declaration language-origin language-reference)
+           (namespace-attach-module-declaration language-origin 'racket/runtime-config))
+         (dynamic-require language-reference #f))
+       namespace)))
+
+(define expected-session-rendering
+  '(define (render-result current result)
+     (parameterize ([current-namespace (session-namespace current)])
+       (define renderer (force (dynamic-require language-reference 'value-to-string)))
+       (string-value->string (renderer result)))))
+
+(define expected-session-completion
+  '(define (session-completion-names current)
+     (parameterize ([current-namespace (session-namespace current)])
+       (define-values (exports syntax-exports) (module->exports language-reference))
+       (define names
+         (for*/fold ([visible (session-bindings current)])
+                    ([group (in-list (list exports syntax-exports))]
+                     [item (in-list (let ([phase-zero (assoc 0 group)])
+                                      (if phase-zero (cdr phase-zero) '())))])
+           (if (memq (car item) '(#%app #%datum #%module-begin #%top))
+               visible
+               (hash-set visible (car item) #t))))
+       (sort (hash-keys names) symbol<?))))
 
 (define expected-session-reset
   '(define (reset-session! current)
@@ -1953,7 +1994,7 @@
        (syntax-property (datum->syntax #f (cons '#%module-begin forms))
                         'attalambda-interaction (list imports result-names)))
      (define module-source
-       (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
+       (datum->syntax #f `(module ,name ,language-reference ,body)))
      (parameterize ([current-namespace (session-namespace current)])
        (on-phase 'expand)
        (define expanded (expand module-source))
@@ -2022,18 +2063,33 @@
    (exact-provide-violations
     path info '(provide (struct-out session) (struct-out checked-entry) (struct-out session-exit)
                          open-session close-session prepare-entry demand-entry render-result evaluate-entry
-                         session-names reset-session! load-source-file)
+                         session-names session-completion-names reset-session! load-source-file)
     'invalid-session-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
-                    '(language-path initialize-session open-session close-session reset-session! prepare-entry
-                                    demand-entry render-result evaluate-entry session-names load-source-file))
+                    '(language-index language-origin language-name language-reference initialize-session open-session close-session reset-session! prepare-entry
+                                    demand-entry render-result evaluate-entry session-names session-completion-names load-source-file))
             (= (datum-occurrence-count
-                '(define-runtime-path language-path "../lang/expander.rkt") forms) 1)
+                '(define-runtime-module-path-index language-index "../lang/expander.rkt") forms) 1)
+            (= (datum-occurrence-count
+                '(define language-origin (variable-reference->namespace (#%variable-reference))) forms) 1)
+            (= (datum-occurrence-count
+                '(define language-name
+                   (resolved-module-path-name (module-path-index-resolve language-index))) forms) 1)
+            (= (datum-occurrence-count
+                '(define language-reference
+                   (if (path? language-name)
+                       `(file ,(path->string language-name))
+                       `(quote ,language-name))) forms) 1)
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
                      '((struct session ([namespace #:mutable] [custodian #:mutable] input output error
                                         [bindings #:mutable]) #:transparent)
                        (struct checked-entry (module-name definitions result-names) #:transparent)
                        (struct session-exit (status) #:transparent)))
+            (member expected-session-bootstrap forms)
+            (= (datum-occurrence-count expected-session-bootstrap forms) 1)
+            (= (datum-occurrence-count expected-session-initialization forms) 1)
+            (= (datum-occurrence-count expected-session-rendering forms) 1)
+            (= (datum-occurrence-count expected-session-completion forms) 1)
             (= (datum-occurrence-count expected-session-preparation forms) 1)
             (= (datum-occurrence-count expected-session-publication forms) 1)
             (= (datum-occurrence-count expected-session-reset forms) 1)
@@ -2041,15 +2097,18 @@
        '() (list (violation path 'invalid-session-scaffolding 'module)))
    (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
                                make-base-namespace make-custodian dynamic-require
-                               set-session-bindings! parameterize-break hash-set)]
-              [expected '(1 2 2 1 1 1 3 4 3 3 1)]
+                               set-session-bindings! parameterize-break hash-set
+                               namespace-attach-module-declaration module-path-index-resolve
+                               variable-reference->namespace resolved-module-path-name set!)]
+              [expected '(1 2 2 1 2 1 3 5 3 3 2 2 1 1 1 2)]
               #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
      (violation path 'invalid-session-operation operation))
-   (for/list ([call '((dynamic-require language-path #f)
+   (for/list ([call '((dynamic-require language-reference #f)
                      (dynamic-require path #f)
                      (dynamic-require `(quote ,(checked-entry-module-name entry)) name)
-                     (dynamic-require language-path 'value-to-string))]
-              #:unless (= (datum-occurrence-count call forms) 1))
+                     (dynamic-require language-reference 'value-to-string))]
+              [expected '(2 1 1 1)]
+              #:unless (= (datum-occurrence-count call forms) expected))
      (violation path 'invalid-session-loader-target call))
    (strict-vocabulary-violations path project-root session-vocabulary
                                  'unapproved-session-identifier)))
@@ -2106,7 +2165,11 @@
     case echo echo? help help-text names name null? for in-list session-names load load-source-file
     source-command-name source-command-argument result reset reset-session! quit
     string-append format-user-name define-values program-output result-output prepare-ui
-    make-shell-output terminal-port? fatal memq command close-output-port recover parameterize-break break-enabled))
+    make-shell-output terminal-port? fatal memq command close-output-port recover parameterize-break break-enabled
+    racket/runtime-path define-runtime-module-path-index editor-index editor-read dynamic-require read-editor-entry
+    read-entry read-plain byte-ready? persistent-history? history read-history write-history
+    remember-history source-buffer? source-buffer-text source-command-text session-completion-names
+    history-changed? updated unless = port-file-identity))
 
 (define (repl-violations path info project-root)
   (define forms (module-info-forms info))
@@ -2114,10 +2177,10 @@
   (append
    (exact-language-violations path info 'racket/base 'unexpected-repl-language)
    (exact-require-violations
-    path info '((require "source-reader.rkt" "source-file.rkt" "session.rkt" "diagnostics.rkt" "output.rkt"))
+    path info '((require racket/runtime-path "source-reader.rkt" "source-file.rkt" "session.rkt" "diagnostics.rkt" "output.rkt" "history.rkt"))
     'invalid-repl-imports)
    (exact-provide-violations path info '(provide run-repl) 'invalid-repl-exports)
-   (if (equal? (filter-map top-level-binding-name forms) '(help-text run-repl))
+   (if (equal? (filter-map top-level-binding-name forms) '(editor-index help-text run-repl))
        '() (list (violation path 'invalid-repl-definitions 'module)))
    ;; `load` is a command label only; pin its case context as well as its count.
    (if (and (= (datum-occurrence-count expected-repl-commands forms) 1)
@@ -2125,13 +2188,39 @@
        '() (list (violation path 'invalid-repl-command-dispatch 'load)))
    (for/list ([operation '(current-input-port current-output-port current-error-port
                                              read-source-entry open-session evaluate-entry render-result
-                                             make-shell-output terminal-port? close-output-port break-enabled)]
+                                             make-shell-output terminal-port? close-output-port break-enabled
+                                             byte-ready? dynamic-require define-runtime-module-path-index
+                                             read-history write-history remember-history session-completion-names)]
               #:unless (= (count (lambda (name) (eq? name operation)) symbols) 1))
      (violation path 'invalid-repl-operation operation))
-   (for/list ([call '((define input (current-input-port))
+   (if (= (count (lambda (name) (eq? name 'port-file-identity)) symbols) 2)
+       '() (list (violation path 'invalid-repl-operation 'port-file-identity)))
+   (for/list ([call '((define-runtime-module-path-index editor-index "editor.rkt")
+                     (dynamic-require editor-index (quote read-editor-entry))
+                     (editor-read input output source history #:names (session-completion-names current))
+                     (define persistent-history? (and interactive? history?))
+                     (read-history persistent-history?)
+                     (define history-changed? #f)
+                     (write-history (and persistent-history? history-changed?) history)
+                     (when (and interactive? (not (eof-object? parsed))
+                                (not (and (source-buffer? parsed)
+                                          (eq? (source-buffer-status parsed) (quote unfinished-eof)))))
+                       (define updated
+                         (remember-history history
+                                           (if (source-command? parsed)
+                                               (source-command-text parsed)
+                                               (source-buffer-text parsed))))
+                       (unless (eq? updated history)
+                         (parameterize-break #f
+                           (set! history updated)
+                           (set! history-changed? #t))))
+                     (byte-ready? input)
+                     (define input (current-input-port))
                      (define output (current-output-port))
                      (define error (current-error-port))
-                     (make-shell-output output error (and interactive? (terminal-port? output)))
+                     (make-shell-output output error
+                                        (and interactive? (terminal-port? output)
+                                             (= (port-file-identity output) (port-file-identity error))))
                      (close-output-port program-output)
                      (break-enabled #t)
                      (open-session #:input input #:output program-output #:error error)
@@ -2200,6 +2289,295 @@
    (exact-provide-violations path info '(provide make-shell-output) 'invalid-output-exports)
    (if (equal? (cdr (module-info-forms info)) expected-output-definitions)
        '() (list (violation path 'invalid-output-forwarding 'module)))))
+
+(define expected-history-forms
+  '(
+;; Inert history framing. Bounds are checked before decoding or allocating from
+;; stored lengths; history text is never passed to a Racket data reader.
+(require racket/file racket/path)
+(provide history-entry-limit history-byte-limit history->bytes bytes->history
+         remember-history read-history write-history)
+(define history-entry-limit 1000)
+(define history-byte-limit 1048576)
+(define history-header #"AttaLambda-history-v1\n")
+(define history-prefix-size (+ (bytes-length history-header) 2))
+
+;; Source ownership is decided by the shell. Retain at most 1000 submissions
+;; independently of the editor's own shorter close-result history.
+(define (remember-history entries text)
+  (if (and (string? text) (positive? (string-length text)))
+      (for/list ([entry (in-list (cons text entries))]
+                 [index (in-range history-entry-limit)])
+        entry)
+      entries))
+
+;; Entries arrive newest first. Skip entries that cannot fit while retaining
+;; later small entries; a history-storage limit must never reject execution.
+(define (history->bytes entries)
+  (define-values (parts total count)
+    (for/fold ([parts '()] [total history-prefix-size] [count 0])
+              ([entry (in-list entries)] #:break (= count history-entry-limit))
+      (unless (string? entry)
+        (raise-argument-error 'history->bytes "list of strings" entries))
+      (define available (- history-byte-limit total 4))
+      (define size
+        (and (<= (string-length entry) available) (string-utf-8-length entry)))
+      (if (and size (<= size available))
+          (values (cons (string->bytes/utf-8 entry)
+                        (cons (integer->integer-bytes size 4 #f #t) parts))
+                  (+ total 4 size) (add1 count))
+          (values parts total count))))
+  (apply bytes-append history-header
+         (integer->integer-bytes count 2 #f #t) (reverse parts)))
+
+(define (bytes->history content)
+  (define size (bytes-length content))
+  (and
+   (<= history-prefix-size size history-byte-limit)
+   (bytes=? (subbytes content 0 (bytes-length history-header)) history-header)
+   (let ([count (integer-bytes->integer content #f #t
+                                      (bytes-length history-header) history-prefix-size)])
+     (and
+      (<= count history-entry-limit)
+      (with-handlers ([exn:fail:contract? (lambda (_) #f)])
+        (let loop ([remaining count] [offset history-prefix-size] [entries '()])
+          (cond
+            [(zero? remaining) (and (= offset size) (reverse entries))]
+            [(> (+ offset 4) size) #f]
+            [else
+             (define start (+ offset 4))
+             (define length (integer-bytes->integer content #f #t offset start))
+             (define end (+ start length))
+             (and (<= end size)
+                  (loop (sub1 remaining) end
+                        (cons (bytes->string/utf-8 content #f start end) entries)))])))))))
+
+(define (history-directory-stat-safe? stat private? root-owner)
+  (define mode (hash-ref stat 'mode))
+  (and
+   (= (bitwise-and mode file-type-bits) directory-type-bits)
+   (or (not (eq? (system-type 'os) 'unix))
+       (zero? (bitwise-and mode (if private? #o077 #o022)))
+       ;; Compare with the filesystem root's observed owner: user namespaces can
+       ;; map its UID to a value other than zero. Other owners remain untrusted.
+       (and (not private?) (= (hash-ref stat 'user-id) root-owner)
+            (not (zero? (bitwise-and mode sticky-bit)))))))
+
+(define (history-file-stat-safe? stat)
+  (define mode (hash-ref stat 'mode))
+  (and (= (bitwise-and mode file-type-bits) regular-file-type-bits)
+       (= (hash-ref stat 'hardlink-count) 1)
+       (<= (hash-ref stat 'size) history-byte-limit)
+       (or (not (eq? (system-type 'os) 'unix))
+           (zero? (bitwise-and mode #o077)))))
+
+(define (checked-history-directory preference-directory #:create? [create? #f])
+  (define directory
+    (simplify-path
+     (path->complete-path
+      (build-path (or preference-directory (find-system-path 'pref-dir)) "attalambda"))
+     #f))
+  (define parts (explode-path directory))
+  (and
+   ;; Validate all names before the writer can create any missing directory.
+   (for/and ([part (in-list parts)])
+     (and (path? part)
+          (not (regexp-match? #px"(^|\\.)env($|\\.)" (string-downcase (path->string part))))))
+   (let loop ([parts parts] [parent #f] [root-owner #f])
+     (cond
+       [(null? parts) parent]
+       [else
+        (define path (if parent (build-path parent (car parts)) (car parts)))
+        (when (and create? (not (file-or-directory-type path)))
+          (make-directory path #o700))
+        (and
+         (eq? (file-or-directory-type path) 'directory)
+         (let* ([stat (file-or-directory-stat path #t)]
+                [owner (or root-owner (hash-ref stat 'user-id))])
+           (and (history-directory-stat-safe? stat (null? (cdr parts)) owner)
+                (loop (cdr parts) path owner))))]))))
+
+(define (read-history enabled? #:preference-directory [preference-directory #f])
+  ;; Disabled means no path discovery or metadata/content access of any kind.
+  (if (not enabled?) '()
+      (with-handlers ([exn:fail? (lambda (_) '())])
+        (define directory (checked-history-directory preference-directory))
+        (or
+         (and
+          directory
+          (let ([path (build-path directory "history-v1")])
+            (and
+             (eq? (file-or-directory-type path) 'file)
+             (let ([before (file-or-directory-stat path #t)])
+               (and
+                (history-file-stat-safe? before)
+                (call-with-input-file
+                 path
+                 (lambda (input)
+                   (define opened (port-file-stat input))
+                   (and
+                    (history-file-stat-safe? opened)
+                    (= (hash-ref before 'device-id) (hash-ref opened 'device-id))
+                    (= (hash-ref before 'inode) (hash-ref opened 'inode))
+                    (let ([content (read-bytes (add1 history-byte-limit) input)])
+                      (and (bytes? content) (bytes->history content)))))))))))
+         '()))))
+
+(define (history-replacement-safe? path)
+  (define type (file-or-directory-type path))
+  (or (not type)
+      (and (eq? type 'file)
+           (history-file-stat-safe? (file-or-directory-stat path #t)))))
+
+(define (write-history enabled? entries #:preference-directory [preference-directory #f])
+  (when enabled?
+    (with-handlers ([exn:fail? void])
+      (define content (history->bytes entries))
+      (define directory (checked-history-directory preference-directory #:create? #t))
+      (when directory
+        (define path (build-path directory "history-v1"))
+        (when (history-replacement-safe? path)
+          (call-with-atomic-output-file
+           path
+           (lambda (output temporary)
+             ;; The temporary starts inside a private directory. Restrict its
+             ;; mode before writing any source, then recheck the replacement path.
+             (file-or-directory-permissions temporary #o600)
+             (write-bytes content output)
+             (unless (and (checked-history-directory preference-directory)
+                          (history-replacement-safe? path))
+               (error 'history "history target changed during save")))
+           #:rename-fail-handler (lambda (failure _) (raise failure))))))))
+))
+
+(define (history-violations path info project-root)
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-history-language)
+   (if (equal? (module-info-forms info) expected-history-forms)
+       '() (list (violation path 'invalid-bounded-history 'module)))))
+
+(define expected-editor-forms
+  (quote (
+
+;; Source collection only. The session engine continues to own evaluation.
+(require expeditor racket/port racket/runtime-path racket/string
+         syntax-color/racket-lexer "source-reader.rkt")
+(provide read-editor-entry)
+(define-runtime-module-path-index editor-output-index "editor-output.rkt")
+
+(define (completion-namespace names)
+  (define namespace (make-empty-namespace))
+  (for ([name (in-list names)])
+    (define spelling
+      (if (equal? (symbol->string name) "")
+          "||"
+          (parameterize ([read-accept-bar-quote #f])
+            (string-replace (format "~s" name) "|" "\\|"))))
+    ;; At the start of an entry, a bare colon would select a shell command.
+    (define source-name
+      (if (string-prefix? spelling ":") (string-append "\\" spelling) spelling))
+    (namespace-set-variable-value! (string->symbol source-name) #f #t namespace))
+  namespace)
+
+(define (read-editor-entry input output source history
+                           #:names [names '()]
+                           #:open [open-editor expeditor-open])
+  ;; Internal portability/file-mode use must not resolve POSIX symbols on Windows.
+  (and
+   (eq? (system-type 'os) 'unix)
+   (let ([call-with-editor-output
+          (dynamic-require editor-output-index 'call-with-editor-output)])
+     (define content
+       (parameterize
+           ([current-input-port input]
+            [current-output-port output]
+            ;; Only source spellings and inert placeholders enter this namespace.
+            [current-namespace (completion-namespace names)]
+            [current-expeditor-reader
+             (lambda (input)
+               (define text (port->string input))
+               (if (equal? text "") eof text))]
+            [current-expeditor-post-skipper (lambda (_) 0)]
+            [current-expeditor-ready-checker
+             (lambda (input) (source-ready? (port->string input)))]
+            [current-expeditor-lexer racket-lexer]
+            [current-expeditor-parentheses '((|(| |)|) (|[| |]|) (|{| |}|))]
+            ;; Use the library's S-expression grouping and indentation fallback.
+            [current-expeditor-grouper (lambda (editor start limit direction) #t)]
+            [current-expeditor-indenter (lambda (editor start auto?) #f)]
+            [current-expeditor-color-enabled #f])
+         (call-with-editor-output
+          (lambda ()
+            (define editor (open-editor history))
+            (and editor
+                 (dynamic-wind
+                  void
+                  (lambda () (expeditor-read editor #:prompt "atta>"))
+                  ;; Open afresh on the next prompt so shell history can retain
+                  ;; the specified 1000 entries despite the library's limit.
+                  (lambda () (void (expeditor-close editor)))))))))
+     (cond
+       [(or (not content) (eof-object? content)) content]
+       [(string? content) (parse-source-entry source content)]
+       [else (error 'editor "source editor did not return an entry")]))))
+)))
+
+(define (editor-violations path info project-root)
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-editor-language)
+   (if (equal? (module-info-forms info) expected-editor-forms)
+       '() (list (violation path 'invalid-editor-source-adapter 'module)))))
+
+(define expected-editor-output-forms
+  '(
+;; CS 9.3's editor uses fd0/fd1. Select stderr only during source editing;
+;; Expeditor owns terminal modes and input. Load this POSIX adapter lazily.
+(require ffi/unsafe)
+(provide call-with-editor-output)
+
+(define libc (ffi-lib #f))
+(define duplicate (get-ffi-obj "dup" libc (_fun _int -> _int)))
+(define duplicate-to (get-ffi-obj "dup2" libc (_fun _int _int -> _int)))
+(define close-descriptor (get-ffi-obj "close" libc (_fun _int -> _int)))
+
+(define (call-with-editor-output action)
+  (define saved #f)
+  (define action-failed? #f)
+  (dynamic-wind
+   (lambda ()
+     (parameterize-break #f
+       (flush-output (current-output-port))
+       (set! saved (duplicate 1))
+       (when (< saved 0) (error 'editor "cannot preserve stdout"))
+       (when (< (duplicate-to 2 1) 0)
+         (close-descriptor saved)
+         (set! saved #f)
+         (error 'editor "cannot select UI output"))))
+   (lambda ()
+     (set! action-failed? #f)
+     (with-handlers ([(lambda (_) #t)
+                      (lambda (failure) (set! action-failed? #t) (raise failure))])
+       (action)))
+   (lambda ()
+     (parameterize-break #f
+       (with-handlers ([(lambda (_) #t)
+                        (lambda (failure) (unless action-failed? (raise failure)))])
+         ;; Even a failed final flush must restore stdout and close its copy.
+         (dynamic-wind
+          void
+          (lambda () (flush-output (current-output-port)))
+          (lambda ()
+            (define restored (duplicate-to saved 1))
+            (close-descriptor saved)
+            (set! saved #f)
+            (when (< restored 0) (error 'editor "cannot restore stdout")))))))))
+))
+
+(define (editor-output-violations path info project-root)
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-editor-output-language)
+   (if (equal? (module-info-forms info) expected-editor-output-forms)
+       '() (list (violation path 'invalid-editor-output-adapter 'module)))))
 
 (define (host-violations path info project-root)
   (define host-definitions
@@ -2279,6 +2657,9 @@
           [(diagnostics) (diagnostics-violations source info root)]
           [(repl) (repl-violations source info root)]
           [(shell-output) (output-violations source info root)]
+          [(editor-output) (editor-output-violations source info root)]
+          [(editor) (editor-violations source info root)]
+          [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
@@ -2370,6 +2751,12 @@
      'diagnostics]
     [(equal? source (normalized (build-path root "runner" "repl.rkt")))
      'repl]
+    [(equal? source (normalized (build-path root "runner" "history.rkt")))
+     'history]
+    [(equal? source (normalized (build-path root "runner" "editor.rkt")))
+     'editor]
+    [(equal? source (normalized (build-path root "runner" "editor-output.rkt")))
+     'editor-output]
     [(equal? source (normalized (build-path root "runner" "output.rkt")))
      'shell-output]
     [(equal? source (normalized (build-path root "runner" "session.rkt")))
@@ -2638,6 +3025,12 @@
        (normalized (build-path runner-directory "source-file.rkt")))
      (define diagnostics
        (normalized (build-path runner-directory "diagnostics.rkt")))
+     (define history
+       (normalized (build-path runner-directory "history.rkt")))
+     (define editor
+       (normalized (build-path runner-directory "editor.rkt")))
+     (define editor-output
+       (normalized (build-path runner-directory "editor-output.rkt")))
      (define shell-output
        (normalized (build-path runner-directory "output.rkt")))
      (define repl
@@ -2701,6 +3094,9 @@
       (file-boundary-violations diagnostics 'diagnostics root)
       (file-boundary-violations repl 'repl root)
       (file-boundary-violations shell-output 'shell-output root)
+      (file-boundary-violations editor-output 'editor-output root)
+      (file-boundary-violations editor 'editor root)
+      (file-boundary-violations history 'history root)
       (file-boundary-violations package-info 'package-info root)
       (append-map (lambda (path)
                     (file-boundary-violations path 'reader root))
@@ -2740,7 +3136,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader session source-file diagnostics repl shell-output) equal?))
+                 #:unless (member path (list runner source-reader session source-file diagnostics repl shell-output editor-output editor history) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)
