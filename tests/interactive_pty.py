@@ -15,8 +15,33 @@ import time
 import unittest
 
 
+def read_pipe_bytes(stream, count, timeout=20):
+    result = b""
+    deadline = time.monotonic() + timeout
+    while len(result) < count:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0 or not select.select([stream], [], [], remaining)[0]:
+            raise AssertionError(f"pipe output stalled at {result!r}")
+        chunk = os.read(stream.fileno(), count - len(result))
+        if not chunk:
+            raise AssertionError(f"pipe ended at {result!r}")
+        result += chunk
+    return result
+
+
+def read_pipe_line(stream, timeout=20):
+    result = b""
+    deadline = time.monotonic() + timeout
+    while not result.endswith(b"\n") and len(result) < 65536:
+        remaining = deadline - time.monotonic()
+        result += read_pipe_bytes(stream, 1, remaining)
+    if not result.endswith(b"\n"):
+        raise AssertionError("diagnostic exceeded the bounded line reader")
+    return result
+
+
 class Terminal:
-    def __init__(self, command, environment=None, *, stdout_pipe=False):
+    def __init__(self, command, environment=None, *, stdout_pipe=False, stderr_pipe=False):
         self.master, self.slave = os.openpty()
         self.process = None
         self.pidfd = None
@@ -33,7 +58,8 @@ class Terminal:
         try:
             self.process = subprocess.Popen(
                 command, stdin=self.slave,
-                stdout=subprocess.PIPE if stdout_pipe else self.slave, stderr=self.slave,
+                stdout=subprocess.PIPE if stdout_pipe else self.slave,
+                stderr=subprocess.PIPE if stderr_pipe else self.slave,
                 env={**os.environ, "TERM": "xterm-256color", **(environment or {})},
                 preexec_fn=own_terminal,
             )
@@ -86,6 +112,8 @@ class Terminal:
         finally:
             if self.process is not None and self.process.stdout is not None:
                 self.process.stdout.close()
+            if self.process is not None and self.process.stderr is not None:
+                self.process.stderr.close()
             if self.pidfd is not None:
                 os.close(self.pidfd)
             os.close(self.master)
@@ -340,6 +368,215 @@ class EditorProbe(unittest.TestCase):
             terminal.expect(b"history:")
             terminal.finish()
         self.assertFalse(sentinel.exists())
+
+
+class CLIEnvironment(unittest.TestCase):
+    def setUp(self):
+        self.home = tempfile.TemporaryDirectory(prefix="attalambda-cli-test-")
+        self.addCleanup(self.home.cleanup)
+        self.environment = {"HOME": self.home.name, "PLTUSERHOME": self.home.name}
+        executable = os.environ.get("ATTALAMBDA_TEST_EXECUTABLE")
+        self.command = ([executable] if executable else
+                        [os.environ.get("ATTALAMBDA_TEST_RACKET", "racket"),
+                         str(Path(__file__).resolve().parent.parent / "runner/attalambda.rkt")])
+
+
+class CLIProbe(CLIEnvironment):
+    def test_default_and_explicit_terminal_selection(self):
+        for arguments in [[], ["--no-history"], ["--repl"],
+                          ["--repl", "--no-history"], ["--no-history", "--repl"]]:
+            with self.subTest(arguments=arguments), Terminal(
+                    self.command + arguments, self.environment) as terminal:
+                terminal.expect(b"AttaLambda ")
+                terminal.expect(b"atta> ")
+                terminal.send(b"(add 2 3)\r")
+                terminal.expect(b"=> 5\r\n")
+                terminal.expect(b"atta> ")
+                terminal.send(b"\x04")
+                terminal.finish()
+
+    def test_redirected_stdout_contains_results_without_terminal_ui(self):
+        with Terminal(self.command + ["--no-history"], self.environment,
+                      stdout_pipe=True) as terminal:
+            terminal.expect(b"AttaLambda ")
+            terminal.expect(b"atta> ")
+            terminal.send(b"(add 2 3)\r")
+            terminal.expect(b"atta> ")
+            terminal.send(b"\x04")
+            terminal.finish()
+            self.assertEqual(terminal.process.stdout.read(), b"=> 5\n")
+
+    def test_terminal_input_with_redirected_ui_requires_explicit_transcript(self):
+        with Terminal(self.command, self.environment,
+                      stdout_pipe=True, stderr_pipe=True) as terminal:
+            terminal.finish(64)
+            self.assertEqual(terminal.process.stdout.read(), b"")
+            self.assertIn(b"use attalambda --repl", terminal.process.stderr.read())
+        with Terminal(self.command + ["--repl", "--no-history"], self.environment,
+                      stdout_pipe=True, stderr_pipe=True) as terminal:
+            terminal.send(b"(add 2 3)\r\x04")
+            terminal.finish()
+            self.assertEqual(terminal.process.stdout.read(), b"=> 5\n")
+            self.assertEqual(terminal.process.stderr.read(), b"")
+
+    def test_program_prompt_is_immediate_before_answer_with_echo_off(self):
+        for redirected in [False, True]:
+            with self.subTest(redirected=redirected), Terminal(
+                    self.command + ["--no-history"], self.environment,
+                    stdout_pipe=redirected) as terminal:
+                terminal.expect(b"atta> ")
+                terminal.send(b":echo off\r")
+                terminal.expect(b"Automatic echo: off")
+                terminal.expect(b"atta> ")
+                terminal.send(b'(stdout "answer: ") (read-line UNIT)\r')
+                if redirected:
+                    self.assertEqual(read_pipe_bytes(terminal.process.stdout, 8), b"answer: ")
+                else:
+                    terminal.expect(b"\r\nanswer: ")
+                self.assertEqual(termios.tcgetattr(terminal.slave), terminal.initial)
+                terminal.send(b"program-answer\n")
+                terminal.expect(b"atta> ")
+                terminal.send(b":echo on\r")
+                terminal.expect(b"atta> ")
+                terminal.send(b"TRUE\r")
+                terminal.expect(b"atta> ")
+                terminal.send(b":quit\r")
+                terminal.finish()
+                if redirected:
+                    self.assertEqual(terminal.process.stdout.read(), b"\n=> TRUE\n")
+                else:
+                    self.assertIn(b"=> TRUE\r\n", terminal.output)
+                self.assertNotIn(b"=> OK", terminal.output)
+
+    def test_non_newline_output_keeps_results_and_prompts_legible(self):
+        with Terminal(self.command + ["--no-history"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b'(stdout "fragment")\r')
+            terminal.expect(b"fragment\r\n=> OK(UNIT)\r\natta> ")
+            terminal.send(b":echo off\r")
+            terminal.expect(b"atta> ")
+            terminal.send(b'(stdout "unrendered")\r')
+            terminal.expect(b"unrendered\r\natta> ")
+            terminal.send(b":quit\r")
+            terminal.finish()
+
+    def test_entry_cancellation_and_recovery_keep_the_actual_shell_usable(self):
+        loaded = Path(self.home.name) / "blocked load.attl"
+        loaded.write_text('#lang attalambda\n(stdout "loading\\n")\n(read-line UNIT)\n(def ghost = 2)\n')
+        with Terminal(self.command + ["--no-history"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b"(def old = 41) old\r")
+            terminal.expect(b"=> 41\r\natta> ")
+            entries = [
+                (b"(add 1\r", b"...> "),
+                (b'(stdout "reading\\n") (read-line UNIT)\r', b"=> OK(UNIT)\r\n"),
+                (b'(rec spin n = (if (is-ok (stdout "running\\n")) (spin n) n)) (spin UNIT)\r', b"running\r\n"),
+                (b'(rec raw n = (if (is-ok (stdout "rendering\\n")) (raw n) n)) raw\r', b"rendering\r\n"),
+                ((':load ' + json.dumps(str(loaded)) + '\r').encode(), b"loading\r\n"),
+            ]
+            for source, reached in entries:
+                terminal.send(source)
+                terminal.expect(reached)
+                terminal.send(b"\x03")
+                terminal.expect(b"entry interrupted")
+                terminal.expect(b"atta> ")
+                terminal.send(b"old\r")
+                terminal.expect(b"=> 41\r\natta> ")
+            terminal.send(b"unknown-name\r")
+            terminal.expect(b"source expansion failed")
+            terminal.expect(b"atta> ")
+            terminal.send(b":quit\r")
+            terminal.finish(0)
+
+    def test_program_eof_returns_none_and_fresh_prompt_eof_exits(self):
+        with Terminal(self.command + ["--no-history"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b'(stdout "reading\\n") (read-line UNIT)\r')
+            terminal.expect(b"=> OK(UNIT)\r\n")
+            terminal.send(b"\x04")
+            terminal.expect(b"=> OK(NONE)\r\natta> ")
+            terminal.send(b"(add 2 3)\r")
+            terminal.expect(b"=> 5\r\natta> ")
+            terminal.send(b"\x04")
+            terminal.finish()
+
+
+class TranscriptProbe(CLIEnvironment):
+    def start_transcript(self):
+        process = subprocess.Popen(
+            self.command + ["--repl", "--no-history"],
+            stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            env={**os.environ, **self.environment},
+        )
+
+        def close():
+            if process.poll() is None:
+                process.kill()
+                process.wait(timeout=5)
+            for stream in [process.stdin, process.stdout, process.stderr]:
+                stream.close()
+
+        self.addCleanup(close)
+        return process
+
+    def send(self, process, source):
+        process.stdin.write(source)
+        process.stdin.flush()
+
+    def test_transcript_interrupt_exits130_during_source_and_program_input(self):
+        for source, expected in [
+            (b"1\n", b"=> 1\n"),
+            (b'(stdout "ready\\n") (read-line UNIT)\n', b"ready\n=> OK(UNIT)\n"),
+        ]:
+            with self.subTest(source=source):
+                process = self.start_transcript()
+                self.send(process, source)
+                self.assertEqual(read_pipe_bytes(process.stdout, len(expected)), expected)
+                self.assertFalse(process.stdin.closed)
+                process.send_signal(signal.SIGINT)
+                self.assertEqual(process.wait(timeout=10), 130)
+                self.assertEqual(process.stdout.read(), b"")
+                self.assertEqual(process.stderr.read(), b"")
+
+    def test_live_source_and_answers_keep_exact_boundaries_until_final_eof(self):
+        process = self.start_transcript()
+        self.send(process, b'(stdout "answer: ") (read-line UNIT)\n')
+        expected = b"answer: \n=> OK(UNIT)\n"
+        self.assertEqual(read_pipe_bytes(process.stdout, len(expected)), expected)
+        self.assertFalse(process.stdin.closed)
+        self.send(process, b":reset\n")
+        expected = b'=> OK(SOME(":reset"))\n'
+        self.assertEqual(read_pipe_bytes(process.stdout, len(expected)), expected)
+        self.send(process, b"(read-line UNIT)\n\n(add 2 3) (mult 3 4)\n")
+        expected = b'=> OK(SOME(""))\n=> 5\n=> 12\n'
+        self.assertEqual(read_pipe_bytes(process.stdout, len(expected)), expected)
+        self.send(process, b"unknown-name\n")
+        diagnostic = read_pipe_line(process.stderr)
+        self.assertIn(b"repl:4:1:0: source expansion failed", diagnostic)
+        self.assertNotIn(b"/runner/", diagnostic)
+        self.send(process, b"(add 20 22)\n")
+        self.assertEqual(read_pipe_bytes(process.stdout, 6), b"=> 42\n")
+        # The writer has stayed open across every earlier result. Close it only
+        # now: the running read must return NONE, then fresh source EOF ends it.
+        self.send(process, b"(read-line UNIT)\n")
+        process.stdin.close()
+        self.assertEqual(read_pipe_bytes(process.stdout, 12), b"=> OK(NONE)\n")
+        self.assertEqual(process.wait(timeout=10), 1)
+        self.assertEqual(process.stdout.read(), b"")
+        self.assertEqual(process.stderr.read(), b"")
+
+    def test_live_echo_off_never_adds_result_text_or_delays_program_prompt(self):
+        process = self.start_transcript()
+        self.send(process, b":echo off\n")
+        self.assertEqual(read_pipe_line(process.stderr), b"Automatic echo: off\n")
+        self.send(process, b'(stdout "answer: ") (read-line UNIT)\n')
+        self.assertEqual(read_pipe_bytes(process.stdout, 8), b"answer: ")
+        self.send(process, b"program-answer\n:echo on\n")
+        self.assertEqual(read_pipe_line(process.stderr), b"Automatic echo: on\n")
+        self.send(process, b"TRUE\n:quit\n")
+        self.assertEqual(process.wait(timeout=10), 0)
+        self.assertEqual(process.stdout.read(), b"\n=> TRUE\n")
+        self.assertEqual(process.stderr.read(), b"")
 
 
 if __name__ == "__main__":

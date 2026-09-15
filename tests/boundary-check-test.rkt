@@ -161,6 +161,10 @@
                  (build-path root "runner" "source-file.rkt"))
       (copy-file (build-path project-root "runner" "diagnostics.rkt")
                  (build-path root "runner" "diagnostics.rkt"))
+      (copy-file (build-path project-root "runner" "output.rkt")
+                 (build-path root "runner" "output.rkt"))
+      (copy-file (build-path project-root "runner" "repl.rkt")
+                 (build-path root "runner" "repl.rkt"))
       (for ([name (in-list '("hello.attl"
                              "stdout.attl"
                              "file-round-trip.attl"
@@ -228,7 +232,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec diagnostics effect host language-expander language-reader macro
-   macro-shell package-info pure-core reader runner session source-file source-reader test tooling))
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader test tooling))
 
 (check-equal?
  (count (lambda (classification)

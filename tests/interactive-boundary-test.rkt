@@ -6,6 +6,8 @@
 (define-runtime-path session-source "../runner/session.rkt")
 (define-runtime-path diagnostics-source "../runner/diagnostics.rkt")
 (define-runtime-path source-file-source "../runner/source-file.rkt")
+(define-runtime-path repl-source "../runner/repl.rkt")
+(define-runtime-path output-source "../runner/output.rkt")
 (define directory (make-temporary-file "attalambda-session-boundary-~a" 'directory))
 (define target (build-path directory "session.rkt"))
 (define original
@@ -24,6 +26,26 @@
 (dynamic-wind
  void
  (lambda ()
+   (test-case "shell boundary keeps source and output on their fixed owned ports"
+     (for ([example (list (list repl-source 'repl
+                                '(((close-output-port program-output) (close-output-port input))
+                                  ((session-names current) (load "native.rkt"))
+                                  ((render-result current value) (read-source-entry input source))
+                                  ((open-session #:input input #:output program-output #:error error)
+                                   (open-session #:input input #:output output #:error error))))
+                         (list output-source 'shell-output
+                               '(((flush-output destination) (flush-output))
+                                 ((newline output) (newline))
+                                 ((values total last-byte) (read-byte))
+                                 (void (lambda () (close-output-port destination))))))])
+       (define original-shell
+         (call-with-input-file (car example)
+           (lambda (input) (parameterize ([read-accept-reader #t]) (read input)))))
+       (check-equal? (check original-shell (cadr example)) '())
+       (for ([mutation (in-list (caddr example))])
+         (define changed (replace original-shell (car mutation) (cadr mutation)))
+         (check-not-equal? changed original-shell)
+         (check-not-equal? (check changed (cadr example)) '()))))
    (test-case "session boundary permits only checked isolated language modules"
      (check-equal? (check original) '())
      (for ([mutation
@@ -31,8 +53,8 @@
               ((datum->syntax #f (cons (quote #%module-begin) forms))
                (datum->syntax (quote-syntax here) (cons (quote #%module-begin) forms)))
               ((eval expanded) (eval forms))
-              ((evaluate-entry current parsed void #:imports (quote ()))
-               (evaluate-entry current parsed void))
+              ((evaluate-entry current parsed void #:imports (quote ()) #:on-phase on-phase)
+               (evaluate-entry current parsed void #:on-phase on-phase))
               ((parameterize-break #f (set-session-bindings! current candidate) (set! successful? #t))
                (begin (set-session-bindings! current candidate) (set! successful? #t)))
               ((parameterize-break #f (set-session-bindings! current candidate) (set! successful? #t))

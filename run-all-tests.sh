@@ -19,6 +19,10 @@ if [[ "${#test_files[@]}" -eq 0 ]]; then
   exit 2
 fi
 
+# `raco test` can reuse an unchanged test's bytecode after an imported helper
+# changes. Refresh dependency caches before executing any test module.
+raco make "${test_files[@]}"
+
 for test_file in "${test_files[@]}"; do
   echo "Running ${test_file#"$project_root/"}"
   raco test "$test_file"

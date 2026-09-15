@@ -58,9 +58,10 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 7.1 — command-line dispatch and terminal/transcript selection.**
-The private source reader exists; the definition checker accepts retained-name context.
-The minimal session helper is present; the CLI loop is pending.
+**Next unfinished step: 8.1 — integrate the proven editor adapter.**
+Phases 0–7 have passing source verification and scoped independent review.
+The checked session engine and complete plain CLI/transcript loop are implemented.
+Checkpoint 7 is ready for its commit/push; reconcile Git before proceeding.
 
 ### Phase 0 — Establish a safe, reproducible starting point
 
@@ -645,7 +646,7 @@ Checkpoint 6 complete: the full CS 9.3 run exits0 with61 suites,17,691 reported
 Racket tests,14 Python PTY cases,40 production purity modules and complete source
 boundaries (/tmp/attalambda-interactive-phase6-full.log). Independent review and
 repair verification are complete; git diff --check passes. The phase is being
-committed/pushed; reconcile Git before starting7.1 after an interruption.
+committed/pushed as542d47b; reconcile Git before starting7.1 after an interruption.
 
 Executable changes: shared validation and sanitized diagnostics are new helpers;
 the existing launcher delegates validation, and the session executes fresh isolated
@@ -675,13 +676,20 @@ these gate/test repairs; its later boundary checks test the repaired implementat
 
 **Purpose:** expose the working engine through the final CLI before full editing polish.
 
+Phase 7 execution subdivisions: 7.1 adds argument/terminal policy and a working
+plain source loop; 7.2 fills in commands, then7.3/7.4 complete echo and output
+boundary behavior, followed by status and live-stream acceptance. Keep the new
+controller behind a fixed lazy module load in the existing launcher, preserving
+help/version/file behavior without initializing the interactive dependency tree.
+No private editor, history, or terminal descriptor capabilities enter Phase 7.
+
 Read-only preparation during Phase 6 verification: editor_probe_review proved that
 stdout location counters cannot alone implement separator boundaries. Bare CR and
 LF have identical reported locations, and Expeditor's fresh-line changes the stdout
 counter while descriptor 1 is routed to stderr, even when stdout itself is a pipe.
 terminal-port? also changes during dup2, so terminal status must be captured before
 editing. A minimal immediate forwarding port tracking only the last accepted output
-byte is proven for 7.4; no output capture or implementation change has occurred.
+byte was proven before 7.4; the implementation and verification are recorded below.
 The 28-line public make-output-port candidate is
 /tmp/attalambda-phase7-forward-output-review.rkt. Five focused partial/nonblocking/
 break/flush/byte tests and five engine/PTY scenarios pass in the adjacent
@@ -690,12 +698,105 @@ accepted-byte count/last byte, forwards immediately, and leaves original stdout
 open. Keep stdout-result separation distinct from visual stderr-prompt separation.
 The editor continues to use original ports; no line counting is needed.
 
-- [ ] **7.1 — Add CLI dispatch without altering file mode.** Implement only the supported command forms and terminal/transcript selection. **Check:** both flag orders work, invalid combinations return `64`, default nonterminal invocation does not consume source, and existing `--help`, `--version`, and file mode retain their contracts except the documented new help text.
-- [ ] **7.2 — Connect the plain loop and commands.** Use the shared reader/session engine and implement `:help`, `:names`, `:load`, `:reset`, and `:quit`. **Check:** a full plain session exercises each command, command errors recover, and reset retains shell preferences while replacing evaluation state.
-- [ ] **7.3 — Add explicit echo control.** Implement `:echo on/off` as one shell preference, default on. With echo off, use normal file-style demand and skip all renderer/type-probing paths. **Check:** supported values print canonically when on; the raw-function example in §3.5 does not invoke `f` until explicit application; explicit output remains immediate in either mode.
-- [ ] **7.4 — Keep stdout and UI separate.** Add the small banner/prompt/result/diagnostic output helpers, including separator behavior after a program writes without a newline. **Check:** `atta>` is used consistently, stdout redirection contains no UI, prompts reach the terminal before blocking reads, and echo-off emits no synthetic result text.
-- [ ] **7.5 — Implement transcript status tracking.** Add the sticky recovered-failure flag and explicit EOF/interruption/exit precedence from §3.7. **Check:** a bad entry followed by a good one still ends with status `1`; reset does not clear the flag; language Error/Err values alone do not set it; unfinished EOF returns `65`; explicit language exit retains its own status.
-- [ ] **7.6 — Test the complete incremental transcript path.** Feed source, program answers, blank answers, multiple source forms, a recoverable error, and fresh source through an open pipe without closing the writer prematurely. **Check:** exact answer/source boundaries and expected results/statuses hold with no prompts, escapes, or history access.
+- [x] **7.1 — Add CLI dispatch without altering file mode.** Implement only the supported command forms and terminal/transcript selection. **Check:** both flag orders work, invalid combinations return `64`, default nonterminal invocation does not consume source, and existing `--help`, `--version`, and file mode retain their contracts except the documented new help text.
+7.1 complete: the fixed lazy controller load leaves help/version/file dependency
+initialization separate. Supported flags, explicit transcripts and a basic checked
+plain loop work. Four CLI groups,291 runner assertions,145 boundary assertions,
+three mutation groups and three actual-CLI PTY cases pass; complete boundary gate
+passes (/tmp/attalambda-interactive-7.1-*.log, final suffix where present).
+PTYs cover all five terminal flag forms, stdout redirection, and terminal stdin
+with redirected stderr requiring explicit --repl. The new controller has its own
+closed class; optional on-phase callbacks identify actual expansion/evaluation for
+diagnostics without changing default engine exceptions. The process-test helper
+now feeds transcripts while draining output and closes all child pipe handles.
+The first gate identified an omitted local problem identifier; its reviewed
+allowlist entry is added. Commands, echo/separators and full status acceptance follow.
+- [x] **7.2 — Connect the plain loop and commands.** Use the shared reader/session engine and implement `:help`, `:names`, `:load`, `:reset`, and `:quit`. **Check:** a full plain session exercises each command, command errors recover, and reset retains shell preferences while replacing evaluation state.
+7.2 complete: seven CLI groups, five diagnostic groups and complete boundaries
+pass (/tmp/attalambda-interactive-7.2-{cli,diagnostics,gate}.log). Real transcripts
+exercise every added command, lazy name listing, loaded definitions/no file echo,
+reset, early quit and recovered command/load failures. Explicit name listings
+preserve long names and escape controls through a small shared formatting helper.
+The exact command case and load-label count are pinned; no native loader is added
+to the controller. Echo preference and its preservation follow in7.3.
+- [x] **7.3 — Add explicit echo control.** Implement `:echo on/off` as one shell preference, default on. With echo off, use normal file-style demand and skip all renderer/type-probing paths. **Check:** supported values print canonically when on; the raw-function example in §3.5 does not invoke `f` until explicit application; explicit output remains immediate in either mode.
+7.3 complete: nine CLI groups and complete boundaries pass in
+/tmp/attalambda-interactive-7.3-{cli,gate}.log. Echo-off raw functions stay
+unobserved until explicit application; echo survives reset; invalid commands
+retain the prior setting. Explicit effects stay live.
+
+- [x] **7.4 — Keep stdout and UI separate.** Add the small banner/prompt/result/diagnostic output helpers, including separator behavior after a program writes without a newline. **Check:** `atta>` is used consistently, stdout redirection contains no UI, prompts reach the terminal before blocking reads, and echo-off emits no synthetic result text.
+7.4 complete: six output groups, ten CLI groups, five actual CLI PTY cases,
+145 boundary checks and complete gate pass (7.4-{output,cli,pty,gate,
+boundary-final}.log). Forwarding preserves immediate exact bytes, partial and
+nonblocking writes, cancellation, flush and original-port ownership. UI and
+redirected stdout have independent separator state. The first boundary test
+failed only because its expected inventory omitted the new shell-output class;
+that explicit expectation is updated and the rerun passes.
+
+7.5 starting evidence: independent file_load_cold_review proved a permanent
+source failure retries101times/100diagnostics; failed stderr escapes the fatal
+handler; automatic-output failures are mislabeled rendering and consume later
+source. Hunter/log: /tmp/attalambda-phase7-stream-review.{rkt,log}. Treat unusable
+shell streams as fatal70, preserving recoverable entry failures and program Err.
+
+- [x] **7.5 — Implement transcript status tracking.** Add the sticky recovered-failure flag and explicit EOF/interruption/exit precedence from §3.7. **Check:** a bad entry followed by a good one still ends with status `1`; reset does not clear the flag; language Error/Err values alone do not set it; unfinished EOF returns `65`; explicit language exit retains its own status.
+7.5 complete:12CLIgroups,4controllergroups,2actualCLI cancellation/EOF
+PTY cases,1transcript interruption case and complete gate pass in7.5logs
+(cli-final/controller-final/pty/transcript/gate). Status precedence, reset
+stickiness, language Error/Err, source/command/load recovery, explicit exit,
+unfinished EOF65 and transcript SIGINT130 are verified. Actual expansion
+observer tests prove controller recovery from native failure and interruption.
+Permanent shell stream failures now return70 after one read/failed emission;
+last-resort stderr failure cannot escape the controller. The initial new
+Error/Err test expected empty stderr despite explicit reset; its assertion
+now requires the documented reset acknowledgement. No product fix for that.
+
+- [x] **7.6 — Test the complete incremental transcript path.** Feed source, program answers, blank answers, multiple source forms, a recoverable error, and fresh source through an open pipe without closing the writer prematurely. **Check:** exact answer/source boundaries and expected results/statuses hold with no prompts, escapes, or history access.
+
+7.6 complete: three live transcript cases pass (7.6-transcript.log), including
+open-writer source/program handoff, command-like and blank answers, multiple
+forms, recoverable failure/fresh source, final running-read EOF then sticky
+status1, echo-off immediate prompt and SIGINT130. No UI appears in transcripts.
+Reviewer reran the original stream hunter; all three product findings close
+(/tmp/attalambda-phase7-stream-review-fixed.log). Its follow-up proved Racket
+custodians leave in-memory ports open. Controller test ports now close explicitly
+in finalization; the shell closes its forwarding port explicitly while preserving
+original stdout. Controller4/output6 groups and complete gate pass (7.6 final
+logs); boundary mutants pass4groups.
+
+Checkpoint7 review found Ctrl+C during recoverable diagnostic output escaped to
+outer130, including read/command/load siblings and a second interrupt while
+reporting the first. A nested parameterize-break-only attempt failed and was
+reverted. Minimal probes establish queued custom-port breaks; final protected
+recovery explicitly checks (break-enabled #t) after show. Six controller groups,
+two targeted PTY cases and the complete boundary gate pass. Independent
+command_loop_cold_review closes with no remaining confirmed Phase7 findings:
+five original interruption siblings, eight cleanup paths and final six controller
+groups pass. Its last test-only global missing-file assumption is eliminated with
+a unique temporary directory and explicit cleanup.
+
+Initial full attempt /tmp/attalambda-interactive-phase7-full.log ended1 at
+distribution load: compiled tests retained old run-command9.1 imports after the
+helper gained #:input. Prior six suites passed. Distribution209passes after raco
+make. run-all-tests.sh now refreshes test dependencies with raco make before
+execution; shell syntax and diff checks pass. The final complete suite passed:
+64 test files, 17,716 reported Racket tests, 24 Python PTY tests, 40 production
+purity modules and complete source boundaries. Command: PATH=/tmp/attalambda-racket93/bin:$PATH
+PLTUSERHOME=/tmp/attalambda-racket93-user TMPDIR=/tmp ./run-all-tests.sh;
+log /tmp/attalambda-interactive-phase7-full-final.log, exit 0. Exec49517 and
+monitor cell448 are finished; do not repeat them. Dotenv-safe diff/whitespace
+checks pass. This phase creates runner/repl.rkt and runner/output.rkt, modifies
+launcher selection/diagnostics/session phase reporting, adds CLI/controller/output
+and PTY regressions, and narrows the corresponding boundary rules. Plan/handoff
+changes record evidence. Core/effects/runtime/lang/readers and version/package
+metadata have no diff from Phase6. No archive or release claim is made.
+
+Memory observations: three 200-entry cycles took 10.313/10.205/10.020 seconds;
+retained heaps were 125204976/125477904/125469192 bytes and reset heaps
+115107568/115168456/115222448 bytes versus 115299864 initial. Descriptors stayed7;
+weak-reference/reset/close assertions passed. These are measurements, not universal
+memory or latency bounds.
 
 **Checkpoint 7 — End-to-end plain REPL review.** Use a behavioral code review against the fixed contract. At this point the feature works without advanced editing. Inspect especially echo-off for accidental tag probing and transcript handling for read-ahead or hidden process-status failures.
 

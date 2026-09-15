@@ -13,7 +13,7 @@
   (simplify-path project-root-path #f))
 
 (define expected-help
-  #"Usage:\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n")
+  #"Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n")
 
 (define (check-runner-failure result expected-status expected-stderr)
   (check-false (command-result-timed-out? result)
@@ -72,7 +72,7 @@
                   20
                   #:current-directory directory))
 
-   ;; The complete initial command surface is exact.
+   ;; File/help/version retain their contracts alongside interactive selection.
    (check-command-success (run '("--help")) expected-help)
    (check-command-success
     (run '("--version"))
@@ -90,7 +90,9 @@
       (run arguments)
       64
       (command-diagnostic
-       "expected attalambda FILE.attl, attalambda --help, or attalambda --version")))
+       (if (null? arguments)
+           "a terminal is required; use attalambda --repl for redirected source"
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version"))))
 
    ;; The retired subcommand is treated as a supplied filename, not retained
    ;; as a compatibility alias.

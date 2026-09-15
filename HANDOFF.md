@@ -3,16 +3,33 @@
 Kyle authorizes autonomous phases 0–11 through the verified candidate, including
 isolated dependencies, tests/builds, commits/pushes and a PR. **No merge, tag, or
 publication.** Contract: [docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
-Branch `interactive-attalambda`, based on input `62d0f0c`. Version stays0.7.0 until
+Branch `interactive-attalambda`, based on input `62d0f0c`. Version stays 0.7.0 until
 Phase 9. PLAN contains the serial checklist and detailed evidence.
 
-Phases 0–5 are committed and pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`,
-`ba3d4c5`, `4f29dd1`. Phase 6 is verified and being committed/pushed now.
-**Next: Step 7.1 — command-line dispatch and terminal/transcript selection.**
+Phases 0–6 are committed and pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`,
+`ba3d4c5`, `4f29dd1`, `542d47b`.
+Phase7 full verification and independent review passed; commit/push is the only
+remaining closure action. **Next implementation step: 8.1 — integrate the editor.**
 Reconcile status before resuming; do not
 repeat completed effects, probes, commits or pushes.
 
 ## Current verification
+
+Phase7 final full run passed with exit0:64 test files,17,716 reported Racket tests,
+24 Python PTY cases,40 production purity modules and complete boundaries. Command:
+PATH=/tmp/attalambda-racket93/bin:$PATH PLTUSERHOME=/tmp/attalambda-racket93-user
+TMPDIR=/tmp ./run-all-tests.sh. Log /tmp/attalambda-interactive-phase7-full-final.log.
+Exec49517/monitor448 finished; phase7-full-final-result stores exit0. Independent
+command_loop_cold_review is closed. Dotenv-safe diff/whitespace checks pass.
+New executable files:runner/repl.rkt and runner/output.rkt; modified launcher,
+diagnostics and session phase reporting. New tests/controller/output/CLI and PTY
+coverage plus exact boundary updates are separate from plan/handoff evidence.
+Core/effects/runtime/lang/readers and version/package metadata have no Phase7 diff.
+
+Phase7 memory observations:3x200 entries took10.313/10.205/10.020seconds; retained
+125204976/125477904/125469192 bytes, reset115107568/115168456/115222448 bytes versus
+115299864 initial. Descriptors stay7; weak-reference/reset/close assertions pass.
+These observations are not universal performance guarantees.
 
 Full Phase 6 verification completed with exit 0: 61 suites, 17,691 reported
 Racket tests, 14 Python PTY cases, 40 production purity modules and complete
@@ -37,6 +54,62 @@ Observations are not universal performance promises. Prior Phase 4 full log
 9PTY cases,40 purity modules and complete boundaries, exit0.
 
 ## Implemented session behavior
+
+Step 7.1 is implemented and verified, uncommitted. New runner/repl.rkt supplies
+the basic plain source loop; runner selects it through a fixed lazy dynamic-require.
+All supported flags/terminal selection pass four CLI groups and three actual CLI
+PTY cases; original runner291, boundary145, three mutation groups and full gate pass.
+Logs /tmp/attalambda-interactive-7.1-*.log (cli-final/gate-final). All focused
+processes are finished; final Phase7 full verification is recorded above. New source-class and optional
+session on-phase callback plumbing are pinned. tests/helpers/fresh-language.rkt
+supports input bytes with concurrent draining/feeding and explicit pipe closure;
+the actual CLI PTY class also supports redirected stderr and later artifact paths.
+Step 7.2 adds help/names/load/reset/quit and passes seven CLI groups, five diagnostic
+groups and complete gate (7.2-{cli,diagnostics,gate}.log). Name listings preserve
+full names and safely escape controls; command/load failures recover. Exact command
+case and load-token count are pinned. Step7.3 passes nine CLI groups and complete gate (7.3-{cli,gate}.log).
+Echo-off skips the renderer and raw-function probing; reset retains echo.
+Step7.4 passes six output groups, ten CLI groups, five CLI PTYs,145boundary
+checks and complete gate (7.4 logs; boundary-final is corrected inventory).
+Step7.5 has proven stream findings from file_load_cold_review: permanent source
+failure retries101times; broken stderr escapes fatal handler; result-output
+failures consume later entries and are mislabeled rendering. Hunter/log
+/tmp/attalambda-phase7-stream-review.{rkt,log}. Repaired source/UI/result I/O as
+fatal70 with protected sanitized report; actual language Err values preserved.
+7.5 passes12CLIgroups,4controllergroups,2actualCLI cancellation/EOF PTYs,
+1transcript interruption case and complete gate (cli-final/controller-final).
+7.6 passes three live transcript cases with the writer kept open through
+source/answer/recovery boundaries; final read EOF and sticky1, echo-off immediate
+prompt and transcript130 are covered. Original stream hunter findings all close
+(/tmp/attalambda-phase7-stream-review-fixed.log). New cleanup finding: custodian
+shutdown leaves in-memory ports open; explicit test-owned port finalization and
+shell forwarding-port closure are added. Controller4/output6 and gate pass in
+7.6 final logs. Boundary mutants pass4groups (7.6-boundary.log). Phase7 full attempt /tmp/attalambda-interactive-phase7-full.log ended1 after
+six passing suites (acceptance21,binary2168,boundary145,byte225,chars729,codec178).
+Distribution failed at load with stale compiled run-command9.1 import after the
+helper gained #:input. Exec28369/monitor431 finished; phase7-full-result stores1.
+`raco make tests/distribution-test.rkt` passed; its focused test passes209 in
+/tmp/attalambda-interactive-phase7-distribution-rebuilt.log. run-all-tests.sh now
+runs raco make on its discovered tests before execution, refreshing imported
+helper caches. Shell syntax and diff checks pass. Final full suite finished0
+in exec49517, /tmp/attalambda-interactive-phase7-full-final.log. functions cell448
+is finished and phase7-full-final-result stores exit0.
+No production change for the stale ABI.
+
+Cold command_loop_cold_review proved Ctrl+C during recoverable diagnostics escaped
+to outer130. Five sibling hunters cover expansion/read/command/load and a second
+break while reporting interruption. First attempted nested protected report with
+parameterize-break alone failed and was reverted. A minimal isolated probe proves
+custom-port callbacks queue breaks until an explicit check. Final recover helper
+uses protected parameterize-break #t, show, then (break-enabled #t), and returns
+interactive continue/transcript130. Original single hunter passes; six controller
+groups, two targeted PTY cases and gate pass (phase7-recovery-* logs). Independent command_loop_cold_review is now closed with no remaining confirmed
+Phase7 findings:5original interruption siblings,8cleanup paths and final6controller
+groups pass. The last test-only global missing-file path is replaced by a child
+under make-temporary-directory with dynamic-wind cleanup. The final full suite includes this completed repair.
+The temporary sleep0 variant passed the original siblings, then was replaced by
+the narrower synchronous public break-enabled check demonstrated independently.
+Docs: https://docs.racket-lang.org/reference/breakhandler.html.
 
 Entries use checked private modules, lazy actual exports, immutable visible binding
 identities, lexical snapshots, pure unary identity suspension for private forward
@@ -116,8 +189,8 @@ unwind wrapper). Five diagnostic groups pass in 6.5-diagnostics.log. Exact new
 boundary class/mutations pass (two mutation groups, 145 assertions, complete gate).
 Default engine
 exceptions and file CLI messages stay intact; Phase 7 wires controller diagnostics.
-Checkpoint 6 is complete; the phase is being committed/pushed. Reconcile Git
-before continuing so an interrupted commit or push is never repeated blindly.
+Checkpoint 6 is complete; commit542d47b is pushed. Reconcile Git
+before continuing so an interrupted action is never repeated blindly.
 The two cold-review findings concerned gate rejection only: omitted-port/early
 preflight mutations and executable diagnostic read/expand labels. Exact protected
 blocks/use counts and permanent mutation tests now reject them. Independent final
@@ -210,7 +283,7 @@ sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62.
 Prior8.10 ignored caches were rebuilt. Phase 3 package staging added readers to all
 four sibling lists; final artifacts remain unverified.
 
-Phases 6–11 remain: shared validation/loading/diagnostics; actualCLI/status/echo;
+Phases 7–11 remain: actual CLI/status/echo;
 editor/history/completion; version0.8/docs/packaging; cold final source review;
 clean exact Linux archive build + isolated no-Racket consumer/PTYS/relocation;
 PR/current-head CI/review and final candidate evidence. No PR created yet.
@@ -357,3 +430,49 @@ the completed plans are historical evidence, not instructions to repeat work.
 tag/asset IDs, sizes, hashes, and consumer results. The final publication-record
 commit changes documentation only, outside the tagged build inputs. No code
 fix, review finding, merge, or publication remains pending.
+
+Additional Phase8 read-only metadata probe:
+/tmp/attalambda-phase8-public-exports-probe.rkt observed actual language exports:
+129 phase-zero variables +10 syntax exports =139 unique names. Exactly four
+scaffolding names are #%app/#%datum/#%module-begin/#%top; filtering those leaves
+135 completion names, including legitimate public host. No eval/dynamic-require/
+open-input-file export. Probe closes its isolated session; no production change.
+
+Read-only Phase8 adapter follow-up by editor_probe_review is now PROVEN:
+final flush failure skips dup2 restore/close in the current test-only descriptor
+helper; fd1 remains on stderr and descriptors grow7→8. A body failure plus final
+flush failure replaces the original action error. Success, initial-flush failure,
+action failure and action break controls all restore descriptors/count7.
+Proof /tmp/attalambda-phase8-descriptor-failure-review.{rkt,py}, using live
+/proc/PID/fd checks from the parent. Narrow cleanup sketch is proven at
+/tmp/attalambda-phase8-descriptor-safe-review.rkt with seven passing subprocess
+scenarios in descriptor-safe-probe.{rkt,py}: nested finalizer always restores/closes
+fd1; it preserves an already propagating action failure or break. No new FFI
+operation. Promote via lazy fixed module load after supported interactive-platform
+selection, since current top-level get-ffi-obj resolves POSIX symbols eagerly.
+This does not affect Phase7 production (no FFI).
+
+Phase8 completion follow-up (not Phase7 blocker): nine PTYs in
+/tmp/attalambda-phase8-escaped-name-review.{rkt,py} prove raw metadata namespace
+names insert invalid source for valid escaped symbols: tw<Tab> -> two words
+(two source forms); lef<Tab> -> left|right (incomplete). Prefixes containing
+source bar/backslash spelling do not match raw symbol names. Raw ESC in a name
+also reaches the PTY (though that candidate parses as the intended identifier).
+Promises remain unforced and all terminal cleanup passes. Native token lexer
+retains source spelling, while completion compares symbol->string metadata and
+inserts suffixes. Follow-up /tmp/attalambda-phase8-adjusted-spelling-review.{rkt,py}
+proves a source-spelling adaptation: print each symbol with read-accept-bar-quote
+disabled, then escape every vertical bar. Thirteen PTYs plus a numeric-prefix
+case preserve the exact identifier under the unchanged restricted reader, with
+unforced promises and restored terminal/stdout. This covers spaces, bars,
+existing backslashes, semicolons and number/Boolean-like names. An unfinished
+bar-quoted prefix such as |tw still is not a completion token.
+
+Literal-control names remain unresolved: the same candidate emits raw ESC.
+The documented lexer/key hooks provide no separate source/display representation;
+ee-insert-self rejects control characters, while make-ee-insert-string and the
+native display path emit the raw entry string. Independent supported-surface
+review is complete; no compliant public adaptation was found. Do not silently
+exclude legitimate names, invent grammar/private imports/custom terminal handling,
+or claim this case passed. Resolve its contract impact at8.3. No Phase8 repository
+implementation has started.

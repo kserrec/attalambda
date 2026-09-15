@@ -6,7 +6,7 @@
                   source-problem-line source-problem-column
                   syntax-failure-expression syntax-failure-reason))
 
-(provide failure->source-problem format-source-problem call-with-render-diagnostics)
+(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
 
 (define (same-source? actual expected)
   (and expected
@@ -42,7 +42,7 @@
 ;; Bound presentation, never source acceptance. Escape terminal controls and
 ;; invisible formatting characters explicitly: symbol ~s can contain them raw.
 (define (diagnostic-fragment text limit)
-  (define size (min (string-length text) limit))
+  (define size (if limit (min (string-length text) limit) (string-length text)))
   (string-append
    (apply string-append
           (for/list ([character (in-string text 0 size)])
@@ -50,6 +50,10 @@
                 (string-append "\\u{" (number->string (char->integer character) 16) "}")
                 (string character))))
    (if (< size (string-length text)) "..." "")))
+
+;; Explicit name listings retain the complete user name while escaping controls.
+(define (format-user-name name)
+  (diagnostic-fragment (format "~s" name) #f))
 
 (define (format-source-problem source-name problem)
   (define source

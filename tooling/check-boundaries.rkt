@@ -82,7 +82,7 @@
 ;; the one explicitly supplied source. Its exact import and source vocabulary
 ;; leave dynamic module loading unavailable everywhere else.
 (define forbidden-runner-capabilities
-  '(current-input-port current-environment-variables getenv putenv
+  '(current-environment-variables getenv putenv
     read read-char read-line read-string read-syntax
     open-input-file open-output-file call-with-output-file
     write write-byte write-bytes print printf
@@ -98,7 +98,7 @@
     make-hash make-hasheq make-weak-hash register registry))
 
 (define runner-vocabulary
-  '(#%module-begin = and arguments binary build-path bytes->string/utf-8 bytes-length
+  '(#%module-begin = _ and arguments binary build-path bytes->string/utf-8 bytes-length
     bytes? cadr call-with-input-file car column command-misuse-status cond content
     current-command-line-arguments datum->syntax define define-syntax display dynamic-require
     else embedded-product-version eprintf eq? equal? exit
@@ -113,15 +113,17 @@
     source-problem? srcloc-column srcloc-line status stop string-append stx syntax-column
     syntax-failure-expression syntax-failure-reason syntax-line syntax-source
     unavailable-source-status unexpected-failure-status unless up validate-source
-    validated-source-path vector->list when with-handlers))
+    validated-source-path vector->list when with-handlers
+    current-input-port current-error-port define-runtime-path interactive? member or
+    racket/runtime-path repl-path run-repl terminal-port?))
 
 (define expected-runner-requires
-  '((require "source-file.rkt"
+  '((require "source-file.rkt" racket/runtime-path
              (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
-    unexpected-failure-status help-text embedded-product-version stop validate-source
+    unexpected-failure-status repl-path help-text embedded-product-version stop validate-source
     requested-source-missing? run-source main))
 
 (define expected-runner-status-definitions
@@ -1621,11 +1623,18 @@
             (= (count (lambda (name)
                         (eq? name 'dynamic-require))
                       symbols)
-               1)
+               2)
             (= (datum-occurrence-count
                 '(dynamic-require source-path #f)
                 (module-info-forms info))
                1)
+            (= (datum-occurrence-count '(dynamic-require repl-path 'run-repl)
+                                        (module-info-forms info)) 1)
+            (= (datum-occurrence-count '(define-runtime-path repl-path "repl.rkt")
+                                        (module-info-forms info)) 1)
+            (= (count (lambda (name) (eq? name 'current-input-port)) symbols) 1)
+            (= (datum-occurrence-count '(terminal-port? (current-input-port))
+                                        (module-info-forms info)) 1)
             (= (count (lambda (name)
                         (eq? name 'call-with-input-file))
                       symbols)
@@ -1766,9 +1775,9 @@
     char-general-category character column cond define diagnostic-fragment else eq?
     equal? exn:fail:read-srclocs exn:fail:read? exn:fail:syntax? exn:fail? expand
     expected expected-source expression failure failure->source-problem for/list
-    format format-source-problem if in-string invalid lambda limit line location
+    format format-source-problem format-user-name if in-string invalid lambda limit line location
     locations matched memq min native number->string only-in pair? path->string path?
-    phase problem provide quote raise read reason render rendering require same-source?
+    name phase problem provide quote raise read reason render rendering require same-source?
     size source source-name source-problem source-problem-column source-problem-line
     source-problem-reason source-problem? srcloc-column srcloc-line srcloc-source string
     string-append string-length string? symbol->string symbol? syntax-column
@@ -1786,10 +1795,10 @@
                                  syntax-failure-expression syntax-failure-reason)))
     'invalid-diagnostics-imports)
    (exact-provide-violations
-    path info '(provide failure->source-problem format-source-problem call-with-render-diagnostics)
+    path info '(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
     'invalid-diagnostics-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
-                    '(same-source? failure->source-problem diagnostic-fragment
+                    '(same-source? failure->source-problem diagnostic-fragment format-user-name
                                    format-source-problem call-with-render-diagnostics))
             (= (datum-occurrence-count
                 '(define (call-with-render-diagnostics action)
@@ -1910,7 +1919,7 @@
     session-input session-output session-error child successful? set! dynamic-wind
     initialize-session reset-session! previous installed? set-session-namespace!
     set-session-custodian! session-exit status exit-handler
-    load-source-file source-name inspected inspect-source-file source-problem? cond else
+    load-source-file source-name inspected inspect-source-file source-problem? cond else on-phase evaluate
     parse-source-buffer validated-source-path validated-source-text validated-source-line
     validated-source-column validated-source-position source-problem invalid
     source-buffer-message source-buffer-line source-buffer-column))
@@ -1932,7 +1941,8 @@
       (lambda () (custodian-shutdown-all (if installed? previous owner))))))
 
 (define expected-session-preparation
-  '(define (prepare-entry current parsed [imports (hash-values (session-bindings current))])
+  '(define (prepare-entry current parsed [imports (hash-values (session-bindings current))]
+                          #:on-phase [on-phase void])
      (unless (and (source-buffer? parsed)
                   (memq (source-buffer-status parsed) '(empty complete)))
        (raise-argument-error 'prepare-entry "complete source buffer" parsed))
@@ -1945,7 +1955,9 @@
      (define module-source
        (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
      (parameterize ([current-namespace (session-namespace current)])
+       (on-phase 'expand)
        (define expanded (expand module-source))
+       (on-phase 'evaluate)
        (eval expanded)
        (define path `(quote ,name))
        (define-values (exports syntax-exports) (module->exports path))
@@ -1958,7 +1970,8 @@
 
 (define expected-session-publication
   '(define (evaluate-entry current parsed [consume void]
-                           #:imports [imports (hash-values (session-bindings current))])
+                           #:imports [imports (hash-values (session-bindings current))]
+                           #:on-phase [on-phase void])
      (define successful? #f)
      (define child (make-custodian (session-custodian current)))
      (dynamic-wind
@@ -1969,7 +1982,7 @@
                        [current-output-port (session-output current)]
                        [current-error-port (session-error current)]
                        [exit-handler (lambda (status) (raise (session-exit status)))])
-          (define entry (prepare-entry current parsed imports))
+          (define entry (prepare-entry current parsed imports #:on-phase on-phase))
           (define candidate
             (for/fold ([bindings (session-bindings current)])
                       ([name (in-list (checked-entry-definitions entry))])
@@ -1981,7 +1994,7 @@
       (lambda () (unless successful? (custodian-shutdown-all child))))))
 
 (define expected-session-load
-  '(define (load-source-file current source-name)
+  '(define (load-source-file current source-name #:on-phase [on-phase void])
      (define inspected (inspect-source-file source-name))
      (cond
        [(source-problem? inspected) inspected]
@@ -1993,7 +2006,7 @@
                                #:column (validated-source-column inspected)
                                #:position (validated-source-position inspected)))
         (if (memq (source-buffer-status parsed) '(empty complete))
-            (evaluate-entry current parsed void #:imports '())
+            (evaluate-entry current parsed void #:imports '() #:on-phase on-phase)
             (source-problem 'invalid (source-buffer-message parsed)
                             (source-buffer-line parsed) (source-buffer-column parsed)))])))
 
@@ -2029,7 +2042,7 @@
    (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
                                make-base-namespace make-custodian dynamic-require
                                set-session-bindings! parameterize-break hash-set)]
-              [expected '(1 1 2 1 1 1 3 4 3 3 1)]
+              [expected '(1 2 2 1 1 1 3 4 3 3 1)]
               #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
      (violation path 'invalid-session-operation operation))
    (for/list ([call '((dynamic-require language-path #f)
@@ -2040,6 +2053,153 @@
      (violation path 'invalid-session-loader-target call))
    (strict-vocabulary-violations path project-root session-vocabulary
                                  'unapproved-session-identifier)))
+
+(define expected-repl-commands
+  '(case (source-command-name parsed)
+                    [(help) (display help-text error) (flush-output error) 'continue]
+                    [(names)
+                     (define names (session-names current))
+                     (if (null? names)
+                         (display "No user definitions.\n" error)
+                         (begin
+                           (display "User definitions:\n" error)
+                           (for ([name (in-list names)])
+                             (fprintf error "  ~a\n" (format-user-name name)))))
+                     (flush-output error)
+                     'continue]
+                    [(load)
+                     (set! source (source-command-argument parsed))
+                     (set! phase 'load)
+                     (define result
+                       (load-source-file current source #:on-phase (lambda (next) (set! phase next))))
+                     (when (source-problem? result) (raise result))
+                     (set! phase 'command)
+                     (prepare-ui)
+                     (display "Loaded source file.\n" error) (flush-output error)
+                     'continue]
+                    [(reset)
+                     (set! phase 'reset)
+                     (reset-session! current)
+                     (display "Session reset.\n" error) (flush-output error)
+                     'continue]
+                    [(echo)
+                     (set! echo? (source-command-argument parsed))
+                     (fprintf error "Automatic echo: ~a\n" (if echo? "on" "off"))
+                     (flush-output error)
+                     'continue]
+                    [(quit) (finish)]
+                    [else (raise (source-problem 'invalid "unsupported command" #f #f))]))
+
+(define repl-vocabulary
+  '(_ add1 and begin call-with-render-diagnostics close-session cond continue current
+    current-custodian current-error-port current-input-port current-output-port
+    custodian-shutdown-all define display dynamic-wind else empty eof-object? eq?
+    error evaluate evaluate-entry exn:break? exn:fail? failed? failure
+    failure->source-problem finish flush-output format format-source-problem fprintf
+    history? if input interactive? interrupted invalid lambda let loop make-custodian
+    next not number on-phase open-session outcome output owner parameterize parsed
+    phase problem provide quote raise read-source-entry render render-result rendered require
+    run-repl session-exit-status session-exit? set! show source source-buffer-column
+    source-buffer-line source-buffer-message source-buffer-status source-command?
+    source-problem source-problem? string->symbol unfinished-eof value version void
+    when with-handlers
+    case echo echo? help help-text names name null? for in-list session-names load load-source-file
+    source-command-name source-command-argument result reset reset-session! quit
+    string-append format-user-name define-values program-output result-output prepare-ui
+    make-shell-output terminal-port? fatal memq command close-output-port recover parameterize-break break-enabled))
+
+(define (repl-violations path info project-root)
+  (define forms (module-info-forms info))
+  (define symbols (module-symbols info))
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-repl-language)
+   (exact-require-violations
+    path info '((require "source-reader.rkt" "source-file.rkt" "session.rkt" "diagnostics.rkt" "output.rkt"))
+    'invalid-repl-imports)
+   (exact-provide-violations path info '(provide run-repl) 'invalid-repl-exports)
+   (if (equal? (filter-map top-level-binding-name forms) '(help-text run-repl))
+       '() (list (violation path 'invalid-repl-definitions 'module)))
+   ;; `load` is a command label only; pin its case context as well as its count.
+   (if (and (= (datum-occurrence-count expected-repl-commands forms) 1)
+            (= (count (lambda (name) (eq? name 'load)) symbols) 2))
+       '() (list (violation path 'invalid-repl-command-dispatch 'load)))
+   (for/list ([operation '(current-input-port current-output-port current-error-port
+                                             read-source-entry open-session evaluate-entry render-result
+                                             make-shell-output terminal-port? close-output-port break-enabled)]
+              #:unless (= (count (lambda (name) (eq? name operation)) symbols) 1))
+     (violation path 'invalid-repl-operation operation))
+   (for/list ([call '((define input (current-input-port))
+                     (define output (current-output-port))
+                     (define error (current-error-port))
+                     (make-shell-output output error (and interactive? (terminal-port? output)))
+                     (close-output-port program-output)
+                     (break-enabled #t)
+                     (open-session #:input input #:output program-output #:error error)
+                     (read-source-entry
+                      input source
+                      #:continue (lambda ()
+                                   (when interactive? (display "...> " error) (flush-output error)))))]
+              #:unless (= (datum-occurrence-count call forms) 1))
+     (violation path 'invalid-repl-port-use call))
+   (strict-vocabulary-violations path project-root repl-vocabulary
+                                 'unapproved-repl-identifier)))
+
+(define expected-output-definitions
+  '((define (make-observed-output destination)
+  (define total 0)
+  (define last-byte #f)
+  (define observed
+    (make-output-port
+     'program-stdout destination
+     (lambda (bytes start end nonblocking? breakable?)
+       (cond
+         [(= start end)
+          (parameterize-break breakable? (flush-output destination))
+          0]
+         [else
+          (define written
+            ((cond [nonblocking? write-bytes-avail*]
+                   [breakable? write-bytes-avail/enable-break]
+                   [else write-bytes-avail])
+             bytes destination start end))
+          (cond
+            [(and written (positive? written))
+             (set! total (+ total written))
+             (set! last-byte (bytes-ref bytes (+ start written -1)))
+             written]
+            [else (wrap-evt destination (lambda (_) #f))])]))
+     void))
+  (values observed (lambda () (values total last-byte))))
+
+(define (make-shell-output output ui shared-terminal?)
+  (define-values (program-output metadata) (make-observed-output output))
+  (define result-boundary 0)
+  (define ui-boundary 0)
+  (define (result-output rendered)
+    (define-values (total last-byte) (metadata))
+    (when (and (> total result-boundary) (not (equal? last-byte 10))
+               (not (and shared-terminal? (>= ui-boundary total))))
+      (newline output))
+    (fprintf output "=> ~a\n" rendered)
+    (flush-output output)
+    (set! result-boundary total)
+    (set! ui-boundary total))
+  (define (prepare-ui)
+    (define-values (total last-byte) (metadata))
+    (when (and shared-terminal? (> total ui-boundary) (not (equal? last-byte 10)))
+      (newline ui)
+      (flush-output ui))
+    ;; A UI newline does not separate redirected stdout from its next result.
+    (set! ui-boundary total))
+  (values program-output result-output prepare-ui))))
+
+(define (output-violations path info project-root)
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-output-language)
+   (exact-require-violations path info '() 'invalid-output-imports)
+   (exact-provide-violations path info '(provide make-shell-output) 'invalid-output-exports)
+   (if (equal? (cdr (module-info-forms info)) expected-output-definitions)
+       '() (list (violation path 'invalid-output-forwarding 'module)))))
 
 (define (host-violations path info project-root)
   (define host-definitions
@@ -2117,6 +2277,8 @@
           [(source-reader) (source-reader-violations source info root)]
           [(source-file) (source-file-violations source info root)]
           [(diagnostics) (diagnostics-violations source info root)]
+          [(repl) (repl-violations source info root)]
+          [(shell-output) (output-violations source info root)]
           [(session) (session-violations source info root)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
@@ -2206,6 +2368,10 @@
      'source-file]
     [(equal? source (normalized (build-path root "runner" "diagnostics.rkt")))
      'diagnostics]
+    [(equal? source (normalized (build-path root "runner" "repl.rkt")))
+     'repl]
+    [(equal? source (normalized (build-path root "runner" "output.rkt")))
+     'shell-output]
     [(equal? source (normalized (build-path root "runner" "session.rkt")))
      'session]
     [(equal? first-part "runner") 'runner]
@@ -2472,6 +2638,10 @@
        (normalized (build-path runner-directory "source-file.rkt")))
      (define diagnostics
        (normalized (build-path runner-directory "diagnostics.rkt")))
+     (define shell-output
+       (normalized (build-path runner-directory "output.rkt")))
+     (define repl
+       (normalized (build-path runner-directory "repl.rkt")))
      (define macro-shell
        (normalized (build-path macros-directory "lazy-with-macros.rkt")))
      (define macro-definitions
@@ -2529,6 +2699,8 @@
       (file-boundary-violations session 'session root)
       (file-boundary-violations source-file 'source-file root)
       (file-boundary-violations diagnostics 'diagnostics root)
+      (file-boundary-violations repl 'repl root)
+      (file-boundary-violations shell-output 'shell-output root)
       (file-boundary-violations package-info 'package-info root)
       (append-map (lambda (path)
                     (file-boundary-violations path 'reader root))
@@ -2568,7 +2740,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader session source-file diagnostics) equal?))
+                 #:unless (member path (list runner source-reader session source-file diagnostics repl shell-output) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

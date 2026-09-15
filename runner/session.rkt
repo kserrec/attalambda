@@ -56,7 +56,8 @@
        (set! installed? #t)))
    (lambda () (custodian-shutdown-all (if installed? previous owner)))))
 
-(define (prepare-entry current parsed [imports (hash-values (session-bindings current))])
+(define (prepare-entry current parsed [imports (hash-values (session-bindings current))]
+                       #:on-phase [on-phase void])
   (unless (and (source-buffer? parsed)
                (memq (source-buffer-status parsed) '(empty complete)))
     (raise-argument-error 'prepare-entry "complete source buffer" parsed))
@@ -70,7 +71,9 @@
     (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
   (parameterize ([current-namespace (session-namespace current)])
     ;; Expand the whole entry before instantiation or any result demand.
+    (on-phase 'expand)
     (define expanded (expand module-source))
+    (on-phase 'evaluate)
     (eval expanded)
     (define path `(quote ,name))
     (define-values (exports syntax-exports) (module->exports path))
@@ -98,7 +101,8 @@
 ;; Keep only visible binding identities. Each compiled module captures its own
 ;; imports; replacing this shell map cannot mutate an earlier language closure.
 (define (evaluate-entry current parsed [consume void]
-                        #:imports [imports (hash-values (session-bindings current))])
+                        #:imports [imports (hash-values (session-bindings current))]
+                        #:on-phase [on-phase void])
   (define successful? #f)
   (define child (make-custodian (session-custodian current)))
   (dynamic-wind
@@ -109,7 +113,7 @@
                     [current-output-port (session-output current)]
                     [current-error-port (session-error current)]
                     [exit-handler (lambda (status) (raise (session-exit status)))])
-       (define entry (prepare-entry current parsed imports))
+       (define entry (prepare-entry current parsed imports #:on-phase on-phase))
        (define candidate
          (for/fold ([bindings (session-bindings current)])
                    ([name (in-list (checked-entry-definitions entry))])
@@ -127,7 +131,7 @@
 ;; The validator supplies the body from its single read. Loads have fresh module
 ;; identities, only public imports, and ordinary file demand without observation.
 ;; Validation/read failures are data; execution failures unwind the shared entry.
-(define (load-source-file current source-name)
+(define (load-source-file current source-name #:on-phase [on-phase void])
   (define inspected (inspect-source-file source-name))
   (cond
     [(source-problem? inspected) inspected]
@@ -139,6 +143,6 @@
                             #:column (validated-source-column inspected)
                             #:position (validated-source-position inspected)))
      (if (memq (source-buffer-status parsed) '(empty complete))
-         (evaluate-entry current parsed void #:imports '())
+         (evaluate-entry current parsed void #:imports '() #:on-phase on-phase)
          (source-problem 'invalid (source-buffer-message parsed)
                          (source-buffer-line parsed) (source-buffer-column parsed)))]))

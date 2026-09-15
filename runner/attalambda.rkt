@@ -1,6 +1,6 @@
 #lang racket/base
 
-(require "source-file.rkt"
+(require "source-file.rkt" racket/runtime-path
          (for-syntax racket/base
                      (only-in racket/path path-only)))
 
@@ -8,10 +8,13 @@
 (define invalid-source-status 65)
 (define unavailable-source-status 66)
 (define unexpected-failure-status 70)
+(define-runtime-path repl-path "repl.rkt")
 
 (define help-text
   (string-append
    "Usage:\n"
+   "  attalambda [--no-history]\n"
+   "  attalambda --repl [--no-history]\n"
    "  attalambda FILE.attl\n"
    "  attalambda --help\n"
    "  attalambda --version\n"))
@@ -116,8 +119,21 @@
     [(and (= (length arguments) 1)
           (not (regexp-match? #px"^-" (car arguments))))
      (run-source (car arguments))]
+    [(member arguments '(() ("--no-history") ("--repl")
+                            ("--repl" "--no-history") ("--no-history" "--repl")))
+     (define interactive?
+       (and (terminal-port? (current-input-port)) (terminal-port? (current-error-port))))
+     (unless (or interactive? (member "--repl" arguments))
+       (stop command-misuse-status #f
+             "a terminal is required; use attalambda --repl for redirected source"))
+     (with-handlers ([exn:fail? (lambda (_)
+                                (stop unexpected-failure-status #f
+                                      "unexpected launcher failure; verify the AttaLambda installation"))])
+       (define run-repl (dynamic-require repl-path 'run-repl))
+       (exit (run-repl (embedded-product-version) interactive?
+                       #:history? (not (member "--no-history" arguments)))))]
     [else
      (stop command-misuse-status #f
-           "expected attalambda FILE.attl, attalambda --help, or attalambda --version")]))
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version")]))
 
 (main)
