@@ -28,19 +28,19 @@ Never inspect dotenv contents or add Graphify output; never overwrite unrelated 
 
 ## Evidence and exact next step
 
-**Phase10 source verification is complete; next commit/push the reviewed
-four-file source-freeze checkpoint, then build that exact clean HEAD.** Phase9
-is pushed as `549460f39add1e6e995f94bb3e46a958e51dd9be`. CI35008188837 completed:
-69 source files / 26,845 assertions, 43 shared terminal methods in 47.226s,
-6 visual methods in 3.528s, 40-module purity and complete boundaries pass. All Windows/macOS
-builds, consumers and cleanup pass. Linux build passed; its consumer failed the
-forced-C-locale Unicode case, now narrowly repaired and independently reviewed
-under10.2b1. New-head CI must validate that correction; the old run remains failed.
-Full log:`/tmp/attalambda-phase9-ci-complete.log`; parsed receipt:
-`/tmp/attalambda-phase9-ci-summary.json`. No product, Racket test, Python test body,
-builder or dependency input changed after the full source run. The sole later
-executable change is the consumer fixture locale, with217 focused checks passing.
-Git writes work as separate approved add/commit/push operations.
+**Phases 0–11 implementation and candidate gates pass at the frozen build
+revision. Next: commit/push this documentation-only evidence checkpoint, verify
+that final head's checks/review, and save the post-commit receipt named in HANDOFF.**
+Build source `3ae392629ecfb380d3dd31451c33fd5617d53f51`, clean tree
+`550b4ae2c255929cff90d7fa823161030c7d7681`. CI35010700799 passes all ten jobs,
+including the complete 69-file / 26,845-assertion source suite, 43 shared terminal
+methods in 51.387s, 6 visual methods in 3.902s and both structural gates.
+The exact Linux archive and the same 25 consumer methods at both paths pass;
+source and artifact reviews have no actionable findings. The final record changes
+only docs, preserves the earlier build SHA, and does not authorize publication.
+Full CI log/summary: `/tmp/attalambda-phase10-ci-complete.log` and
+`/tmp/attalambda-phase10-ci-summary.json`. Artifact review:
+`/tmp/attalambda-final-artifact-review-t48v0bdw/review.md`.
 
 The Phase 9 complete run `/tmp/attalambda-interactive-phase9-full.log` finished 0:
 69 Racket test files, 26,845 assertions, 43 shared terminal methods in 71.605s,
@@ -48,13 +48,13 @@ The Phase 9 complete run `/tmp/attalambda-interactive-phase9-full.log` finished 
 Afterward, only two Linux CI setup blocks changed; their affected distribution
 suite passes 217 checks in `/tmp/attalambda-phase9-ci-ownership-focused.log`.
 
-The first current-head CI run, 34994217012, passed all Windows/macOS builds,
+The earlier CI run, 34994217012, passed all Windows/macOS builds,
 consumers and artifact cleanup. Its Linux preparation failures are diagnosed:
 the newly installed Racket directory was root-owned. The correction transfers
 only `/usr/share/racket` to the disposable job's user, then performs ordinary
 preparation and compilation. Independent original-image checks prove the actual
-compiler and all 15 preparation regressions pass with default caches. Complete
-new-head CI is still required. Full logs and review are in
+compiler and all 15 preparation regressions pass with default caches. The final
+frozen-source CI also passes. Full diagnosis logs and review are in
 `/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/`.
 
 Completion, bounded history, source/program input, cancellation, standalone loads
@@ -64,12 +64,14 @@ manifest still matches. The reviewed dependency patches, exact runtime checks,
 notices and all three builder contracts remain unchanged from Phase8. The Linux
 consumer now supplies UTF-8 only to its two terminal-test invocations.
 The corrected temporary candidate drivers have independent source review at
-`/tmp/attalambda-interactive-candidate01-review.md`; neither has been executed.
+`/tmp/attalambda-interactive-candidate01-review.md`; both completed successfully
+and their exact output is independently reviewed in Phase 11.
 
 Reuse the prepared consumer image
 `sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`.
-Development08 predates final source and is not a candidate. The source-freeze
-commit, new-head checks and exact clean Linux artifact verification remain required.
+Development08 predates final source and is not a candidate. The final clean
+archive has its own passing evidence. Only the documentation record and its
+post-commit current-head reconciliation remain before delivery.
 No source suite or owned container is running. The independent CI setup probe
 also passed actual package setup, executable embedding, distribution, version and
 transcript smoke checks; its finalizer removed the container. HANDOFF.md records
@@ -1831,11 +1833,60 @@ checked around the build and against the exact output manifest/clean-tree state.
 Its cleanup must retain transfer removal and JSON evidence even if container
 removal raises or times out. Add these guards to the `/tmp` drivers, check their
 syntax and obtain a read-only re-review. Product/build/consumer scripts and
-acceptance criteria remain unchanged. These drivers have not run a candidate.
+acceptance criteria remained unchanged. At that preparation step the drivers had
+not run a candidate; both subsequent verified executions are recorded below.
 
-- [ ] **11.1 — Build from the clean candidate revision.** Use the repository's approved Racket CS build runtime and existing Linux build script, with a fresh output directory outside the checkout. Do not use `--allow-dirty` for the candidate artifact. **Check:** record the clean source revision, product/package versions, build command, artifact names, and checksums.
-- [ ] **11.2 — Consume the exact artifact without development dependencies.** Run the existing isolated Linux consumer on the output directory, including real terminal tests and relocation to a path with spaces. **Check:** the extracted executable supports both new feature themes without external Racket, source checkout, personal packages, or user initialization files. Artifact failures require a fix, refreshed source verification as affected, and a new clean build.
-- [ ] **11.3 — Reconcile delivery state and handoff.** Verify that the reviewed source, tested source, clean build revision, and recorded artifact actually correspond. Open or update the milestone PR when authorized, verify current-head checks/review, and record any pending external checks without calling them passed. **Check:** provide the concise handoff in §7; stop at the candidate unless explicit merge/publication authority is present.
+- [x] **11.1 — Build from the clean candidate revision.** Use the repository's approved Racket CS build runtime and existing Linux build script, with a fresh output directory outside the checkout. Do not use `--allow-dirty` for the candidate artifact. **Check:** record the clean source revision, product/package versions, build command, artifact names, and checksums.
+11.1 evidence: `python3 /tmp/attalambda-interactive-candidate-build01.py
+3ae392629ecfb380d3dd31451c33fd5617d53f51` finished0 (exec32901). It invokes the
+existing Linux builder without --allow-dirty, source read-only, with the pinned
+CS9.3 image and isolated runtime corrections. Source commit/tree stayed clean
+before/inside/after. Product0.8.0/package0.8;11 files,2 runtime files,
+68,881,441 unpacked regular-file bytes. Archive19,602,521 bytes at
+`/tmp/attalambda-interactive-candidate-01/attalambda-0.8.0-linux-x86_64.tar.gz`,
+SHA256 `1b4b4a338028b11fafe22a4b52c7862c77f9c57e0241e4e037c6b022f6761785`.
+Manifest SHA256 `e0597d0506f08ad0661c0dc9d1dab2ac1257afb8d799d3aca3cbb2725a44a95b`;
+SHA256SUMS SHA256 `a5382b07aa7190196f114536cf47e86d029a8017b43cc4cd934a88db25fc11ba`.
+Log:`/tmp/attalambda-interactive-candidate-build-01.log`; receipt:
+`/tmp/attalambda-interactive-candidate-01/build-report.json`. Builder removed.
+The following exact consumer result closes11.2 independently of build success.
+
+- [x] **11.2 — Consume the exact artifact without development dependencies.** Run the existing isolated Linux consumer on the output directory, including real terminal tests and relocation to a path with spaces. **Check:** the extracted executable supports both new feature themes without external Racket, source checkout, personal packages, or user initialization files. Artifact failures require a fix, refreshed source verification as affected, and a new clean build.
+11.2 evidence: `python3 /tmp/attalambda-interactive-candidate-consumer01.py
+3ae392629ecfb380d3dd31451c33fd5617d53f51` finished0 (exec63273). The transferred
+archive/hash and frozen consumer/harness bytes match11.1. Same25 actual CLI and
+transcript methods pass at both extraction paths in67.185s and78.388s. The
+consumer confirms no external racket/raco, no source checkout, guide workflow,
+runtime input/snapshot transcript, and relocation pass. Terminal localeC.UTF-8;
+Python3.12.3 is consumer test tooling only, absent from the11-file product.
+The immutable prepared Ubuntu24.04 image ran offline/read-only/nonroot65534,
+capabilities dropped, no-new-privileges, bounded processes/memory and tmpfs.
+Consumer container and transfer directory are removed. First startup714ms and
+relocated630ms are observations, not performance guarantees. Log/report:
+`/tmp/attalambda-interactive-candidate01-consumer.log` and`.json`; combined parsed
+receipt:`/tmp/attalambda-interactive-candidate01-summary.json`. The following11.3
+record closes new-head CI and independent artifact review; no publication is authorized.
+
+- [x] **11.3 — Reconcile delivery state and handoff.** Verify that the reviewed source, tested source, clean build revision, and recorded artifact actually correspond. Open or update the milestone PR when authorized, verify current-head checks/review, and record any pending external checks without calling them passed. **Check:** provide the concise handoff in §7; stop at the candidate unless explicit merge/publication authority is present.
+
+11.3 evidence: CI35010700799 completes successfully with all ten jobs at the
+exact build head. Its PR merge commit2dcc67ef7f8fb17e8b2c7f88ce8d16a21c0c6761 has
+the identical build tree. Source results:69 files/26,845 assertions;43 terminal
+methods51.387s and6 visual methods3.902s;40 pure modules and complete boundaries.
+Full log:`/tmp/attalambda-phase10-ci-complete.log`; summary:
+`/tmp/attalambda-phase10-ci-summary.json`. Remote temporary artifacts are absent.
+The exact-artifact independent review closes with no actionable findings:
+`/tmp/attalambda-final-artifact-review-t48v0bdw/review.md`; adjacent observations
+verify all11 files, all25 method identities at both paths, source/patch/notices
+hashes, consumer isolation and actual cleanup. Current source review hashes match.
+
+The Phase11 record reconciles README/API, acceptance, candidate notes, distribution
+design, PLAN and HANDOFF only. The archive remains built from3ae3926 regardless
+of later record SHA. The final record-head CI/review and exact Git/PR state must
+be saved after commit in `/tmp/attalambda-interactive-final-state.json`; its absence
+or pending status means final delivery reconciliation is not finished. No extra
+commit is required merely to insert a commit's own SHA into itself. No merge,
+tag or publication is authorized; the exact candidate is retained locally.
 
 **Checkpoint 11 — Final release-candidate gate.** Use release verification and a final scope review. Close this phase with a documentation-only evidence commit when authorized; preserve the exact earlier build SHA rather than relabeling the archive as built from the later record commit. No executable-input change may rely solely on stale evidence. If only publication-record documentation changes afterward, state why prior artifact evidence still applies. Leave no owned test workers, listeners, containers, or temporary source modifications running or staged accidentally.
 

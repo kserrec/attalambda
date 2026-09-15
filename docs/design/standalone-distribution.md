@@ -53,8 +53,9 @@ attalambda --help
 attalambda --version
 ```
 
-The shell forms are implemented in the unreleased interactive milestone;
-current-head CI and standalone candidate verification remain open. Published 0.7.0
+The shell forms are implemented in the unreleased interactive milestone. The
+exact Linux candidate passes isolated terminal and relocation checks; the
+[handoff](../../HANDOFF.md) records final delivery checks. Published 0.7.0
 supports only file/help/version. `--repl` explicitly permits transcripts;
 without it, no-file startup requires terminal stdin and stderr. See the
 [shell contract and statuses](../API.md#interactive-shell-unreleased).
@@ -296,8 +297,11 @@ then runs that exact image ID without network access, as a non-root user with
 a read-only root filesystem and the existing capability/process/memory limits.
 The consumer has no Racket command or source checkout and receives only the
 archive, checksum, self-contained shell harness, and `interactive_pty.py`.
-Its isolated-image terminal path passed for development build08 at both extraction
-paths; the final candidate requires its own verification. Existing checks verify the checksum,
+The final clean candidate from `3ae3926` passes this isolated consumer, including
+all 25 terminal/transcript methods at both extraction paths. The
+[candidate notes](../releases/0.8.0.md) record its exact hashes and the
+[handoff](../../HANDOFF.md) records runtime, commands and completed review.
+Existing checks verify the checksum,
 layout, permissions, manifest, legal bytes, guide commands, version/help,
 stdout, byte-exact file-example round-trip, TCP/HTTP loopback behavior, and
 relocation. The current consumer also checks explicit/default program statuses
