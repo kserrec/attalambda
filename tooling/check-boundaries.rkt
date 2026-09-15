@@ -669,7 +669,7 @@
       bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
       negative? rational? abs
-      cons first for-syntax form function host identifier? if lambda
+      cons first for-syntax form function held host identifier? if lambda
       lambda-let language-application language-bit-expressions
       language-char-expression language-cons language-datum
       language-definition-form? language-discard language-host
@@ -1789,10 +1789,13 @@
     raise-argument-error render-result renderer repl require result result-names session
     session-custodian session-namespace source-buffer-forms source-buffer-status
     source-buffer? string-value->string struct struct-out syntax-exports syntax-property
-    unless unquote value-to-string void with-handlers))
+    unless unquote value-to-string void with-handlers
+    bindings candidate checked-entry-definitions evaluate-entry for/fold hash-set
+    hash-values hasheq parameterize-break session-bindings set-session-bindings!
+    hash-keys session-names sort symbol<?))
 
 (define expected-session-preparation
-  '(define (prepare-entry current parsed [imports '()])
+  '(define (prepare-entry current parsed [imports (hash-values (session-bindings current))])
      (unless (and (source-buffer? parsed)
                   (memq (source-buffer-status parsed) '(empty complete)))
        (raise-argument-error 'prepare-entry "complete source buffer" parsed))
@@ -1817,6 +1820,16 @@
                       (filter (lambda (name) (not (memq name result-names))) names)
                       (filter (lambda (name) (memq name names)) result-names)))))
 
+(define expected-session-publication
+  '(define (evaluate-entry current parsed [consume void])
+     (define entry (prepare-entry current parsed))
+     (define candidate
+       (for/fold ([bindings (session-bindings current)])
+                 ([name (in-list (checked-entry-definitions entry))])
+         (hash-set bindings name (list name (checked-entry-module-name entry) name))))
+     (demand-entry current entry consume)
+     (parameterize-break #f (set-session-bindings! current candidate))))
+
 (define (session-violations path info project-root)
   (define forms (module-info-forms info))
   (define symbols (module-symbols info))
@@ -1828,21 +1841,24 @@
     'invalid-session-imports)
    (exact-provide-violations
     path info '(provide (struct-out session) (struct-out checked-entry)
-                         open-session close-session prepare-entry demand-entry render-result)
+                         open-session close-session prepare-entry demand-entry render-result evaluate-entry
+                         session-names)
     'invalid-session-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(language-path open-session close-session prepare-entry
-                                    demand-entry render-result))
+                                    demand-entry render-result evaluate-entry session-names))
             (= (datum-occurrence-count
                 '(define-runtime-path language-path "../lang/expander.rkt") forms) 1)
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
-                     '((struct session (namespace custodian) #:transparent)
+                     '((struct session (namespace custodian [bindings #:mutable]) #:transparent)
                        (struct checked-entry (module-name definitions result-names) #:transparent)))
-            (= (datum-occurrence-count expected-session-preparation forms) 1))
+            (= (datum-occurrence-count expected-session-preparation forms) 1)
+            (= (datum-occurrence-count expected-session-publication forms) 1))
        '() (list (violation path 'invalid-session-scaffolding 'module)))
    (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
-                               make-base-namespace make-custodian dynamic-require)]
-              [expected '(1 1 2 1 1 1 1 4)]
+                               make-base-namespace make-custodian dynamic-require
+                               set-session-bindings! parameterize-break hash-set)]
+              [expected '(1 1 2 1 1 1 1 4 1 1 1)]
               #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
      (violation path 'invalid-session-operation operation))
    (for/list ([call '((dynamic-require language-path #f)

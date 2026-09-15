@@ -43,6 +43,8 @@
           (cdr (syntax->list (fourth (syntax->list expanded))))))
        (for ([text '("-7/3 \"hello\" #\\A"
                      "(def x = 1) (add x 2)"
+                     "(def y = x) (def x = 7) y"
+                     "x (def x = 7)"
                      "(rec sum n = (if (eq n 0) 0 (add n (sum (sub n 1))))) (sum 3)"
                      "(list 1 (some TRUE)) (lambda (x y) (add x y))"
                      "(let ((x 1) (y (add x 1))) y) (cond (FALSE 1) (else 2))")])

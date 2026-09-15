@@ -58,7 +58,7 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 4.1 — retain committed binding identities (after the Phase 3 commit/push).**
+**Next unfinished step: 5.1 — original process ports and session runtime ownership.**
 The private source reader exists; the definition checker accepts retained-name context.
 The minimal session helper is present; the CLI loop is pending.
 
@@ -346,9 +346,8 @@ analysis, exact session boundary and all three focused tests. Surrounding bounda
 classes/source-reader were skimmed; retention/cancellation/UI/artifacts are outside
 this phase. Its 28 additional scope/hygiene/shared-effect assertions are now
 permanent regressions. Final independent reruns pass four expansion and seven
-session cases; session boundary mutations also pass. Full suite is running via
-the recorded CS 9.3 command, log `/tmp/attalambda-interactive-phase3-full.log`.
-Do not commit or start Phase 4 implementation until its exit and gates pass.
+session cases; session boundary mutations also pass. The first full suite used
+`/tmp/attalambda-interactive-phase3-full.log`; its corrected rerun is recorded below.
 
 The initial full phase run stopped in host-test: the isolated package staging
 list copied the new session helper but omitted readers/string.rkt. The exact
@@ -376,7 +375,7 @@ staging now includes observation readers. New tests cover private expansion,
 session execution and boundary mutations; existing staging fixtures are updated.
 PLAN/HANDOFF record evidence and the upcoming forward-reference gap. Core, effects,
 host, codec, public facade exports and old file-launch behavior are unchanged.
-Commit/push this phase, then execute 4.1 serially.
+Phase 3 commit `fe70e6f` is pushed; continue 4.1 serially.
 
 ### Phase 4 — Retain definitions with precise session semantics
 
@@ -389,15 +388,15 @@ rejected, and imported def/rec values become calls. Implement an immutable hashe
 of visible-name to module/export identity with one shell-owned mutable field;
 construct candidate state before demand and protect only the final successful
 field swap. Keep an explicit empty-import path for later standalone loads.
-Names derive from committed keys without forcing. No Phase 4 implementation has
-started. The reviewer also compared direct forward aliases in real files/private
+Names derive from committed keys without forcing. At that pre-implementation checkpoint,
+the reviewer also compared direct forward aliases in real files/private
 entries: `(def y = x) (def x = 7) y` fails identically during instantiation, whereas
 `(def y = (add x 0)) ...` succeeds. Although inherited, the canonical purity amendment explicitly permits acyclic
 forward references. Step 4.3 must therefore cover direct forward aliases and
 expressions before a later definition; inheritance is not an acceptance exemption.
 Investigate pure hygienic suspension in the private expansion path, retaining
 existing dependency checks and the old file-launch behavior. No implementation
-has occurred; the gap is assigned to the next phase’s required dependency work.
+had occurred at that checkpoint; Step4.3 below resolves the gap.
 The isolated read-only probe `/tmp/attalambda-suspension-review.rkt` now proves
 the minimal mechanism: after existing analysis, wrap each private declaration
 body and generated result expression in a hygienic unary identity application.
@@ -408,14 +407,73 @@ bodies pass existing expanded purity; final in-repository literal/effect purity
 is still required because the relocated facade is outside the gate’s path policy.
 
 
-- [ ] **4.1 — Retain and import committed binding identities.** Maintain the visible-name map and import references to existing module instances into the next entry. **Check:** definitions, functions, and retained partial applications remain usable across several entries without rerunning earlier expressions.
-- [ ] **4.2 — Implement snapshot redefinition.** New entries replace visible name mappings, not old language bindings. Resolve generated imports so local replacements do not conflict. **Check:** the `x`/`plus-x` example passes, old delayed expressions retain their environment, and duplicate definitions within one entry retain current rejection behavior.
-- [ ] **4.3 — Preserve name and recursion rules across entries.** Test unknown earlier names, permitted same-entry forward dependencies, recursive `def`, mutual cycles, and `rec`. **Check:** `(def x = (add x 1))` is rejected even with an earlier `x`; hidden dependencies in sugar do not bypass the checks.
-- [ ] **4.4 — Preserve shadowing and hygiene.** Exercise shadowed public function/syntax names, including declaration-name shadowing where the current language permits it, across multiple entries. **Check:** recognition follows bindings rather than raw symbol spelling, and user names cannot capture generated result/import/export identifiers.
-- [ ] **4.5 — Commit new names as one small transition.** Prepare an entry's new map separately and publish it only after required execution/rendering succeeds; protect only the brief commit operation against partial interruption. **Check:** read/expansion/native/render failures expose none of the entry's new names, preserve previous names, and do not claim to roll back completed effects.
-- [ ] **4.6 — Expose non-evaluating name metadata.** Provide the sorted committed name set for `:names` and completion, excluding private exports. **Check:** listing names never forces a saved read, lazy error, or function body, and failed-entry names never appear.
+- [x] **4.1 — Retain and import committed binding identities.** Maintain the visible-name map and import references to existing module instances into the next entry. **Check:** definitions, functions, and retained partial applications remain usable across several entries without rerunning earlier expressions.
+4.1 complete: runner/session.rkt now stores immutable visible binding identities;
+prepare imports those actual modules, and evaluate-entry constructs/publishes one
+candidate map after demand. Two focused state cases pass: retained definitions,
+partial applications, lazy aliases and once-only input/stdout across entries.
+The exact session boundary also passes (`/tmp/attalambda-interactive-4.1{,-boundary}.log`).
+Atomic failure/interruption and metadata receive deeper tests in 4.5/4.6.
+
+- [x] **4.2 — Implement snapshot redefinition.** New entries replace visible name mappings, not old language bindings. Resolve generated imports so local replacements do not conflict. **Check:** the `x`/`plus-x` example passes, old delayed expressions retain their environment, and duplicate definitions within one entry retain current rejection behavior.
+4.2 complete: three state cases pass (`/tmp/attalambda-interactive-4.2.log`).
+Old closures yield2, new x yields11, delayed old arithmetic yields101, and another
+replacement preserves prior captured values. Duplicate declarations reject
+without changing the committed map. Existing module-binding identities suffice.
+
+- [x] **4.3 — Preserve name and recursion rules across entries.** Test unknown earlier names, permitted same-entry forward dependencies, recursive `def`, mutual cycles, and `rec`. **Check:** `(def x = (add x 1))` is rejected even with an earlier `x`; hidden dependencies in sugar do not bypass the checks.
+4.3 complete: private declaration/result bodies now have hygienic pure unary
+identity suspension after the unchanged dependency checker. Five state groups
+pass, including direct forward aliases, early source expressions, shared lazy
+stdout/input, unknown future names, sugar-hidden self/mutual cycles and rec.
+Four actual expansion/purity groups and the exact boundary pass
+(`/tmp/attalambda-interactive-4.3-{state,purity,boundary}.log`). Public/file paths
+retain their original expansion branch; no host promise operation was added.
+
+- [x] **4.4 — Preserve shadowing and hygiene.** Exercise shadowed public function/syntax names, including declaration-name shadowing where the current language permits it, across multiple entries. **Check:** recognition follows bindings rather than raw symbol spelling, and user names cannot capture generated result/import/export identifiers.
+4.4 complete: seven state groups pass (`/tmp/attalambda-interactive-4.4.log`).
+Imported def/rec/lambda/let/list/cond and native-looking names remain language
+values; generated wrappers/imports/results resist capture. Function aliases are
+the identical procedure, and shadowed syntax spellings cannot hide dependency cycles.
+
+- [x] **4.5 — Commit new names as one small transition.** Prepare an entry's new map separately and publish it only after required execution/rendering succeeds; protect only the brief commit operation against partial interruption. **Check:** read/expansion/native/render failures expose none of the entry's new names, preserve previous names, and do not claim to roll back completed effects.
+4.5 complete: eleven state groups and exact publication mutations pass
+(`/tmp/attalambda-interactive-4.5-{state,boundary}.log`). Read/expansion rejection,
+a trusted delayed native-failure injection, rendering failure after stdout and
+a pending break all preserve the identical old map; later expressions stop and
+completed output remains visible. Ordinary Error/Err values commit normally.
+The candidate and consumer calls are outside break protection; only one final
+setter is protected, and its entire approved function is structurally pinned.
+
+- [x] **4.6 — Expose non-evaluating name metadata.** Provide the sorted committed name set for `:names` and completion, excluding private exports. **Check:** listing names never forces a saved read, lazy error, or function body, and failed-entry names never appear.
+
+4.6 complete: twelve state groups and the full boundary gate pass
+(`/tmp/attalambda-interactive-4.6-{state,boundary}.log`). session-names sorts
+committed hash keys, exposes no private result exports or failed names, and
+leaves saved input, lazy Error and function body untouched. An extra closing
+parenthesis in the newly added test was identified by the native reader at line217
+and corrected before this passing run. Independent `state_review` and the full
+phase suite/gates are in progress; log `/tmp/attalambda-interactive-phase4-full.log`.
 
 **Checkpoint 4 — State and laziness review.** Use a code review focused on instance reuse and binding publication. The strongest tests should deliberately include observable effects and failing entries, not just arithmetic. Verify the implementation neither concatenates history nor changes closures to read mutable top-level cells.
+
+Independent `state_review` close-read the complete session helper, expansion and
+dependency interactions, exact session boundary, and state/expansion/boundary tests.
+Adjacent facade/boundary rules were skimmed; Phase5 resources/CLI/artifacts were
+not covered. No confirmed findings: independent 12-state/4-expansion/boundary
+reruns and nine additional hunter groups pass. Its distinct shared-promise-after-
+consumer-failure case is now permanent, extended to stdout and input; the final focused and independent reruns pass
+13 groups (`/tmp/attalambda-interactive-4-review-regression.log`). Independent
+close-read of the addition found no issue. The addition was made while fullsuite was still in the
+earlier binary-Nat file, before its state-test invocation.
+
+Checkpoint 4 complete: full CS9.3 suite exits 0, all 56 suites, 17,662 reported
+Racket tests plus nine Python PTY cases, 40-module purity and full boundaries.
+Log: `/tmp/attalambda-interactive-phase4-full.log`. `git diff --check` passes.
+Executable changes: immutable visible binding identities, single protected
+publication, and pure private forward-reference suspension. Test changes: state,
+actual private expansion and publication-boundary regressions. Documentation:
+PLAN/HANDOFF evidence. No core/effect/host/codec or file-mode behavioral change.
 
 ### Phase 5 — Integrate input, cancellation, and session lifetime
 

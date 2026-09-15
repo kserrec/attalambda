@@ -422,8 +422,17 @@
              (if interaction (list #`(provide #,@names #,@result-names)) '())]
             [(prepared-form ...)
              (map (lambda (form result)
-                    (cond [(memq form definitions) form]
-                          [interaction #`(def #,result = #,form)]
+                    (cond [(memq form definitions)
+                           (if interaction
+                               ;; Lazy Racket leaves bare aliases eager during
+                               ;; module initialization. Pure suspension permits
+                               ;; checked forward references without forcing them.
+                               (syntax-case form ()
+                                 [(head name argument ... equals body)
+                                  #'(head name argument ... equals
+                                          ((lambda (held) held) body))])
+                               form)]
+                          [interaction #`(def #,result = ((lambda (held) held) #,form))]
                           [else #`(language-discard #,form)]))
                   forms results)])
          #'(#%module-begin import-form ... export-form ... prepared-form ...)))]))

@@ -1,58 +1,53 @@
 # Interactive AttaLambda — in progress
 
-Kyle authorized autonomous phases 0–11, isolated dependencies, tests/builds,
-commits/pushes and a PR. **No merge, tag, or publication.** Contract:
-[docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
-Branch: `interactive-attalambda`, based on input `62d0f0c`; version stays 0.7.0
-until Phase 9. PLAN.md contains the complete active checklist and detailed evidence.
+Kyle authorizes autonomous phases0–11 through the verified candidate, including
+isolated dependencies, tests/builds, commits/pushes and a PR. **No merge, tag, or
+publication.** Contract: [docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
+Branch `interactive-attalambda`, based on input `62d0f0c`. Version stays0.7.0 until
+Phase9. PLAN contains the serial checklist and detailed evidence.
 
-Phases 0–2 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`. Phase 3 is
-verified and ready for its commit/push. **Next: commit/push Phase 3, then Step 4.1,
-retain committed binding identities.** Do not repeat effects, commits or pushes
-already recorded. Reconcile current Git status before resuming.
+Phases0–3 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`.
+Phase4 implementation/checkpoint is complete; commit/push follows immediately.
+**Next implementation step: 5.1 — original process ports and runtime ownership.**
+Reconcile Git status before resuming. Do not repeat completed effects.
 
-Phase 3 adds private expander plumbing and runner/session.rkt: whole-entry checked
-expansion, lazy user/result exports, ordered demand, and existing pure renderer +
-String observation. Exact session scaffolding/native targets are classified.
-Public facade exports, core/effects/host/codec and old file launch are unchanged.
-No retained-name map or CLI loop exists yet. Actual private-transformer literal,
-sugar, def/rec/result bodies pass the unchanged purity checker under relative test
-facade plumbing; the engine retains its absolute runtime path. Native computation
-negative control is rejected. Independent final review found no Phase 3 issues;
-its 28 additional scope/hygiene/shared-effect assertions are permanent regressions.
+Checkpoint4: full CS9.3 suite exits0; 56 suites, 17,662 reported Racket tests plus
+nine Python PTY cases;40 production purity modules and complete boundaries pass.
+Log `/tmp/attalambda-interactive-phase4-full.log`. Independent `state_review`
+close-read session/private expansion/boundaries/tests, reran13state/4expansion
+cases, and found no confirmed issues. Shared-effect-after-failure hunter is now
+permanent. `git diff --check` passes. No suite/monitor remains running.
 
-Checkpoint 3 full CS 9.3 rerun: exit 0, **55 suites, 17,649 reported Racket tests
-plus nine Python PTY cases, 40 production purity modules and complete boundaries**.
-Log: `/tmp/attalambda-interactive-phase3-final-full.log`. The initial run failed
-because isolated package staging omitted the new String reader dependency;
-`readers` was added to the fresh-install helper and all three distribution staging
-lists. Focused host81/distribution209 plus independent cold closure review pass.
-Initial failure log: `/tmp/attalambda-interactive-phase3-full.log`. The staging
-prerequisite moved from Phase9; no artifact/platform acceptance is claimed.
+Session entries use fresh checked private modules, immutable visible binding
+identities, lexical snapshots and one protected publication. Pure hygienic unary
+identity suspension in private declarations/results supports direct forward aliases.
+Core/effects/host/codec, public facade exports and file-mode behavior are preserved.
+Source reader is restricted and incremental. CLI/editor/history integration is pending.
 
-Phase4 read-only preparation found an inherited direct-forward-alias initialization
-failure. Canonical specs permit acyclic forward references: Step4.3 must support
-that class in the private path, not preserve failure as an exception. The completed
-`/tmp/attalambda-suspension-review.rkt` probe proves hygienic unary identity
-applications on private declaration/result bodies (after existing analysis) solve
-it, retain identical/shared values and effects, and preserve file mode. Exact
-mechanism/evidence is in PLAN. Do not repeat exploratory effects. Full in-repository
-purity must be rerun after implementing that mechanism. No Phase4 edits yet.
+Phase5 read-only probes support subordinate entry custodians and original ports
+outside them. Remove the session-custodian overrides in prepare/demand/render when
+adding entry ownership. **Publish bindings and mark success in the same short
+break-disabled block**; an outer success marker has a reproduced break seam.
+Probe `/tmp/attalambda-phase5-lifetime-review.rkt` and scratch session copy are
+not repository implementation. Blocked/cached reads, demand-time listener cleanup,
+original ports, exit0/1 escape and session closure passed. One earlier break escaped
+during later work in1/31 recursive-cancellation runs; current re-raise site/promise
+unproven, old=41 still worked. No speculative fix was applied. Record/characterize
+any recurrence; contract allows a forced shared promise to retain a failure.
 
 Use isolated CS9.3: PATH=/tmp/attalambda-racket93/bin:$PATH,
-PLTUSERHOME=/tmp/attalambda-racket93-user, TMPDIR=/tmp. One test file per raco test
-invocation; the relocated runtime's multi-file process mode does not work.
-Full suite is ./run-all-tests.sh and includes both gates. Old8.10 ignored caches
-were rebuilt/removed. Approved build image: cached racket/racket:9.3-full,
+PLTUSERHOME=/tmp/attalambda-racket93-user, TMPDIR=/tmp. One file per raco test call
+(relocated multi-file process mode fails); full ./run-all-tests.sh includes gates.
+Approved image racket/racket:9.3-full digest
 sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62.
-No owned suite/monitor is running after the final Phase3 exit.
+Prior8.10 ignored caches were rebuilt. Package staging now includes readers in
+all four sibling lists (Phase3 prerequisite); final artifacts remain unverified.
 
-CS9.3 Expeditor natively requires stdout descriptor1. The test-only adapter routes
-it to stderr only while editing and restores it before program execution. Phase8
-must promote/classify that exact capability. Source parser and nine PTY cases pass;
-production editor/history/CLI integration remains pending. All artifact verification,
-current-head CI/review, PR and final candidate evidence remain pending. Never read
-dotenv contents; no Graphify, main merge, tag or release action is authorized.
+Expeditor9.3 requires descriptor1; the proven test-only dup/dup2/close adapter
+routes it to stderr only during editing. Promote/classify that exact capability
+in Phase8. No alternative input registry/replay buffer was needed in probes.
+All final artifact/current-head CI/review/PR evidence remains pending. Never
+inspect dotenv contents, use Graphify, merge main, tag, or publish.
 
 ---
 

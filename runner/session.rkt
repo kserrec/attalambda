@@ -5,10 +5,11 @@
          "../readers/string.rkt")
 
 (provide (struct-out session) (struct-out checked-entry)
-         open-session close-session prepare-entry demand-entry render-result)
+         open-session close-session prepare-entry demand-entry render-result evaluate-entry
+         session-names)
 
 (define-runtime-path language-path "../lang/expander.rkt")
-(struct session (namespace custodian) #:transparent)
+(struct session (namespace custodian [bindings #:mutable]) #:transparent)
 (struct checked-entry (module-name definitions result-names) #:transparent)
 
 (define (open-session)
@@ -21,12 +22,12 @@
       (parameterize ([current-namespace namespace])
         ;; A new instance initializes the shared host before any entry work.
         (dynamic-require language-path #f))
-      (session namespace owner))))
+      (session namespace owner (hasheq)))))
 
 (define (close-session current)
   (custodian-shutdown-all (session-custodian current)))
 
-(define (prepare-entry current parsed [imports '()])
+(define (prepare-entry current parsed [imports (hash-values (session-bindings current))])
   (unless (and (source-buffer? parsed)
                (memq (source-buffer-status parsed) '(empty complete)))
     (raise-argument-error 'prepare-entry "complete source buffer" parsed))
@@ -67,3 +68,18 @@
                  [current-custodian (session-custodian current)])
     (define renderer (force (dynamic-require language-path 'value-to-string)))
     (string-value->string (renderer result))))
+
+;; Keep only visible binding identities. Each compiled module captures its own
+;; imports; replacing this shell map cannot mutate an earlier language closure.
+(define (evaluate-entry current parsed [consume void])
+  (define entry (prepare-entry current parsed))
+  (define candidate
+    (for/fold ([bindings (session-bindings current)])
+              ([name (in-list (checked-entry-definitions entry))])
+      (hash-set bindings name (list name (checked-entry-module-name entry) name))))
+  (demand-entry current entry consume)
+  ;; The candidate and all fallible work are complete before this one swap.
+  (parameterize-break #f (set-session-bindings! current candidate)))
+
+(define (session-names current)
+  (sort (hash-keys (session-bindings current)) symbol<?))
