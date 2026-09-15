@@ -6,18 +6,19 @@ tag or publication. Contract: [docs/interactive-implementation-spec.md](docs/int
 Branch: `interactive-attalambda`, based on input `62d0f0c`; source version remains
 0.7.0 until Phase 9. PLAN.md contains the complete active checklist and evidence.
 
-Phases 0–1 complete. Phase 1 full source verification exits 0: 51 suites,
-17,626 reported Racket tests plus eight Python PTY cases, 40-module expanded purity
-and complete boundaries. Independent review verified twenty consecutive
-cancellations, stable descriptors/threads, lazy input sharing, lexical snapshots,
-fresh registries and cleanup; no remaining finding. Next: **2.1, implement the
-restricted located source-buffer parser**, following the review notes in PLAN.
-Full evidence: `/tmp/attalambda-interactive-phase1-full.log`.
-Ignored 8.10 caches from the initial baseline were rebuilt for 9.3 or removed;
-use only the selected 9.3 runtime throughout the remaining milestone.
+Phases 0–2 complete. Phase 1 commit `5a9f907` is pushed. Phase 2 full source
+verification exits 0: 52 suites, 17,637 reported Racket tests plus nine Python PTY
+cases, 40-module expanded purity and complete boundaries. Independent review
+closed Unicode command whitespace and exact protected-reader execution findings;
+all original counterexamples fail the final gate. Focused final reruns also pass.
+Next: **3.1, extend the existing checked definition analysis**, then private lazy
+exports and one-entry execution. Phase 3 design/probe evidence is in PLAN; no
+interaction module path or CLI loop exists yet. Full Phase 2 evidence:
+`/tmp/attalambda-interactive-phase2-full.log`. Never rerun completed effects.
+Ignored 8.10 caches from the baseline were rebuilt or removed; use CS 9.3 throughout.
 CS 9.3 natively requires stdout descriptor 1; the test-only descriptor adapter
 routes it to stderr during editing and restores it afterward. PLAN records proof.
-No production REPL code exists yet. Follow the next unchecked step; never repeat
+The private source reader exists; no session engine or CLI REPL loop exists yet. Follow the next unchecked step; never repeat
 commits, pushes, loads or effects already recorded as complete. Before resuming,
 reconcile Git status and active processes with this record. This handoff goes
 stale whenever a later phase updates PLAN.md without updating this entry.

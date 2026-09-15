@@ -1690,6 +1690,87 @@
                                  runner-vocabulary
                                  'unapproved-runner-identifier)))
 
+;; Exact private source tooling: native reading of collected source buffers and
+;; incremental reads from its injected source port. No evaluator or file access.
+(define source-reader-vocabulary
+  '(= _ add1 and argument arguments begin byte bytes->string/utf-8 bytes-append
+    bytes-length bytes? call-with-default-reading-parameterization car char-whitespace?
+    close-input-port column complete cond cons content continue current-readtable define
+    define-values dynamic-wind echo else empty end end-column end-line end-position eof
+    eof-object? eq? error exn:fail:contract? exn:fail:read-srclocs exn:fail:read:eof?
+    exn:fail:read? failure failure-result for/first form forms get-output-bytes help
+    identifier? if in-range incomplete index input invalid lambda length let line load
+    location locations loop memq message name names next not null? off on only-in
+    open-input-string open-output-bytes or output pair? parameterize parse-source-buffer
+    parse-source-entry parsed pending port-count-lines! port-next-location position
+    provide quit quote racket/string read-accept-compiled read-accept-lang
+    read-accept-reader read-byte read-source-entry read-source-line read-syntax reason
+    repl require reset result reverse separator set-port-next-location! size source
+    source-buffer source-buffer-forms source-buffer-status source-buffer-text
+    source-buffer? source-command source-ready? srcloc-column srcloc-line start status
+    string->symbol string-length string-prefix? string-ref string? struct struct-copy
+    struct-out sub1 substring syntax-e tail text trim-command-space trimmed
+    unfinished-eof void with-handlers write-byte zero?))
+
+;; Pin the executed reader block rather than infer dynamic scope from arbitrary
+;; syntax nesting. A returned lambda, local function or named-let procedure must
+;; not move the read outside its parameterization while retaining the controls.
+(define expected-source-reader-block
+  '(call-with-default-reading-parameterization
+    (lambda ()
+      (parameterize ((current-readtable #f)
+                     (read-accept-reader #f)
+                     (read-accept-lang #f)
+                     (read-accept-compiled #f))
+        (with-handlers ((exn:fail:read:eof?
+                         (lambda (failure) (failure-result failure 'incomplete)))
+                        (exn:fail:read?
+                         (lambda (failure) (failure-result failure 'error))))
+          (let loop ((forms '()))
+            (define form (read-syntax source input))
+            (if (eof-object? form)
+                (source-buffer (if (null? forms) 'empty 'complete)
+                               text (reverse forms) #f #f #f)
+                (loop (cons form forms)))))))))
+
+(define (source-reader-violations path info project-root)
+  (define forms (module-info-forms info))
+  (define symbols (module-symbols info))
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-source-reader-language)
+   (exact-require-violations
+    path info '((require (only-in racket/string string-prefix?)))
+    'invalid-source-reader-imports)
+   (exact-provide-violations
+    path info
+    '(provide (struct-out source-buffer) (struct-out source-command)
+              parse-source-buffer parse-source-entry read-source-entry source-ready?)
+    'invalid-source-reader-exports)
+   (if (equal? (filter-map top-level-binding-name forms)
+               '(parse-source-buffer trim-command-space parse-source-entry source-ready?
+                 read-source-line read-source-entry))
+       '() (list (violation path 'invalid-source-reader-definitions 'definitions)))
+   (for/list ([control '(current-readtable read-accept-reader read-accept-lang
+                        read-accept-compiled)]
+              #:unless (and (= (count (lambda (name) (eq? name control)) symbols) 1)
+                            (= (datum-occurrence-count (list control #f) forms) 1)))
+     (violation path 'unsafe-source-reader-control control))
+   (for/list ([call '((read-syntax source input) (read-byte input)
+                     (write-byte byte output) (open-input-string text)
+                     (bytes->string/utf-8 content #f))]
+              #:unless (and (= (count (lambda (name) (eq? name (car call))) symbols) 1)
+                            (= (datum-occurrence-count call forms) 1)))
+     (violation path 'invalid-source-reader-operation call))
+   ;; `load` is command data only; never admit the native loader as a value.
+   (if (and (= (count (lambda (name) (eq? name 'load)) symbols) 1)
+            (= (datum-occurrence-count '(quote load) forms) 1)
+            (= (count (lambda (name)
+                        (eq? name 'call-with-default-reading-parameterization)) symbols) 1)
+            (= (datum-occurrence-count expected-source-reader-block forms) 1))
+       '() (list (violation path 'unsafe-source-reader-configuration 'reader)))
+   (strict-vocabulary-violations path project-root source-reader-vocabulary
+                                 'unapproved-source-reader-identifier)))
+
 (define (host-violations path info project-root)
   (define host-definitions
     (filter (lambda (form)
@@ -1763,6 +1844,7 @@
           [(test tooling) (host-support-violations source info class)]
           [(application) (application-violations source info)]
           [(runner) (runner-violations source info root)]
+          [(source-reader) (source-reader-violations source info root)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
           [(host) (host-violations source info root)]
@@ -1845,6 +1927,8 @@
     [(equal? first-part "tests") 'test]
     [(equal? first-part "tooling") 'tooling]
     [(equal? first-part "examples") 'application]
+    [(equal? source (normalized (build-path root "runner" "source-reader.rkt")))
+     'source-reader]
     [(equal? first-part "runner") 'runner]
     [else #f]))
 
@@ -2101,6 +2185,8 @@
        (normalized (build-path root "info.rkt")))
      (define runner
        (normalized (build-path runner-directory "attalambda.rkt")))
+     (define source-reader
+       (normalized (build-path runner-directory "source-reader.rkt")))
      (define macro-shell
        (normalized (build-path macros-directory "lazy-with-macros.rkt")))
      (define macro-definitions
@@ -2154,6 +2240,7 @@
                                 'language-reader
                                 root)
       (file-boundary-violations runner 'runner root)
+      (file-boundary-violations source-reader 'source-reader root)
       (file-boundary-violations package-info 'package-info root)
       (append-map (lambda (path)
                     (file-boundary-violations path 'reader root))
@@ -2193,7 +2280,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (equal? path runner))
+                 #:unless (member path (list runner source-reader) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

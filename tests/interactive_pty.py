@@ -1,6 +1,7 @@
 """Bounded Linux PTY acceptance; standard library only, also reusable by artifacts."""
 
 import fcntl
+import json
 import os
 from pathlib import Path
 import select
@@ -212,6 +213,28 @@ class EditorProbe(unittest.TestCase):
         for descriptor in [terminal.master, terminal.slave, terminal.pidfd]:
             with self.assertRaises(OSError):
                 os.fstat(descriptor)
+
+    def test_reader_directive_and_datum_comment_do_not_execute_extensions(self):
+        sentinel = Path(self.home.name) / "reader-executed"
+        reader = Path(self.home.name) / "reader.rkt"
+        reader.write_text(
+            '#lang racket/base\n(provide read read-syntax)\n'
+            f'(call-with-output-file {json.dumps(str(sentinel))} '
+            '(lambda (out) (display "executed" out)))\n'
+        )
+        directive = f'#reader (file {json.dumps(str(reader))}) 1'
+        with Terminal(self.command + ["--input"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(directive.encode() + b"\r")
+            terminal.expect(b'accepted: "#reader')
+            terminal.expect(b"atta> ")
+            terminal.send(b"#;1\r")
+            terminal.expect(b'accepted: "#;1"')
+            terminal.expect(b"atta> ")
+            terminal.send(b"quit\r")
+            terminal.expect(b"history:")
+            terminal.finish()
+        self.assertFalse(sentinel.exists())
 
 
 if __name__ == "__main__":

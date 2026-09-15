@@ -153,6 +153,8 @@
                  (build-path root "VERSION"))
       (copy-file (build-path project-root "runner" "attalambda.rkt")
                  (build-path root "runner" "attalambda.rkt"))
+      (copy-file (build-path project-root "runner" "source-reader.rkt")
+                 (build-path root "runner" "source-reader.rkt"))
       (for ([name (in-list '("hello.attl"
                              "stdout.attl"
                              "file-round-trip.attl"
@@ -220,7 +222,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec effect host language-expander language-reader macro
-   macro-shell package-info pure-core reader runner test tooling))
+   macro-shell package-info pure-core reader runner source-reader test tooling))
 
 (check-equal?
  (count (lambda (classification)

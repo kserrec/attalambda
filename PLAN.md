@@ -58,8 +58,8 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 2.1 — the restricted located source-buffer parser.** Only test
-probes exist; there is no production entry/session/editor implementation yet.
+**Next unfinished step: 3.1 — extend the existing checked definition analysis.**
+The private source reader exists; there is no production session or CLI loop yet.
 
 ### Phase 0 — Establish a safe, reproducible starting point
 
@@ -203,17 +203,89 @@ datum comments/here-strings/bar symbols, open-pipe invalid-UTF-8 answer preserva
 and quoted-spelling-only load argument tests. The launcher remains unchanged until
 Phase 6; classify the exact reader helper now without broadening all runner files.
 
-- [ ] **2.1 — Parse a completed buffer with locations.** Add one helper that reads the entire supplied source buffer under the fixed safe reader configuration and returns located forms or a structured diagnostic. **Check:** exact Rats, strings, ASCII character literals, nested forms, and multiple forms parse without executing code; unsupported datums still fail at their existing stage.
-- [ ] **2.2 — Classify completeness and errors.** Distinguish empty/comment-only input, incomplete input, complete input, and genuine read failure using the native reader's behavior. **Check:** comments, escaped quotes, character literals containing delimiters, incomplete strings/block comments, and mismatched delimiters are classified correctly. Do not count parentheses manually.
-- [ ] **2.3 — Assemble plain source entries incrementally.** Collect source lines only until the current buffer is complete, preserving positions and consuming its own terminator. Decode only collected source bytes. **Check:** a following answer line remains available on the same input port, including when the pipe writer stays open.
-- [ ] **2.4 — Parse commands without evaluation.** Add fresh-entry recognition and exact argument validation for the six commands, reusing restricted string parsing for `:load`. **Check:** command-like text inside comments, strings, incomplete source, and program answers is not intercepted; trailing extra command arguments are rejected.
-- [ ] **2.5 — Connect editor readiness to this reader.** Use the same safe parser/completeness logic for Expeditor acceptance and the fallback. Prevent the editor's default reader or error path from bypassing extension restrictions or sanitized diagnostics. **Check:** a malicious reader directive is rejected during completeness checking as well as submission, and no fixture reader module executes.
+- [x] **2.1 — Parse a completed buffer with locations.** Add one helper that reads the entire supplied source buffer under the fixed safe reader configuration and returns located forms or a structured diagnostic. **Check:** exact Rats, strings, ASCII character literals, nested forms, and multiple forms parse without executing code; unsupported datums still fail at their existing stage.
+- [x] **2.2 — Classify completeness and errors.** Distinguish empty/comment-only input, incomplete input, complete input, and genuine read failure using the native reader's behavior. **Check:** comments, escaped quotes, character literals containing delimiters, incomplete strings/block comments, and mismatched delimiters are classified correctly. Do not count parentheses manually.
+- [x] **2.3 — Assemble plain source entries incrementally.** Collect source lines only until the current buffer is complete, preserving positions and consuming its own terminator. Decode only collected source bytes. **Check:** a following answer line remains available on the same input port, including when the pipe writer stays open.
+- [x] **2.4 — Parse commands without evaluation.** Add fresh-entry recognition and exact argument validation for the six commands, reusing restricted string parsing for `:load`. **Check:** command-like text inside comments, strings, incomplete source, and program answers is not intercepted; trailing extra command arguments are rejected.
+- [x] **2.5 — Connect editor readiness to this reader.** Use the same safe parser/completeness logic for Expeditor acceptance and the fallback. Prevent the editor's default reader or error path from bypassing extension restrictions or sanitized diagnostics. **Check:** a malicious reader directive is rejected during completeness checking as well as submission, and no fixture reader module executes.
+
+Steps 2.1–2.5 implemented in `runner/source-reader.rkt`, with located native
+syntax, strict UTF-8, default/fixed reader controls, native completeness, fresh
+command recognition and incremental source bytes. Source physical lines end at
+LF (preserving CRLF); a bare CR in a redirected source line is reader whitespace.
+This source policy does not alter the existing program read's native CR handling.
+The editor fixture now uses shared readiness; its reader hook still returns inert
+whole-buffer text with post-skipper zero. No file-launch/runtime source changed.
+
+Focused evidence: `raco test tests/interactive-reader-test.rkt` passes eleven
+cases covering the parser matrix, source locations, hostile ambient settings,
+open-pipe answer preservation, commands, extension non-execution and boundary
+mutations (`/tmp/attalambda-interactive-2-reader.log`). The ordinary editor gate
+passes nine PTY cases in 6.843 s (`/tmp/attalambda-interactive-2-editor.log`).
+Exact source-reader imports/exports, reader controls/operations and vocabulary
+are classified; unknown runner modules remain rejected. The existing boundary
+fixture was updated to copy the new required helper and include its class after
+its failures reported precisely those omissions. Its focused rerun passes all 145 assertions
+(`/tmp/attalambda-interactive-2-boundary-suite.log`).
+
+One new test initially missed its final closing parenthesis; the reader's line 87
+error located it and the correction passed. A combined multi-file `raco test`
+invocation failed before assertions in the relocated runtime's process mode;
+individual invocations, matching the normal full-suite script, pass. No test
+content or deadline was weakened to accommodate that environment failure.
+Independent review and full phase verification are running before the phase commit;
+full log `/tmp/attalambda-interactive-phase2-full.log`.
+
+Independent Phase 2 review found two gaps, now closed. Native Unicode whitespace
+was not recognized by command trimming/splitting; commands now use
+`char-whitespace?`, verified independently across all 25 whitespace characters below
+U+3100. The new gate initially counted reader controls without proving protected
+execution. Independent copies moved controls into no-ops or returned a lambda,
+local function or named-let function that read after restrictions ended, passing
+the earlier checks and executing an ambient reader macro. The final gate pins the
+exact approved defaults/parameterization/handlers/read-loop fragment alongside the
+single-operation counts; no general dynamic-scope analyzer remains. All six
+hoisting/function-escape mutations are permanent regressions.
+
+Final independent recheck (`reader_design_review`) rejects the original named-let
+bypass, accepts the actual safe helper, and passes all eleven reader cases. Both
+findings are closed; no remaining finding in parser/commands/readiness/boundary scope.
+Focused final logs: `/tmp/attalambda-interactive-2-review.log` (11 cases) and
+`/tmp/attalambda-interactive-2-boundary-review.log` (145 assertions). The full phase
+run is still active; the late gate refinement has its own focused reruns and will
+also be read by the full run's final structural gate. Earlier language/runtime
+sources are unchanged.
 
 **Checkpoint 2 — Reader correctness and extension-boundary review.** Run adversarial reader cases and affected existing reader/runner tests. Inspect all places that parse source, command arguments, and later history data; each must use an explicit restricted configuration. Confirm that terminal input remains in the host, while source input remains tooling.
+
+Checkpoint 2 complete: the full CS 9.3 command recorded above exits 0 with
+52 suites, 17,637 reported Racket tests plus nine Python PTY cases, 40-module purity
+and complete boundaries (`/tmp/attalambda-interactive-phase2-full.log`). The final
+exact-block gate refinement also passed focused 11-reader/145-boundary reruns and
+independent original counterexamples. `git diff --check` passes. Changes create
+one private source helper, its focused tests, shared fixture readiness and exact
+boundary classification/fixture updates; object-language/host/codec/file-launch
+behavior is unchanged. Phase 3 starts after this phase commit/push.
 
 ### Phase 3 — Add the smallest private interaction path
 
 **Purpose:** evaluate a checked entry and retrieve results without duplicating language semantics.
+
+Read-only Phase 3 design review (`interaction_design_review`) proved in isolated
+CS 9.3 modules that fresh gensym module names, uninterned result-export discovery,
+lazy dynamic retrieval, and shared ordinary user imports work. Static `only-in`
+rejected uninterned result exports, so they remain runner-only; user exports retain
+their ordinary source symbols. A private module-begin syntax property reaches the
+transformer, and source-context identifiers match generated import binders. Native
+quote/require/provide forms must come from transformer lexical templates, not user
+context. Reuse the existing definition checker with retained-name context, excluding
+superseded imports before graph analysis so a prior x cannot hide a new self-reference.
+Use actual expanded define-values bodies for purity, including generated results.
+The transformer prototype uses `#lang lazy`; comparisons show quote/require/
+only-in/provide retain native bindings, so no extra native imports are needed.
+Probe files: `/tmp/attalambda-phase3-name-probe.rkt`,
+`/tmp/attalambda-phase3-user-import-probe.rkt`, and
+`/tmp/attalambda-phase3-property-{lang,probe}.rkt`. No production interaction path yet.
 
 - [ ] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
 - [ ] **3.2 — Expose lazy user bindings privately.** Add generated exports or equivalent trusted access for definitions from an interaction module. Keep the public language export surface unchanged. **Check:** discovering exports and retrieving a definition do not demand an input/output effect hidden in its body.

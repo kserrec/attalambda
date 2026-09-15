@@ -8,27 +8,18 @@
          racket/string
          syntax-color/racket-lexer
          "../helpers/editor-descriptors.rkt"
+         "../../runner/source-reader.rkt"
          (only-in "../../lang/expander.rkt" [read-line language-read-line]
                   UNIT value-to-string)
          "../../readers/string.rkt")
-
-(define (ready? input)
-  (parameterize ([current-readtable #f]
-                 [read-accept-reader #f]
-                 [read-accept-lang #f]
-                 [read-accept-compiled #f])
-    (with-handlers ([exn:fail:read:eof? (lambda (_) #f)]
-                    [exn:fail:read? (lambda (_) #t)])
-      (let loop ([seen? #f])
-        (define form (read-syntax 'probe input))
-        (if (eof-object? form) seen? (loop #t))))))
 
 (parameterize ([current-expeditor-reader
                 (lambda (input)
                   (define source (port->string input))
                   (if (equal? source "") eof source))]
                [current-expeditor-post-skipper (lambda (_) 0)]
-               [current-expeditor-ready-checker ready?]
+               [current-expeditor-ready-checker
+                (lambda (input) (source-ready? (port->string input)))]
                [current-expeditor-lexer racket-lexer]
                [current-expeditor-color-enabled #f])
   (define open-editor
