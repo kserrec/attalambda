@@ -1,6 +1,6 @@
 # Third-Party Notices
 
-This document applies to the standalone AttaLambda 0.2.0 distributions
+This document applies to the standalone AttaLambda distributions
 built with Racket CS 9.3. It accompanies, and does not replace, the AttaLambda
 `LICENSE`. Third-party components remain governed by their own terms below.
 
@@ -17,6 +17,10 @@ and are not copied into the AttaLambda archive.
 | Racket 9.3 core and Racket CS runtime | all | Apache-2.0 OR MIT for Racket; Apache-2.0 for embedded Chez Scheme |
 | Lazy Racket package, source revision `985fb8dde464388b52efb6654f87c61b5ec56ddc` | all | Apache-2.0 OR MIT |
 | `htdp-lib/stepper/private/syntax-property.rkt`, from source revision `47cd4924d94713126fc0dec87ce56a825dd63810` | all | Apache-2.0 OR MIT |
+| Expeditor package 1.2, source revision `65e20a410bdc5f09c0682a1bb57cac2b68d73506` | all | Apache-2.0 OR MIT plus the preserved Boyer notice |
+| Syntax Color package 1.7, source revision `e1c5ac5115ed3e6c52430390e6bf9b39c8c7e3df` | all | Apache-2.0 OR MIT |
+| Parser Tools package 9.0, source revision `2f3638fa66c83d0c53f8aec7cc6cfd3775daf8a5` | all | Apache-2.0 OR MIT; packaged legacy notice also preserved below |
+| Option Contract package 1.0, source revision `50d72f706ef944689e21b65a6c94b3c819989c59` | all | Apache-2.0 OR MIT |
 | Mbed TLS SHA-224/SHA-256 implementation adapted for Racket | all | Apache-2.0 |
 | zlib | all | Zlib license |
 | Chez Scheme terminal support derived from C. David Boyer's editor | all | Apache-2.0 plus the preserved Boyer notice |
@@ -43,6 +47,38 @@ SHA-256:
 
 The Racket 9.3 release identifies source commit
 `bbf7dea831df95922db23aaa51e13eed17dcf881`.
+
+AttaLambda applies a local correction to Racket's
+`racket/collects/racket/private/promise.rkt` so a new demand cannot redirect an
+already completed shared promise into an interrupted computation. This is patched
+Racket 9.3, not an upstream release. The exact corresponding patch and preparation
+tool are under `tooling/patches/` and `tooling/prepare-racket-runtime.rkt` in the
+AttaLambda source commit recorded by `BUILD-MANIFEST.txt`. The patch SHA-256 is
+`179be1bbde34542758c87b364ae7717c7355cba58cb880875faf137c521ab1a9`;
+the corrected file SHA-256 is
+`bca5b526943be123c8f3fbad24d30556fe3ffea1dc60b6d9c28ec8875e27c7eb`.
+Racket's original license terms below remain applicable.
+
+The editor and its lexer use these exact package source snapshots. Each
+snapshot's package `info.rkt` declares `(Apache-2.0 OR MIT)`; those full license
+texts are preserved below. The package versions are library versions, separate
+from the Racket release version.
+
+- Expeditor: https://github.com/racket/expeditor/tree/65e20a410bdc5f09c0682a1bb57cac2b68d73506/expeditor-lib
+- Syntax Color: https://github.com/racket/syntax-color/tree/e1c5ac5115ed3e6c52430390e6bf9b39c8c7e3df/syntax-color-lib
+- Parser Tools: https://github.com/racket/parser-tools/tree/2f3638fa66c83d0c53f8aec7cc6cfd3775daf8a5/parser-tools-lib
+- Option Contract: https://github.com/racket/option-contract/tree/50d72f706ef944689e21b65a6c94b3c819989c59/option-contract-lib
+
+AttaLambda locally corrects Expeditor 1.2's source-character display, lossless
+history recall, and cursor/redraw accounting. Source characters remain intact;
+the existing editor supplies terminal operations. This is a patched dependency,
+not a new upstream package release. The corresponding patch is
+`tooling/patches/expeditor-1.2-source-display.patch` in the recorded AttaLambda
+source commit, with SHA-256
+`954cdc83b8ee684512a5c3c131d4bc48dd30c40a6a6e8c5a884b3f46dc98b755`.
+`tooling/prepare-expeditor-runtime.rkt` pins original and corrected bytes for all
+five changed files; the build manifest records their corrected hashes. Existing
+upstream copyright and license terms below remain applicable.
 
 The exact GNU libiconv source release used by Racket's Windows native-library
 recipe is:
@@ -491,7 +527,10 @@ authorization of the copyright holder.
 ;;; DEALINGS IN THE SOFTWARE.
 ```
 
-## C. David Boyer terminal-editor notice (`src/ChezScheme/s/expeditor.ss`, lines 5-16)
+## C. David Boyer terminal-editor notice
+
+This identical notice occurs in Racket's `src/ChezScheme/s/expeditor.ss`,
+lines 5-16, and the pinned Expeditor package's `main.rkt`, lines 128-139.
 
 ```text
 ;;; This code is based on David Boyer's command-line editor, which has the
@@ -506,6 +545,28 @@ authorization of the copyright holder.
 ;;;
 ;;; The present implementation retains some of the basic design but little
 ;;; of the original code.
+```
+
+## Parser Tools packaged legacy notice (`parser-tools-lib/LICENSE.txt`)
+
+The pinned source retains this 2014 notice. Its later `info.rkt` declares
+`(Apache-2.0 OR MIT)`, added by upstream commit
+https://github.com/racket/parser-tools/commit/4afd434f2fcd719132e7a5b2c263faf544f916ca
+in 2021. Both source statements are retained here; the older notice is not
+silently discarded or substituted for the later package declaration.
+
+```text
+parser-tools-lib
+Copyright (c) 2010-2014 PLT Design Inc.
+
+This package is distributed under the GNU Lesser General Public
+License (LGPL).  This means that you can link this package into proprietary
+applications, provided you follow the rules stated in the LGPL.  You
+can also modify this package; if you distribute a modified version,
+you must distribute it under the terms of the LGPL, which in
+particular means that you must release the source code for the
+modified software.  See http://www.gnu.org/copyleft/lesser.html
+for more information.
 ```
 
 ## Olin Shivers sorting notice (`src/ChezScheme/s/5_6.ss`, lines 442-453)
@@ -2134,4 +2195,3 @@ apply, that proxy's public statement of acceptance of any version is
 permanent authorization for you to choose that version for the
 Library.
 ```
-

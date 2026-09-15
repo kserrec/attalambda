@@ -61,19 +61,43 @@ Authenticode signing are not distributed.
 
 ## Run it from source
 
-You need Racket. The install command registers the checkout in your user-level
-Racket package registry and does not require administrator access:
+The `interactive-attalambda` milestone branch includes unreleased runtime line
+input and the `atta>` interactive shell. The full source suite and exact clean
+Linux archive pass their tests, including terminal interaction and relocation.
+[HANDOFF.md](HANDOFF.md) records source/build revisions and final delivery checks.
+Published 0.7.0 downloads include neither feature. See the tested
+[terminal input example](docs/API.md#terminal-line-input-unreleased) and
+[interactive guide](docs/API.md#interactive-shell-unreleased).
+
+Use an isolated Racket CS 9.3 installation with the milestone's
+[reviewed dependency corrections](tooling/patches/README.md). They preserve shared
+lazy values after Ctrl+C and correct editor source display, history and redraw.
+Explicit preparation changes only that isolated
+installation; do not apply it to a personal or system runtime. The install command
+below registers the checkout in that environment's Racket package registry:
 
 ```sh
-git clone https://github.com/kserrec/attalambda.git
+git clone --branch interactive-attalambda https://github.com/kserrec/attalambda.git
 cd attalambda
+racket tooling/prepare-racket-runtime.rkt --apply
+racket tooling/prepare-racket-runtime.rkt --check
 raco pkg install --auto --name attalambda .
 racket runner/attalambda.rkt examples/hello.attl
 ```
 
-AttaLambda has no third-party package dependencies. Its runtime dependencies
-are Racket's `base` and `lazy` packages; tests also use `rackunit-lib` and
-`net-lib`.
+This milestone is tested with the corrected Racket CS 9.3 and Linux Python 3 for terminal
+acceptance. Runtime dependencies are `base`, `lazy`, `expeditor-lib`, and
+`syntax-color-lib`; tests also use `rackunit-lib` and `net-lib`. The maintained
+Expeditor and lexer packages supply terminal editing and S-expression handling.
+Their transitive Parser Tools and Option Contract packages are included in
+the distribution notices.
+
+Start the source shell in a terminal with `racket runner/attalambda.rkt`.
+Type expressions without `#lang attalambda`; use `:help` for the six commands.
+Definitions stay lazy, and expression results print as `=> 5`, `=> TRUE`, or
+other canonical value displays. Use `:echo off` before evaluating raw functions:
+their printing behavior is unspecified. `--repl` explicitly permits redirected
+transcripts; `--no-history` disables persistent source history.
 
 To run the complete test and structural-purity suite:
 
@@ -95,9 +119,10 @@ To run the complete test and structural-purity suite:
   literals.
 - Errors are ordinary structured values. Expected computational failures use
   `Result`; contract and representation failures use `Error`.
-- Output, files, blocking TCP, and explicit process exit are available through
-  one host boundary. Pure HTTP framing, parsing, response rendering, and
-  routing sit above that boundary as ordinary language computation.
+- Output, standard-input lines (unreleased), files, blocking TCP, and explicit
+  process exit are available through one host boundary. Pure HTTP framing,
+  parsing, response rendering, and routing sit above that boundary as ordinary
+  language computation.
 - Automated structural checks reject host computation, hidden privileged
   imports, non-unary lambdas, and unknown source locations in production
   paths.
@@ -159,11 +184,13 @@ intentionally repeats neither.
 | Path | Purpose |
 | --- | --- |
 | [`core/`](core) | Pure representations, raw algorithms, and strict typed operations. |
-| [`effects/`](effects) | Pure requests and wrappers for output, files, TCP, exit, and HTTP. |
+| [`effects/`](effects) | Pure requests and wrappers for output, line input, files, TCP, exit, and HTTP. |
 | [`runtime/codec.rkt`](runtime/codec.rkt) | Deterministic conversion between lambda values and private host data. |
 | [`runtime/host.rkt`](runtime/host.rkt) | The sole privileged `host`; start at `dispatch-request`. |
 | [`lang/expander.rkt`](lang/expander.rkt) | Public exports, literal expansion, currying, and one-time host injection. |
-| [`runner/attalambda.rkt`](runner/attalambda.rkt) | Command, source validation, sanitized diagnostics, and one source load. |
+| [`runner/attalambda.rkt`](runner/attalambda.rkt) | File/shell selection and sanitized launcher diagnostics. |
+| [`runner/repl.rkt`](runner/repl.rkt) | Commands, original-input handoff, echo, and history lifecycle. |
+| [`runner/session.rkt`](runner/session.rkt) | Checked entry modules, binding snapshots, loads, and resource ownership. |
 | [`macros/`](macros) | The two trusted mechanical-expansion modules every production file compiles through. |
 | [`readers/`](readers) | One-way human-readable observation used outside production computation. |
 | [`tests/`](tests) | Behavioral, representation, error, laziness, and boundary tests. |

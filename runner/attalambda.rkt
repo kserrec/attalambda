@@ -1,8 +1,6 @@
 #lang racket/base
 
-(require (only-in racket/file file-type-bits regular-file-type-bits)
-         (only-in racket/path path-get-extension path-only)
-         (only-in racket/port port->bytes)
+(require "source-file.rkt" racket/runtime-path
          (for-syntax racket/base
                      (only-in racket/path path-only)))
 
@@ -10,16 +8,16 @@
 (define invalid-source-status 65)
 (define unavailable-source-status 66)
 (define unexpected-failure-status 70)
+(define-runtime-module-path-index repl-index "repl.rkt")
 
 (define help-text
   (string-append
    "Usage:\n"
+   "  attalambda [--no-history]\n"
+   "  attalambda --repl [--no-history]\n"
    "  attalambda FILE.attl\n"
    "  attalambda --help\n"
    "  attalambda --version\n"))
-
-(define language-declaration
-  #"#lang attalambda")
 
 (define-syntax (embedded-product-version stx)
   (define source (syntax-source stx))
@@ -52,148 +50,14 @@
      (eprintf "AttaLambda: ~a\n" reason)])
   (exit status))
 
-(define (dotenv-component? part)
-  (and (path? part)
-       (regexp-match?
-        #px"(^|\\.)env($|\\.)"
-        (string-downcase (path->string part)))))
-
-(define (dotenv-path? path)
-  (for/or ([part (in-list (explode-path path))])
-    (dotenv-component? part)))
-
-(define (resolve-parent-path path)
-  (let loop ([remaining (explode-path (path->complete-path path))]
-             [resolved #f]
-             [seen '()])
-    (cond
-      [(null? remaining)
-       (and resolved (simplify-path resolved #f))]
-      [(not (car remaining))
-       ;; The target is complete; a later visit to this link is not a cycle.
-       (loop (cdr remaining) resolved (cdr seen))]
-      [else
-       (define next
-         (simplify-path
-          (if resolved
-              (build-path resolved (car remaining))
-              (car remaining))
-          #f))
-       (cond
-         [(link-exists? next)
-          (if (member next seen equal?)
-              #f
-              (loop
-               (append
-                (explode-path
-                 (path->complete-path (resolve-path next) (path-only next)))
-                (cons #f (cdr remaining)))
-               #f
-               (cons next seen)))]
-         [else
-          (loop (cdr remaining) next seen)])])))
-
-(define (source-preflight-result source)
-  (call-with-input-file source
-    (lambda (input)
-      (define declaration
-        (read-bytes (bytes-length language-declaration) input))
-      (define terminator
-        (read-byte input))
-      (if (and (equal? declaration language-declaration)
-               (or (eof-object? terminator)
-                   (= terminator 10)
-                   (and (= terminator 13)
-                        (equal? (read-byte input) 10))))
-          (with-handlers
-              ([exn:fail:contract?
-                (lambda (failure) 'invalid-encoding)])
-            (bytes->string/utf-8 (port->bytes input) #f)
-            'valid)
-          'invalid-declaration))
-    #:mode 'binary))
-
-(define (regular-file? path)
-  (= (bitwise-and
-      (hash-ref (file-or-directory-stat path) 'mode)
-      file-type-bits)
-     regular-file-type-bits))
-
 (define (validate-source source-name)
-  (with-handlers
-      ([exn:fail?
-        (lambda (failure)
-          (stop unavailable-source-status source-name
-                "source path could not be inspected"))])
-    (define supplied-path (string->path source-name))
-    (when (dotenv-path? supplied-path)
-      (stop unavailable-source-status source-name
-            "refused source path because dotenv files are never read"))
-    (unless (equal? (path-get-extension supplied-path) #".attl")
-      (stop invalid-source-status source-name
-            "source file name must end in lowercase .attl"))
-    (define complete-path (path->complete-path supplied-path))
-    (when (link-exists? complete-path)
-      (stop unavailable-source-status source-name
-            "refused symbolic-link source; choose a regular .attl file"))
-    (define-values (parent name directory?)
-      (split-path complete-path))
-    (define resolved-parent (resolve-parent-path parent))
-    (unless resolved-parent
-      (stop unavailable-source-status source-name
-            "source path could not be inspected"))
-    (when (dotenv-path? resolved-parent)
-      (stop unavailable-source-status source-name
-            "refused source path because dotenv files are never read"))
-    (define resolved-source (build-path resolved-parent name))
-    (unless (or (file-exists? resolved-source)
-                (directory-exists? resolved-source))
-      (stop unavailable-source-status source-name
-            "source file was not found"))
-    (unless (regular-file? resolved-source)
-      (stop unavailable-source-status source-name
-            "source path is not a regular file"))
-    (define preflight-result
-      (with-handlers
-        ([exn:fail?
-          (lambda (failure)
-            (stop unavailable-source-status source-name
-                  "source file could not be read"))])
-        (source-preflight-result resolved-source)))
-    (cond
-      [(eq? preflight-result 'invalid-declaration)
-       (stop invalid-source-status source-name
-             "line 1 must be exactly #lang attalambda")]
-      [(eq? preflight-result 'invalid-encoding)
-       (stop invalid-source-status source-name
-             "source is not valid UTF-8")])
-    supplied-path))
-
-(define (syntax-failure-expression failure)
-  (define expressions
-    (exn:fail:syntax-exprs failure))
-  (and (pair? expressions)
-       (car expressions)))
-
-(define (datum-failure-expression? expression)
-  (and expression
-       (let ([value (syntax-e expression)])
-         (and (pair? value)
-              (syntax? (car value))
-              (eq? (syntax-e (car value)) '#%datum)))))
-
-(define (syntax-failure-reason expression)
-  (cond
-    [(and expression (eq? (syntax-property expression 'attalambda-recursion) 'self))
-     "recursive def binding is not allowed; use rec for self recursion"]
-    [(and expression (eq? (syntax-property expression 'attalambda-recursion) 'cycle))
-     "module-binding recursion is forbidden; rec supports only self recursion"]
-    [(and expression (identifier? expression))
-     (format "unknown AttaLambda name: ~s" (syntax-e expression))]
-    [(datum-failure-expression? expression)
-     "unsupported literal; only exact Rat, String, and ASCII Char literals are supported"]
-    [else
-     "source has invalid syntax"]))
+  (define inspected (inspect-source-file source-name))
+  (when (source-problem? inspected)
+    (stop (if (eq? (source-problem-kind inspected) 'invalid)
+              invalid-source-status unavailable-source-status)
+          source-name (source-problem-reason inspected)
+          (source-problem-line inspected) (source-problem-column inspected)))
+  (validated-source-path inspected))
 
 (define (requested-source-missing? failure source-path)
   (define missing-path
@@ -255,8 +119,21 @@
     [(and (= (length arguments) 1)
           (not (regexp-match? #px"^-" (car arguments))))
      (run-source (car arguments))]
+    [(member arguments '(() ("--no-history") ("--repl")
+                            ("--repl" "--no-history") ("--no-history" "--repl")))
+     (define interactive?
+       (and (terminal-port? (current-input-port)) (terminal-port? (current-error-port))))
+     (unless (or interactive? (member "--repl" arguments))
+       (stop command-misuse-status #f
+             "a terminal is required; use attalambda --repl for redirected source"))
+     (with-handlers ([exn:fail? (lambda (_)
+                                (stop unexpected-failure-status #f
+                                      "unexpected launcher failure; verify the AttaLambda installation"))])
+       (define run-repl (dynamic-require repl-index 'run-repl))
+       (exit (run-repl (embedded-product-version) interactive?
+                       #:history? (not (member "--no-history" arguments)))))]
     [else
      (stop command-misuse-status #f
-           "expected attalambda FILE.attl, attalambda --help, or attalambda --version")]))
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version")]))
 
 (main)

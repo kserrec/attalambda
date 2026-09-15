@@ -9,7 +9,7 @@ umask 022
 program_name="build-macos-distribution"
 required_racket_banner="Welcome to Racket v9.3 [cs]."
 required_racket_version="9.3"
-approved_notice_sha256="516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad"
+approved_notice_sha256="d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024"
 
 usage() {
   cat <<'USAGE'
@@ -128,6 +128,7 @@ case "$product_version" in
   0.5.0) expected_package_version="0.5" ;;
   0.6.0) expected_package_version="0.6" ;;
   0.7.0) expected_package_version="0.7" ;;
+  0.8.0) expected_package_version="0.8" ;;
   *) die "VERSION is outside the approved milestone states" ;;
 esac
 
@@ -151,6 +152,8 @@ raco_executable="$(command -v raco)"
   die "build requires exactly $required_racket_banner"
 [[ "$("$racket_executable" -e '(display (system-type (quote vm)))')" == "chez-scheme" ]] ||
   die "build requires the Racket CS virtual machine"
+runtime_patch_evidence="$("$racket_executable" "$project_root/tooling/prepare-racket-runtime.rkt" --check)" ||
+  die "build requires the reviewed dependency corrections in its isolated Racket runtime"
 
 build_temp_parent="${TMPDIR:-/tmp}"
 [[ -d "$build_temp_parent" && ! -L "$build_temp_parent" ]] ||
@@ -252,7 +255,7 @@ copy_regular_file() {
 copy_regular_file "info.rkt"
 copy_regular_file "VERSION"
 
-for source_directory_name in core effects lang macros runner runtime; do
+for source_directory_name in core effects lang macros readers runner runtime; do
   source_directory="$project_root/$source_directory_name"
   [[ -d "$source_directory" && ! -L "$source_directory" ]] ||
     die "package source directory is unavailable or symlinked: $source_directory_name"
@@ -349,7 +352,7 @@ license_digest="$(sha256_file "$project_root/LICENSE")"
 notice_path="$project_root/distribution/THIRD_PARTY_NOTICES.md.in"
 notice_digest="$(sha256_file "$notice_path")"
 [[ "$notice_digest" == "$approved_notice_sha256" ]] ||
-  die "third-party notices differ from the exact Phase 29 approval"
+  die "third-party notices differ from the recorded notice digest"
 install -m 0644 "$notice_path" "$artifact_root/THIRD_PARTY_NOTICES.md"
 
 while IFS= read -r -d '' linked_path; do
@@ -420,6 +423,7 @@ done < <(
   printf 'Target identifier: %s\n' "$target_identifier"
   printf 'Racket version: %s\n' "$required_racket_version"
   printf 'Racket variant: CS\n'
+  printf '%s\n' "$runtime_patch_evidence"
   printf 'Artifact status: final release artifact\n'
   printf 'Repository license SHA-256: %s\n' "$license_digest"
   printf 'Third-party notices SHA-256: %s\n' "$notice_digest"
@@ -437,6 +441,22 @@ scan_for_build_path() {
   [[ -n "$forbidden_path" ]] || return 0
   while IFS= read -r -d '' artifact_file; do
     if grep -aFq -- "$forbidden_path" "$artifact_file"; then
+      printf 'build_path_match_sha256=%s\n' "$(sha256_file "$artifact_file")" >&2
+      perl -e '
+        my ($needle, $file, $relative) = @ARGV;
+        open my $input, "<:raw", $file or die "cannot open matched artifact: $!";
+        my $content = do { local $/; <$input> };
+        my $offset = index($content, $needle);
+        $offset >= 0 or die "matched path disappeared";
+        my $start = $offset > 64 ? $offset - 64 : 0;
+        printf "build_path_match_file_hex=%s\n", unpack("H*", $relative);
+        printf "build_path_match_needle_hex=%s\n", unpack("H*", $needle);
+        printf "build_path_match_bytes=%d\n", length($content);
+        printf "build_path_match_offset=%d\n", $offset;
+        printf "build_path_match_context_hex=%s\n",
+          unpack("H*", substr($content, $start, $offset - $start + length($needle) + 64));
+      ' "$forbidden_path" "$artifact_file" "${artifact_file#"$artifact_root"/}" >&2 ||
+        printf 'build_path_match_diagnostic=unavailable\n' >&2
       die "artifact retains a forbidden build path"
     fi
   done < <(

@@ -14,7 +14,7 @@ Usage:
 
 Transfer the final Linux release archive and its checksum into
 a locked-down Ubuntu 24.04 container with no Racket installation, then run the
-Phase 29 guide, consumer, and relocation acceptance checks.
+guide, runtime-input, terminal, and relocation acceptance checks.
 USAGE
 }
 
@@ -60,6 +60,8 @@ run_inside_consumer() {
 
   command -v racket >/dev/null 2>&1 && die "consumer unexpectedly has a racket command"
   command -v raco >/dev/null 2>&1 && die "consumer unexpectedly has a raco command"
+  command -v python3 >/dev/null 2>&1 || die "test-only Python3 is unavailable"
+  python3 -c 'import fcntl, os, pty, select, signal, struct, subprocess, termios, unittest; assert hasattr(os, "pidfd_open")'
   [[ -f "$archive_path" && ! -L "$archive_path" ]] || die "transferred archive is unavailable"
   [[ -f "$checksum_path" && ! -L "$checksum_path" ]] || die "transferred checksum manifest is unavailable"
 
@@ -191,6 +193,22 @@ run_inside_consumer() {
     die "build manifest Racket version mismatch"
   grep -Fxq 'Racket variant: CS' "$first_root/BUILD-MANIFEST.txt" ||
     die "build manifest Racket variant mismatch"
+  grep -Fxq 'Racket promise patch SHA-256: 179be1bbde34542758c87b364ae7717c7355cba58cb880875faf137c521ab1a9' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest promise patch mismatch"
+  grep -Fxq 'Racket promise source SHA-256: bca5b526943be123c8f3fbad24d30556fe3ffea1dc60b6d9c28ec8875e27c7eb' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected promise source mismatch"
+  grep -Fxq 'Expeditor patch SHA-256: 954cdc83b8ee684512a5c3c131d4bc48dd30c40a6a6e8c5a884b3f46dc98b755' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
+  grep -Fxq 'Expeditor main.rkt SHA-256: 5bc2e1e1ac8b08b40f52d8b4ef259612330fc63799ee932a6b3947eda70188ff' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
+  grep -Fxq 'Expeditor private/ee.rkt SHA-256: 5e3f9f407745db422ad53e21d1de855b0ff619af9c1079802e94f80efe3449f6' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
+  grep -Fxq 'Expeditor private/screen.rkt SHA-256: 58da8a119d445728f684d1eebb70e4d1196a8fa699925c62731870ba1bf6e262' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
+  grep -Fxq 'Expeditor private/terminal.rkt SHA-256: 657c809503ba85b590c21ceeb0260d1253dc0440527eeba2be72d47db3c52f3e' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
+  grep -Fxq 'Expeditor private/wstring.rkt SHA-256: 26ff7df942f7acd4332a5a6b4fd9e74abd7d5b2b14cb9a2f54ce862c2ffb07c2' "$first_root/BUILD-MANIFEST.txt" ||
+    die "build manifest corrected editor mismatch"
   grep -Eq '^Source commit: [0-9a-f]{40}$' "$first_root/BUILD-MANIFEST.txt" ||
     die "build manifest source commit is invalid"
   grep -Fxq 'Archive checksum: external sibling SHA256SUMS' "$first_root/BUILD-MANIFEST.txt" ||
@@ -199,14 +217,14 @@ run_inside_consumer() {
     die "build manifest release status mismatch"
   grep -Fxq 'Repository license SHA-256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30' "$first_root/BUILD-MANIFEST.txt" ||
     die "build manifest repository-license hash mismatch"
-  grep -Fxq 'Third-party notices SHA-256: 516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad' "$first_root/BUILD-MANIFEST.txt" ||
+  grep -Fxq 'Third-party notices SHA-256: d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024' "$first_root/BUILD-MANIFEST.txt" ||
     die "build manifest notice hash mismatch"
   [[ "$(sha256sum "$first_root/LICENSE" | awk '{print $1}')" == \
       "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30" ]] ||
     die "repository license bytes differ from the approved license"
   [[ "$(sha256sum "$first_root/THIRD_PARTY_NOTICES.md" | awk '{print $1}')" == \
-      "516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad" ]] ||
-    die "third-party notices differ from the exact Phase 29 approval"
+      "d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024" ]] ||
+    die "third-party notices differ from the recorded notice digest"
   grep -Fxq "awk '\$2 == \"$archive_name\" { print }' SHA256SUMS | sha256sum -c -" "$first_root/GETTING_STARTED.md" ||
     die "guide checksum command mismatch"
   grep -Fxq "tar -xzf $archive_name" "$first_root/GETTING_STARTED.md" ||
@@ -248,7 +266,7 @@ run_inside_consumer() {
 
   "$attalambda" --help >"$stdout_file" 2>"$stderr_file"
   check_captured_output \
-    $'Usage:\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n' \
+    $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n' \
     "packaged help"
 
   (cd "$first_root" && ./bin/attalambda examples/hello.attl \
@@ -455,6 +473,48 @@ PROGRAM
   cmp -s "$scratch_root/http-body.txt" "$expected_file" ||
     die "HTTP response body mismatch"
 
+  local input_source="$scratch_root/runtime-input.attl"
+  cat > "$input_source" <<'PROGRAM'
+#lang attalambda
+(def saved = (read-line UNIT))
+(print saved)
+(stdout "\n")
+(print saved)
+(stdout "\n")
+(print (read-line UNIT))
+(stdout "\n")
+(print (read-line UNIT))
+(stdout "\n")
+(print (read-line UNIT))
+(stdout "\n")
+PROGRAM
+  check_interactive_and_input() {
+    printf 'first\r\n\n\377\000\n' > "$scratch_root/runtime-input.bin"
+    timeout 20 "$attalambda" "$input_source" < "$scratch_root/runtime-input.bin" \
+      > "$stdout_file" 2> "$stderr_file"
+    check_captured_output \
+      $'OK(SOME("first"))\nOK(SOME("first"))\nOK(SOME(""))\nOK(SOME("\\xFF\\x00"))\nOK(NONE)\n' \
+      "saved input, byte preservation and EOF"
+    timeout 20 "$attalambda" --repl --no-history > "$stdout_file" 2> "$stderr_file" <<'SOURCE'
+(def x = 1)
+(def plus-x n = (add x n))
+(def x = 10)
+(plus-x 1)
+(add x 1)
+TRUE
+:quit
+SOURCE
+    check_captured_output $'=> 2\n=> 11\n=> TRUE\n' "documented snapshot transcript"
+  }
+  check_interactive_and_input
+
+  # These classes exercise only the absolute executable and temporary fixtures.
+  # Source-only probe classes are deliberately excluded from this consumer.
+  # Their UTF-8 terminal input needs a matching native console locale; retain C
+  # for the surrounding archive inventory and byte comparisons.
+  LC_ALL=C.UTF-8 ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
+    timeout --kill-after=5s 600s python3 -I -B /transfer/interactive_pty.py -v CLIProbe TranscriptProbe
+
   mkdir -p -- "$second_parent"
   mv -- "$first_root" "$second_root"
   attalambda="$second_root/bin/attalambda"
@@ -469,9 +529,18 @@ PROGRAM
   "$attalambda" "$generated_source" >"$stdout_file" 2>"$stderr_file"
   check_captured_output $'Generated after packaging.\n' "relocated source"
 
+  check_interactive_and_input
+  LC_ALL=C.UTF-8 ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
+    timeout --kill-after=5s 600s python3 -I -B /transfer/interactive_pty.py -v CLIProbe TranscriptProbe
+
   printf 'consumer_image=%s\n' "$consumer_image"
   printf 'consumer_racket_command=absent\n'
   printf 'consumer_raco_command=absent\n'
+  printf 'terminal_harness_sha256=%s\n' "$(sha256sum /transfer/interactive_pty.py | awk '{print $1}')"
+  printf 'terminal_classes=CLIProbe TranscriptProbe\n'
+  printf 'terminal_locale=C.UTF-8\n'
+  printf 'consumer_python_version=%s\n' "$(python3 --version)"
+  dpkg-query -W -f='consumer_package=${Package} ${Version}\n' python3 python3-minimal libpython3-stdlib
   printf 'consumer_network=none-with-loopback-only\n'
   printf 'archive_sha256=%s\n' "${expected_checksum_line%% *}"
   printf 'compressed_bytes=%s\n' "$(stat -c '%s' "$archive_path")"
@@ -480,6 +549,8 @@ PROGRAM
   printf 'runtime_files=%s\n' "$runtime_file_count"
   printf 'guide_workflow=passed\n'
   printf 'relocation=passed\n'
+  printf 'interactive_terminal_acceptance=passed-at-both-paths\n'
+  printf 'runtime_input_and_snapshot_transcript=passed-at-both-paths\n'
   printf 'first_startup_milliseconds=%s\n' "$first_startup_milliseconds"
   printf 'relocated_startup_milliseconds=%s\n' "$relocated_startup_milliseconds"
   printf 'consumer_acceptance=passed\n'
@@ -537,6 +608,17 @@ chmod 0755 -- "$consumer_transfer_root"
 install -m 0644 -- "$archive_path" "$consumer_transfer_root/$archive_name"
 install -m 0644 -- "$checksum_path" "$consumer_transfer_root/SHA256SUMS"
 install -m 0555 -- "${BASH_SOURCE[0]}" "$consumer_transfer_root/consumer.sh"
+install -m 0444 -- "$project_root/tests/interactive_pty.py" "$consumer_transfer_root/interactive_pty.py"
+
+# Build with an empty context: no checkout contents enter the consumer image.
+# Network access belongs only to this test-dependency preparation step.
+docker build --platform linux/amd64 \
+  --build-arg "BASE_IMAGE=$consumer_image" \
+  --iidfile "$consumer_transfer_root/consumer-image-id" \
+  - < "$project_root/tooling/linux-consumer.Dockerfile"
+prepared_consumer_image="$(<"$consumer_transfer_root/consumer-image-id")"
+[[ "$prepared_consumer_image" =~ ^sha256:[0-9a-f]{64}$ ]] || die "consumer image ID is invalid"
+printf 'prepared_consumer_image=%s\n' "$prepared_consumer_image"
 
 docker run \
   --rm \
@@ -552,7 +634,7 @@ docker run \
   --memory 2g \
   --mount "type=bind,src=$consumer_transfer_root,dst=/transfer,readonly" \
   --entrypoint /bin/bash \
-  "$consumer_image" \
+  "$prepared_consumer_image" \
   /transfer/consumer.sh \
   --inside-consumer \
   "$archive_name" \

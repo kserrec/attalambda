@@ -9,7 +9,7 @@ program_name="build-linux-distribution"
 target_identifier="linux-x86_64"
 required_racket_banner="Welcome to Racket v9.3 [cs]."
 required_racket_version="9.3"
-approved_notice_sha256="516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad"
+approved_notice_sha256="d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024"
 
 usage() {
   cat <<'USAGE'
@@ -102,6 +102,7 @@ case "$product_version" in
   0.5.0) expected_package_version="0.5" ;;
   0.6.0) expected_package_version="0.6" ;;
   0.7.0) expected_package_version="0.7" ;;
+  0.8.0) expected_package_version="0.8" ;;
   *) die "VERSION is outside the approved milestone states" ;;
 esac
 
@@ -125,6 +126,8 @@ raco_executable="$(command -v raco)"
   die "build requires exactly $required_racket_banner"
 [[ "$("$racket_executable" -e '(display (system-type (quote vm)))')" == "chez-scheme" ]] ||
   die "build requires the Racket CS virtual machine"
+runtime_patch_evidence="$("$racket_executable" "$project_root/tooling/prepare-racket-runtime.rkt" --check)" ||
+  die "build requires the reviewed dependency corrections in its isolated Racket runtime"
 
 build_temp_root="$(mktemp -d /tmp/attalambda-linux-build-XXXXXX)"
 staged_archive=""
@@ -215,7 +218,7 @@ copy_regular_file() {
 copy_regular_file "info.rkt"
 copy_regular_file "VERSION"
 
-for source_directory_name in core effects lang macros runner runtime; do
+for source_directory_name in core effects lang macros readers runner runtime; do
   source_directory="$project_root/$source_directory_name"
   [[ -d "$source_directory" && ! -L "$source_directory" ]] ||
     die "package source directory is unavailable or symlinked: $source_directory_name"
@@ -307,7 +310,7 @@ license_digest="$(sha256sum "$project_root/LICENSE" | awk '{print $1}')"
 notice_path="$project_root/distribution/THIRD_PARTY_NOTICES.md.in"
 notice_digest="$(sha256sum "$notice_path" | awk '{print $1}')"
 [[ "$notice_digest" == "$approved_notice_sha256" ]] ||
-  die "third-party notices differ from the exact Phase 29 approval"
+  die "third-party notices differ from the recorded notice digest"
 install -m 0644 -- "$notice_path" "$artifact_root/THIRD_PARTY_NOTICES.md"
 
 runtime_files=("$artifact_root"/lib/plt/racketcs-*)
@@ -353,6 +356,7 @@ find "$artifact_root" \
   printf 'Target identifier: %s\n' "$target_identifier"
   printf 'Racket version: %s\n' "$required_racket_version"
   printf 'Racket variant: CS\n'
+  printf '%s\n' "$runtime_patch_evidence"
   printf 'Artifact status: final release artifact\n'
   printf 'Repository license SHA-256: %s\n' "$license_digest"
   printf 'Third-party notices SHA-256: %s\n' "$notice_digest"

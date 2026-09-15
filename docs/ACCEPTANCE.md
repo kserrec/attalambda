@@ -7,6 +7,38 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
+## Unreleased interactive milestone
+
+The clean build revision is `3ae392629ecfb380d3dd31451c33fd5617d53f51`. The
+complete corrected Racket CS 9.3 source suite passes 69 test files / 26,845
+assertions, 43 shared Python terminal methods, 6 source-only visual methods,
+40 production purity modules and the complete source boundary inventory.
+The frozen-source CI terminal groups took 51.387s and 3.902s; all ten CI jobs pass.
+[HANDOFF.md](../HANDOFF.md) records the current-head CI and final delivery state.
+
+The checks cover lazy binding snapshots, generated-module purity, input sharing,
+cancellation, failure publication, resource lifetime, standalone loads, transcript
+status, inert bounded history, completion and terminal restoration. The 18-row
+contract map is in [PLAN.md](../PLAN.md). Independent current-source, completion,
+visual-editor and dependency-preparation reviews closed their confirmed findings.
+
+The exact 19,602,521-byte Linux archive passes the isolated consumer: all 25
+CLI/transcript methods at both paths in 67.185s and 78.388s, runtime input and
+snapshot transcripts, guide examples, provenance, dependencies and relocation.
+There is no external Racket or source checkout in the consumer and no Python in
+the archive. The native terminal test locale is C.UTF-8; surrounding archive byte
+checks retain C. Both owned containers and the transfer directory were removed.
+[Candidate notes](releases/0.8.0.md) record all three exact artifact hashes.
+
+Three 200-entry sessions kept 7 descriptors. Latest local retained heaps were
+125,518,000, 125,715,392 and 125,670,160 bytes; reset heaps were 115,860,096,
+115,845,952 and 115,864,736 bytes versus 116,036,976 initially. These are
+observations, not universal memory or performance guarantees. Earlier baseline
+and development-artifact evidence stays historical in PLAN.md. No release is
+published from this branch.
+
+## Published baseline
+
 The published 0.7.0 source passes 46 suites with 17,290 assertions,
 39-module expanded purity, and the full boundary scan. The 157 sugar
 assertions include actual frontend-expanded terms judged by the existing

@@ -44,13 +44,24 @@ the corresponding downloaded-user path.
 command surface:
 
 ```text
+attalambda
+attalambda --no-history
+attalambda --repl
+attalambda --repl --no-history
 attalambda FILE.attl
 attalambda --help
 attalambda --version
 ```
 
-There are no aliases, short flags, program arguments, REPL, stdin-source,
-compiler, or package-manager modes. A source path beginning with `-` must use
+The shell forms are implemented in the unreleased interactive milestone. The
+exact Linux candidate passes isolated terminal and relocation checks; the
+[handoff](../../HANDOFF.md) records final delivery checks. Published 0.7.0
+supports only file/help/version. `--repl` explicitly permits transcripts;
+without it, no-file startup requires terminal stdin and stderr. See the
+[shell contract and statuses](../API.md#interactive-shell-unreleased).
+
+There are no aliases, short flags, program arguments, compiler, or package-manager
+modes. A source path beginning with `-` must use
 an explicit directory component such as `./-example.attl`.
 
 A runnable source has these properties:
@@ -88,6 +99,8 @@ Validation has one fixed order:
 
 ```text
 Usage:
+  attalambda [--no-history]
+  attalambda --repl [--no-history]
   attalambda FILE.attl
   attalambda --help
   attalambda --version
@@ -105,7 +118,7 @@ Launcher-controlled completion uses this table:
 | Status | Meaning | Conditions |
 | ---: | --- | --- |
 | `0` | success | help/version completed, or the source instantiated without an uncaught host failure |
-| `64` | command misuse | missing, unknown, or extra command arguments |
+| `64` | command misuse | unknown, duplicate, incompatible, or extra arguments; implicit no-file startup without terminal stdin and stderr |
 | `65` | invalid source | suffix, declaration, encoding, read, syntax, or expansion failure |
 | `66` | unavailable/refused input | forbidden path, symlink, missing path, nonregular input, or inspection/read failure |
 | `70` | unexpected launcher failure | a catchable Racket failure outside the preceding classes and approved host Results |
@@ -144,7 +157,8 @@ The exact reasons are:
 
 | Class | Status | Reason |
 | --- | ---: | --- |
-| command misuse | 64 | `expected attalambda FILE.attl, attalambda --help, or attalambda --version` |
+| command misuse | 64 | `expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version` |
+| implicit nonterminal startup | 64 | `a terminal is required; use attalambda --repl for redirected source` |
 | forbidden path | 66 | `refused source path because dotenv files are never read` |
 | wrong extension | 65 | `source file name must end in lowercase .attl` |
 | source symlink | 66 | `refused symbolic-link source; choose a regular .attl file` |
@@ -179,6 +193,22 @@ use a shell or FFI, contact a network service, or discover another source.
 [`tooling/check-boundaries.rkt`](../../tooling/check-boundaries.rkt) enforces
 this class and rejects unknown Racket source locations.
 
+The interactive milestone adds separate exact tooling classes for source
+collection, session modules, diagnostics, shell output, editor integration,
+the scoped POSIX descriptor adapter, and inert source history. The launcher
+loads only its fixed shell entrypoint in shell mode. Source files remain checked
+by the same validator and language expander. Session loading may reference only
+the fixed language and generated checked entry modules. The embedded language
+initializes once in the executable's namespace before declaration transfer,
+which requires Racket's shared cross-phase-persistent primitives to be ready.
+The unused origin graph opens no resources or program ports; each session
+instantiates a separate ordinary language graph and host registry. The fixed
+`racket/runtime-config` declaration also transfers so runtime expansion can
+resolve Racket's generated entry scaffolding. Only the descriptor adapter
+may use its three exact FFI operations. None of these exceptions expands the
+language's program effects or permits arbitrary runner imports. See
+[ARCHITECTURE.md](../../ARCHITECTURE.md#frontend-runner-and-observation).
+
 ## Version authority
 
 Root [`VERSION`](../../VERSION) is the sole manually edited product version.
@@ -197,17 +227,21 @@ different syntax, so build tooling checks this closed projection:
 | `0.5.0` | `0.5` |
 | `0.6.0` | `0.6` |
 | `0.7.0` | `0.7` |
+| `0.8.0` | `0.8` |
 
-A new version state requires an explicit plan change. The small Lisp sugar
-release plan authorizes exactly 0.7.0 for the four syntax conveniences,
-including its Linux archive and publication. Earlier releases remain historical evidence; they do not
-authorize a future version. The release ledger separates prepared inputs from
+A new version state requires an explicit plan change. The interactive milestone
+authorizes prepared 0.8.0 metadata and a verified Linux candidate, with no merge,
+tag, or publication. Earlier releases remain historical evidence; they do not
+authorize another release. The release ledger separates prepared inputs from
 observed publication.
 
 ## Build, archive, and consumer contract
 
 [`tooling/build-linux-distribution.sh`](../../tooling/build-linux-distribution.sh)
-builds with exactly full Racket CS 9.3:
+builds with full Racket CS 9.3 plus the
+[pinned dependency corrections](../../tooling/patches/README.md). Explicit isolated
+environment preparation applies them; the source suite and builders only check
+their source hashes and loaded behavior, without modifying an installation:
 
 1. copy package sources into an isolated temporary package home;
 2. compile the runner with `raco exe` using the default `-U` isolation and
@@ -240,7 +274,8 @@ THIRD_PARTY_NOTICES.md
 `bin/` contains only `attalambda`. `examples/` contains `hello.attl`,
 `stdout.attl`, `file-round-trip.attl`, `http-server.attl`, and
 `foundations.attl`. `BUILD-MANIFEST.txt` records the product version, source
-commit and tree state, target, Racket version/variant, exact file inventory,
+commit and tree state, target, Racket version/variant, promise and Expeditor patch
+hashes, corrected source hashes, exact file inventory,
 legal hashes, checksum arrangement, and observed native-library assumptions.
 It records no user name, secret, timestamp, package registry, checkout path,
 or temporary path.
@@ -250,15 +285,23 @@ SHA-256
 `cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30`.
 The approved Racket CS 9.3
 [`THIRD_PARTY_NOTICES.md.in`](../../distribution/THIRD_PARTY_NOTICES.md.in) is
-exactly 100,024 bytes with SHA-256
-`516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad`.
+exactly 103,764 bytes with SHA-256
+`d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024`.
 The build copies these bytes unchanged.
 
 [`tooling/test-linux-distribution.sh`](../../tooling/test-linux-distribution.sh)
-crosses a build-to-consumer transfer boundary into
-`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`.
-The consumer has no Racket command or source checkout and receives the archive,
-checksum, and self-contained consumer harness. It verifies the checksum,
+prepares a test-only image from
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`,
+adding Ubuntu's Python3 standard library with an empty build context. Acceptance
+then runs that exact image ID without network access, as a non-root user with
+a read-only root filesystem and the existing capability/process/memory limits.
+The consumer has no Racket command or source checkout and receives only the
+archive, checksum, self-contained shell harness, and `interactive_pty.py`.
+The final clean candidate from `3ae3926` passes this isolated consumer, including
+all 25 terminal/transcript methods at both extraction paths. The
+[candidate notes](../releases/0.8.0.md) record its exact hashes and the
+[handoff](../../HANDOFF.md) records runtime, commands and completed review.
+Existing checks verify the checksum,
 layout, permissions, manifest, legal bytes, guide commands, version/help,
 stdout, byte-exact file-example round-trip, TCP/HTTP loopback behavior, and
 relocation. The current consumer also checks explicit/default program statuses
@@ -270,7 +313,15 @@ is inventoried but not executed by this consumer. Fixed launcher-failure
 statuses and sanitized diagnostics are covered by `tests/runner-test.rkt`;
 foundations execution is covered by `tests/milestone-two-acceptance-test.rkt`.
 Those are source-suite checks, not packaged-consumer results. External
-networking is disabled; only ephemeral loopback service is used.
+networking is disabled; only ephemeral loopback service is used. Added checks
+exercise saved runtime input, byte preservation, EOF, the documented snapshot
+transcript, and the actual executable's CLIProbe/TranscriptProbe terminal cases
+before and after relocation. Source-only Racket probe classes are excluded.
+The terminal invocations use `LC_ALL=C.UTF-8` to match their UTF-8 input with
+the native editor's console encoding. Archive sorting and byte comparisons retain
+the surrounding `C` locale. The consumer records this terminal locale explicitly.
+The consumer records the harness digest, selected classes, prepared image ID,
+and Python package versions. These test dependencies do not enter the archive.
 
 Building or verifying an archive does not authorize a tag, Release, upload,
 signing or notarization operation, paid account use, purchase, or publication.

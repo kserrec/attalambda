@@ -1,0 +1,403 @@
+--- a/main.rkt
++++ b/main.rkt
+@@ -11,7 +11,8 @@
+          "private/ee.rkt"
+          "private/history.rkt"
+          "private/token.rkt"
+-         "private/color.rkt")
++         "private/color.rkt"
++         "private/wstring.rkt")
+ 
+ (provide call-with-expeditor
+          expeditor-open
+@@ -216,7 +217,7 @@
+         (move-eoe ee entry)
+         (no-raw-mode)
+         (when newline? ; skip a newline on EOF for consistency with plain input
+-          (ee-write-char #\newline))
++          (line-feed))
+         (ee-flush)
+         (update-history! ee entry)
+         ;; skip close delimiters, whitespace, and comments?
+@@ -289,7 +290,7 @@
+                                     (no-raw-mode)
+                                     #;((error-display-handler) (exn-message exn) exn)
+                                     (ee-display-string (exn-message exn))
+-                                    (ee-write-char #\newline)
++                                    (line-feed)
+                                     (update-history! ee entry)
+                                     (void))]
+                        [exn:break? (lambda (exn)
+@@ -387,23 +388,28 @@
+ (define-public (ee-id-completion ee-id-completion/indent ee-id-completion/indent/reverse)
+   (define (display-completions prefix suffix*)
+     (let* ([s* (map (lambda (suffix) (string-append prefix suffix)) suffix*)]
+-           [width (fx+ (apply fxmax (map string-length s*)) 2)]
++           [width (fx+ (apply fxmax (map string-width s*)) 2)]
+            [tcols (fxmax 1 (fxquotient (screen-cols) width))]
+            [trows (fxquotient (length s*) tcols)]
+            [nlong (fxremainder (length s*) tcols)])
+       (define (display-row v last)
+-        (let loop ([j 0])
+-          (let ([s (vector-ref v j)])
+-            (if (fx= j last)
+-                (ee-display-string s)
+-                (begin
+-                  (ee-display-string (let ([s (format "~a"  s)])
+-                                       (string-append
+-                                        s
+-                                        (make-string (max 0 (- width (string-length s))) #\space))))
+-                  (loop (fx+ j 1))))))
+-        (carriage-return)
+-        (line-feed))
++        (define row
++          (apply string-append
++                 (for/list ([j (in-range (add1 last))])
++                   (define s (vector-ref v j))
++                   (if (= j last)
++                       s
++                       (string-append s (make-string (- width (string-width s)) #\space))))))
++        ;; Candidate names can exceed a screen row. Count physical rows so
++        ;; the entry is redisplayed at the correct position below the list.
++        (let loop ([i 0] [rows 0])
++          (define n (string-fits-width row i (screen-cols)))
++          (ee-display-string (substring row i (+ i n)))
++          (carriage-return)
++          (line-feed)
++          (if (= (+ i n) (string-length row))
++              (add1 rows)
++              (loop (+ i n) (add1 rows)))))
+       (set-fg-color identifier-color)
+       (begin0
+         (let ([v (make-vector (if (fx= nlong 0) trows (fx+ trows 1)))])
+@@ -417,12 +423,11 @@
+                   (begin
+                     (vector-set! (vector-ref v i) j (car s*))
+                     (f (cdr s*) (fx+ i 1) j nlong)))))
+-          (do ([i 0 (fx+ i 1)])
+-              ((fx= i trows))
+-            (display-row (vector-ref v i) (fx- tcols 1)))
+-          (unless (fx= nlong 0)
+-            (display-row (vector-ref v trows) (fx- nlong 1)))
+-          (if (fx= nlong 0) trows (fx+ trows 1)))
++          (+ (for/sum ([i (in-range trows)])
++               (display-row (vector-ref v i) (fx- tcols 1)))
++             (if (fx= nlong 0)
++                 0
++                 (display-row (vector-ref v trows) (fx- nlong 1)))))
+         (set-fg-color default-color))))
+ 
+   (define (common-prefix s*)
+@@ -739,7 +744,7 @@
+                (update-history! ee entry)
+                (move-eoe ee entry)
+                (no-raw-mode)
+-               (ee-write-char #\newline)
++                 (line-feed)
+                (ee-flush)
+                (raw-mode)
+                (let ([entry (string->entry ee "")])
+--- a/private/ee.rkt
++++ b/private/ee.rkt
+@@ -269,7 +269,8 @@
+               [else (write-char c op) (f (fx+ i 1) (fx+ col 1))]))))))
+ 
+ (define (string->entry ee s)
+-  (let ([ln* (map (lambda (str) (make-ln ee str)) (string->lines s))])
++  ;; Recalled source is lossless; clipboard tab normalization is separate.
++  (let ([ln* (map (lambda (str) (make-ln ee str)) (regexp-split #rx"\n" s))])
+     (make-entry (if (null? ln*) (list (make-ln ee "")) ln*))))
+ 
+ (define (null-entry? entry)
+@@ -319,8 +320,16 @@
+        ;; shouldn't go negative, bust just in case:
+        0))
+ 
++(define (display-prompt ee)
++  (define prompt (eestate-prompt ee))
++  ;; Keep the configured prompt so widening restores it. A narrower display
++  ;; must use the same fitting text for both rendering and cursor geometry.
++  (if (<= (string-width prompt) (screen-cols))
++      prompt
++      (substring prompt 0 (string-fits-width prompt 0 (max 0 (sub1 (screen-cols)))))))
++
+ (define (prompt-width ee)
+-  (string-length (regexp-replace* #rx"\033\\[[0-9;]*m" (eestate-prompt ee) "")))
++  (string-width (display-prompt ee)))
+ 
+ (define (str->nsr ee str)
+   ;; we can't just divide by the screen width, because a double-wide
+@@ -436,7 +445,7 @@
+ ; the first, which gets the actual prompt.
+ 
+ (define (phantom-prompt ee)
+-  (make-string (string-length (eestate-prompt ee)) #\space))
++  (make-string (prompt-width ee) #\space))
+ 
+ (define (ee-display-string/colors str colors current-color)
+   (cond
+@@ -509,7 +518,7 @@
+                 (carriage-return)
+                 (line-feed)
+                 (ee-display-string (phantom-prompt ee))
+-                (loop (fx+ new-row 1) 0 0)))))))
++                (loop (fx+ new-row 1) 0 (prompt-width ee))))))))
+   
+   (define (display-rest/goto ee entry just-row? clear? to-row to-col)
+     ; display rest of entry and go directly from there to (to-row, to-col)
+@@ -556,7 +565,7 @@
+       (when (fx= start 0)
+         (ee-display-string
+          (if (fx= row 0)
+-             (eestate-prompt ee)
++             (display-prompt ee)
+              (phantom-prompt ee))))
+       (define current-color (ee-display-string/colors (car ls) (car cs) default-color))
+       (carriage-return)
+@@ -945,12 +954,25 @@
+                             (fx+ mrow (fx- r2 r1))
+                             (if (fx= mrow r1) (fx+ c2 (fx- mcol c1)) mcol))))))))
+ 
++(define (redisplay-after-change ee entry row col)
++  ;; clear-entry ran before the change using the old physical coordinates.
++  ;; Old viewport offsets may no longer exist after a width or line change.
++  (set-entry-row! entry row)
++  (set-entry-col! entry col)
++  (set-entry-top-line! entry (make-pos 0 0))
++  (set-entry-bot-line! entry (make-pos 0 0))
++  (redisplay ee entry))
++
+ (define (delete-forward ee entry r2 c2)
+   ; deletes from point, aka r1, c1 (inclusive) to r2, c2 (exclusive)
+   ; and returns the deleted content as a list of strings
+   (let ([r1 (entry-row entry)] [c1 (entry-col entry)])
+     (assert* (or (fx< r1 r2) (and (fx= r1 r2) (fx<= c1 c2))))
+     (adjust-mark/delete ee entry r1 c1 r2 c2)
++    (define redraw?
++      (or (not (ln-unicell? (list-ref (entry-lns entry) r1)))
++          (not (ln-unicell? (list-ref (entry-lns entry) r2)))))
++    (when redraw? (clear-entry ee entry))
+     (if (fx= r1 r2)
+         (let* ([ln (list-ref (entry-lns entry) r1)]
+                [s (ln-str ln)]
+@@ -963,7 +985,9 @@
+                        (vector-append
+                         (vector-copy colors 0 c1)
+                         (vector-copy colors c2 (string-length s))))
+-          (display-rest/goto ee entry (fx= (ln-nsr ln) old-nsr) #t r1 c1)
++          (if redraw?
++              (redisplay-after-change ee entry r1 c1)
++              (display-rest/goto ee entry (fx= (ln-nsr ln) old-nsr) #t r1 c1))
+           (list (substring s c1 c2)))
+         (let* ([lns (entry-lns entry)]
+                [ls1 (list-tail lns r1)]
+@@ -986,7 +1010,9 @@
+                              (list (substring s2 0 c2))
+                              (cons (ln-str (car ls)) (f (cdr ls))))))])
+             (set-entry-lns! entry (replace-cdr lns ls1 (cdr ls2)))
+-            (display-rest/goto ee entry #f #t r1 c1)
++            (if redraw?
++                (redisplay-after-change ee entry r1 c1)
++                (display-rest/goto ee entry #f #t r1 c1))
+             deleted)))))
+ 
+ (define (update-entry-colors ee entry new-colors)
+@@ -1059,15 +1085,18 @@
+          [colors (ln-colors ln)]
+          [new-col (fx+ col (string-length new-str))]
+          [nsr (ln-nsr ln)]
+-         [eoe? (end-of-entry? ee entry)])
++         [eoe? (end-of-entry? ee entry)]
++         [redraw? (or (not (ln-unicell? ln)) (not (string-unicell? new-str)))])
+     ;; beware of inserting just before a multicell character that has
+     ;; moved to the next line leaving a blank cell at the end of a
+     ;; row, in which case inserting could shift the logical->physical
+     ;; calculation for the point
+-    (let ([pcol (col->screen-col ee entry row col)])
+-      (when (and (col . fx> . 0) (fx= 0 pcol))
+-        (move-left ee entry 1)
+-        (set-entry-col! entry (fx- col 1))))
++    (if redraw?
++        (clear-entry ee entry)
++        (let ([pcol (col->screen-col ee entry row col)])
++          (when (and (col . fx> . 0) (fx= 0 pcol))
++            (move-left ee entry 1)
++            (set-entry-col! entry (fx- col 1)))))
+     (ln-str-set! ee ln
+                  (string-append
+                   (substring str 0 col)
+@@ -1083,12 +1112,14 @@
+                                           [else
+                                            default-color]))
+                   (vector-copy colors col (string-length str))))
+-    (let ([just-row? (fx= (ln-nsr ln) nsr)])
+-      (display-rest/goto ee entry just-row?
++    (if redraw?
++        (redisplay-after-change ee entry row new-col)
++        (let ([just-row? (fx= (ln-nsr ln) nsr)])
++          (display-rest/goto ee entry just-row?
+                          ; avoid clear-eol/eos if insertion takes place at end of entry or
+                          ; if rewriting just the current row
+-                         (and (not eoe?) (not just-row?))
+-                         row new-col))
++                             (and (not eoe?) (not just-row?))
++                             row new-col)))
+     (adjust-mark/insert ee entry row col row new-col)))
+ 
+ (define (add-char ee entry c)
+@@ -1107,7 +1138,10 @@
+                [ln (car ls)]
+                [point-str (ln-str ln)]
+                [point-colors (ln-colors ln)]
+-               [eoe? (end-of-entry? ee entry)])
++               [eoe? (end-of-entry? ee entry)]
++               [redraw? (or (not (ln-unicell? ln))
++                            (for/or ([str (in-list strs)]) (not (string-unicell? str))))])
++          (when redraw? (clear-entry ee entry))
+           (ln-str-set! ee ln
+                        (string-append (substring point-str 0 col) (car strs))
+                        (vector-append (vector-copy point-colors 0 col)
+@@ -1126,7 +1160,9 @@
+           (let* ([n (fx- (length strs) 1)]
+                  [new-row (fx+ row n)]
+                  [new-col (string-length (list-ref strs n))])
+-            (display-rest/goto ee entry #f (not eoe?) new-row new-col)
++            (if redraw?
++                (redisplay-after-change ee entry new-row new-col)
++                (display-rest/goto ee entry #f (not eoe?) new-row new-col))
+             (adjust-mark/insert ee entry row col new-row new-col))))))
+ 
+ (define (first-line? ee entry) (fxzero? (entry-row entry)))
+@@ -1179,7 +1215,9 @@
+     (unless (and (fx= (entry-screen-cols entry) (screen-cols))
+                  (fx= (entry-screen-rows entry) (screen-rows)))
+       (for-each
+-       (lambda (ln) (ln-nsr-set! ln (str->nsr ee (ln-str ln))))
++       (lambda (ln)
++         (ln-nsr-set! ln (str->nsr ee (ln-str ln)))
++         (set-ln-unicell?! ln (string-unicell? (ln-str ln))))
+        (entry-lns entry))
+       (set-entry-screen-cols! entry (screen-cols))
+       (set-entry-screen-rows! entry (screen-rows))))
+@@ -1632,15 +1670,18 @@
+     (define ln (list-ref lns row))
+     (define nsr (ln-nsr ln))
+     (define (finish n amt)
++      (define redraw? (not (ln-unicell? ln)))
++      (if redraw? (clear-entry ee entry) (move-bol ee entry))
+       (indent-row! ee entry row n)
+-      (move-bol ee entry)
+-      (let ([just-row? (fx= (ln-nsr ln) nsr)])
++      (if redraw?
++          (redisplay-after-change ee entry row amt)
++          (let ([just-row? (fx= (ln-nsr ln) nsr)])
+         (define eoe? (end-of-entry? ee entry))
+         (display-rest/goto ee entry just-row?
+                            ; avoid clear-eol/eos if inserting and either at end of entry or
+                            ; rewriting just the current row
+                            (or (fx< n 0) (and (not eoe?) (not just-row?)))
+-                           row amt)))
++                           row amt))))
+     (cond
+       [(not amt)
+        (define amt (calc-indent ee entry row))
+--- a/private/screen.rkt
++++ b/private/screen.rkt
+@@ -131,7 +131,7 @@
+ ; screen cell.  it should never be passed #\return, #\newline, or #\tab.
+ ; furthermore, ee-write-char should never be used to write past the end
+ ; of a screen line.
+-(define (ee-write-char c)
++(define (ee-write-glyph c)
+   (define len
+     (if (and cols (fx= (fx+ cursor-col 1) cols))
+         (begin
+@@ -142,6 +142,12 @@
+         ($ee-write-char c)))
+   (set! cursor-col (fx+ cursor-col len))
+   len)
++
++(define (ee-write-char c)
++  (define spelling (character-display-string c))
++  (if spelling
++      (for/sum ([glyph (in-string spelling)]) (ee-write-glyph glyph))
++      (ee-write-glyph c)))
+ 
+ ; comments regarding ee-write-char above apply also to ee-display-string
+ (define (ee-display-string s)
+--- a/private/terminal.rkt
++++ b/private/terminal.rkt
+@@ -10,6 +10,7 @@
+               $ee-pending-winch?
+               $ee-write-char
+               char-width
++              character-display-string
+               set-color
+               ee-flush
+               get-screen-size
+@@ -43,6 +44,30 @@
+ ;; the cursor advanced.
+ (define char-widths (make-hasheqv))
+ 
++;; Source controls are data, never terminal commands. Share their display
++;; spelling with geometry, retaining the original character in the entry.
++(define display-columns #f)
++(define (native-char-width c)
++  (max 0 (or (hash-ref char-widths c #f) (terminal-char-width c))))
++(define (character-display-string c)
++  (define n (char->integer c))
++  (define spelling
++    (cond
++      [(< n 32) (string #\^ (integer->char (+ n 64)))]
++      [(= n 127) "^?"]
++      [(<= 128 n 159)
++       (string-append "\\x" (string-upcase (number->string n 16)))]
++      [else #f]))
++  (cond
++    [spelling
++     (if (and display-columns (< display-columns (string-length spelling)))
++         "?"
++         spelling)]
++    ;; An indivisible character wider than the whole screen cannot advance
++    ;; the layout loop. Only its display changes, never the source character.
++    [(and display-columns (< display-columns (native-char-width c))) "?"]
++    [else #f]))
++
+ (define init-term terminal-init)
+ (define $ee-read-char/blocking terminal-read-char)
+ (define $ee-pending-winch? terminal-pending-winch?)
+@@ -56,14 +81,16 @@
+ 			   (hash-set! char-widths c w)
+ 			   w])))
+ (define char-width (lambda (c)
+-                     ;; we're only set up to handle characters
+-                     ;; that are non-negative sized, so we don't
+-                     ;; handle control characters
+-                     (max 0 (or (hash-ref char-widths c #f)
+-                                (terminal-char-width c)))))
++                     (define spelling (character-display-string c))
++                     (if spelling
++                         (string-length spelling)
++                         (native-char-width c))))
+ (define set-color terminal-set-color)
+ (define ee-flush terminal-flush)
+-(define get-screen-size terminal-get-screen-size)
++(define (get-screen-size)
++  (define size (terminal-get-screen-size))
++  (set! display-columns (cdr size))
++  size)
+ (define raw-mode (lambda () (terminal-raw-mode #t)))
+ (define no-raw-mode (lambda () (terminal-raw-mode #f)))
+ (define post-output-mode (lambda () (terminal-postoutput-mode #t)))
+--- a/private/wstring.rkt
++++ b/private/wstring.rkt
+@@ -34,7 +34,8 @@
+      ;; since the width report may change after we try to draw,
+      ;; conservatively check for just ASCII
+      (for/and ([c (in-string str)])
+-       ((char->integer c) . < . 128))]
++       (and (not (character-display-string c))
++            ((char->integer c) . < . 128)))]
+     [else
+      (for/and ([c (in-string str)])
+        (eqv? 1 (char-width c)))]))

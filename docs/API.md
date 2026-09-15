@@ -1,6 +1,10 @@
 # Public API
 
-This reference describes the published 0.7.0 API. Older 0.6.0 binaries lack
+This reference describes the source API and implemented interactive shell,
+including unreleased `read-line`. The full source suite and exact Linux archive
+pass their tests; [the handoff](../HANDOFF.md) records final delivery checks.
+The published 0.7.0 binary includes neither shell nor line input.
+Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
 printing examples and compatibility. Older 0.5.0 binaries include pure recursion
@@ -13,13 +17,15 @@ Constants keep their names. All 25 specified List operations are implemented.
 Verification is recorded in [PLAN.md](../PLAN.md) and the
 [acceptance record](ACCEPTANCE.md).
 
-Programs begin with `#lang attalambda`. Functions with multiple parameters
+Standalone programs begin with `#lang attalambda`; shell entries omit that line.
+Functions with multiple parameters
 are curried: supplying one argument returns the function awaiting the next.
 Every expanded lambda has one parameter. Wrong tagged arguments return
 structured Error values with the public operation's name; an early Error absorbs the remaining
 arguments.
 Expected computational failures return Result Err. There is no implicit
-printing or conversion from Error to a process exit status.
+printing in file mode or conversion from Error to a process exit status.
+The shell's optional automatic echo observes expression values.
 
 ## Syntax and values
 
@@ -259,6 +265,7 @@ SOME(OK([1, TRUE]))
 | Application | Successful outcome |
 | --- | --- |
 | `stdout string` | Write and flush bytes; Ok UNIT. |
+| `read-line UNIT` | Read one line from standard input; Ok(Some(String)) or Ok(NONE) at end of input. Unreleased. |
 | `print value` | Render tagged data through pure `value-to-string`, then delegate to stdout; Ok UNIT. Added in 0.6.0. |
 | `read-file path` | Ok containing the complete List of Byte. |
 | `write-file path bytes` | Replace file contents from List of Byte; Ok UNIT. |
@@ -283,9 +290,174 @@ Expected external failures return Result Err. `exit` accepts only Rat 0 or 1:
 other Rats return InvalidCount, wrong types return TypeMismatch, and neither
 failure calls the host. Without explicit exit, normal completion is status 0.
 
+### Terminal line input (unreleased)
+
+`read-line` follows Racket's native byte-line reader in `any` mode. LF, CRLF,
+and CR are separators and are removed; other bytes are preserved, including
+leading/trailing spaces and tabs. A blank line produces Some of the empty
+String. A final line without a separator is returned before the next read
+reports NONE. Reading writes no prompt and works with redirected files and
+pipes as well as a terminal. Strings remain byte-based: input performs no
+Unicode decoding, trimming, or parsing.
+
+After CR, reading waits for another byte or end of input to determine
+whether LF follows. A following LF completes the same separator; any other
+byte belongs to the next line. A sender that keeps its stream open and waits
+for a reply should end its line with LF or a complete CRLF, rather than CR
+alone. No custom line reader or extra input state is used.
+
+The exact example below is exercised by the input integration suite through
+both the source language and the command-line runner:
+
+<!-- terminal-input-example -->
+```racket
+#lang attalambda
+
+(stdout "What is your name? ")
+(def response = (read-line UNIT))
+(if (is-ok response)
+    (option-case (unwrap-ok response)
+      (lambda (name)
+        (stdout (string-append "Hello, " (string-append name ".\n"))))
+      (stdout "\nNo input.\n"))
+    (exit 1))
+```
+<!-- /terminal-input-example -->
+
+The Unit argument preserves unary application. A wrong type or incoming
+Error is rejected before reading. Expected failures return
+Err(HostFailure(read-line, io-failure)); allocation failures use
+resource-exhausted. No native exception message or port name is exposed.
+Like whole-file input, there is no fixed line-length limit.
+
+Reads follow the existing lazy effect rules. A saved result reads at most
+once when demanded; an unused result reads nothing. Put a fresh call inside
+the body of a function to read again on its next invocation. Top-level
+expressions run in source order, so stdout displays and flushes the example's
+prompt first. Inside a function, check an output Result with `if (is-ok ...)`
+before entering the branch that reads or recurs. A lazy let binding by itself
+does not force an effect or establish order between independent effects.
+
+The interactive shell uses this unchanged operation while a program runs.
+Source collection and program input share the original input port. The
+[full input contract](terminal-input-spec.md) records the public and internal
+request boundaries.
+
 HTTP status constants are `HTTP-STATUS-OK` (200),
 `HTTP-STATUS-BAD-REQUEST` (400), `HTTP-STATUS-NOT-FOUND` (404), and
 `HTTP-STATUS-INTERNAL-SERVER-ERROR` (500). HTTP constructors retain the
 existing diagnostic names `http-path-handler`, `http-serve-one`, and
 `http-server` for the functions they construct; these names are lowercase.
 The existing HTTP grammar, request-size cap, and cleanup rules are unchanged.
+
+## Interactive shell (unreleased)
+
+These behaviors are implemented and source-tested on `interactive-attalambda`.
+The full source suite and exact Linux archive pass their tests;
+see [PLAN.md](../PLAN.md). The published 0.7.0 executable has no shell.
+
+Tab completion includes public language names and successfully committed user
+definitions, including loaded names. Redefinition updates the visible bindings;
+reset removes user names. Completion does not force lazy values. Control characters
+in names receive safe display spellings while their original source is preserved.
+
+With terminal stdin and stderr, `attalambda` or `attalambda --no-history` starts
+`atta> `. `attalambda --repl` explicitly allows redirected input/output;
+`--repl` and `--no-history` may appear in either order. Duplicates and combinations
+with file mode are rejected. A pipe without `--repl` receives a usage diagnostic.
+Interactive UI uses stderr; automatic results and program output use stdout.
+Redirected transcripts have no unsolicited prompts, banner, terminal controls,
+or persistent-history access.
+
+| Command | Effect |
+| --- | --- |
+| `:help` | Show syntax, commands, and the automatic-printing limitation. |
+| `:names` | List sorted committed user names without demanding their values. |
+| `:load "path.attl"` | Validate and run a standalone file; publish its definitions after success. |
+| `:echo on` / `:echo off` | Enable or disable automatic expression-result observation. |
+| `:reset` | Discard definitions and close session resources; preserve echo and history preferences. |
+| `:quit` | End the shell with its current status. |
+
+Commands occupy a fresh entry. Command-looking text inside source strings,
+comments, unfinished expressions, or program answers is ordinary content.
+`:load` takes one literal quoted path, with no shell expansion. The file must
+begin with `#lang attalambda`; it sees only the public language, never shell
+names. Each load is fresh, emits only the file's requested output, and publishes
+all definitions together after successful evaluation. Earlier closures keep
+their captured bindings across reloads and redefinitions. A failed file may
+already have performed effects; those cannot be rolled back.
+
+A definition is silent and lazy. Redefinition affects subsequent entries;
+existing closures and delayed values retain the earlier binding. Recursive
+`def` stays forbidden, including `(def x = (add x 1))`. Use `rec` for self
+recursion. Unknown names cannot be supplied by a future entry.
+
+<!-- interactive-snapshot-example -->
+```text
+(def x = 1)
+(def plus-x n = (add x n))
+(def x = 10)
+(plus-x 1)
+(add x 1)
+:quit
+```
+<!-- /interactive-snapshot-example -->
+
+In transcript mode the exact stdout is:
+
+```text
+=> 2
+=> 11
+```
+
+The complete entry is read and expanded before any expression runs. Multiple
+forms in one accepted buffer are one entry. Incomplete source continues on the
+next line; the plain fallback shows `...> `. Reader extensions such as `#reader`
+and entry-level `#lang` are rejected. A reader or expansion failure runs none of
+that entry. A native failure or interruption during evaluation stops later
+expressions and leaves the previously committed names available.
+
+Echo applies the existing pure `value-to-string` to the computed result, then
+observes its String. It does not rerun the expression. Definitions and unselected
+branches remain unforced. Raw functions, including functions inside containers,
+have unspecified rendering behavior: use `:echo off` before demanding them.
+Program stdout is immediate even with echo off, including a prompt awaiting input.
+
+`(read-line UNIT)` reads only when demanded and returns `Ok(Some(String))`,
+`Ok(NONE)` at end of input, or a Result Err for expected failure. An unused saved
+read consumes nothing; demanding one saved result repeatedly consumes at most
+one line. Put a fresh call inside a function to read again. The source entry's
+terminating newline belongs to source; the next answer line belongs to the
+program. Wait for the program prompt before pasting answers: text already
+accepted by the editor as one buffer is source, and the shell cannot infer a
+source/answer boundary inside that buffer. Answer bytes retain the input
+operation's byte semantics and are never recorded in source history.
+
+In interactive mode, Ctrl+C cancels the pending entry or running demand and
+returns to a fresh prompt. Ctrl+D at a fresh prompt exits; during a program read
+it supplies the input operation's EOF behavior. Terminal state is restored on
+exit and cancellation. If the advanced editor cannot initialize, the shell uses
+a plain interactive collector on the same input port.
+
+History retains at most 1,000 submitted source entries per shell. On Linux,
+persistence uses the Racket preference directory's `attalambda/history-v1` file
+(normally `~/.config/racket/attalambda/history-v1`). Its inert, versioned format
+is bounded to 1 MiB; oversized entries can execute but are omitted from the
+file. Unsafe, damaged, missing, or unwritable history does not stop the shell.
+Private directory/file permissions and atomic replacement protect persisted
+source. `--no-history` prevents all persistent-history access while retaining
+in-memory navigation. Cancelled unsubmitted source and program answers are not
+saved. Neither shell nor editor runs personal Racket initialization files.
+
+| Exit situation | Status |
+| --- | ---: |
+| Normal interactive EOF or `:quit`, including after recovered errors | 0 |
+| Transcript EOF or `:quit` after any reader, expansion, command, or native entry failure | 1 |
+| Transcript EOF with unfinished source | 65 |
+| Transcript Ctrl+C | 130 |
+| Explicit `(exit 0)` or `(exit 1)` | Exactly the chosen status, overriding earlier transcript failures |
+| Unexpected shell/stream initialization or infrastructure failure | 70 |
+
+Ordinary language Error and Result Err values do not count as native failures.
+The shell is not a sandbox: entered source and loaded files have the same
+program capabilities as file mode, including file writes, TCP, and process exit.

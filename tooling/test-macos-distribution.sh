@@ -109,7 +109,7 @@ artifact_root_name="${archive_name%.tar.gz}"
 product_version="${artifact_root_name#attalambda-}"
 product_version="${product_version%-$target_identifier}"
 case "$product_version" in
-  0.2.0-dev|0.2.0-rc.1|0.2.0|0.3.0-dev|0.3.0|0.4.0|0.5.0|0.6.0|0.7.0) ;;
+  0.2.0-dev|0.2.0-rc.1|0.2.0|0.3.0-dev|0.3.0|0.4.0|0.5.0|0.6.0|0.7.0|0.8.0) ;;
   *) die "archive filename contains an unapproved product version" ;;
 esac
 [[ "$artifact_root_name" == "attalambda-$product_version-$target_identifier" ]] ||
@@ -271,6 +271,22 @@ grep -Fxq 'Racket version: 9.3' "$first_root/BUILD-MANIFEST.txt" ||
   die "build manifest Racket version mismatch"
 grep -Fxq 'Racket variant: CS' "$first_root/BUILD-MANIFEST.txt" ||
   die "build manifest Racket variant mismatch"
+grep -Fxq 'Racket promise patch SHA-256: 179be1bbde34542758c87b364ae7717c7355cba58cb880875faf137c521ab1a9' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest promise patch mismatch"
+grep -Fxq 'Racket promise source SHA-256: bca5b526943be123c8f3fbad24d30556fe3ffea1dc60b6d9c28ec8875e27c7eb' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected promise source mismatch"
+grep -Fxq 'Expeditor patch SHA-256: 954cdc83b8ee684512a5c3c131d4bc48dd30c40a6a6e8c5a884b3f46dc98b755' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
+grep -Fxq 'Expeditor main.rkt SHA-256: 5bc2e1e1ac8b08b40f52d8b4ef259612330fc63799ee932a6b3947eda70188ff' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
+grep -Fxq 'Expeditor private/ee.rkt SHA-256: 5e3f9f407745db422ad53e21d1de855b0ff619af9c1079802e94f80efe3449f6' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
+grep -Fxq 'Expeditor private/screen.rkt SHA-256: 58da8a119d445728f684d1eebb70e4d1196a8fa699925c62731870ba1bf6e262' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
+grep -Fxq 'Expeditor private/terminal.rkt SHA-256: 657c809503ba85b590c21ceeb0260d1253dc0440527eeba2be72d47db3c52f3e' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
+grep -Fxq 'Expeditor private/wstring.rkt SHA-256: 26ff7df942f7acd4332a5a6b4fd9e74abd7d5b2b14cb9a2f54ce862c2ffb07c2' "$first_root/BUILD-MANIFEST.txt" ||
+  die "build manifest corrected editor mismatch"
 grep -Eq '^Source commit: [0-9a-f]{40}$' "$first_root/BUILD-MANIFEST.txt" ||
   die "build manifest source commit is invalid"
 grep -Fxq 'Archive checksum: external sibling SHA256SUMS' "$first_root/BUILD-MANIFEST.txt" ||
@@ -279,14 +295,14 @@ grep -Fxq 'Artifact status: final release artifact' "$first_root/BUILD-MANIFEST.
   die "build manifest release status mismatch"
 grep -Fxq 'Repository license SHA-256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30' "$first_root/BUILD-MANIFEST.txt" ||
   die "build manifest repository-license hash mismatch"
-grep -Fxq 'Third-party notices SHA-256: 516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad' "$first_root/BUILD-MANIFEST.txt" ||
+grep -Fxq 'Third-party notices SHA-256: d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024' "$first_root/BUILD-MANIFEST.txt" ||
   die "build manifest notice hash mismatch"
 [[ "$(sha256_file "$first_root/LICENSE")" == \
     "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30" ]] ||
   die "repository license bytes differ from the approved license"
 [[ "$(sha256_file "$first_root/THIRD_PARTY_NOTICES.md")" == \
-    "516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad" ]] ||
-  die "third-party notices differ from the exact Phase 29 approval"
+    "d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024" ]] ||
+  die "third-party notices differ from the recorded notice digest"
 grep -Fxq "awk '\$2 == \"$archive_name\" { print }' SHA256SUMS | shasum -a 256 -c -" "$first_root/GETTING_STARTED.md" ||
   die "guide checksum command mismatch"
 grep -Fxq "tar -xzf $archive_name" "$first_root/GETTING_STARTED.md" ||
@@ -396,7 +412,7 @@ check_captured_output "AttaLambda $product_version"$'\n' "packaged version"
 
 run_attalambda --help >"$stdout_file" 2>"$stderr_file"
 check_captured_output \
-  $'Usage:\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n' \
+  $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n' \
   "packaged help"
 
 (cd "$first_root" && run_attalambda examples/hello.attl \

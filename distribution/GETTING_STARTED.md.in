@@ -86,6 +86,55 @@ Error nor Result Err is automatically printed or translated into process
 failure. A performed exit does not return, so later effects do not run; an
 exit in an unselected branch remains unforced.
 
+## Interactive shell and program input
+
+Start `@EXECUTABLE@` with terminal stdin and stderr for the `atta> ` prompt.
+Enter expressions without `#lang attalambda`; for example, `(add 2 3)` prints
+`=> 5`, and `TRUE` prints `=> TRUE`. Definitions stay lazy and silent.
+Use `@EXECUTABLE@ --repl` for redirected transcripts, or add `--no-history`
+to disable persistent source history. The two flags may appear in either order;
+they cannot be combined with a source filename.
+
+| Command | Meaning |
+| --- | --- |
+| `:help` | Show syntax and commands. |
+| `:names` | List committed user definitions without forcing their values. |
+| `:load "path.attl"` | Run a standalone file and publish its definitions after success. |
+| `:echo on` / `:echo off` | Enable or disable automatic expression-result display. |
+| `:reset` | Discard definitions and close resources; retain echo and history settings. |
+| `:quit` | End the shell. |
+
+Redefinition affects later entries. Existing closures and delayed values keep
+the bindings they captured. A loaded file sees the public language, not shell
+definitions; loading it again reruns it. Bare file expressions are not echoed.
+Each source buffer is checked completely before execution. Failed evaluation
+does not publish new names, but effects already performed cannot be undone.
+
+Use `:echo off` before demanding raw functions, including inside containers:
+their rendering behavior is unspecified. Echo-off does not delay program stdout.
+`(read-line UNIT)` reads a byte-preserving line only when demanded and returns
+`OK(SOME("answer"))` or `OK(NONE)` at EOF. A saved read is shared; a fresh call
+inside a function reads again. Wait for a program's prompt before pasting its
+answer. Text already accepted as an editor buffer is source, and cannot also
+be interpreted as program input. Source and program reads share the original
+input stream, and program answers never enter source history.
+
+Ctrl+C cancels a pending entry or running demand and returns to a fresh
+interactive prompt. Ctrl+D at a fresh prompt exits. The editor restores terminal
+state and falls back to a plain interactive collector if it cannot initialize.
+History retains at most 1,000 submitted source entries, with a 1 MiB persisted
+file under Racket's preference directory (normally
+`~/.config/racket/attalambda/history-v1` on Linux). Unsafe or damaged history
+is ignored. `--no-history` keeps in-memory navigation without persistent access.
+Personal Racket/editor initialization files are not run.
+
+Transcripts have no unsolicited prompts, banner, terminal controls, or persistent
+history access. Normal completion is 0; a recovered reader/expansion/command/native
+failure makes final transcript status 1. Unfinished source at EOF is 65, and
+transcript Ctrl+C is 130. Explicit `(exit 0)` or `(exit 1)` overrides that status.
+Ordinary language Error/Result Err values do not count as native failures.
+Interactive EOF or `:quit` after recovered errors is 0.
+
 ## Small Lisp sugar
 
 Version 0.7.0 adds four source conveniences. This program prints
@@ -113,6 +162,7 @@ AttaLambda does not sandbox programs. A program runs with the launching
 process's authority:
 
 - `stdout` can write to the terminal or redirected output.
+- `read-line` can consume standard-input bytes when a program demands it.
 - `read-file` can read files that the process can access.
 - `write-file` can create, truncate, or replace files that the process can
   access; AttaLambda does not prompt or make backups.
@@ -125,6 +175,11 @@ from a directory and operating-system account whose files and network access
 you are willing to expose.
 
 ## Release notes
+
+The interactive milestone combines program line input with the `atta>` shell.
+It preserves the existing language, lazy effects, lexical binding snapshots,
+standalone source validation, and absolute object-language purity. The shell
+adds only private tooling for source entry, terminal editing, and session state.
 
 Version 0.6.0 adds pure value-to-String conversion and generic `print`.
 `value-to-string` renders tagged values, including nested Lists, Options,
@@ -159,7 +214,7 @@ produced for other targets are internal portability evidence, not supported publ
 - `BUILD-MANIFEST.txt` records the target, toolchain, and observed native-library
   assumptions. It does not record a tested operating-system version or establish
   a minimum compatibility guarantee.
-- There is no installer, automatic PATH configuration, REPL, program-argument
+- There is no installer, automatic PATH configuration, program-argument
   API, package manager, updater, formatter, debugger, or editor integration.
 - Programs receive no sandbox, permission prompt, backup, timeout, or
   concurrency layer.

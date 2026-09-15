@@ -3,6 +3,7 @@
 set -euo pipefail
 
 project_root="$(cd "$(dirname "$0")" && pwd)"
+racket "$project_root/tooling/prepare-racket-runtime.rkt" --check
 test_files=()
 
 while IFS= read -r -d '' test_file; do
@@ -18,6 +19,10 @@ if [[ "${#test_files[@]}" -eq 0 ]]; then
   echo "No test files found."
   exit 2
 fi
+
+# `raco test` can reuse an unchanged test's bytecode after an imported helper
+# changes. Refresh dependency caches before executing any test module.
+raco make "${test_files[@]}"
 
 for test_file in "${test_files[@]}"; do
   echo "Running ${test_file#"$project_root/"}"

@@ -28,7 +28,8 @@
   (find-executable-path "raco"))
 
 (define (run-command environment executable arguments timeout-seconds
-                     #:current-directory [working-directory #f])
+                     #:current-directory [working-directory #f]
+                     #:input [input-content #""])
   (define-values (process child-output child-input child-error)
     (parameterize
         ([current-environment-variables environment]
@@ -40,7 +41,6 @@
              #f
              executable
              arguments)))
-  (close-output-port child-input)
   (define captured-output
     (box #f))
   (define captured-error
@@ -55,6 +55,16 @@
      (lambda ()
        (set-box! captured-error
                  (port->bytes child-error)))))
+  ;; Start drainers before feeding a transcript: input and output can both be
+  ;; larger than pipe capacity. Early program exit may legitimately close stdin.
+  (define input-writer
+    (thread
+     (lambda ()
+       (with-handlers ([exn:fail? void])
+         (dynamic-wind
+          void
+          (lambda () (write-bytes input-content child-input))
+          (lambda () (close-output-port child-input)))))))
   (define completed
     (sync/timeout timeout-seconds process))
   (unless completed
@@ -62,6 +72,9 @@
     (sync process))
   (sync output-reader)
   (sync error-reader)
+  (sync input-writer)
+  (close-input-port child-output)
+  (close-input-port child-error)
   (command-result
    (and completed (subprocess-status process))
    (unbox captured-output)
@@ -226,7 +239,7 @@
                  (build-path package-source "VERSION"))
       (for ([directory
              (in-list '("core" "effects" "lang" "macros"
-                        "runner" "runtime"))])
+                        "readers" "runner" "runtime"))])
         (copy-package-source
          (build-path project-root directory)
          (build-path package-source directory)))

@@ -12,7 +12,7 @@ $ProgramName = 'build-windows-distribution'
 $RequiredRacketBanner = 'Welcome to Racket v9.3 [cs].'
 $RequiredRacketVersion = '9.3'
 $TargetIdentifier = 'windows-x86_64'
-$ApprovedNoticeSha256 = '516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad'
+$ApprovedNoticeSha256 = 'd480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024'
 $Usage = @'
 Usage:
   tooling/build-windows-distribution.ps1 [-AllowDirty] OUTPUT_DIRECTORY
@@ -320,6 +320,7 @@ try {
         "0.5.0`n" { $productVersion = '0.5.0'; $expectedPackageVersion = '0.5' }
         "0.6.0`n" { $productVersion = '0.6.0'; $expectedPackageVersion = '0.6' }
         "0.7.0`n" { $productVersion = '0.7.0'; $expectedPackageVersion = '0.7' }
+        "0.8.0`n" { $productVersion = '0.8.0'; $expectedPackageVersion = '0.8' }
         default { Fail 'VERSION is outside the approved milestone states or lacks one terminal LF' }
     }
     $infoText = [IO.File]::ReadAllText($infoFile)
@@ -353,6 +354,10 @@ try {
     $racketVm = (& $racket.Source -e '(display (system-type (quote vm)))' | Out-String).TrimEnd("`r", "`n")
     if ($LASTEXITCODE -ne 0 -or $racketVm -cne 'chez-scheme') {
         Fail 'build requires the Racket CS virtual machine'
+    }
+    $runtimePatchEvidence = (& $racket.Source ([IO.Path]::Combine($ProjectRoot, 'tooling', 'prepare-racket-runtime.rkt')) --check | Out-String).TrimEnd("`r", "`n")
+    if ($LASTEXITCODE -ne 0) {
+        Fail 'build requires the reviewed dependency corrections in its isolated Racket runtime'
     }
 
     $tempParent = if ([string]::IsNullOrWhiteSpace($env:RUNNER_TEMP)) { [IO.Path]::GetTempPath() } else { $env:RUNNER_TEMP }
@@ -441,7 +446,7 @@ try {
 
     Copy-RegularFile $infoFile ([IO.Path]::Combine($packageSource, 'info.rkt')) 'info.rkt'
     Copy-RegularFile $versionFile ([IO.Path]::Combine($packageSource, 'VERSION')) 'VERSION'
-    foreach ($sourceDirectoryName in @('core', 'effects', 'lang', 'macros', 'runner', 'runtime')) {
+    foreach ($sourceDirectoryName in @('core', 'effects', 'lang', 'macros', 'readers', 'runner', 'runtime')) {
         $sourceDirectory = [IO.Path]::Combine($ProjectRoot, $sourceDirectoryName)
         if (-not [IO.Directory]::Exists($sourceDirectory)) {
             Fail "package source directory is unavailable: $sourceDirectoryName"
@@ -516,7 +521,7 @@ try {
     $licenseDigest = Get-Sha256 $licensePath
     $noticePath = [IO.Path]::Combine($ProjectRoot, 'distribution', 'THIRD_PARTY_NOTICES.md.in')
     if ((Get-Sha256 $noticePath) -cne $ApprovedNoticeSha256) {
-        Fail 'third-party notices differ from the exact Phase 29 approval'
+        Fail 'third-party notices differ from the recorded notice digest'
     }
     Copy-RegularFile $noticePath ([IO.Path]::Combine($artifactRoot, 'THIRD_PARTY_NOTICES.md')) 'approved third-party notices'
 
@@ -591,6 +596,7 @@ try {
     [void] $manifest.Append("Target identifier: $TargetIdentifier`n")
     [void] $manifest.Append("Racket version: $RequiredRacketVersion`n")
     [void] $manifest.Append("Racket variant: CS`n")
+    [void] $manifest.Append($runtimePatchEvidence.Replace("`r`n", "`n") + "`n")
     [void] $manifest.Append("Artifact status: final release artifact`n")
     [void] $manifest.Append("Repository license SHA-256: $licenseDigest`n")
     [void] $manifest.Append("Third-party notices SHA-256: $ApprovedNoticeSha256`n")

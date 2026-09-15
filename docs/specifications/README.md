@@ -63,9 +63,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `382e2ff41b46deff3f5dd9d519d47e323155016d6ea6e59c3009301de5bf9386` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `4ad64530f84bb96fb37424318a631b022a7cc7ec9a0f44e0f4a4ed3ed3834be3` |
-| `03-canonical-public-naming-and-host-isolation.md` | `c97a8e9527fe495b27c03f879f49773e7da51bf7762751a9beecfc1e1f2f5142` |
+| `01-greenfield-core-language.md` | `f681a8c34548b81b219cd1a3bdd9ac8025b92ea266976291d45fa73f786ed448` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `1223746f4b281195ee2a4bf2543b021067c6e73069098a7dd52340c36ad22d65` |
+| `03-canonical-public-naming-and-host-isolation.md` | `afb63b2a8a85ad77b91dc5c77059263ec617745bde4e077d0ad504e96358ee37` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -117,3 +117,27 @@ specification bytes are preserved. Before these amendments, the hashes were
 `c3f9ed4e23cc31724fb6cc9483b9468a6d9a665656d235c61edfa56c5e75dc27`,
 `49ba636c5e1af5f5f5d23066ddbf35e0d7c5cb10783dbdfda633c9f676a10a91`,
 `5a5bd4cb2447aa667a1a130c71471f3651a8639997759870a523a06cace921f7` respectively.
+
+The Terminal Line Input Amendments (2026-09-14) incorporate the
+[authorized input contract](../terminal-input-spec.md). They add only unary
+`read-line UNIT` and its standard-input host operation, preserving every
+earlier specification byte. Implementation is tracked in PLAN.md; this
+feature is not present in the published 0.7.0 binary. Before these amendments,
+the respective hashes were `382e2ff41b46deff3f5dd9d519d47e323155016d6ea6e59c3009301de5bf9386`,
+`4ad64530f84bb96fb37424318a631b022a7cc7ec9a0f44e0f4a4ed3ed3834be3`,
+`c97a8e9527fe495b27c03f879f49773e7da51bf7762751a9beecfc1e1f2f5142`.
+
+The Interactive Tooling Amendments (2026-09-14) incorporate the
+[authorized REPL contract](../interactive-implementation-spec.md) without
+changing any earlier canonical bytes. They authorize exact private shell/module
+scaffolding, preserve absolute object-language purity and the sole host, and
+add no public language operation. Implementation and candidate verification are
+tracked in PLAN.md; publication remains unauthorized. Before these amendments,
+the respective hashes were `cf91183a48194707c48f33d4dde83030475b34c8c2e72ad3491e588e642459a1`, `63acc294b842f9bb7d01495fa5239b84d9cfcea8bcc6ab56c0f3d7048d7ef6c7`, `1afb240d197d268b1b7e8e73d8396c3420aa8132d195ccf17ea61e45e846d8cd`.
+
+Implementation record: the exact source classes and observed module/session
+mechanism are described in [ARCHITECTURE.md](../../ARCHITECTURE.md#frontend-runner-and-observation).
+The session uses fixed language declarations and fresh runtime instances;
+source, editor, history, and result observation remain separate tooling roles.
+Completion and standalone candidate verification remain open. No additional
+canonical amendment or change to the preceding contract is made by this record.

@@ -693,3 +693,39 @@ Typed cons and if preserve their existing checks, Error behavior, and demand
 on expressions. Definition dependency analysis must preserve sequential let
 scope and all lambda parameter scopes, and must continue rejecting module
 cycles. No core/runtime/host change or weakening of either gate is permitted.
+
+# Terminal Line Input Amendment (2026-09-14)
+
+The [Terminal line input contract](../terminal-input-spec.md) extends the
+sole host exception with reading one byte-preserving line from standard input.
+Only `runtime/host.rkt` may use `current-input-port` and `read-bytes-line` for
+this effect. The codec may construct existing Option values deterministically;
+it gains no effect authority. The Unit wrapper and zero-argument request
+validation remain pure unary-lambda computation through the generalized
+checker and schema walker. The language facade injects the same sole host.
+All other purity rules and structural enforcement remain in force; this
+amendment overrides earlier ten-operation limits only for this eleventh effect.
+
+
+# Interactive Tooling Amendment (2026-09-14)
+
+The [Interactive AttaLambda contract](../interactive-implementation-spec.md)
+permits exactly classified private tooling modules to read restricted source,
+configure an editor and bounded inert history, declare and instantiate checked
+in-memory modules, retain binding identities, and own session namespaces and
+custodians. These shell responsibilities may use native control and collections;
+they may not decide object-language results. The expander shares its existing
+checked analysis and mechanically exposes lazy bindings/results through private
+module scaffolding. Automatic echo applies the existing pure value-to-string and
+observes its String through the existing reader. It does not use the runtime
+codec, detect raw functions, or add a formatter. Echo-off skips that observation.
+
+Only runtime/host.rkt performs program input and the other approved program
+effects; source collection/editor/history I/O are separately classified tooling.
+The codec and host import/definition/export path remains closed. Pure core/effects
+never depend on tooling or readers. Every new helper is classified by exact path
+and its necessary capabilities, never a blanket runner-directory exception.
+Actual generated object-language terms remain only variables, unary lambdas and
+application, and both purity and boundary gates must reject violations. No new
+object-language effect, evaluator, mutable global, type or representation is added.
+This amendment overrides earlier tooling exclusions only for these responsibilities.

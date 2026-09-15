@@ -29,13 +29,14 @@ tooling. Two runtime files have narrower roles:
   representations and private Racket bytes, integers, lists, and exact
   rationals. It performs no external effect and owns no mutable state.
 - [`runtime/host.rkt`](runtime/host.rkt) alone defines `host`. It may perform
-  the approved standard-output, file, blocking TCP, and explicit process-exit
-  operations and own the TCP handle registry.
+  the approved standard-output, standard-input line, file, blocking TCP, and
+  explicit process-exit operations and own the TCP handle registry.
 
-Only `runtime/host.rkt` performs the approved native effects, only the language
+Only `runtime/host.rkt` performs the approved program effects, only the language
 facade imports that host, and only the host imports the codec. Readers can
-observe completed values for people and tests, but production never depends
-on them.
+observe completed values for people, shell tooling, and tests; pure production
+computation never depends on them. Source/editor/history I/O has its own exact
+tooling classification and does not extend the program's host protocol.
 
 ## Where to start
 
@@ -49,7 +50,9 @@ Read only the row for the work you are doing:
 | Native effect behavior | `dispatch-request` in [`runtime/host.rkt`](runtime/host.rkt) | one local decoder path and one `perform-*` function |
 | Representation conversion | the matching exported function in [`runtime/codec.rkt`](runtime/codec.rkt) | raw constructors/accessors imported from `core/` |
 | Source syntax or public exports | [`lang/expander.rkt`](lang/expander.rkt) | [`lang/reader.rkt`](lang/reader.rkt) and [`macros/`](macros) only as needed |
-| Command-line launch | `main` in [`runner/attalambda.rkt`](runner/attalambda.rkt) | `validate-source`, then `run-source` |
+| Command-line launch | `main` in [`runner/attalambda.rkt`](runner/attalambda.rkt) | file validation/loading or [`runner/repl.rkt`](runner/repl.rkt) |
+| Interactive definitions and lifetime | [`runner/session.rkt`](runner/session.rkt) | shared expander analysis, checked modules, per-entry and per-session custodians |
+| Terminal/history behavior | [`runner/editor.rkt`](runner/editor.rkt) | restricted source reader, scoped editor-output adapter, bounded inert history |
 | Human-readable observation | the matching file in [`readers/`](readers) | one-way conversion only |
 | Structural enforcement | [`tooling/check-purity.rkt`](tooling/check-purity.rkt) and [`tooling/check-boundaries.rkt`](tooling/check-boundaries.rkt) | focused rejection fixtures in `tests/` |
 
@@ -65,8 +68,16 @@ effects/protocol <- runtime/host
 The diagram shows module dependency, not authority. `effects/` receives the
 host as an ordinary unary argument; it never imports `runtime/`. The language
 facade is the single place that imports the real host and injects it into the
-ten direct effect wrappers. Generic `print` receives the already-created
+eleven direct effect wrappers. Generic `print` receives the already-created
 stdout wrapper and does not receive another host injection.
+
+The unreleased `read-line UNIT` wrapper in `effects/stdin.rkt` constructs the
+zero-argument request `["read-line"]`. The host reads a byte line from its
+current standard-input port and converts it through the codec to
+Ok(Some(String)) or Ok(NONE). Only the host reads program answers; deterministic
+Option construction uses existing core terms. Prompting and sequencing remain
+ordinary program choices. The [input contract](docs/terminal-input-spec.md)
+defines separators, failures, demand, and the shell/program input boundary.
 
 ## Pure value rendering and printing
 
@@ -113,7 +124,7 @@ For a call such as `write-file`:
    codec. Expected operating-system failure becomes `Result Err`; a malformed
    direct request becomes a bare contract `Error`.
 
-The other eight returning operations use the same route. Explicit exit uses
+The other nine returning operations use the same route. Explicit exit uses
 the same request boundary but ends at `perform-exit`, without returning a
 Result. `runtime/host.rkt` keeps decoding next to each route and keeps resource
 acquisition, registration, cleanup, and failure mapping in the corresponding
@@ -165,13 +176,59 @@ The two files in
 [`macros/`](macros) provide the smaller expansion machinery used by production
 modules. Their different lexical contexts are deliberate.
 
-[`runner/attalambda.rkt`](runner/attalambda.rkt) is process scaffolding. It
-implements `attalambda FILE.attl`, `--help`, and `--version`; validates the
-source name, path policy, regular-file status, exact first line, and UTF-8; and
-loads the source once. It exports nothing, imports no project module, does not
-inspect a completed lambda value, and reports only fixed sanitized
-diagnostics. Its native exit calls remain limited to launcher, source-loading,
-and scaffolding failures; program-requested exit belongs only to the host.
+[`runner/attalambda.rkt`](runner/attalambda.rkt) selects file mode, interactive
+mode, or explicit transcript mode. The shared `runner/source-file.rkt` validates
+source paths, regular-file status, the exact first line, and UTF-8. File mode
+loads once without automatic echo. Shell commands and input phases live in
+`runner/repl.rkt`; sanitized source/native diagnostics live in
+`runner/diagnostics.rkt`. The launcher exports nothing.
+
+`runner/source-reader.rkt` configures a fixed restricted Racket data reader for
+source and completeness checks. `runner/session.rkt` constructs an entry module
+with no runner lexical context. The language's checked expansion path validates
+the entire entry before instantiation, exposing only lazy binding identities and
+expression results through private scaffolding. Each new entry imports the
+latest committed identities. Earlier modules retain their own imports, which
+gives redefinition its snapshot behavior without source replay or mutable
+language globals. A failed entry never publishes its new definitions.
+
+Each session has a fresh namespace and resource custodian; each evaluated entry
+has a child custodian. Successful entries retain their resources until reset or
+close. Failure releases the candidate entry's resources. Reset prepares a fresh
+session before replacing the old one. `exit` raises a private unwind request via
+the host's configured exit handler so terminal/session cleanup precedes the
+launcher's final status. No program-visible exception mechanism is added.
+
+Source and running programs share the original stdin port. The editor owns
+source collection only while a prompt is active; it closes before program
+evaluation. Already-buffered bytes use the plain collector on that same port.
+On Linux, the small `editor-output.rkt` adapter redirects Expeditor's native
+descriptor1 UI to stderr and restores it under every checked unwind. It imports
+only the three fixed native operations `dup`, `dup2`, and `close`. Loading that
+POSIX helper remains conditional. No personal editor/Racket initialization runs.
+
+`runner/output.rkt` forwards program bytes immediately and maintains legible
+result boundaries. Echo demands the already-computed result through pure
+`value-to-string`, then uses the existing String reader; echo-off skips this
+observation. The shell cannot safely classify or render arbitrary raw functions.
+`runner/history.rkt` retains only submitted source in a bounded inert format,
+uses private regular-file storage and atomic replacement, and performs no
+persistent access for transcripts or `--no-history`.
+
+The source inventory and exact per-file boundary checks separately classify
+the launcher, source reader/file validator, session, diagnostics, shell output,
+editor, descriptor adapter, and history. Fixed module dependencies are declared
+for executable embedding. The embedded language initializes once in the
+executable's namespace so Racket can transfer its declarations and shared
+cross-phase-persistent primitives. This unused origin graph opens no resources
+and captures no program ports. Fresh session namespaces instantiate their own
+ordinary language modules and host registries; packaging verification is still
+open. The fixed `racket/runtime-config` declaration and public-name mapping also
+transfer into each embedded session for Racket's generated entry scaffolding.
+There is no blanket permission for arbitrary runner imports or native
+computation. Completion combines actual public exports with committed names,
+spells them as readable identifiers, and supplies only inert placeholders to the
+editor namespace. It never imports or demands the definitions' values.
 
 Each file in [`readers/`](readers) turns one completed representation into a
 Racket value or display string. Readers may force and inspect values, but they

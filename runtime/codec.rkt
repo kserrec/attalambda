@@ -28,6 +28,9 @@
                   raw-object-value)
          (only-in "../core/pair.rkt"
                   raw-pair)
+         (only-in "../core/option.rkt"
+                  NONE
+                  raw-make-some)
          (only-in "../core/rat.rkt"
                   raw-rat-numerator
                   raw-rat-denominator)
@@ -56,6 +59,8 @@
          exact->object-rat
          object-rat->exact
          object-unit
+         object-none
+         object-some
          object-ok
          object-err)
 
@@ -317,6 +322,11 @@
          [else (- (/ magnitude bottom))])])))
 
 (define object-unit UNIT)
+
+(define object-none NONE)
+
+(define (object-some payload)
+  (lazy-apply raw-make-some payload))
 
 (define (object-ok payload)
   (lazy-apply raw-make-ok payload))

@@ -1,8 +1,8 @@
 # Host boundary design
 
-Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05.
-Exit protocol, host, and public wrapper injection are implemented. The 0.3.0
-representation and existing nine operations are behaviorally unchanged.
+Status: approved 2026-08-27; explicit exit amendment approved 2026-09-05;
+terminal line input authorized 2026-09-14 and retained in `interactive-attalambda`.
+Line input is unreleased; the 0.7.0 binary retains its ten operations.
 
 This document records the exact current contract for AttaLambda's one
 outside-world boundary. The three canonical
@@ -18,12 +18,22 @@ authoritative.
   computation. It receives the host as an ordinary unary argument and never
   imports `runtime/`.
 - `lang/expander.rkt` is the sole production importer of `host`; it injects
-  that value once into the ten public wrappers.
-- The closed effect set is standard output, whole-file read and replacement,
-  blocking TCP connect/listen/accept/read/write/close, and explicit process exit.
+  that value once into the eleven public wrappers.
+- The closed effect set is standard output, standard-input lines, whole-file
+  read and replacement, blocking TCP connect/listen/accept/read/write/close,
+  and explicit process exit.
 - HTTP parsing, rendering, routing, and server decisions stay in `effects/`
   as pure computation over the TCP wrappers.
 - The host inherits the launching process's permissions. It is not a sandbox.
+
+The interactive shell uses the same eleven-operation host. While an entry runs,
+the session uses the original input port and the shell's immediate program-output
+forwarding port; program `read-line` still reads only when demanded. Shell source
+collection, terminal editing, and
+source-history storage are separately classified tooling, outside this program
+effect protocol. Reset closes the old session's resources and instantiates a
+fresh host registry. Entry interruption does not replay earlier effects or undo
+external writes. See [the architecture](../../ARCHITECTURE.md#frontend-runner-and-observation).
 
 The shortest implementation path is:
 
@@ -71,6 +81,7 @@ automatically.
 | Request | Decoded constraints | Successful result |
 | --- | --- | --- |
 | `stdout String` | String bytes | `Ok(UNIT)` after write and flush |
+| `read-line` | no request arguments; public call is `read-line UNIT` | `Ok(Some(String))`, or `Ok(NONE)` at end of input |
 | `read-file String` | path bytes must be UTF-8 | `Ok(List Byte)` with the complete file |
 | `write-file String (List Byte)` | UTF-8 path and byte payload | `Ok(UNIT)` after truncating replacement |
 | `tcp-connect String Rat` | nonempty UTF-8 hostname; whole port 1..65535 | `Ok(Rat)` connection handle |
@@ -97,6 +108,7 @@ The wrapper names in the approved language contract are:
 
 ```text
 stdout
+read-line
 read-file
 write-file
 tcp-connect
@@ -108,7 +120,7 @@ tcp-close
 exit
 ```
 
-`effects/stdout.rkt`, `effects/files.rkt`, `effects/tcp.rkt`, and
+`effects/stdout.rkt`, `effects/stdin.rkt`, `effects/files.rkt`, `effects/tcp.rkt`, and
 `effects/exit.rkt` build these wrappers. Each builder accepts a host first,
 which lets tests inject a unary fake. That injection is ordinary lambda
 calculus and does not create another privileged primitive.
@@ -127,6 +139,15 @@ uses the unchanged codec and bounded-count decoder to defensively require a
 canonical whole Rat 0 or 1. It does not choose a status from any other value.
 
 ## Errors and external failures
+
+Line input follows the [terminal input contract](../terminal-input-spec.md).
+It removes one LF, CRLF, or CR separator, preserving all other bytes.
+Blank input is Some of the empty String; final nonempty bytes are returned
+before a later read reports NONE. Reads use the current input port when
+demanded, do not close it, and own no registry or cached EOF flag. Prompts
+are separate stdout calls. There is no terminal-only restriction, length
+limit, text decoding, or input parsing. Expected failures become
+HostFailure with `io-failure` or `resource-exhausted`, without native details.
 
 InvalidHostRequest and HostFailure use Error kinds in the approved tiny Church
 metadata namespace; they are not new object-language types.
@@ -265,8 +286,8 @@ and scaffolding failures; only the host performs program-requested exit.
 ## Authority
 
 The real host has the launching process's relevant authority. An AttaLambda
-program can write stdout, read permitted files, create or truncate permitted
-paths including symlink targets, resolve names, connect to permitted remote TCP
+program can read standard input, write stdout, read permitted files, create
+or truncate permitted paths including symlink targets, resolve names, connect to permitted remote TCP
 endpoints, bind permitted local ports, and terminate its own process with
 status 0 or 1. Users must inspect and trust a program before running it.
 

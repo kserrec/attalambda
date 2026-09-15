@@ -1,8 +1,8 @@
 #lang racket/base
 
 ;; The one production bridge to the outside world. The closed dispatcher
-;; contains exactly stdout, file, blocking TCP, and explicit exit operations
-;; approved by the host design and the 2026-09-05 exit amendment.
+;; contains exactly stdout, stdin line input, file, blocking TCP, and explicit
+;; exit operations approved by the host design and its scoped amendments.
 
 (require (only-in racket/file file->bytes)
          racket/promise
@@ -32,6 +32,7 @@
                   out-of-range-reason
                   permission-denied-code
                   read-file-operation
+                  read-line-operation
                   resource-exhausted-code
                   stdout-operation
                   tcp-accept-operation
@@ -52,6 +53,8 @@
                   codec-failure?
                   object-err
                   object-unit
+                  object-none
+                  object-some
                   exact->object-rat
                   object-rat->exact
                   object-list->host-list
@@ -241,6 +244,20 @@
 ;; only canonical whole Rat 0 or 1. Successful real exit does not return.
 (define (perform-exit status)
   (exit status))
+
+(define (perform-read-line)
+  (with-handlers ([exn:fail:out-of-memory?
+                   (lambda (failure)
+                     (host-failure read-line-operation
+                                   resource-exhausted-code))]
+                  [exn:fail?
+                   (lambda (failure)
+                     (host-failure read-line-operation io-failure-code))])
+    (define input (read-bytes-line (current-input-port) 'any))
+    (object-ok
+     (if (eof-object? input)
+         object-none
+         (object-some (bytes->object-string input))))))
 
 (define (decode-utf8 operation payload)
   (with-handlers ([exn:fail:out-of-memory?
@@ -523,6 +540,10 @@
            (define argument-count
              (length arguments))
            (cond
+             [(bytes=? operation-bytes #"read-line")
+              (if (= argument-count 0)
+                  (perform-read-line)
+                  (wrong-arity read-line-operation))]
              [(bytes=? operation-bytes #"stdout")
               (if (= argument-count 1)
                   (dispatch-one-string stdout-operation

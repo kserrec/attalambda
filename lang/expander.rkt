@@ -140,6 +140,8 @@
                   [make-print language-make-print])
          (only-in "../effects/stdout.rkt"
                   [make-stdout language-make-stdout])
+         (only-in "../effects/stdin.rkt"
+                  [make-read-line language-make-read-line])
          (only-in "../effects/tcp.rkt"
                   [make-tcp-connect language-make-tcp-connect]
                   [make-tcp-listen language-make-tcp-listen]
@@ -165,6 +167,7 @@
                      [language-host host]
                      [language-exit exit]
                      [language-print print]
+                     [language-read-line read-line]
                      [HEAD head]
                      [TAIL tail]
                      [IS-NIL is-nil]
@@ -337,11 +340,11 @@
                     (syntax->list #'(part ...))))]
        [_ '()])]))
 
-(define-for-syntax (language-check-definitions forms)
+(define-for-syntax (language-check-definitions forms [imported '()])
   ;; Module declarations expand in source order. Once a name shadows def or
   ;; rec, later calls to that binding are expressions, not declarations.
   (define definitions
-    (let collect ([remaining forms] [bound '()])
+    (let collect ([remaining forms] [bound imported])
       (cond
         [(null? remaining) '()]
         [else
@@ -353,6 +356,10 @@
              (collect (cdr remaining) bound))])))
   (define parts (map language-definition-parts definitions))
   (define names (map car parts))
+  ;; A new local binding supersedes the imported name throughout this module.
+  ;; In particular, a previous x must not hide a new def x's self-reference.
+  (define retained
+    (filter (lambda (name) (not (language-bound-name name names))) imported))
   (define graph
     (map (lambda (form definition)
            (define name (car definition))
@@ -361,7 +368,8 @@
              (syntax-case form (language-rec)
                [(language-rec . remaining) (cons name arguments)]
                [_ arguments]))
-           (cons name (language-dependencies (caddr definition) names bound)))
+           (cons name (language-dependencies (caddr definition) names
+                                             (append retained bound))))
          definitions parts))
   (define (visit name path finished)
     (when (memq name path)
@@ -385,15 +393,49 @@
 (define-syntax (language-module-begin stx)
   (syntax-case stx ()
     [(_ form ...)
-     (with-syntax
-         ([(prepared-form ...)
-           (let ([definitions (language-check-definitions (syntax->list #'(form ...)))])
-             (map (lambda (form)
-                    (if (memq form definitions)
-                        form
-                        #`(language-discard #,form)))
-                  (syntax->list #'(form ...))))])
-       #'(#%module-begin prepared-form ...))]))
+     (let* ([forms (syntax->list #'(form ...))]
+            ;; Only trusted tooling constructs this property. Restricted source
+            ;; reading cannot create syntax properties or native module forms.
+            [interaction (syntax-property stx 'attalambda-interaction)]
+            [imports (if interaction (car interaction) '())]
+            [imported (map (lambda (binding) (datum->syntax stx (car binding))) imports)]
+            [definitions (language-check-definitions forms imported)]
+            [names (map (lambda (form) (car (language-definition-parts form))) definitions)]
+            [results (if interaction
+                         (map (lambda (name) (datum->syntax stx name)) (cadr interaction))
+                         (map (lambda (form) #f) forms))]
+            [result-names (filter values
+                                  (map (lambda (form result)
+                                         (and (not (memq form definitions)) result))
+                                       forms results))])
+       (with-syntax
+           ([(import-form ...)
+             (map (lambda (binding)
+                    #`(require (only-in (quote #,(cadr binding))
+                                        [#,(caddr binding)
+                                         #,(datum->syntax stx (car binding))])))
+                  (filter (lambda (binding)
+                            (not (language-bound-name
+                                  (datum->syntax stx (car binding)) names)))
+                          imports))]
+            [(export-form ...)
+             (if interaction (list #`(provide #,@names #,@result-names)) '())]
+            [(prepared-form ...)
+             (map (lambda (form result)
+                    (cond [(memq form definitions)
+                           (if interaction
+                               ;; Lazy Racket leaves bare aliases eager during
+                               ;; module initialization. Pure suspension permits
+                               ;; checked forward references without forcing them.
+                               (syntax-case form ()
+                                 [(head name argument ... equals body)
+                                  #'(head name argument ... equals
+                                          ((lambda (held) held) body))])
+                               form)]
+                          [interaction #`(def #,result = ((lambda (held) held) #,form))]
+                          [else #`(language-discard #,form)]))
+                  forms results)])
+         #'(#%module-begin import-form ... export-form ... prepared-form ...)))]))
 
 (define-syntax (language-rec stx)
   (syntax-case stx ()
@@ -540,6 +582,9 @@
 ;; ordinary lambda values; only language-host is privileged.
 (def stdout =
   (language-make-stdout language-host))
+
+(def language-read-line =
+  (language-make-read-line language-host))
 
 (def language-print =
   (language-make-print stdout))

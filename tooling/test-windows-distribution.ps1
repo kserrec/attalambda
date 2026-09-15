@@ -484,7 +484,7 @@ try {
     Assert-RegularNonsymlinkFile $archivePath 'transferred archive'
     Assert-RegularNonsymlinkFile $checksumPath 'transferred SHA256SUMS'
 
-    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0|0[.]7[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
+    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0|0[.]7[.]0|0[.]8[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
     if (-not $nameMatch.Success) {
         Fail 'archive filename contains an unapproved product version or target'
     }
@@ -599,9 +599,17 @@ try {
         "Product version: $productVersion",
         "Target identifier: $TargetIdentifier",
         'Racket version: 9.3', 'Racket variant: CS',
+        'Racket promise patch SHA-256: 179be1bbde34542758c87b364ae7717c7355cba58cb880875faf137c521ab1a9',
+        'Racket promise source SHA-256: bca5b526943be123c8f3fbad24d30556fe3ffea1dc60b6d9c28ec8875e27c7eb',
+        'Expeditor patch SHA-256: 954cdc83b8ee684512a5c3c131d4bc48dd30c40a6a6e8c5a884b3f46dc98b755',
+        'Expeditor main.rkt SHA-256: 5bc2e1e1ac8b08b40f52d8b4ef259612330fc63799ee932a6b3947eda70188ff',
+        'Expeditor private/ee.rkt SHA-256: 5e3f9f407745db422ad53e21d1de855b0ff619af9c1079802e94f80efe3449f6',
+        'Expeditor private/screen.rkt SHA-256: 58da8a119d445728f684d1eebb70e4d1196a8fa699925c62731870ba1bf6e262',
+        'Expeditor private/terminal.rkt SHA-256: 657c809503ba85b590c21ceeb0260d1253dc0440527eeba2be72d47db3c52f3e',
+        'Expeditor private/wstring.rkt SHA-256: 26ff7df942f7acd4332a5a6b4fd9e74abd7d5b2b14cb9a2f54ce862c2ffb07c2',
         'Artifact status: final release artifact',
         'Repository license SHA-256: cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30',
-        'Third-party notices SHA-256: 516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad',
+        'Third-party notices SHA-256: d480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024',
         'Archive checksum: external sibling SHA256SUMS'
     )) {
         if (@($manifest.Replace("`r`n", "`n").Split("`n") | Where-Object { $_ -ceq $requiredLine }).Count -ne 1) {
@@ -620,8 +628,8 @@ try {
     if ((Get-Sha256 ([IO.Path]::Combine($firstRoot, 'LICENSE'))) -cne 'cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30') {
         Fail 'repository license bytes differ from the approved license'
     }
-    if ((Get-Sha256 ([IO.Path]::Combine($firstRoot, 'THIRD_PARTY_NOTICES.md'))) -cne '516b3a08454709bf111494c92ed260a5c4afb47c91d06efca924b500c89e17ad') {
-        Fail 'third-party notices differ from the exact Phase 29 approval'
+    if ((Get-Sha256 ([IO.Path]::Combine($firstRoot, 'THIRD_PARTY_NOTICES.md'))) -cne 'd480dcda59df5e54a4185fa2293a04f6ff40ebf1e79712d29e51d8490b87b024') {
+        Fail 'third-party notices differ from the recorded notice digest'
     }
     $guide = [IO.File]::ReadAllText([IO.Path]::Combine($firstRoot, 'GETTING_STARTED.md'))
     foreach ($guideCommand in @(
@@ -711,7 +719,7 @@ try {
     Assert-ProcessResult $versionResult 0 "AttaLambda $productVersion`n" '' 'packaged version'
     $firstStartupMilliseconds = $versionResult.Milliseconds
     $helpResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('--help') -WorkingDirectory $workRoot
-    Assert-ProcessResult $helpResult 0 "Usage:`n  attalambda FILE.attl`n  attalambda --help`n  attalambda --version`n" '' 'packaged help'
+    Assert-ProcessResult $helpResult 0 "Usage:`n  attalambda [--no-history]`n  attalambda --repl [--no-history]`n  attalambda FILE.attl`n  attalambda --help`n  attalambda --version`n" '' 'packaged help'
     $helloResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('examples\hello.attl') -WorkingDirectory $firstRoot
     Assert-ProcessResult $helloResult 0 "Hello from AttaLambda.`n" '' 'guide hello'
     $guideSource = [IO.Path]::Combine($firstRoot, 'my-program.attl')
@@ -719,7 +727,7 @@ try {
     $guideResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('my-program.attl') -WorkingDirectory $firstRoot
     Assert-ProcessResult $guideResult 0 "My first AttaLambda program.`n" '' 'guide custom program'
     $misuseResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @() -WorkingDirectory $workRoot
-    Assert-ProcessResult $misuseResult 64 '' "AttaLambda: expected attalambda FILE.attl, attalambda --help, or attalambda --version`n" 'command misuse'
+    Assert-ProcessResult $misuseResult 64 '' "AttaLambda: a terminal is required; use attalambda --repl for redirected source`n" 'command misuse'
     $extensionResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('missing.rkt') -WorkingDirectory $workRoot
     Assert-ProcessResult $extensionResult 65 '' "AttaLambda: `"missing.rkt`": source file name must end in lowercase .attl`n" 'wrong extension'
     $missingResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('missing.attl') -WorkingDirectory $workRoot

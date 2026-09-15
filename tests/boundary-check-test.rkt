@@ -153,6 +153,24 @@
                  (build-path root "VERSION"))
       (copy-file (build-path project-root "runner" "attalambda.rkt")
                  (build-path root "runner" "attalambda.rkt"))
+      (copy-file (build-path project-root "runner" "source-reader.rkt")
+                 (build-path root "runner" "source-reader.rkt"))
+      (copy-file (build-path project-root "runner" "session.rkt")
+                 (build-path root "runner" "session.rkt"))
+      (copy-file (build-path project-root "runner" "source-file.rkt")
+                 (build-path root "runner" "source-file.rkt"))
+      (copy-file (build-path project-root "runner" "diagnostics.rkt")
+                 (build-path root "runner" "diagnostics.rkt"))
+      (copy-file (build-path project-root "runner" "output.rkt")
+                 (build-path root "runner" "output.rkt"))
+      (copy-file (build-path project-root "runner" "history.rkt")
+                 (build-path root "runner" "history.rkt"))
+      (copy-file (build-path project-root "runner" "editor.rkt")
+                 (build-path root "runner" "editor.rkt"))
+      (copy-file (build-path project-root "runner" "editor-output.rkt")
+                 (build-path root "runner" "editor-output.rkt"))
+      (copy-file (build-path project-root "runner" "repl.rkt")
+                 (build-path root "runner" "repl.rkt"))
       (for ([name (in-list '("hello.attl"
                              "stdout.attl"
                              "file-round-trip.attl"
@@ -194,6 +212,8 @@
                     exact->object-rat
                     object-rat->exact
                     object-unit
+                    object-none
+                    object-some
                     object-ok
                     object-err))))
       (write-datum
@@ -217,8 +237,8 @@
  (sort (remove-duplicates
         (map source-classification-class project-classifications))
        symbol<?)
- '(application codec effect host language-expander language-reader macro
-   macro-shell package-info pure-core reader runner test tooling))
+ '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader test tooling))
 
 (check-equal?
  (count (lambda (classification)
@@ -490,6 +510,15 @@
         (def use value = (exit value))))
     '(unapproved-effect-identifier))
 
+   ;; A pure input wrapper can invoke only its injected host, not a reader.
+   (check-effect
+    '(module example "../macros/lazy-with-macros.rkt"
+       (#%module-begin
+        (require "../macros/macros.rkt")
+        (provide use)
+        (def use value = (read-bytes-line value))))
+    '(unapproved-effect-identifier))
+
    (check-effect
     '(module example "../macros/lazy-with-macros.rkt"
        (#%module-begin
@@ -608,12 +637,21 @@
                   exact->object-rat
                   object-rat->exact
                   object-unit
+                  object-none
+                  object-some
                   object-ok
                   object-err)
          ,extra)))
 
    (write-datum codec
                 (codec-datum '(define leak (display "effect"))))
+   (check-equal?
+    (kinds (file-boundary-violations codec 'codec root))
+    '(forbidden-codec-capability))
+
+   ;; Adding host line input grants no input capability to the codec.
+   (write-datum codec
+                (codec-datum '(define leak (read-bytes-line))))
    (check-equal?
     (kinds (file-boundary-violations codec 'codec root))
     '(forbidden-codec-capability))
@@ -1052,6 +1090,10 @@
              (define-syntax (language-lambda stx)
                (syntax #hash((function . exit))))
              (define-for-syntax (language-definition-form? form bound) (print 1))
+             (define-for-syntax (language-definition-form? form bound) (read-line))
+             (define-syntax (language-lambda stx) (syntax (read-line)))
+             (define-syntax (language-lambda stx) (syntax #hash((function . read-line))))
+             (define-for-syntax (language-definition-form? form bound) (read-bytes-line))
              (define-syntax (language-lambda stx) (syntax (print 1)))
              (define-syntax (language-lambda stx)
                (syntax #hash((function . print))))))])
@@ -1172,19 +1214,20 @@
                      (#"0.4.0\n" "0.4")
                      (#"0.5.0\n" "0.5")
                      (#"0.6.0\n" "0.6")
-                     (#"0.7.0\n" "0.7")))])
+                     (#"0.7.0\n" "0.7")
+                     (#"0.8.0\n" "0.8")))])
      (write-exact-bytes product-version-file (car version-pair))
      (write-datum
       package-info
       (replace-package-version clean-package-info-datum
                                (cadr version-pair)))
      (check-equal? (project-boundary-violations root) '()))
-   (write-exact-bytes product-version-file #"0.7.0\n")
+   (write-exact-bytes product-version-file #"0.8.0\n")
    (write-datum package-info clean-package-info-datum)
 
-   (write-exact-bytes product-version-file #"0.7.0")
+   (write-exact-bytes product-version-file #"0.8.0")
    (check-project-kind 'invalid-product-version)
-   (write-exact-bytes product-version-file #"0.7.0\n")
+   (write-exact-bytes product-version-file #"0.8.0\n")
 
    (define saved-version-file
      (build-path root "VERSION.backup"))
@@ -1192,7 +1235,7 @@
      (make-temporary-file "attalambda-version-target-~a"
                           #f
                           (path-only root)))
-   (write-exact-bytes version-target #"0.7.0\n")
+   (write-exact-bytes version-target #"0.8.0\n")
    (rename-file-or-directory product-version-file saved-version-file)
    (make-file-or-directory-link version-target product-version-file)
    (define-values (version-link-findings version-target-reads)
@@ -1232,17 +1275,19 @@
     '())
    (write-datum runner-file clean-runner-datum)
 
+   (define source-file (build-path root "runner" "source-file.rkt"))
+   (define clean-source-file-datum (read-datum source-file))
    (write-datum
-    runner-file
+    source-file
     (replace-datum
      '(bytes->string/utf-8 (port->bytes input) #f)
      '(bytes->string/utf-8 #"" #f)
-     clean-runner-datum))
+     clean-source-file-datum))
    (check-not-false
-    (member 'invalid-runner-input-targets
+    (member 'invalid-source-file-input-targets
             (kinds
-             (file-boundary-violations runner-file 'runner root))))
-   (write-datum runner-file clean-runner-datum)
+             (file-boundary-violations source-file 'source-file root))))
+   (write-datum source-file clean-source-file-datum)
 
    (write-datum
     runner-file
