@@ -1,53 +1,119 @@
 # Interactive AttaLambda — in progress
 
-Kyle authorizes autonomous phases0–11 through the verified candidate, including
+Kyle authorizes autonomous phases 0–11 through the verified candidate, including
 isolated dependencies, tests/builds, commits/pushes and a PR. **No merge, tag, or
 publication.** Contract: [docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
 Branch `interactive-attalambda`, based on input `62d0f0c`. Version stays0.7.0 until
-Phase9. PLAN contains the serial checklist and detailed evidence.
+Phase 9. PLAN contains the serial checklist and detailed evidence.
 
-Phases0–3 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`.
-Phase4 implementation/checkpoint is complete; commit/push follows immediately.
-**Next implementation step: 5.1 — original process ports and runtime ownership.**
-Reconcile Git status before resuming. Do not repeat completed effects.
+Phases 0–4 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`, `fe70e6f`, `ba3d4c5`.
+Phase 5 is implemented but uncommitted. **Next: finish Checkpoint 5 full suite/gates,
+then commit/push; only then begin6.1.** Reconcile status before resuming. Do not
+repeat completed effects, probes, commits or pushes.
 
-Checkpoint4: full CS9.3 suite exits0; 56 suites, 17,662 reported Racket tests plus
-nine Python PTY cases;40 production purity modules and complete boundaries pass.
-Log `/tmp/attalambda-interactive-phase4-full.log`. Independent `state_review`
-close-read session/private expansion/boundaries/tests, reran13state/4expansion
-cases, and found no confirmed issues. Shared-effect-after-failure hunter is now
-permanent. `git diff --check` passes. No suite/monitor remains running.
+## Current verification
 
-Session entries use fresh checked private modules, immutable visible binding
-identities, lexical snapshots and one protected publication. Pure hygienic unary
-identity suspension in private declarations/results supports direct forward aliases.
-Core/effects/host/codec, public facade exports and file-mode behavior are preserved.
-Source reader is restricted and incremental. CLI/editor/history integration is pending.
+Full Phase 5 verification completed with exit 0: 59 suites, 17,674 reported
+Racket tests, 14 Python PTY cases, 40 production purity modules and complete
+boundaries. Log `/tmp/attalambda-interactive-phase5-full.log`. No suite/monitor
+remains running. Cold `lifetime_cold_review` found no proven findings and
+independently passed lifetime/input/boundary and all five new PTY cases. Memory
+was close-read but not rerun alongside the measurement. No new hunter required
+retention. Commit/push this verified phase, then proceed with 6.1.
 
-Phase5 read-only probes support subordinate entry custodians and original ports
-outside them. Remove the session-custodian overrides in prepare/demand/render when
-adding entry ownership. **Publish bindings and mark success in the same short
-break-disabled block**; an outer success marker has a reproduced break seam.
-Probe `/tmp/attalambda-phase5-lifetime-review.rkt` and scratch session copy are
-not repository implementation. Blocked/cached reads, demand-time listener cleanup,
-original ports, exit0/1 escape and session closure passed. One earlier break escaped
-during later work in1/31 recursive-cancellation runs; current re-raise site/promise
-unproven, old=41 still worked. No speculative fix was applied. Record/characterize
-any recurrence; contract allows a forced shared promise to retain a failure.
+Memory log `/tmp/attalambda-interactive-5.8-memory.log`: three 200-entry sessions,
+about9.15/9.13/9.21seconds; retained heap131.16/131.39/131.45MB and reset heap
+121.07/121.15/121.15MB versus121.18MB initial; descriptors stay 7. Weak references to
+old namespace/maps clear on each reset and final close; no owned thread/port growth.
+Observations are not universal performance promises. Prior Phase 4 full log
+`/tmp/attalambda-interactive-phase 4-full.log`:56suites,17,662 Racket-reported tests,
+9PTY cases,40 purity modules and complete boundaries, exit0.
 
-Use isolated CS9.3: PATH=/tmp/attalambda-racket93/bin:$PATH,
+## Implemented session behavior
+
+Entries use checked private modules, lazy actual exports, immutable visible binding
+identities, lexical snapshots, pure unary identity suspension for private forward
+aliases, ordered demand and one protected publication. Core/effects/host/codec,
+public facade exports and file-mode behavior are preserved. Source reader stays
+restricted and incremental.
+
+open-session captures original input/output/error (optional keyword overrides);
+evaluate-entry uses them explicitly. Shared runtime is initialized once under the
+session owner. Each entry gets a child custodian; failure/break releases its new
+resources, success retains them. The success marker and name publication share
+one short break-disabled section. Prepare/demand/render now only parameterize the
+namespace, preserving the demand-time child owner. No production worker or timeout.
+
+reset-session! initializes a candidate runtime then atomically swaps namespace,
+owner and empty bindings; cleanup closes the displaced or abandoned owner.
+The shell must call reset outside the old session custodian. close-session shuts
+resources and clears namespace/bindings; original ports remain open. Private
+session-exit(status), deliberately not exn:fail, unwinds valid language exit so
+outer launcher cleanup runs before honoring0/1. Final CLI/diagnostics remain6–8.
+
+Existing editor fixture --session uses the same engine to prove real input,
+repeated Ctrl+C, rendering, reset/echo/history ownership, EOF and exit0/1/native
+failure70. It is test-only; Phase 7 replaces its loop with the real controller.
+Native9.3 Expeditor requires descriptor1; existing dup/dup2/close adapter routes it
+to stderr only during editing. Promote/classify exact capability in Phase 8.
+No alternate input registry or source/answer replay buffer was needed.
+
+The earlier preimplementation scratch observation of a cached break escaping
+subsequent work in1/31 runs remains unclassified. It did not recur in current
+focused/regression review; old binding/listener survival is permanently checked.
+Do not invent a fix or promise rollback: a forced shared promise may retain failure.
+
+## Phase 6 preparation already completed read-only
+
+reader_design_review recommends one exact new runner/source-file.rkt helper:
+inspect-source-file -> validated-source(original path, strict-decoded body text,
+line,column,position) or source-problem(fixed status/reason/location). Move existing
+path/header/UTF8 validation and tiny sanitized syntax-expression/reason selectors;
+retain stop/CLI/VERSION and actual file dynamic-require in runner/attalambda.rkt.
+Return the body already read during validation; :load must not reopen it. Parse
+with source-reader using exact coordinates, then shared evaluate-entry with explicit
+empty imports and consume=void. Add an imports option, not a second publication path.
+
+Preserve validation order and original path spelling: dotenv before extension,
+extension before existence, final symlink before parent resolution, resolved dotenv
+parent before stat/open, regular-file before content. Keep resolve-parent-path logic
+for permitted parent symlinks, relative targets, symlink/.. traversal and cycle
+handling. Fixed header accepts EOF/LF/CRLF, rejects BOM/space/bareCR; strictly decode
+whole body first. Counted-port observed body location after LF orCRLF is2/0/18;
+header-only EOF1/16/17. Compute port-next-location, do not hardcode byte offsets.
+Existing runner tests163–579 pin precedence, paths, source errors and safe diagnostics.
+
+Source-file must have its own exact path/import/export/read-target class; source-reader
+gets no filesystem capability. Session retains closed native loader targets/single
+publication. Caller working directory and program-relative I/O never change.
+Final launcher distinguishes expansion/render/native errors without arbitrary native
+messages/paths; missing-source vs missing-installation remains file-launch logic.
+No Phase 6 implementation or helper creation has happened yet.
+
+Phase 8 read-only API review is running with editor_probe_review: installed
+Expeditor main does not export its private completer or history-limit parameters.
+Candidate supported approach uses an empty metadata-only completion namespace
+and fresh public editor state per read from shell-owned history (up to 1,000),
+so private internal history trimming cannot discard the shell history. Await
+its exact primary-source findings before implementing Phase 8. A blank-Enter
+probe passed: it retains editing and only repositions the cursor; do not expect
+a newly printed prompt as the readiness signal. No repository change from that probe.
+
+## Environment / remaining endpoint
+
+Use CS 9.3: PATH=/tmp/attalambda-racket93/bin:$PATH,
 PLTUSERHOME=/tmp/attalambda-racket93-user, TMPDIR=/tmp. One file per raco test call
-(relocated multi-file process mode fails); full ./run-all-tests.sh includes gates.
-Approved image racket/racket:9.3-full digest
+(relocated multi-file process mode fails). ./run-all-tests.sh includes both gates.
+Approved cached image racket/racket:9.3-full digest
 sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62.
-Prior8.10 ignored caches were rebuilt. Package staging now includes readers in
-all four sibling lists (Phase3 prerequisite); final artifacts remain unverified.
+Prior8.10 ignored caches were rebuilt. Phase 3 package staging added readers to all
+four sibling lists; final artifacts remain unverified.
 
-Expeditor9.3 requires descriptor1; the proven test-only dup/dup2/close adapter
-routes it to stderr only during editing. Promote/classify that exact capability
-in Phase8. No alternative input registry/replay buffer was needed in probes.
-All final artifact/current-head CI/review/PR evidence remains pending. Never
-inspect dotenv contents, use Graphify, merge main, tag, or publish.
+Phases 6–11 remain: shared validation/loading/diagnostics; actualCLI/status/echo;
+editor/history/completion; version0.8/docs/packaging; cold final source review;
+clean exact Linux archive build + isolated no-Racket consumer/PTYS/relocation;
+PR/current-head CI/review and final candidate evidence. No PR created yet.
+Never inspect dotenv contents, use Graphify, merge main, tag, or publish.
 
 ---
 

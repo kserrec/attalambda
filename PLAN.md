@@ -58,7 +58,7 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 5.1 — original process ports and session runtime ownership.**
+**Next unfinished step: 6.1 — shared file validation and compatibility.**
 The private source reader exists; the definition checker accepts retained-name context.
 The minimal session helper is present; the CLI loop is pending.
 
@@ -170,12 +170,12 @@ remain 7/1. It independently passed all fourteen module assertions and checked
 custodian/input cleanup. No new findings in the scoped feasibility review.
 The full phase suite is running on CS 9.3. Its initial attempt stopped before
 assertions on ignored 8.10 compiled reader caches. Compiling the complete test/gate
-set with CS 9.3 succeeded (`/tmp/attalambda-interactive-phase1-compile.log`);
+set with CS 9.3 succeeded (`/tmp/attalambda-interactive-phase 1-compile.log`);
 this changes no tracked source. A later boundary test exposed the dynamically
 loaded `lang/reader.rkt` cache, which was outside static test dependencies. After
 `raco make lang/reader.rkt`, the focused boundary suite passes 145 assertions
-(`/tmp/attalambda-interactive-phase1-boundary.log`). The full suite has restarted.
-The preserved cache-failure log is `/tmp/attalambda-interactive-phase1-reader-cache-failure.log`.
+(`/tmp/attalambda-interactive-phase 1-boundary.log`). The full suite has restarted.
+The preserved cache-failure log is `/tmp/attalambda-interactive-phase 1-reader-cache-failure.log`.
 
 **Checkpoint 1 — Integration feasibility review.** Use a focused architecture review and terminal-integration review. A cold reviewer should challenge stdin ownership, accidental forcing, captured bindings, and runtime sharing. Do not proceed with a handoff known to lose bytes or a reset known to share old host state. Resolve the minimal mechanism here rather than hiding the problem until packaging.
 
@@ -183,7 +183,7 @@ Checkpoint 1 complete: `PATH=/tmp/attalambda-racket93/bin:$PATH
 PLTUSERHOME=/tmp/attalambda-racket93-user TMPDIR=/tmp ./run-all-tests.sh` exits 0:
 all 51 suites, 17,626 reported Racket tests plus the eight Python PTY cases,
 40-module expanded purity, and complete boundary inventory pass. Full log:
-`/tmp/attalambda-interactive-phase1-full.log`. Independent correction/module
+`/tmp/attalambda-interactive-phase 1-full.log`. Independent correction/module
 review has no remaining findings. `git diff --check` passes. Executable language,
 effect, runtime, codec and launcher sources are untouched; this phase adds test
 probes/harness and their declared build dependencies, exact metadata expectations,
@@ -235,7 +235,7 @@ invocation failed before assertions in the relocated runtime's process mode;
 individual invocations, matching the normal full-suite script, pass. No test
 content or deadline was weakened to accommodate that environment failure.
 Independent review and full phase verification are running before the phase commit;
-full log `/tmp/attalambda-interactive-phase2-full.log`.
+full log `/tmp/attalambda-interactive-phase 2-full.log`.
 
 Independent Phase 2 review found two gaps, now closed. Native Unicode whitespace
 was not recognized by command trimming/splitting; commands now use
@@ -261,7 +261,7 @@ sources are unchanged.
 
 Checkpoint 2 complete: the full CS 9.3 command recorded above exits 0 with
 52 suites, 17,637 reported Racket tests plus nine Python PTY cases, 40-module purity
-and complete boundaries (`/tmp/attalambda-interactive-phase2-full.log`). The final
+and complete boundaries (`/tmp/attalambda-interactive-phase 2-full.log`). The final
 exact-block gate refinement also passed focused 11-reader/145-boundary reruns and
 independent original counterexamples. `git diff --check` passes. Changes create
 one private source helper, its focused tests, shared fixture readiness and exact
@@ -284,9 +284,9 @@ superseded imports before graph analysis so a prior x cannot hide a new self-ref
 Use actual expanded define-values bodies for purity, including generated results.
 The transformer prototype uses `#lang lazy`; comparisons show quote/require/
 only-in/provide retain native bindings, so no extra native imports are needed.
-Probe files: `/tmp/attalambda-phase3-name-probe.rkt`,
-`/tmp/attalambda-phase3-user-import-probe.rkt`, and
-`/tmp/attalambda-phase3-property-{lang,probe}.rkt`. No production interaction path yet.
+Probe files: `/tmp/attalambda-phase 3-name-probe.rkt`,
+`/tmp/attalambda-phase 3-user-import-probe.rkt`, and
+`/tmp/attalambda-phase 3-property-{lang,probe}.rkt`. No production interaction path yet.
 
 - [x] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
 3.1 complete: existing language suite passes 193 checks and sugar suite passes
@@ -347,7 +347,7 @@ classes/source-reader were skimmed; retention/cancellation/UI/artifacts are outs
 this phase. Its 28 additional scope/hygiene/shared-effect assertions are now
 permanent regressions. Final independent reruns pass four expansion and seven
 session cases; session boundary mutations also pass. The first full suite used
-`/tmp/attalambda-interactive-phase3-full.log`; its corrected rerun is recorded below.
+`/tmp/attalambda-interactive-phase 3-full.log`; its corrected rerun is recorded below.
 
 The initial full phase run stopped in host-test: the isolated package staging
 list copied the new session helper but omitted readers/string.rkt. The exact
@@ -355,9 +355,9 @@ missing-module diagnostic proves the staging closure is incomplete. Added
 `readers` to the fresh-install helper and all three matching distribution staging
 lists; this narrow prerequisite moves forward from Phase 9, without any version
 change or artifact claim. Focused host/distribution reruns precede the full rerun.
-Initial failure log is retained at `/tmp/attalambda-interactive-phase3-full.log`.
+Initial failure log is retained at `/tmp/attalambda-interactive-phase 3-full.log`.
 Focused correction checks pass: host 81, distribution 209, and both shell-builder
-syntax checks. Full rerun log: `/tmp/attalambda-interactive-phase3-final-full.log`.
+syntax checks. Full rerun log: `/tmp/attalambda-interactive-phase 3-final-full.log`.
 Independent cold follow-up traced the String reader dependency closure, inspected
 all four staging-list changes and searched their siblings. It found no remaining
 omission or weakened dotenv/symlink/compiled-file exclusion. Version and release
@@ -368,7 +368,7 @@ capabilities are unchanged; final artifact/platform checks remain Phase 9–11 w
 
 Checkpoint 3 complete: the final full CS 9.3 rerun exits 0 with 55 suites,
 17,649 reported Racket tests plus nine Python PTY cases, 40-module expanded
-purity and all source boundaries (`/tmp/attalambda-interactive-phase3-final-full.log`).
+purity and all source boundaries (`/tmp/attalambda-interactive-phase 3-final-full.log`).
 Independent reviews and `git diff --check` pass. Executable changes add private
 module expansion/session/result observation and the exact tooling class; package
 staging now includes observation readers. New tests cover private expansion,
@@ -396,7 +396,7 @@ forward references. Step 4.3 must therefore cover direct forward aliases and
 expressions before a later definition; inheritance is not an acceptance exemption.
 Investigate pure hygienic suspension in the private expansion path, retaining
 existing dependency checks and the old file-launch behavior. No implementation
-had occurred at that checkpoint; Step4.3 below resolves the gap.
+had occurred at that checkpoint; Step 4.3 below resolves the gap.
 The isolated read-only probe `/tmp/attalambda-suspension-review.rkt` now proves
 the minimal mechanism: after existing analysis, wrap each private declaration
 body and generated result expression in a hygienic unary identity application.
@@ -453,13 +453,13 @@ committed hash keys, exposes no private result exports or failed names, and
 leaves saved input, lazy Error and function body untouched. An extra closing
 parenthesis in the newly added test was identified by the native reader at line217
 and corrected before this passing run. Independent `state_review` and the full
-phase suite/gates are in progress; log `/tmp/attalambda-interactive-phase4-full.log`.
+phase suite/gates are in progress; log `/tmp/attalambda-interactive-phase 4-full.log`.
 
 **Checkpoint 4 — State and laziness review.** Use a code review focused on instance reuse and binding publication. The strongest tests should deliberately include observable effects and failing entries, not just arithmetic. Verify the implementation neither concatenates history nor changes closures to read mutable top-level cells.
 
 Independent `state_review` close-read the complete session helper, expansion and
 dependency interactions, exact session boundary, and state/expansion/boundary tests.
-Adjacent facade/boundary rules were skimmed; Phase5 resources/CLI/artifacts were
+Adjacent facade/boundary rules were skimmed; Phase 5 resources/CLI/artifacts were
 not covered. No confirmed findings: independent 12-state/4-expansion/boundary
 reruns and nine additional hunter groups pass. Its distinct shared-promise-after-
 consumer-failure case is now permanent, extended to stdout and input; the final focused and independent reruns pass
@@ -467,9 +467,9 @@ consumer-failure case is now permanent, extended to stdout and input; the final 
 close-read of the addition found no issue. The addition was made while fullsuite was still in the
 earlier binary-Nat file, before its state-test invocation.
 
-Checkpoint 4 complete: full CS9.3 suite exits 0, all 56 suites, 17,662 reported
+Checkpoint 4 complete: full CS 9.3 suite exits 0, all 56 suites, 17,662 reported
 Racket tests plus nine Python PTY cases, 40-module purity and full boundaries.
-Log: `/tmp/attalambda-interactive-phase4-full.log`. `git diff --check` passes.
+Log: `/tmp/attalambda-interactive-phase 4-full.log`. `git diff --check` passes.
 Executable changes: immutable visible binding identities, single protected
 publication, and pure private forward-reference suspension. Test changes: state,
 actual private expansion and publication-boundary regressions. Documentation:
@@ -479,16 +479,116 @@ PLAN/HANDOFF evidence. No core/effect/host/codec or file-mode behavioral change.
 
 **Purpose:** make interactive execution recoverable without changing existing input semantics.
 
-- [ ] **5.1 — Wire original process ports and session runtime ownership.** Initialize the shared runtime under session lifetime and parameterize actual entry execution with the correct process ports. **Check:** temporary parsing ports never become program stdin, and one session has one consistent host instance.
-- [ ] **5.2 — Integrate one live program read.** Connect the source engine to `(read-line UNIT)` through open pipes, then through the early editor adapter. **Check:** source terminators are consumed correctly, a partial answer blocks, one answer is returned exactly once, and the next source entry is readable.
-- [ ] **5.3 — Prove lazy input reuse.** Retain a definition whose body reads input, inspect its name, demand it twice, and invoke a function containing a fresh read twice. **Check:** name inspection does not read; the retained answer is reused; fresh calls consume successive answers; an unselected branch performs no read. Reuse existing typing/byte/EOF/newline tests rather than rebuilding that operation.
-- [ ] **5.4 — Add break-aware recovery.** Handle prompt cancellation and cancellation during expansion, infinite computation, rendering, and blocked input. **Check:** each returns to a usable interactive prompt and an unrelated earlier definition still works. Verify diagnostic context and terminal restoration; do not impose a universal computation timeout.
-- [ ] **5.5 — Scope resources created by an entry.** Add the narrow custodian/worker ownership required by the proven design. **Check:** a failed entry's new listener closes, a previously committed unrelated listener survives, original standard ports remain open, and no cancelled worker continues reading or writing.
-- [ ] **5.6 — Implement reset as genuine session replacement.** Shut down the old session and discard its namespace, visible-name map, runtime instance, and stored diagnostics. Retain shell preferences. **Check:** old names disappear, a listening port can be rebound, the new host registry is fresh, and input/history/echo ownership is still correct.
-- [ ] **5.7 — Close cleanly on all exit paths.** Route ordinary quit/EOF, fatal failure, and valid language exit through the necessary cleanup, preserving language exit statuses. **Check:** terminal mode is restored and session resources close after normal success, `(exit 0)`, `(exit 1)`, and an injected native failure. Test processes must be isolated from the test runner.
-- [ ] **5.8 — Measure repeated-use and reset behavior.** Run a modest reproducible workload, initially about 200 small entries mixing definitions, expressions, and rejected entries, across several reset cycles. **Check:** no worker/port accumulation, old session objects become reclaimable after references are dropped, and memory/latency observations show no unexplained severe growth. Record measurements without brittle universal timing/RSS thresholds; fix concrete retention bugs, not theoretical infinite-session limits.
+Execution subdivisions: 5.2 first proves the live pipe, then adds a session mode
+to the existing temporary editor fixture. 5.4 first verifies engine cancellation
+using event-observed work, then prompt recovery through that fixture. 5.5 adds
+child ownership and a success marker atomic with publication. Phase 7 replaces
+the fixture loop with the production controller; no second engine is introduced.
+
+- [x] **5.1 — Wire original process ports and session runtime ownership.** Initialize the shared runtime under session lifetime and parameterize actual entry execution with the correct process ports. **Check:** temporary parsing ports never become program stdin, and one session has one consistent host instance.
+5.1 complete: session construction captures the caller's three standard ports;
+entry execution explicitly uses them even under a temporary parsing port. The
+focused captured-port test and exact boundary pass (`/tmp/attalambda-interactive-5.1-{input,boundary}.log`).
+Runtime initialization remains once per fresh namespace under session lifetime.
+Phase 4 commit `ba3d4c5` is pushed.
+
+- [x] **5.2 — Integrate one live program read.** Connect the source engine to `(read-line UNIT)` through open pipes, then through the early editor adapter. **Check:** source terminators are consumed correctly, a partial answer blocks, one answer is returned exactly once, and the next source entry is readable.
+5.2 complete: two input groups pass with event-observed partial reads and LF/CRLF
+source termination; the writer remains open and following source is consumed only
+after the answer. Logs `/tmp/attalambda-interactive-5.2-pipe.log` and
+`/tmp/attalambda-interactive-5.2-pty.log`. The new session mode in the existing
+editor fixture executes the checked engine; its real PTY test passes, returning
+from one program read to a second source entry with correct history and restored
+standard output/terminal mode. The fixture remains test-only until Phase 7's loop.
+
+- [x] **5.3 — Prove lazy input reuse.** Retain a definition whose body reads input, inspect its name, demand it twice, and invoke a function containing a fresh read twice. **Check:** name inspection does not read; the retained answer is reused; fresh calls consume successive answers; an unselected branch performs no read. Reuse existing typing/byte/EOF/newline tests rather than rebuilding that operation.
+5.3 complete: three live-input groups pass; definitions/name metadata and an
+unselected branch finish with no supplied answer, a saved read reuses its first
+answer, and two function calls consume the following two answers. Test-owned
+workers have event deadlines and bounded cleanup. Log:
+`/tmp/attalambda-interactive-5.3-input.log`. Existing byte/EOF/newline tests remain.
+
+- [x] **5.4 — Add break-aware recovery.** Handle prompt cancellation and cancellation during expansion, infinite computation, rendering, and blocked input. **Check:** each returns to a usable interactive prompt and an unrelated earlier definition still works. Verify diagnostic context and terminal restoration; do not impose a universal computation timeout.
+5.4 complete: three engine lifetime groups pass. A native test-only expansion
+observer proves interruption inside expansion; two actual output calls prove
+running recurrence and automatic raw-term rendering before interruption. A
+consumed partial saved read retains its cached break without consuming the next
+answer on retry; a fresh read and old=41 still work. No production worker/timeout
+is introduced. The real checked-session PTY case passes four cancellations,
+including two blocked reads, with old=41 after each, correct entry/rendering
+context and terminal restoration. Logs `/tmp/attalambda-interactive-5.4-lifetime.log`
+and `/tmp/attalambda-interactive-5.4-pty-context.log`. Final launcher diagnostics
+and production prompt assembly remain the explicitly scheduled Phase 6/7 work.
+
+- [x] **5.5 — Scope resources created by an entry.** Add the narrow custodian/worker ownership required by the proven design. **Check:** a failed entry's new listener closes, a previously committed unrelated listener survives, original standard ports remain open, and no cancelled worker continues reading or writing.
+5.5 complete: every entry now owns a child custodian under its existing session;
+shared runtime initialization stays outside. Prepare/demand/render no longer
+override that child. The success marker and binding swap share one short protected
+block, with exact structural mutations proving the seam is rejected. Five lifetime
+groups and the full boundary pass (`/tmp/attalambda-interactive-5.5-{lifetime-final,gate}.log`);
+mutation log `...-5.5-boundary.log`. Failed renderer/break cleanup closes only new
+listeners; delayed allocations belong to demand scope, never replay; previously
+committed listeners survive failed work and actual recursive/render cancellation.
+The caller thread and original three ports survive. A break after successful
+publication preserves its listener until explicit session shutdown.
+
+- [x] **5.6 — Implement reset as genuine session replacement.** Shut down the old session and discard its namespace, visible-name map, runtime instance, and stored diagnostics. Retain shell preferences. **Check:** old names disappear, a listening port can be rebound, the new host registry is fresh, and input/history/echo ownership is still correct.
+5.6 complete: reset prepares a fresh runtime/namespace under a candidate owner,
+then swaps namespace/owner/empty bindings atomically. Its finalizer closes exactly
+the displaced or abandoned owner. Seven lifetime groups pass: original names are
+unknown, host registry starts empty, old listener closes/rebinds, new session can
+create a live listener, input still works, and cancelled initialization preserves
+old state. Real PTY reset preserves editor history and echo setting; logs
+`/tmp/attalambda-interactive-5.6-{lifetime-final,pty,gate}.log`. The independent
+`state_review` close-read found no issue and reran seven lifetime groups; its
+`/tmp/attalambda-reset-design-review.rkt` additionally proves initialization failure
+and deferred-break-at-swap with real resources. Caller invariant: reset runs in
+the controlling shell outside the previous session custodian; no program can
+invoke this tooling API. close-session also drops namespace and binding references.
+
+- [x] **5.7 — Close cleanly on all exit paths.** Route ordinary quit/EOF, fatal failure, and valid language exit through the necessary cleanup, preserving language exit statuses. **Check:** terminal mode is restored and session resources close after normal success, `(exit 0)`, `(exit 1)`, and an injected native failure. Test processes must be isolated from the test runner.
+5.7 complete: valid language exit raises a private non-exn:fail unwind request
+inside the entry, allowing child/session/editor cleanup before the outer launcher
+honors status0/1. Eight lifetime groups and the exact gate pass; the exit test
+observes new listeners closed before catching the request while old ones survive
+until session shutdown. Two PTY groups exercise exit0, exit1, injected native
+failure70 and fresh EOF, with terminal and output restoration. Logs:
+`/tmp/attalambda-interactive-5.7-{lifetime,gate,pty}.log`. The fixture outer loop
+implements these integration exits; the actual CLI loop follows in Phase 7.
+
+- [x] **5.8 — Measure repeated-use and reset behavior.** Run a modest reproducible workload, initially about 200 small entries mixing definitions, expressions, and rejected entries, across several reset cycles. **Check:** no worker/port accumulation, old session objects become reclaimable after references are dropped, and memory/latency observations show no unexplained severe growth. Record measurements without brittle universal timing/RSS thresholds; fix concrete retention bugs, not theoretical infinite-session limits.
+
+5.8 complete: three cycles of 200 mixed definitions, rendered expressions and
+rejected entries pass. Elapsed times9.147/9.135/9.210seconds; retained heap
+131.157/131.386/131.452MB; after reset121.068/121.147/121.149MB versus initial
+121.182MB. Process descriptors remain7. Old namespace and binding-table weak
+references clear after every reset and final close; no session-owned thread/port
+accumulation. These are observations, not universal timing/heap limits. Log:
+`/tmp/attalambda-interactive-5.8-memory.log`. Permanent test preserves measurements,
+weak-reference checks, resource checks and bounded owned-resource cleanup.
 
 **Checkpoint 5 — Effects, interruption, and lifetime review.** Use systematic debugging for any failures, followed by a cold review of the port/custodian/namespace paths. Tests must include failure-path cleanup and actual PTY behavior. Explicitly check forced promises are not replayed after interruption and that cleanup does not accidentally close the shared session runtime initialized for earlier entries.
+
+Checkpoint 5 cold `lifetime_cold_review` found no proven findings after close-reading
+the complete session, exact gate, input/lifetime/memory tests, state delta and
+editor fixture/PTY additions against contract§§3.6–4.3. Independent checks pass:
+8 lifetime, 3 input and 1 boundary groups and all 5 new PTY cases. Memory test was reviewed,
+not rerun alongside the local measurement. No extra hunter required retention.
+The full suite is running in exec56431/monitor303, log
+`/tmp/attalambda-interactive-phase 5-full.log`. Await its exit/gates before committing
+or implementing Phase 6. Focused 13 state groups/1 boundary group and diff whitespace checks pass.
+
+Checkpoint 5 complete: full CS 9.3 verification exits 0 with all 59 suites,
+17,674 reported Racket tests plus 14 Python PTY cases, 40 production purity
+modules and full boundary/source inventory. Log:
+`/tmp/attalambda-interactive-phase5-full.log`. Cold review and whitespace checks
+pass. Executable changes: original port capture, entry-owned resources, atomic
+publication/success marking, genuine reset and explicit-exit unwinding in private
+session tooling; exact gate updated. Tests: input/lifetime/memory regressions,
+state/boundary updates and five real-PTY integration cases in the existing fixture.
+Documentation records measured evidence and remaining work. Object language,
+effects, codec/host and existing file execution behavior remain unchanged from
+the authorized input baseline. No Phase 6 implementation has started.
 
 ### Phase 6 — Load files and reuse diagnostics
 

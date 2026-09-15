@@ -162,6 +162,111 @@ class EditorProbe(unittest.TestCase):
             terminal.expect(b'history: ("quit" "next" "read")')
             terminal.finish()
 
+    def test_checked_session_read_and_return_to_editing(self):
+        with Terminal(self.command + ["--session"], self.environment, stdout_pipe=True) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b"(read-line UNIT)\r")
+            terminal.expect(b"entry ready\r\n")
+            self.assertEqual(termios.tcgetattr(terminal.slave), terminal.initial)
+            terminal.send(b"checked-answer\n(add 2 3)\n")
+            terminal.expect(b'=> OK(SOME("checked-answer"))')
+            terminal.expect(b"=> 5")
+            terminal.expect(b"atta> ")
+            terminal.send(b"quit\r")
+            terminal.expect(b'history: ("quit" "(add 2 3)" "(read-line UNIT)")')
+            terminal.finish()
+            self.assertEqual(terminal.process.stdout.read(), b"stdout restored\n")
+
+    def test_checked_session_cancellation_recovers_the_old_binding(self):
+        with Terminal(self.command + ["--session"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b"(def old = 41) old\r")
+            terminal.expect(b"=> 41")
+            terminal.expect(b"atta> ")
+            entries = [
+                b"(read-line UNIT)",
+                b"(read-line UNIT)",
+                b'(rec spin n = (if (is-ok (stdout "running\\n")) (spin n) n)) (spin UNIT)',
+                b'(rec raw n = (if (is-ok (stdout "rendering\\n")) (raw n) n)) raw',
+            ]
+            for source in entries:
+                terminal.send(source + b"\r")
+                terminal.expect(b"entry ready\r\n")
+                if b"running" in source:
+                    terminal.expect(b"running\r\n")
+                elif b"rendering" in source:
+                    terminal.expect(b"rendering\r\n")
+                self.assertEqual(termios.tcgetattr(terminal.slave), terminal.initial)
+                terminal.send(b"\x03")
+                context = b"rendering" if b"rendering" in source else b"entry"
+                terminal.expect(b"repl:probe: interrupted (" + context + b")")
+                terminal.expect(b"atta> ")
+                terminal.send(b"old\r")
+                terminal.expect(b"=> 41")
+                terminal.expect(b"atta> ")
+            terminal.send(b"quit\r")
+            terminal.expect(b"history:")
+            terminal.finish()
+
+    def test_session_reset_preserves_editor_history_echo_and_program_input(self):
+        with Terminal(self.command + ["--session"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b"(def old = 41)\r")
+            terminal.expect(b"entry ready\r\n")
+            terminal.expect(b"atta> ")
+            terminal.send(b":echo off\r")
+            terminal.expect(b"echo: #f")
+            terminal.expect(b"atta> ")
+            terminal.send(b":reset\r")
+            terminal.expect(b"session reset")
+            terminal.expect(b"atta> ")
+            start = terminal.cursor
+            terminal.send(b'(stdout "after-reset\\n")\r')
+            terminal.expect(b"after-reset\r\n")
+            terminal.expect(b"atta> ")
+            self.assertNotIn(b"=>", terminal.output[start:terminal.cursor])
+            terminal.send(b":echo on\r")
+            terminal.expect(b"echo: #t")
+            terminal.expect(b"atta> ")
+            terminal.send(b"(read-line UNIT)\r")
+            terminal.expect(b"entry ready\r\n")
+            terminal.send(b"reset-answer\n")
+            terminal.expect(b'=> OK(SOME("reset-answer"))')
+            terminal.expect(b"atta> ")
+            terminal.send(b"quit\r")
+            terminal.expect(b"history:")
+            terminal.expect(b'(def old = 41)')
+            terminal.finish()
+
+    def test_session_exit_and_native_failure_restore_the_terminal(self):
+        for status in [0, 1]:
+            with self.subTest(status=status), Terminal(
+                    self.command + ["--session"], self.environment, stdout_pipe=True) as terminal:
+                terminal.expect(b"atta> ")
+                terminal.send(b'(def kept = (tcp-listen "127.0.0.1" 0 1)) kept\r')
+                terminal.expect(b"=> OK(")
+                terminal.expect(b"atta> ")
+                terminal.send(f"(exit {status})\r".encode())
+                terminal.expect(b"session closed")
+                terminal.expect(b"history:")
+                terminal.finish(status)
+                self.assertEqual(terminal.process.stdout.read(), b"stdout restored\n")
+        with Terminal(self.command + ["--session-native-failure"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b'(tcp-listen "127.0.0.1" 0 1)\r')
+            terminal.expect(b"session closed")
+            terminal.expect(b"history:")
+            terminal.expect(b"probe failure")
+            terminal.finish(70)
+
+    def test_session_fresh_eof_closes_cleanly(self):
+        with Terminal(self.command + ["--session"], self.environment) as terminal:
+            terminal.expect(b"atta> ")
+            terminal.send(b"\x04")
+            terminal.expect(b"session closed")
+            terminal.expect(b"history:")
+            terminal.finish()
+
     def test_multiline_paste_is_one_source_entry(self):
         with Terminal(self.command + ["--input"], self.environment) as terminal:
             terminal.expect(b"atta> ")

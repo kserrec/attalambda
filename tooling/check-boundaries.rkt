@@ -1792,7 +1792,27 @@
     unless unquote value-to-string void with-handlers
     bindings candidate checked-entry-definitions evaluate-entry for/fold hash-set
     hash-values hasheq parameterize-break session-bindings set-session-bindings!
-    hash-keys session-names sort symbol<?))
+    hash-keys session-names sort symbol<?
+    input output error current-input-port current-output-port current-error-port
+    session-input session-output session-error child successful? set! dynamic-wind
+    initialize-session reset-session! previous installed? set-session-namespace!
+    set-session-custodian! session-exit status exit-handler))
+
+(define expected-session-reset
+  '(define (reset-session! current)
+     (define previous (session-custodian current))
+     (define owner (make-custodian))
+     (define installed? #f)
+     (dynamic-wind
+      void
+      (lambda ()
+        (define namespace (initialize-session owner))
+        (parameterize-break #f
+          (set-session-namespace! current namespace)
+          (set-session-custodian! current owner)
+          (set-session-bindings! current (hasheq))
+          (set! installed? #t)))
+      (lambda () (custodian-shutdown-all (if installed? previous owner))))))
 
 (define expected-session-preparation
   '(define (prepare-entry current parsed [imports (hash-values (session-bindings current))])
@@ -1807,8 +1827,7 @@
                         'attalambda-interaction (list imports result-names)))
      (define module-source
        (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
-     (parameterize ([current-namespace (session-namespace current)]
-                    [current-custodian (session-custodian current)])
+     (parameterize ([current-namespace (session-namespace current)])
        (define expanded (expand module-source))
        (eval expanded)
        (define path `(quote ,name))
@@ -1822,13 +1841,26 @@
 
 (define expected-session-publication
   '(define (evaluate-entry current parsed [consume void])
-     (define entry (prepare-entry current parsed))
-     (define candidate
-       (for/fold ([bindings (session-bindings current)])
-                 ([name (in-list (checked-entry-definitions entry))])
-         (hash-set bindings name (list name (checked-entry-module-name entry) name))))
-     (demand-entry current entry consume)
-     (parameterize-break #f (set-session-bindings! current candidate))))
+     (define successful? #f)
+     (define child (make-custodian (session-custodian current)))
+     (dynamic-wind
+      void
+      (lambda ()
+        (parameterize ([current-custodian child]
+                       [current-input-port (session-input current)]
+                       [current-output-port (session-output current)]
+                       [current-error-port (session-error current)]
+                       [exit-handler (lambda (status) (raise (session-exit status)))])
+          (define entry (prepare-entry current parsed))
+          (define candidate
+            (for/fold ([bindings (session-bindings current)])
+                      ([name (in-list (checked-entry-definitions entry))])
+              (hash-set bindings name (list name (checked-entry-module-name entry) name))))
+          (demand-entry current entry consume)
+          (parameterize-break #f
+            (set-session-bindings! current candidate)
+            (set! successful? #t))))
+      (lambda () (unless successful? (custodian-shutdown-all child))))))
 
 (define (session-violations path info project-root)
   (define forms (module-info-forms info))
@@ -1840,25 +1872,28 @@
                           "../readers/string.rkt"))
     'invalid-session-imports)
    (exact-provide-violations
-    path info '(provide (struct-out session) (struct-out checked-entry)
+    path info '(provide (struct-out session) (struct-out checked-entry) (struct-out session-exit)
                          open-session close-session prepare-entry demand-entry render-result evaluate-entry
-                         session-names)
+                         session-names reset-session!)
     'invalid-session-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
-                    '(language-path open-session close-session prepare-entry
+                    '(language-path initialize-session open-session close-session reset-session! prepare-entry
                                     demand-entry render-result evaluate-entry session-names))
             (= (datum-occurrence-count
                 '(define-runtime-path language-path "../lang/expander.rkt") forms) 1)
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
-                     '((struct session (namespace custodian [bindings #:mutable]) #:transparent)
-                       (struct checked-entry (module-name definitions result-names) #:transparent)))
+                     '((struct session ([namespace #:mutable] [custodian #:mutable] input output error
+                                        [bindings #:mutable]) #:transparent)
+                       (struct checked-entry (module-name definitions result-names) #:transparent)
+                       (struct session-exit (status) #:transparent)))
             (= (datum-occurrence-count expected-session-preparation forms) 1)
-            (= (datum-occurrence-count expected-session-publication forms) 1))
+            (= (datum-occurrence-count expected-session-publication forms) 1)
+            (= (datum-occurrence-count expected-session-reset forms) 1))
        '() (list (violation path 'invalid-session-scaffolding 'module)))
    (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
                                make-base-namespace make-custodian dynamic-require
                                set-session-bindings! parameterize-break hash-set)]
-              [expected '(1 1 2 1 1 1 1 4 1 1 1)]
+              [expected '(1 1 2 1 1 1 3 4 3 3 1)]
               #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
      (violation path 'invalid-session-operation operation))
    (for/list ([call '((dynamic-require language-path #f)

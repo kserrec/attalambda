@@ -3,9 +3,9 @@
 (require rackunit racket/promise "../runner/source-reader.rkt" "../runner/session.rkt")
 
 (define (with-state procedure)
-  (define current (open-session))
   (define input (open-input-bytes #"one\ntwo\n"))
   (define output (open-output-bytes))
+  (define current (open-session #:input input #:output output))
   (dynamic-wind
    void
    (lambda ()
