@@ -1,33 +1,58 @@
 # Interactive AttaLambda — in progress
 
-Updated 2026-09-14. This active record supersedes the completed release handoffs
-below. Kyle authorized autonomous phases 0–11, commits/pushes and a PR; no merge,
-tag or publication. Contract: [docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
-Branch: `interactive-attalambda`, based on input `62d0f0c`; source version remains
-0.7.0 until Phase 9. PLAN.md contains the complete active checklist and evidence.
+Kyle authorized autonomous phases 0–11, isolated dependencies, tests/builds,
+commits/pushes and a PR. **No merge, tag, or publication.** Contract:
+[docs/interactive-implementation-spec.md](docs/interactive-implementation-spec.md).
+Branch: `interactive-attalambda`, based on input `62d0f0c`; version stays 0.7.0
+until Phase 9. PLAN.md contains the complete active checklist and detailed evidence.
 
-Phases 0–2 complete. Phase 1 commit `5a9f907` is pushed. Phase 2 full source
-verification exits 0: 52 suites, 17,637 reported Racket tests plus nine Python PTY
-cases, 40-module expanded purity and complete boundaries. Independent review
-closed Unicode command whitespace and exact protected-reader execution findings;
-all original counterexamples fail the final gate. Focused final reruns also pass.
-Next: **3.1, extend the existing checked definition analysis**, then private lazy
-exports and one-entry execution. Phase 3 design/probe evidence is in PLAN; no
-interaction module path or CLI loop exists yet. Full Phase 2 evidence:
-`/tmp/attalambda-interactive-phase2-full.log`. Never rerun completed effects.
-Ignored 8.10 caches from the baseline were rebuilt or removed; use CS 9.3 throughout.
-CS 9.3 natively requires stdout descriptor 1; the test-only descriptor adapter
-routes it to stderr during editing and restores it afterward. PLAN records proof.
-The private source reader exists; no session engine or CLI REPL loop exists yet. Follow the next unchecked step; never repeat
-commits, pushes, loads or effects already recorded as complete. Before resuming,
-reconcile Git status and active processes with this record. This handoff goes
-stale whenever a later phase updates PLAN.md without updating this entry.
+Phases 0–2 are committed/pushed: `52dde70`, `5a9f907`, `bebe51a`. Phase 3 is
+verified and ready for its commit/push. **Next: commit/push Phase 3, then Step 4.1,
+retain committed binding identities.** Do not repeat effects, commits or pushes
+already recorded. Reconcile current Git status before resuming.
 
-Evidence: `/tmp/attalambda-interactive-baseline.log`. Isolated CS 9.3 runtime:
-`/tmp/attalambda-racket93/bin`; isolated user home `/tmp/attalambda-racket93-user`.
-Approved final build uses cached `racket/racket:9.3-full` Docker image. All artifact,
-current-head CI/review and final terminal acceptance remain pending. Do not claim
-candidate or release completion from the source baseline result.
+Phase 3 adds private expander plumbing and runner/session.rkt: whole-entry checked
+expansion, lazy user/result exports, ordered demand, and existing pure renderer +
+String observation. Exact session scaffolding/native targets are classified.
+Public facade exports, core/effects/host/codec and old file launch are unchanged.
+No retained-name map or CLI loop exists yet. Actual private-transformer literal,
+sugar, def/rec/result bodies pass the unchanged purity checker under relative test
+facade plumbing; the engine retains its absolute runtime path. Native computation
+negative control is rejected. Independent final review found no Phase 3 issues;
+its 28 additional scope/hygiene/shared-effect assertions are permanent regressions.
+
+Checkpoint 3 full CS 9.3 rerun: exit 0, **55 suites, 17,649 reported Racket tests
+plus nine Python PTY cases, 40 production purity modules and complete boundaries**.
+Log: `/tmp/attalambda-interactive-phase3-final-full.log`. The initial run failed
+because isolated package staging omitted the new String reader dependency;
+`readers` was added to the fresh-install helper and all three distribution staging
+lists. Focused host81/distribution209 plus independent cold closure review pass.
+Initial failure log: `/tmp/attalambda-interactive-phase3-full.log`. The staging
+prerequisite moved from Phase9; no artifact/platform acceptance is claimed.
+
+Phase4 read-only preparation found an inherited direct-forward-alias initialization
+failure. Canonical specs permit acyclic forward references: Step4.3 must support
+that class in the private path, not preserve failure as an exception. The completed
+`/tmp/attalambda-suspension-review.rkt` probe proves hygienic unary identity
+applications on private declaration/result bodies (after existing analysis) solve
+it, retain identical/shared values and effects, and preserve file mode. Exact
+mechanism/evidence is in PLAN. Do not repeat exploratory effects. Full in-repository
+purity must be rerun after implementing that mechanism. No Phase4 edits yet.
+
+Use isolated CS9.3: PATH=/tmp/attalambda-racket93/bin:$PATH,
+PLTUSERHOME=/tmp/attalambda-racket93-user, TMPDIR=/tmp. One test file per raco test
+invocation; the relocated runtime's multi-file process mode does not work.
+Full suite is ./run-all-tests.sh and includes both gates. Old8.10 ignored caches
+were rebuilt/removed. Approved build image: cached racket/racket:9.3-full,
+sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62.
+No owned suite/monitor is running after the final Phase3 exit.
+
+CS9.3 Expeditor natively requires stdout descriptor1. The test-only adapter routes
+it to stderr only while editing and restores it before program execution. Phase8
+must promote/classify that exact capability. Source parser and nine PTY cases pass;
+production editor/history/CLI integration remains pending. All artifact verification,
+current-head CI/review, PR and final candidate evidence remain pending. Never read
+dotenv contents; no Graphify, main merge, tag or release action is authorized.
 
 ---
 

@@ -252,7 +252,7 @@ copy_regular_file() {
 copy_regular_file "info.rkt"
 copy_regular_file "VERSION"
 
-for source_directory_name in core effects lang macros runner runtime; do
+for source_directory_name in core effects lang macros readers runner runtime; do
   source_directory="$project_root/$source_directory_name"
   [[ -d "$source_directory" && ! -L "$source_directory" ]] ||
     die "package source directory is unavailable or symlinked: $source_directory_name"

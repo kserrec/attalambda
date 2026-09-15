@@ -58,8 +58,9 @@ The independent reviewer checked the amendment text and preservation procedure.
 Only documentation changes in this phase; production and test inputs match the
 untouched passing baseline.
 
-**Next unfinished step: 3.1 — extend the existing checked definition analysis.**
-The private source reader exists; there is no production session or CLI loop yet.
+**Next unfinished step: 4.1 — retain committed binding identities (after the Phase 3 commit/push).**
+The private source reader exists; the definition checker accepts retained-name context.
+The minimal session helper is present; the CLI loop is pending.
 
 ### Phase 0 — Establish a safe, reproducible starting point
 
@@ -252,8 +253,8 @@ bypass, accepts the actual safe helper, and passes all eleven reader cases. Both
 findings are closed; no remaining finding in parser/commands/readiness/boundary scope.
 Focused final logs: `/tmp/attalambda-interactive-2-review.log` (11 cases) and
 `/tmp/attalambda-interactive-2-boundary-review.log` (145 assertions). The full phase
-run is still active; the late gate refinement has its own focused reruns and will
-also be read by the full run's final structural gate. Earlier language/runtime
+run completed successfully; the late gate refinement has focused reruns and passed
+the full run's final structural gate. Earlier language/runtime
 sources are unchanged.
 
 **Checkpoint 2 — Reader correctness and extension-boundary review.** Run adversarial reader cases and affected existing reader/runner tests. Inspect all places that parse source, command arguments, and later history data; each must use an explicit restricted configuration. Confirm that terminal input remains in the host, while source input remains tooling.
@@ -287,19 +288,125 @@ Probe files: `/tmp/attalambda-phase3-name-probe.rkt`,
 `/tmp/attalambda-phase3-user-import-probe.rkt`, and
 `/tmp/attalambda-phase3-property-{lang,probe}.rkt`. No production interaction path yet.
 
-- [ ] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
-- [ ] **3.2 — Expose lazy user bindings privately.** Add generated exports or equivalent trusted access for definitions from an interaction module. Keep the public language export surface unchanged. **Check:** discovering exports and retrieving a definition do not demand an input/output effect hidden in its body.
-- [ ] **3.3 — Expose ordered expression results privately.** Generate result bindings that preserve the original lazy expressions and their source order. Keep native transport metadata outside object-language terms. **Check:** module instantiation alone does not prematurely force these results, while ordinary file modules still execute their normal force-and-discard path.
-- [ ] **3.4 — Evaluate one checked module in a session.** Add the minimal runner-side declaration/instantiation/result-demand path. Use fresh module names and the safe AttaLambda source context. **Check:** arithmetic produces the expected encoded value, expressions are demanded in order, and an expansion error anywhere in the entry prevents all its effects.
-- [ ] **3.5 — Render supported results through the existing renderer.** Connect the pure `value-to-string` path and observation-side String reader, retaining the already computed result. **Check:** exact fractions, nested Lists/Options/Results, Maps, Errors, Strings, and Unit use canonical rendering, with no second evaluation and no codec import.
-- [ ] **3.6 — Classify the new scaffolding precisely.** Extend boundary expectations for the new files/imports/exports and their narrowly required capabilities. **Check:** unknown source locations, unapproved production imports, and user attempts to access native `eval`, `require`, or port operations still fail closed.
-- [ ] **3.7 — Check real generated terms for purity.** Feed actual interactive expansions through the existing purity-checking approach, isolating native module scaffolding as existing frontend tests do. **Check:** representative literal, sugar, `def`, and `rec` bodies contain only the allowed expanded computation; a deliberately forbidden computation fixture is rejected.
+- [x] **3.1 — Factor shared definition analysis only as needed.** Make the existing definition recognition/dependency checks reusable by the private interactive wrapper, preserving their lexical context. **Check:** existing file syntax, recursive-definition rejection, sugar, and shadowing suites remain unchanged in behavior.
+3.1 complete: existing language suite passes 193 checks and sugar suite passes
+157 (`/tmp/attalambda-interactive-3.1-{language,sugar}.log`). Definition recognition
+and dependency checks accept retained-name context while preserving file defaults.
+
+- [x] **3.2 — Expose lazy user bindings privately.** Add generated exports or equivalent trusted access for definitions from an interaction module. Keep the public language export surface unchanged. **Check:** discovering exports and retrieving a definition do not demand an input/output effect hidden in its body.
+3.2 complete: direct private-module test passes; export discovery and dynamic
+retrieval leave saved effects undemanded, and repeated demand emits once
+(`/tmp/attalambda-interactive-3.2.log`). Exact public language exports remain pinned;
+the targeted boundary gate passes. Native imports/provides come from transformer
+scope; user forms retain their original syntax context.
+
+- [x] **3.3 — Expose ordered expression results privately.** Generate result bindings that preserve the original lazy expressions and their source order. Keep native transport metadata outside object-language terms. **Check:** module instantiation alone does not prematurely force these results, while ordinary file modules still execute their normal force-and-discard path.
+3.3 complete: three private-expansion cases pass (`/tmp/attalambda-interactive-3.3.log`).
+Instantiation/export retrieval do not demand expression results, demand order is A/B,
+repeated demand shares A, a delayed definition stays silent, and ordinary file modules
+still force/discard their expressions. Result identities are private uninterned exports.
+
+- [x] **3.4 — Evaluate one checked module in a session.** Add the minimal runner-side declaration/instantiation/result-demand path. Use fresh module names and the safe AttaLambda source context. **Check:** arithmetic produces the expected encoded value, expressions are demanded in order, and an expansion error anywhere in the entry prevents all its effects.
+3.4 complete: three engine cases pass (`/tmp/attalambda-interactive-3.4.log`):
+exact arithmetic, rejection before effects and ordered execution. The first numeric
+test incorrectly observed a tagged object as a raw Rat; an isolated payload-accessor
+probe returned 5/6 and 42, and correcting the test observer passed without engine changes.
+
+- [x] **3.5 — Render supported results through the existing renderer.** Connect the pure `value-to-string` path and observation-side String reader, retaining the already computed result. **Check:** exact fractions, nested Lists/Options/Results, Maps, Errors, Strings, and Unit use canonical rendering, with no second evaluation and no codec import.
+3.5 complete: five session cases pass (`/tmp/attalambda-interactive-3.5.log`),
+including exact fractions, nested containers, Maps, Errors, byte-escaped Strings,
+Char, Byte and Unit. Re-observing one stdout result prints once. Two test inputs
+were corrected against the actual API/UTF-8 literal rules: make-ok is public;
+source U+00FF becomes bytes C3 BF. No production formatter/representation changed.
+
+- [x] **3.6 — Classify the new scaffolding precisely.** Extend boundary expectations for the new files/imports/exports and their narrowly required capabilities. **Check:** unknown source locations, unapproved production imports, and user attempts to access native `eval`, `require`, or port operations still fail closed.
+3.6 complete: exact session imports/exports, native loader targets, source-context
+construction and whole-entry expansion sequence are classified. The full boundary
+gate passes, as do 145 existing boundary assertions and session mutation cases
+(`/tmp/attalambda-interactive-3.6-{gate,boundary,mutations}.log`). Unknown runner
+locations, native/codec imports, unexpanded eval and context attachment fail closed.
+
+- [x] **3.7 — Check real generated terms for purity.** Feed actual interactive expansions through the existing purity-checking approach, isolating native module scaffolding as existing frontend tests do. **Check:** representative literal, sugar, `def`, and `rec` bodies contain only the allowed expanded computation; a deliberately forbidden computation fixture is rejected.
+
+3.7 complete: four private expansion cases pass (`/tmp/attalambda-interactive-3.7.log`).
+Every generated literal/sugar/def/rec/result body passes the unchanged expression
+purity checker; native conditional computation fails its negative control. The
+test spells the same trusted facade relatively, following sugar-test, because
+the core gate deliberately rejects absolute `(file ...)` import chains. An isolated
+probe established that only scaffolding path spelling differed; these are actual
+private-transformer bodies under relative test plumbing, not the engine’s exact
+absolute-path module syntax. The independent reviewer accepted that isolation.
+No checker exception or object-language change was introduced.
 
 **Checkpoint 3 — Language-equivalence and purity review.** Use a focused code/architecture review. Compare file and interactive expansion paths and their tests. Reject copied recursion logic, privileged scope accidentally attached to user source, eager transport conversions, and public export leakage. Close only after the full suite and both structural gates pass.
+
+Independent Checkpoint 3 review (`interaction_design_review`) found no proven
+issues after close-reading the complete session helper, expander delta/shared
+analysis, exact session boundary and all three focused tests. Surrounding boundary
+classes/source-reader were skimmed; retention/cancellation/UI/artifacts are outside
+this phase. Its 28 additional scope/hygiene/shared-effect assertions are now
+permanent regressions. Final independent reruns pass four expansion and seven
+session cases; session boundary mutations also pass. Full suite is running via
+the recorded CS 9.3 command, log `/tmp/attalambda-interactive-phase3-full.log`.
+Do not commit or start Phase 4 implementation until its exit and gates pass.
+
+The initial full phase run stopped in host-test: the isolated package staging
+list copied the new session helper but omitted readers/string.rkt. The exact
+missing-module diagnostic proves the staging closure is incomplete. Added
+`readers` to the fresh-install helper and all three matching distribution staging
+lists; this narrow prerequisite moves forward from Phase 9, without any version
+change or artifact claim. Focused host/distribution reruns precede the full rerun.
+Initial failure log is retained at `/tmp/attalambda-interactive-phase3-full.log`.
+Focused correction checks pass: host 81, distribution 209, and both shell-builder
+syntax checks. Full rerun log: `/tmp/attalambda-interactive-phase3-final-full.log`.
+Independent cold follow-up traced the String reader dependency closure, inspected
+all four staging-list changes and searched their siblings. It found no remaining
+omission or weakened dotenv/symlink/compiled-file exclusion. Version and release
+capabilities are unchanged; final artifact/platform checks remain Phase 9–11 work.
+
+
+
+
+Checkpoint 3 complete: the final full CS 9.3 rerun exits 0 with 55 suites,
+17,649 reported Racket tests plus nine Python PTY cases, 40-module expanded
+purity and all source boundaries (`/tmp/attalambda-interactive-phase3-final-full.log`).
+Independent reviews and `git diff --check` pass. Executable changes add private
+module expansion/session/result observation and the exact tooling class; package
+staging now includes observation readers. New tests cover private expansion,
+session execution and boundary mutations; existing staging fixtures are updated.
+PLAN/HANDOFF record evidence and the upcoming forward-reference gap. Core, effects,
+host, codec, public facade exports and old file-launch behavior are unchanged.
+Commit/push this phase, then execute 4.1 serially.
 
 ### Phase 4 — Retain definitions with precise session semantics
 
 **Purpose:** grow from one entry to a persistent session without replay or mutable globals.
+
+Read-only preparation while Checkpoint 3 runs: `reader_design_review` verified
+explicit binding triples with the existing helper. Snapshots yield 2/11, saved
+effects remain lazy across imports and run once, superseding self-reference is
+rejected, and imported def/rec values become calls. Implement an immutable hasheq
+of visible-name to module/export identity with one shell-owned mutable field;
+construct candidate state before demand and protect only the final successful
+field swap. Keep an explicit empty-import path for later standalone loads.
+Names derive from committed keys without forcing. No Phase 4 implementation has
+started. The reviewer also compared direct forward aliases in real files/private
+entries: `(def y = x) (def x = 7) y` fails identically during instantiation, whereas
+`(def y = (add x 0)) ...` succeeds. Although inherited, the canonical purity amendment explicitly permits acyclic
+forward references. Step 4.3 must therefore cover direct forward aliases and
+expressions before a later definition; inheritance is not an acceptance exemption.
+Investigate pure hygienic suspension in the private expansion path, retaining
+existing dependency checks and the old file-launch behavior. No implementation
+has occurred; the gap is assigned to the next phase’s required dependency work.
+The isolated read-only probe `/tmp/attalambda-suspension-review.rkt` now proves
+the minimal mechanism: after existing analysis, wrap each private declaration
+body and generated result expression in a hygienic unary identity application.
+Keep ordinary file forms unchanged. It resolves aliases/expression-before-def,
+preserves identical function objects and one-time stdout/input effects, survives
+lambda/held/def shadowing, and retains cycle rejection/rec. The three local lambda
+bodies pass existing expanded purity; final in-repository literal/effect purity
+is still required because the relocated facade is outside the gate’s path policy.
+
 
 - [ ] **4.1 — Retain and import committed binding identities.** Maintain the visible-name map and import references to existing module instances into the next entry. **Check:** definitions, functions, and retained partial applications remain usable across several entries without rerunning earlier expressions.
 - [ ] **4.2 — Implement snapshot redefinition.** New entries replace visible name mappings, not old language bindings. Resolve generated imports so local replacements do not conflict. **Check:** the `x`/`plus-x` example passes, old delayed expressions retain their environment, and duplicate definitions within one entry retain current rejection behavior.

@@ -656,7 +656,9 @@
       #%app #%datum #%module-begin #%top ... = _ and argument body byte
       language-rec rec raw-fix language-fix
       language-curried-lambdas language-bound-name language-definition-parts
-      language-dependencies language-check-definitions
+      language-dependencies language-check-definitions imported retained
+      interaction attalambda-interaction imports binding datum->syntax let*
+      import-form export-form unsyntax-splicing results result result-names values
       language-sugar-expression language-unary-let language-list language-cond
       condition
       arguments name names candidate bound bound-identifier=? free-identifier=? ormap
@@ -1771,6 +1773,87 @@
    (strict-vocabulary-violations path project-root source-reader-vocabulary
                                  'unapproved-source-reader-identifier)))
 
+;; Private session tooling has a closed import graph and native loader targets.
+;; Pin module construction/expansion as a whole: symbols alone cannot establish
+;; that user syntax lost native lexical context or was checked before execution.
+(define session-vocabulary
+  '(#%module-begin _ and assoc attalambda-interaction body car cdr checked-entry
+    checked-entry-module-name checked-entry-result-names close-session complete cons
+    consume current current-custodian current-namespace custodian custodian-shutdown-all
+    datum->syntax define define-runtime-path define-values definitions demand-entry
+    dynamic-require empty entry eval exn? expand expanded exports failure file filter for
+    force forms gensym if imports in-list lambda language-path list make-base-namespace
+    make-custodian map memq module module->exports module-name module-source name names
+    namespace not open-session owner parameterize parsed path path->string phase-zero
+    prepare-entry provide quasiquote quote racket/promise racket/runtime-path raise
+    raise-argument-error render-result renderer repl require result result-names session
+    session-custodian session-namespace source-buffer-forms source-buffer-status
+    source-buffer? string-value->string struct struct-out syntax-exports syntax-property
+    unless unquote value-to-string void with-handlers))
+
+(define expected-session-preparation
+  '(define (prepare-entry current parsed [imports '()])
+     (unless (and (source-buffer? parsed)
+                  (memq (source-buffer-status parsed) '(empty complete)))
+       (raise-argument-error 'prepare-entry "complete source buffer" parsed))
+     (define forms (source-buffer-forms parsed))
+     (define name (gensym 'repl))
+     (define result-names (map (lambda (_) (gensym 'result)) forms))
+     (define body
+       (syntax-property (datum->syntax #f (cons '#%module-begin forms))
+                        'attalambda-interaction (list imports result-names)))
+     (define module-source
+       (datum->syntax #f `(module ,name (file ,(path->string language-path)) ,body)))
+     (parameterize ([current-namespace (session-namespace current)]
+                    [current-custodian (session-custodian current)])
+       (define expanded (expand module-source))
+       (eval expanded)
+       (define path `(quote ,name))
+       (define-values (exports syntax-exports) (module->exports path))
+       (define phase-zero (assoc 0 exports))
+       (define names (if phase-zero (map car (cdr phase-zero)) '()))
+       (dynamic-require path #f)
+       (checked-entry name
+                      (filter (lambda (name) (not (memq name result-names))) names)
+                      (filter (lambda (name) (memq name names)) result-names)))))
+
+(define (session-violations path info project-root)
+  (define forms (module-info-forms info))
+  (define symbols (module-symbols info))
+  (append
+   (exact-language-violations path info 'racket/base 'unexpected-session-language)
+   (exact-require-violations
+    path info '((require racket/promise racket/runtime-path "source-reader.rkt"
+                          "../readers/string.rkt"))
+    'invalid-session-imports)
+   (exact-provide-violations
+    path info '(provide (struct-out session) (struct-out checked-entry)
+                         open-session close-session prepare-entry demand-entry render-result)
+    'invalid-session-exports)
+   (if (and (equal? (filter-map top-level-binding-name forms)
+                    '(language-path open-session close-session prepare-entry
+                                    demand-entry render-result))
+            (= (datum-occurrence-count
+                '(define-runtime-path language-path "../lang/expander.rkt") forms) 1)
+            (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
+                     '((struct session (namespace custodian) #:transparent)
+                       (struct checked-entry (module-name definitions result-names) #:transparent)))
+            (= (datum-occurrence-count expected-session-preparation forms) 1))
+       '() (list (violation path 'invalid-session-scaffolding 'module)))
+   (for/list ([operation '(eval expand datum->syntax syntax-property module->exports
+                               make-base-namespace make-custodian dynamic-require)]
+              [expected '(1 1 2 1 1 1 1 4)]
+              #:unless (= (count (lambda (name) (eq? name operation)) symbols) expected))
+     (violation path 'invalid-session-operation operation))
+   (for/list ([call '((dynamic-require language-path #f)
+                     (dynamic-require path #f)
+                     (dynamic-require `(quote ,(checked-entry-module-name entry)) name)
+                     (dynamic-require language-path 'value-to-string))]
+              #:unless (= (datum-occurrence-count call forms) 1))
+     (violation path 'invalid-session-loader-target call))
+   (strict-vocabulary-violations path project-root session-vocabulary
+                                 'unapproved-session-identifier)))
+
 (define (host-violations path info project-root)
   (define host-definitions
     (filter (lambda (form)
@@ -1845,6 +1928,7 @@
           [(application) (application-violations source info)]
           [(runner) (runner-violations source info root)]
           [(source-reader) (source-reader-violations source info root)]
+          [(session) (session-violations source info root)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
           [(host) (host-violations source info root)]
@@ -1929,6 +2013,8 @@
     [(equal? first-part "examples") 'application]
     [(equal? source (normalized (build-path root "runner" "source-reader.rkt")))
      'source-reader]
+    [(equal? source (normalized (build-path root "runner" "session.rkt")))
+     'session]
     [(equal? first-part "runner") 'runner]
     [else #f]))
 
@@ -2187,6 +2273,8 @@
        (normalized (build-path runner-directory "attalambda.rkt")))
      (define source-reader
        (normalized (build-path runner-directory "source-reader.rkt")))
+     (define session
+       (normalized (build-path runner-directory "session.rkt")))
      (define macro-shell
        (normalized (build-path macros-directory "lazy-with-macros.rkt")))
      (define macro-definitions
@@ -2241,6 +2329,7 @@
                                 root)
       (file-boundary-violations runner 'runner root)
       (file-boundary-violations source-reader 'source-reader root)
+      (file-boundary-violations session 'session root)
       (file-boundary-violations package-info 'package-info root)
       (append-map (lambda (path)
                     (file-boundary-violations path 'reader root))
@@ -2280,7 +2369,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader) equal?))
+                 #:unless (member path (list runner source-reader session) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

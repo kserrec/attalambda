@@ -226,7 +226,7 @@
                  (build-path package-source "VERSION"))
       (for ([directory
              (in-list '("core" "effects" "lang" "macros"
-                        "runner" "runtime"))])
+                        "readers" "runner" "runtime"))])
         (copy-package-source
          (build-path project-root directory)
          (build-path package-source directory)))

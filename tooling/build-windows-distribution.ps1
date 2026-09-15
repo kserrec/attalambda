@@ -441,7 +441,7 @@ try {
 
     Copy-RegularFile $infoFile ([IO.Path]::Combine($packageSource, 'info.rkt')) 'info.rkt'
     Copy-RegularFile $versionFile ([IO.Path]::Combine($packageSource, 'VERSION')) 'VERSION'
-    foreach ($sourceDirectoryName in @('core', 'effects', 'lang', 'macros', 'runner', 'runtime')) {
+    foreach ($sourceDirectoryName in @('core', 'effects', 'lang', 'macros', 'readers', 'runner', 'runtime')) {
         $sourceDirectory = [IO.Path]::Combine($ProjectRoot, $sourceDirectoryName)
         if (-not [IO.Directory]::Exists($sourceDirectory)) {
             Fail "package source directory is unavailable: $sourceDirectoryName"
