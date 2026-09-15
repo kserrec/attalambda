@@ -28,15 +28,20 @@ Never inspect dotenv contents or add Graphify output; never overwrite unrelated 
 
 ## Evidence and exact next step
 
-**Phase 9 source, documentation and packaging checks pass. Next: record and push
-the phase commit using the Git write access Kyle has now explicitly allowed.**
-The earlier sandbox exposed `.git` as read-only; creating
-`.git/index.lock` failed, and the one escalation request was rejected by the
-execution tool (`Rejected("rejected by user")`). Nothing was staged or committed.
-Kyle subsequently authorized the rejected Git metadata write and continuation.
-After committing/pushing Phase9, use fresh current-head CI and review for
-Phase10 source freeze. Phase 8 is committed
-as `21f9324bd95bc1127201057c485f363005875048`.
+**Phase10 source verification is complete; next commit/push the reviewed
+four-file source-freeze checkpoint, then build that exact clean HEAD.** Phase9
+is pushed as `549460f39add1e6e995f94bb3e46a958e51dd9be`. CI35008188837 completed:
+69 source files / 26,845 assertions, 43 shared terminal methods in 47.226s,
+6 visual methods in 3.528s, 40-module purity and complete boundaries pass. All Windows/macOS
+builds, consumers and cleanup pass. Linux build passed; its consumer failed the
+forced-C-locale Unicode case, now narrowly repaired and independently reviewed
+under10.2b1. New-head CI must validate that correction; the old run remains failed.
+Full log:`/tmp/attalambda-phase9-ci-complete.log`; parsed receipt:
+`/tmp/attalambda-phase9-ci-summary.json`. No product, Racket test, Python test body,
+builder or dependency input changed after the full source run. The sole later
+executable change is the consumer fixture locale, with217 focused checks passing.
+Git writes work as separate approved add/commit/push operations.
+
 The Phase 9 complete run `/tmp/attalambda-interactive-phase9-full.log` finished 0:
 69 Racket test files, 26,845 assertions, 43 shared terminal methods in 71.605s,
 6 visual methods in 5.733s, 40 pure production modules and the full boundary gate.
@@ -56,14 +61,15 @@ Completion, bounded history, source/program input, cancellation, standalone load
 and output separation are implemented. Independent current-source review is
 closed at `/tmp/attalambda-phase10-independent-review.md`; its 18-file hash
 manifest still matches. The reviewed dependency patches, exact runtime checks,
-notices and all three builder/consumer contracts remain unchanged from Phase 8.
+notices and all three builder contracts remain unchanged from Phase8. The Linux
+consumer now supplies UTF-8 only to its two terminal-test invocations.
 The corrected temporary candidate drivers have independent source review at
 `/tmp/attalambda-interactive-candidate01-review.md`; neither has been executed.
 
 Reuse the prepared consumer image
 `sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`.
-Development08 predates final source and is not a candidate. Source freeze,
-current-head checks and exact clean Linux artifact verification remain required.
+Development08 predates final source and is not a candidate. The source-freeze
+commit, new-head checks and exact clean Linux artifact verification remain required.
 No source suite or owned container is running. The independent CI setup probe
 also passed actual package setup, executable embedding, distribution, version and
 transcript smoke checks; its finalizer removed the container. HANDOFF.md records
@@ -1754,8 +1760,39 @@ and `review.md`. This control is not the final clean archive/consumer acceptance
 
 **Purpose:** close implementation review and establish the clean source revision used by the artifact phase.
 
-- [ ] **10.1 — Perform a cold implementation review.** Review the current complete milestone diff, this contract, and tests using a separate read-only reviewer when available. Focus on purity, effects/laziness, imports/shadowing, cancellation, stdin, loading, history, and scope. **Check:** each finding has evidence and a severity/rationale; do not manufacture changes when no defect is found.
-- [ ] **10.2 — Resolve confirmed findings in small units.** For each actual finding, add a regression or reproducible check, patch only the responsible code, and rerun focused checks. Split independent fixes into separate numbered substeps. **Check:** no unresolved correctness or security-boundary blocker remains; rejected suggestions have an evidence-based explanation.
+10.2b — Diagnose the current CI terminal consumer before editing. Run35008188837
+built the Linux archive successfully, then its25-method consumer failed only the
+unusual-name case when typing prefix `z日`: native Expeditor reported invalid or
+incomplete multibyte input and the process exited. All65 control-name prefixes
+and other terminal methods passed. Log:`/tmp/attalambda-phase10-linux-ci.log`.
+The consumer explicitly exports `LC_ALL=C`; its Python child inherits that
+ASCII-only native locale. Compare the unchanged actual CLI case under C and
+C.UTF-8 and review the fixed contract before deciding whether only the terminal
+test invocation needs an explicit UTF-8 environment. Preserve the Unicode case,
+the deterministic shell checks, all deadlines and the exact artifact gate.
+At diagnosis, no executable change had been made and source CI was still running.
+Diagnosis is confirmed before repair: the unchanged72-name actual CLI test fails
+only at `z日` under C (9.753s, native exit70) and passes in C.UTF-8 (9.798s).
+Native Expeditor creates its console locale from the environment, then decodes
+bytes with mbrtowc; C declares ASCII, so UTF-8 input fails before completion.
+Independent review identifies fixture setup, not a language/completion defect.
+10.2b1 will set C.UTF-8 only on the two existing Python terminal invocations and
+record that terminal locale in consumer evidence. Keep global C for sorting and
+byte checks, preserve every Unicode assertion and deadline, and document the
+actual consumer environment. Logs:`/tmp/attalambda-phase10-locale-{C,UTF8}-source.log`.
+This does not claim Unicode editing under a deliberately non-UTF-8 native locale.
+10.2b1 is applied: two command-scoped locale assignments, one consumer evidence
+line and the distribution design explanation. No product/test-body/deadline
+change. The affected distribution suite passes217 assertions in
+`/tmp/attalambda-phase10-locale-distribution.log`; all18 current source-review
+hashes still match. Final independent locale review is closed at
+`/tmp/attalambda-phase10-locale-review.md`; its direct no-Tab Unicode sibling
+proves native decoding and cleanup under both locales. The full source CI has
+now passed; its exact results are recorded in10.3. The new-head Linux consumer
+and the exact Phase11 candidate must rerun the unchanged25 methods at both paths.
+
+- [x] **10.1 — Perform a cold implementation review.** Review the current complete milestone diff, this contract, and tests using a separate read-only reviewer when available. Focus on purity, effects/laziness, imports/shadowing, cancellation, stdin, loading, history, and scope. **Check:** each finding has evidence and a severity/rationale; do not manufacture changes when no defect is found.
+- [x] **10.2 — Resolve confirmed findings in small units.** For each actual finding, add a regression or reproducible check, patch only the responsible code, and rerun focused checks. Split independent fixes into separate numbered substeps. **Check:** no unresolved correctness or security-boundary blocker remains; rejected suggestions have an evidence-based explanation.
 10.2a (before repair): independent current-source review proves stdout and stderr
 can be different terminals. The current shared-terminal flag checks only whether
 stdout is a terminal; a UI separator on stderr then suppresses the needed stdout
@@ -1766,7 +1803,20 @@ Racket's documented port-file-identity for the two open output ports before
 allowing one terminal's UI newline to satisfy the other's result boundary.
 Update the exact boundary pins; existing same-terminal and pipe tests must pass.
 
-- [ ] **10.3 — Run final source verification.** Run the entire suite, expanded purity, boundary inventory, and PTY cases on the final candidate inputs. Review dotenv-safe diff/whitespace checks and generated-file exclusions. **Check:** record the runtime, commands, logs, actual results, and any outstanding artifact-only checks.
+- [x] **10.3 — Run final source verification.** Run the entire suite, expanded purity, boundary inventory, and PTY cases on the final candidate inputs. Review dotenv-safe diff/whitespace checks and generated-file exclusions. **Check:** record the runtime, commands, logs, actual results, and any outstanding artifact-only checks.
+
+10.3 evidence: CI35008188837 source job104513162394 completed successfully on
+Racket CS9.3 after explicit isolated preparation. `./run-all-tests.sh` passes69
+Racket files/26,845 assertions;43 shared terminal methods47.226s and6 visual
+methods3.528s; expanded purity40 modules and complete boundary/source inventory.
+The PR merge commit60450c1ca36cf0604e4b8f312d87803167aded68 and reviewed head549460f
+have the same tree `ed17a5a251d1368809d4eb636034eea69ce5e47b`. Source review18-file
+hashes match. Subsequent changes are the reviewed consumer fixture locale and
+its receipt/docs only; affected distribution suite passes217. Full CI log and
+parsed receipt are `/tmp/attalambda-phase9-ci-complete.log` and
+`/tmp/attalambda-phase9-ci-summary.json`. Canonical attachment/index/link integrity,
+dotenv-safe source scope/generated inventory and whitespace checks pass. Exact
+standalone artifact and new-head CI remain Phase11 gates, not inferred passes.
 
 **Checkpoint 10 — Source freeze.** Use a final scope and code review; close the verified phase with its commit/push when authorized. Record the resulting exact candidate commit without claiming the archive is already verified. Do not amend executable inputs during artifact testing without returning to the responsible implementation step and refreshing affected evidence.
 

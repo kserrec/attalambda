@@ -510,7 +510,9 @@ SOURCE
 
   # These classes exercise only the absolute executable and temporary fixtures.
   # Source-only probe classes are deliberately excluded from this consumer.
-  ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
+  # Their UTF-8 terminal input needs a matching native console locale; retain C
+  # for the surrounding archive inventory and byte comparisons.
+  LC_ALL=C.UTF-8 ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
     timeout --kill-after=5s 600s python3 -I -B /transfer/interactive_pty.py -v CLIProbe TranscriptProbe
 
   mkdir -p -- "$second_parent"
@@ -528,7 +530,7 @@ SOURCE
   check_captured_output $'Generated after packaging.\n' "relocated source"
 
   check_interactive_and_input
-  ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
+  LC_ALL=C.UTF-8 ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
     timeout --kill-after=5s 600s python3 -I -B /transfer/interactive_pty.py -v CLIProbe TranscriptProbe
 
   printf 'consumer_image=%s\n' "$consumer_image"
@@ -536,6 +538,7 @@ SOURCE
   printf 'consumer_raco_command=absent\n'
   printf 'terminal_harness_sha256=%s\n' "$(sha256sum /transfer/interactive_pty.py | awk '{print $1}')"
   printf 'terminal_classes=CLIProbe TranscriptProbe\n'
+  printf 'terminal_locale=C.UTF-8\n'
   printf 'consumer_python_version=%s\n' "$(python3 --version)"
   dpkg-query -W -f='consumer_package=${Package} ${Version}\n' python3 python3-minimal libpython3-stdlib
   printf 'consumer_network=none-with-loopback-only\n'

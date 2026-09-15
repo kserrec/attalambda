@@ -313,6 +313,9 @@ networking is disabled; only ephemeral loopback service is used. Added checks
 exercise saved runtime input, byte preservation, EOF, the documented snapshot
 transcript, and the actual executable's CLIProbe/TranscriptProbe terminal cases
 before and after relocation. Source-only Racket probe classes are excluded.
+The terminal invocations use `LC_ALL=C.UTF-8` to match their UTF-8 input with
+the native editor's console encoding. Archive sorting and byte comparisons retain
+the surrounding `C` locale. The consumer records this terminal locale explicitly.
 The consumer records the harness digest, selected classes, prepared image ID,
 and Python package versions. These test dependencies do not enter the archive.
 
