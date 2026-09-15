@@ -1,8 +1,8 @@
 # Public API
 
 This reference describes the source API and implemented interactive shell,
-including unreleased `read-line`. Full current-source and candidate verification
-remain unfinished. The published 0.7.0 binary includes neither shell nor line input.
+including unreleased `read-line`. The full source suite passes; current-head CI
+and standalone candidate verification remain open. The published 0.7.0 binary includes neither shell nor line input.
 Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
@@ -352,7 +352,7 @@ The existing HTTP grammar, request-size cap, and cleanup rules are unchanged.
 ## Interactive shell (unreleased)
 
 These behaviors are implemented and source-tested on `interactive-attalambda`.
-The full current-source and standalone release-candidate gates remain unfinished;
+The full source suite passes; current-head CI and the standalone candidate gate remain open;
 see [PLAN.md](../PLAN.md). The published 0.7.0 executable has no shell.
 
 Tab completion includes public language names and successfully committed user

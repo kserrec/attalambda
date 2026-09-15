@@ -62,8 +62,8 @@ Authenticode signing are not distributed.
 ## Run it from source
 
 The `interactive-attalambda` milestone branch includes unreleased runtime line
-input and the `atta>` interactive shell. Full source and standalone candidate
-verification remain unfinished; this branch is not a verified release candidate.
+input and the `atta>` interactive shell. The full source suite passes; current-head
+CI and standalone candidate verification remain open.
 Published 0.7.0 downloads include neither feature. See the tested
 [terminal input example](docs/API.md#terminal-line-input-unreleased) and
 [interactive guide](docs/API.md#interactive-shell-unreleased).

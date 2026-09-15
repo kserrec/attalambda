@@ -54,7 +54,7 @@ attalambda --version
 ```
 
 The shell forms are implemented in the unreleased interactive milestone;
-full current-source and standalone candidate verification remain open. Published 0.7.0
+current-head CI and standalone candidate verification remain open. Published 0.7.0
 supports only file/help/version. `--repl` explicitly permits transcripts;
 without it, no-file startup requires terminal stdin and stderr. See the
 [shell contract and statuses](../API.md#interactive-shell-unreleased).

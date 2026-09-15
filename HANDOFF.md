@@ -1,21 +1,56 @@
-# Interactive AttaLambda — Phase8 verified, commit next
+# Interactive AttaLambda — Phase 9 verified, Git write authorized
 
 ## Authority and exact next step
 
-Kyle's latest instruction is **“keep the python testing and finish.”** The original
+Kyle explicitly authorized the previously rejected Git metadata write and
+continuation through the verified release candidate. The original
 [saved specification](docs/interactive-implementation-spec.md) authorizes phases
 0–11, scoped changes, isolated dependencies/builds/tests, commits/pushes and the
 milestone PR. **Do not merge, tag or publish.** Never inspect dotenv contents or
 overwrite unrelated work. Python remains standard-library-only test tooling.
 
-**Next effect: commit/push the verified Phase8 work, then close Phase9's final
-documentation/packaging checkpoint.** The complete source run88594 finished0:
-`/tmp/attalambda-interactive-phase8-final-full-02.log`,69 Racket files,26845
-assertions,43 shared Python methods in88.934s plus6 visual methods in6.702s,
-40 pure production modules and the complete boundary inventory. All independent
-reviews are closed and current reviewed-file hashes match. No test process or
-container is running. Final source-freeze/current-head CI and exact clean Linux
-artifact verification are still required; this is not a candidate yet.
+**Next: record the verified Phase 9 commit, then push it and verify
+fresh current-head CI before Phase 10 source freeze.** Before repeating a Git effect, inspect the
+branch log for the checkpoint commit. Current HEAD is
+`21f9324bd95bc1127201057c485f363005875048`; the intended next commit is
+`Reconcile interactive documentation and CI runtime preparation`.
+
+The previous default Git operation failed creating `.git/index.lock` because the current
+sandbox exposes `.git` as read-only. The required escalation was attempted once;
+the execution tool returned `Rejected("rejected by user")`. No command from that
+escalated request ran. Read-only verification confirms HEAD and origin still
+equal21f9324, all eight intended files remain unstaged, and there are no staged changes.
+Kyle has now explicitly allowed this Git metadata write. Use the authorized
+escalation for the existing repository; no alternate Git directory is needed.
+No test/build permission or dependency change is needed. The exact candidate
+output directory does not exist; do not substitute a dirty build for Phase11.
+
+Phase 9 full source exec17885 finished0: 69 files, 26,845 assertions, 43 shared
+terminal methods in71.605s, 6 visual methods in5.733s and both structural gates.
+Log:`/tmp/attalambda-interactive-phase9-full.log`; parsed counts:
+`/tmp/attalambda-interactive-phase9-full-summary.json`. The only subsequent
+non-doc change is two Linux CI setup blocks; final distribution checks pass217
+in `/tmp/attalambda-phase9-ci-ownership-focused.log`.
+
+CI run34994217012 at the current HEAD finished with all Windows/macOS
+build/consumer/cleanup jobs passing and only two Linux preparation failures.
+The root-owned installation caused --apply and later compilation permission
+failures. The final workflow transfers only the newly installed
+`/usr/share/racket` to the disposable job user, then runs ordinary --apply.
+Independent original-image proof covers normal compilation and all15 preparation
+regressions; default caches and product inputs are unchanged. Review/logs:
+`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/`. The incomplete sudo-only
+attempt and bounded setup diagnostics remain failed/limited evidence there.
+New-head CI is required after push. Full old run log:
+`/tmp/attalambda-phase8-ci-complete.log`; temporary remote artifacts are absent.
+
+No source test process or owned container is running. The independent setup
+diagnostic also passed package setup, actual executable embedding/distribution,
+version and transcript smoke checks; its finalizer removed the container.
+Record:`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/ownership02-cache-results.json`.
+Source review hashes match, and temporary artifact drivers have closed independent
+review, but current-head CI, source freeze and exact artifact checks remain.
+This is not a verified candidate yet.
 
 The first full attempt36337 remains failed evidence at
 `/tmp/attalambda-interactive-phase8-final-full.log`: six failures all identified
@@ -34,11 +69,11 @@ Update this handoff after the next effect, so an interruption does not repeat it
 | Item | Current state |
 | --- | --- |
 | Branch | `interactive-attalambda` |
-| HEAD/origin head | `9960d4b1ad702bd9d06dd18835dd346b9700c665` |
+| HEAD/origin head | `21f9324bd95bc1127201057c485f363005875048` |
 | Main/origin main | `71232f7fb47f8daad61e6a7a6bcf4a5477532352` |
 | PR | https://github.com/kserrec/attalambda/pull/7 — open draft |
 | Completed commits | Phases0–7:52dde70,5a9f907,bebe51a,fe70e6f,ba3d4c5,4f29dd1,542d47b,9960d4b |
-| Current worktree | Recognized Phase8 terminal/history/completion work, required packaging/runtime repairs, Phase9 docs/version and Phase10 output repair; uncommitted |
+| Current worktree | Phase8 committed; Phase9 documentation reconciliation and two Linux CI preparation lines are uncommitted |
 | Version | VERSION0.8.0/package0.8 prepared, unpublished; remote tag and release both404 on latest read |
 | Source changes | Runtime input, shared checked entry expansion, lazy retained definitions, snapshot redefinition, commands/load/reset/status, original-input ownership, cancellation, editor/completion/private bounded history |
 | Canonical files | Prior canonical bytes plus previously committed narrow tooling amendment preserved; saved contract matches attachment |
@@ -113,7 +148,7 @@ Reuse the prepared consumer image:
 installed14 Ubuntu packages,7.274MB download/27.9MB installed; no pip packages.
 The prior preparation permission blocker is resolved. Do not rebuild blindly.
 
-Final drivers are prepared but **not executed**:
+Final drivers are prepared, independently reviewed and **not executed**:
 `/tmp/attalambda-interactive-candidate-build01.py` takes the exact frozen HEAD as
 its argument, asserts it matches, then calls the existing Linux builder without
 --allow-dirty into a new`/tmp/attalambda-interactive-candidate-01` directory.
@@ -126,7 +161,8 @@ The mount name matters: old generic`/source` collided with abbreviated source-fi
 basenames in the unchanged leakage gate; the distinctive name avoids that proven
 invocation collision without weakening the gate.
 
-`/tmp/attalambda-interactive-candidate-consumer01.py` then copies only the archive,
+`/tmp/attalambda-interactive-candidate-consumer01.py` takes the same exact build SHA
+as an argument and then copies only the archive,
 checksum and existing self-contained consumer/Python harness into its owned
 transfer directory. It reuses the immutable image, offline/read-only/nonroot,
 capabilities dropped, with bounded process/memory and cleanup. It records archive,
@@ -134,11 +170,17 @@ harness and consumer hashes; log/report:
 `/tmp/attalambda-interactive-candidate01-consumer.{log,json}`. Do not run it against
 an old archive or label dirty development evidence as clean candidate evidence.
 
+The corrected drivers verify expected HEAD before/inside/after the build, exact
+manifest source/clean state, archive/checksum/manifest hashes, original file
+preconditions and frozen consumer/harness bytes. Nested finalizers retain cleanup
+evidence even on a removal exception. Review and exact input hashes:
+`/tmp/attalambda-interactive-candidate01-review.md` and
+`/tmp/attalambda-interactive-candidate01-review-hashes.json`. Neither driver has run.
+
 ## Remaining delivery sequence
 
-Close Phase8 only after the current complete suite/gates; commit/push the verified
-work and record exact SHA. Phase9 final docs/acceptance/packaging checkpoint and
-Phase10 source freeze require their specified verification and commits. Current
+Phase8 is closed. Phase9 verification passes and its commit/push is next;
+Phase10 source freeze still requires current-head verification and its commit. CI run34994217012 finished at21f9324 with only the two diagnosed Linux preparation failures. Earlier
 PR checks at9960d4b are old: source passed, Linux/Windows/macOS Intel had failures;
 those results do not validate this worktree. Recheck current-head CI/review after
 push, investigate any actual failures, and preserve existing native gates.
@@ -152,8 +194,8 @@ it must not relabel the artifact as built from the later record commit.
 Known limits remain: printing raw untagged terms is unspecified; failed entries
 cannot roll back effects already demanded; closures may retain old binding graphs
 until unreachable/reset; only Linux x86-64 is a supported public binary target.
-No candidate, tag, release or publication is claimed. All owned test/probe/build
-processes and containers are finished and cleaned.
+No candidate, tag, release or publication is claimed. The Phase9 suite finished0;
+the independent CI permission/embedding probe finished and removed its container.
 
 Patch-format whitespace check: the staged whole-diff check reports18 whitespace
 lines, all validated as unchanged unified-diff context in the two SHA-pinned
@@ -161,3 +203,9 @@ dependency patches (blank context markers and existing upstream indentation).
 No added patch source line is implicated. Source whitespace passes with patch
 serialization paths excluded; exact patch application/source hashes remain checked.
 No source rule or acceptance test was weakened.
+
+PR status was updated and read back at 2026-09-15T16:50:53Z. It now names the
+actual failed Linux preparation and verified, unpushed correction; no current CI
+or candidate pass is claimed. Receipt:
+`/tmp/attalambda-interactive-pr-phase9-status-readback.json`. This is the only
+external write after the Git denial; it did not change any repository ref.

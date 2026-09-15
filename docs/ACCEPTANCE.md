@@ -9,23 +9,25 @@ release facts are in the
 
 ## Unreleased interactive milestone
 
-The independent Phase8 source baseline passed 66 test files with 17,738 reported
-Racket tests, 36 Linux Python terminal cases, 40 production purity modules, and
-the complete source boundary inventory on Racket CS 9.3. This was a working-tree
-baseline before the subsequent fixed-module packaging and documentation changes;
-it is not current-candidate or standalone-artifact evidence. Focused later checks
-and the exact 18-row contract map are in [PLAN.md](../PLAN.md).
+Phase8 is committed as`21f9324bd95bc1127201057c485f363005875048`. The complete
+corrected Racket CS9.3 source run passed69 test files and26845 reported assertions,
+43 shared Python terminal methods plus6 source-only visual methods,40 production
+purity modules and the complete source boundary inventory. The two terminal
+suites took88.934s and6.702s. Exact log and commands are in[HANDOFF.md](../HANDOFF.md).
 
-The implemented checks cover lazy binding snapshots, generated-module purity,
-input sharing, cancellation, failure publication, resource lifetime, standalone
-loads, transcript status, inert bounded history, and terminal restoration.
-Completion preserves public and committed names, including control-containing
-identifiers, without demanding values. Its actual-helper corpus and CLI cases
-pass, along with the reviewed dependency regressions. The complete current source
-run is in progress. The exact Linux archive and current-head candidate checks have not
-passed. No new release is published. The baseline's three 200-entry sessions
-kept 7 descriptors and returned near the initial measured heap after reset;
-these observations are not a universal memory or performance guarantee.
+The checks cover lazy binding snapshots, generated-module purity, input sharing,
+cancellation, failure publication, resource lifetime, standalone loads, transcript
+status, inert bounded history, completion and terminal restoration. The18-row
+contract map is in[PLAN.md](../PLAN.md). Independent current-source, completion,
+visual-editor and dependency-preparation reviews have closed their confirmed
+findings. Current-head CI and the exact clean Linux candidate remain unverified;
+no release is published from this branch.
+
+Three200-entry sessions kept7 descriptors. Retained heaps were125510688,
+125668432 and125663616bytes; reset heaps were115855184,115863840 and115855568bytes
+versus116030592initial. These are observations, not universal memory or
+performance guarantees. Earlier baseline and development-artifact evidence is
+preserved in PLAN.md and is not substituted for the final candidate gates.
 
 ## Published baseline
 

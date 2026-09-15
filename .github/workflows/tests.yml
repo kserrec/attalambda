@@ -33,7 +33,10 @@ jobs:
         run: racket -e '(require lazy)'
 
       - name: Prepare the job-owned Racket dependency corrections
-        run: racket tooling/prepare-racket-runtime.rkt --apply
+        # The job must own the freshly installed sources and their compiled caches.
+        run: |
+          sudo -n chown -R -- "$(id -u):$(id -g)" /usr/share/racket
+          racket tooling/prepare-racket-runtime.rkt --apply
 
       - name: Run test suite
         run: |
@@ -59,7 +62,10 @@ jobs:
           variant: CS
 
       - name: Prepare the job-owned Racket dependency corrections
-        run: racket tooling/prepare-racket-runtime.rkt --apply
+        # The job must own the freshly installed sources and their compiled caches.
+        run: |
+          sudo -n chown -R -- "$(id -u):$(id -g)" /usr/share/racket
+          racket tooling/prepare-racket-runtime.rkt --apply
 
       - name: Build final Linux release archive
         run: ./tooling/build-linux-distribution.sh "$RUNNER_TEMP/attalambda-artifacts"

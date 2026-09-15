@@ -28,39 +28,54 @@ Never inspect dotenv contents or add Graphify output; never overwrite unrelated 
 
 ## Evidence and exact next step
 
-**Phase8 checkpoint passed; next effect is its scoped commit/push, then Phase9
-final documentation/packaging closure.** The complete current source run
-`/tmp/attalambda-interactive-phase8-final-full-02.log` finished0 (exec88594):69
-Racket test files,26845 reported assertions,43 shared terminal methods in88.934s,
-6 visual methods in6.702s,40 pure production modules and the full boundary gate.
-The first run's stale adapter fixture failed before loading the editor; all four
-Python-launched fixtures are now explicitly compiled and the focused failures,
-full rerun and independent wrapper review pass. No acceptance was waived.
+**Phase 9 source, documentation and packaging checks pass. Next: record and push
+the phase commit using the Git write access Kyle has now explicitly allowed.**
+The earlier sandbox exposed `.git` as read-only; creating
+`.git/index.lock` failed, and the one escalation request was rejected by the
+execution tool (`Rejected("rejected by user")`). Nothing was staged or committed.
+Kyle subsequently authorized the rejected Git metadata write and continuation.
+After committing/pushing Phase9, use fresh current-head CI and review for
+Phase10 source freeze. Phase 8 is committed
+as `21f9324bd95bc1127201057c485f363005875048`.
+The Phase 9 complete run `/tmp/attalambda-interactive-phase9-full.log` finished 0:
+69 Racket test files, 26,845 assertions, 43 shared terminal methods in 71.605s,
+6 visual methods in 5.733s, 40 pure production modules and the full boundary gate.
+Afterward, only two Linux CI setup blocks changed; their affected distribution
+suite passes 217 checks in `/tmp/attalambda-phase9-ci-ownership-focused.log`.
 
-Completion, bounded history, source/program input, cancellation, standalone loading
-and output separation are implemented. The preserved-name editor correction and
-shared-promise correction are pinned in source/loaded runtime checks and all three
-builder/consumer manifest contracts. Python remains isolated standard-library-only
-testing. Required packaging/bootstrap/version/notices work was prepared alongside
-the earlier terminal blockage and is included as necessary tested prerequisites;
-Phase9 still closes its documentation and packaging checkpoint separately.
+The first current-head CI run, 34994217012, passed all Windows/macOS builds,
+consumers and artifact cleanup. Its Linux preparation failures are diagnosed:
+the newly installed Racket directory was root-owned. The correction transfers
+only `/usr/share/racket` to the disposable job's user, then performs ordinary
+preparation and compilation. Independent original-image checks prove the actual
+compiler and all 15 preparation regressions pass with default caches. Complete
+new-head CI is still required. Full logs and review are in
+`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/`.
 
-Independent current-source review is closed at
-`/tmp/attalambda-phase10-independent-review.md`; its18-file hash manifest matches
-the current tree. Completion, Expeditor visual, preparation/provenance and final
-active documentation reviews are also closed (HANDOFF.md lists exact evidence).
-The separate-output-terminal finding is repaired and fails-before/passes-after;
-the stale compiled editor-main verifier finding has a permanent fresh-process
-regression. No open review finding remains. Final current-head CI and exact clean
-Linux artifact gates are still required; this is not a verified candidate.
+Completion, bounded history, source/program input, cancellation, standalone loads
+and output separation are implemented. Independent current-source review is
+closed at `/tmp/attalambda-phase10-independent-review.md`; its 18-file hash
+manifest still matches. The reviewed dependency patches, exact runtime checks,
+notices and all three builder/consumer contracts remain unchanged from Phase 8.
+The corrected temporary candidate drivers have independent source review at
+`/tmp/attalambda-interactive-candidate01-review.md`; neither has been executed.
 
-The consumer image is already prepared:
+Reuse the prepared consumer image
 `sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`.
-Development08 passed the isolated consumer at both paths but predates final
-completion/notice/output changes and is not the candidate. Reuse the prepared
-image; do not repeat completed development builds. No source suite, probe or
-container remains running. HANDOFF.md contains clean-candidate drivers prepared
-for Phase11, not yet executed. No merge, tag or publication is authorized.
+Development08 predates final source and is not a candidate. Source freeze,
+current-head checks and exact clean Linux artifact verification remain required.
+No source suite or owned container is running. The independent CI setup probe
+also passed actual package setup, executable embedding, distribution, version and
+transcript smoke checks; its finalizer removed the container. HANDOFF.md records
+exact next actions and artifact driver paths. No merge, tag or publication.
+
+
+Patch-format whitespace check: the staged whole-diff check reports18 whitespace
+lines, all validated as unchanged unified-diff context in the two SHA-pinned
+dependency patches (blank context markers and existing upstream indentation).
+No added patch source line is implicated. Source whitespace passes with patch
+serialization paths excluded; exact patch application/source hashes remain checked.
+No source rule or acceptance test was weakened.
 
 Phase 0 records context/ref/environment checks and preserves canonical bytes.
 Untouched source verification: `TMPDIR=/tmp ./run-all-tests.sh`, Racket CS 8.10,
@@ -1173,6 +1188,48 @@ by the terminal feature, with Phase9's final reconciliation still separate.
 
 **Purpose:** make the implemented feature accurately documented and packageable.
 
+9.5e — CI preparation correction, recorded before implementation. Current-head
+run34994217012 failed both Linux jobs before tests/builds: setup-racket installs
+the job-owned toolchain under `/usr`, then unprivileged --apply cannot atomically
+write `/usr/share/racket/collects/racket/private/promise.rkt` (errno13). Logs:
+`/tmp/attalambda-ci-phase8-{source,linux}.log`. Use `sudo -n /usr/bin/racket`
+only for these two preparation steps; normal tests/builds remain unprivileged.
+The install log proves `/usr/bin` and successful sudo; GitHub's hosted-runner
+documentation confirms passwordless sudo. This is the authorized disposable CI
+environment, not a local system mutation. Do not relocate the toolchain into a
+temporary absolute prefix or weaken the archive path gate. Verify the focused
+distribution checks, independent workflow review, full suite and new CI run.
+The same run is now complete: all Windows/macOS build/consumer/cleanup jobs pass;
+only the two Linux preparation jobs failed. The changed workflow passes217
+distribution assertions. A disposable original-image probe reproduces the
+unprivileged failure, passes root-only preparation and then passes nonroot
+read-only verification; container cleanup passes. Evidence:
+`/tmp/attalambda-ci-preparation-permissions-probe.{log,json}`. The Phase9 full suite
+is running in exec17885, log`/tmp/attalambda-interactive-phase9-full.log`.
+Independent review subsequently proves that read-only source loading does not
+establish `raco make` permissions: its recursive compiler writes stale installed
+dependency caches. A changed read-only scratch collection loads successfully but
+compilation of its importer fails errno13. Evidence:
+`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/compilation-permission-results.json`.
+The original-image actual import closure is under diagnosis before any further
+workflow edit. Do not call the two --apply lines alone a sufficient CI repair.
+
+9.5e2 — Replace that incomplete preparation-only privilege attempt with ownership
+of the newly installed `/usr/share/racket`, then ordinary --apply. Before this
+edit, an independent original-image probe transferred only that directory to the
+job UID/GID: `/usr/bin/racket` and `/usr/lib/racket/compiled` remained root-owned.
+Ordinary --apply, --check, actual launcher/editor/promise-test `raco make` and all
+15 unchanged preparation regressions pass. Default cache roots are preserved.
+Evidence:`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/ownership02-*.log`.
+This adds no custom cache policy or test change. Earlier global setup and cold
+embedding/ownership diagnostic timeouts are retained, not counted as passes.
+The transfer's Docker overlay I/O took73.995s; compilation took44.35s and the
+preparation regression5.41s. Final native CI remains the complete workflow proof.
+The full Phase9 source run17885 finished0:69 files/26845 assertions,43 terminal
+methods71.605s,6 visual methods5.733s,40-module purity and full boundary inventory.
+Only these CI setup lines change afterward; rerun their affected distribution
+checks before committing, and verify the complete final configuration in CI.
+
 Independent preparation while8.3 awaits the explicit contract decision:9.1
 assertion mapping is below;9.5 package-path behavior is being checked with the
 existing build script in an isolated, explicitly dirty development build at
@@ -1218,7 +1275,7 @@ language once and attaches only embedded declarations before fresh instantiation
 Exact boundary checks pin resolution/attachment/initialization and reject instance
 attachment or omission. Core/effects/runtime/lang/readers are behaviorally unchanged.
 
-- [ ] **9.1 — Run a contract-to-test audit.** Map every acceptance row in §6 to an existing test, new test, or explicit artifact check. **Check:** critical behaviors have executable evidence; observational memory measurements and unperformed platform checks are labeled honestly, not converted into claims of proof.
+- [x] **9.1 — Run a contract-to-test audit.** Map every acceptance row in §6 to an existing test, new test, or explicit artifact check. **Check:** critical behaviors have executable evidence; observational memory measurements and unperformed platform checks are labeled honestly, not converted into claims of proof.
 
 Independent read-only audit prepared while8.3 is blocked; this maps assertions,
 not a new execution or final-artifact claim. command_loop_cold_review read all18
@@ -1235,7 +1292,7 @@ PTY harness without skipping the required Linux gate.
 | A03 reader extension rejection | interactive-reader-test.rkt, interactive-file-test.rkt reader probes; interactive-history-test.rkt inert framing; interactive-boundary-test.rkt reader mutants. |
 | A04 retained state/snapshots | interactive-state-test.rkt partial applications, retained effects, rebinding; actual CLI snapshot/partial/rec group. |
 | A05 def/rec/hygiene | interactive-state-test.rkt cycles/shadowing/duplicates; interactive-session-test.rkt hygiene; interactive-expansion-test.rkt; actual CLI terminating rec. |
-| A06 purity/capabilities | interactive-expansion-test.rkt actual generated terms and negative control; interactive-boundary-test.rkt; boundary-check-test.rkt unknown imports/classes. Completion boundary pending. |
+| A06 purity/capabilities | interactive-expansion-test.rkt actual generated terms and negative control; interactive-boundary-test.rkt; boundary-check-test.rkt unknown imports/classes. Exact completion namespace/wiring boundary and mutation checks pass. |
 | A07 rendering/effect sharing | interactive-session-test.rkt computed-result rendering/no repeat; interactive-cli-test.rkt echo-off raw functions and exact effect output. |
 | A08 saved/fresh input | interactive-input-test.rkt; stdin-test.rkt/stdin-stream-test.rkt/input-language-test.rkt byte/EOF/type/sharing cases; actual CLI saved/:names/repeated/fresh read group. |
 | A09 one input stream | interactive-input-test.rkt original-port/open-pipe assertions; TranscriptProbe live source/answers; CLIProbe advanced typeahead/immediate prompt/EOF. Artifact rerun pending. |
@@ -1244,16 +1301,16 @@ PTY harness without skipping the required Linux gate.
 | A12 resource lifetime | interactive-lifetime-test.rkt failed-entry/reset/exit isolation; interactive-memory-test.rkt weak-reference/descriptor/worker checks; actual CLI reset/exit. |
 | A13 loading | interactive-file-test.rkt standalone/path/reload/snapshot/failed publication/cancel; exact-output CLI two-load markers/bare-expression silence and failed-load expansion; CLIProbe real repeated load/reset. |
 | A14 statuses | interactive-cli-test.rkt sticky1/incomplete65/explicit exit0,1/Error+Err0; TranscriptProbe interruption130. |
-| A15 completion/history | Names:interactive-state-test.rkt; history:interactive-history-test.rkt/lifecycle fixture and CLI persistence/recall/1000/cancel/no-history. Completion:interactive-completion-test.rkt and actual CLI completion methods; full current terminal gate pending. |
-| A16 terminal usability/restoration | CLIProbe advanced editing/paste/cancellation/EOF/exit; DescriptorProbe restoration including flush/break failures; full implemented PTY gate36 cases passes. Completion/artifact rerun pending. |
-| A17 measured repeated use | interactive-memory-test.rkt three200-entry sessions, observed elapsed/heap, weak old state reclamation and stable descriptors. Final measurements pending; no universal memory bound claimed. |
-| A18 standalone artifact | distribution-test.rkt plus tooling/test-linux-distribution.sh existing no-Racket/layout/notices/examples/relocation checks.9.5–9.7 must wire interactive/runtime-input/PTY cases before exact11.1–11.2 build/consumer gate. |
+| A15 completion/history | Names:interactive-state-test.rkt; history:interactive-history-test.rkt/lifecycle fixture and CLI persistence/recall/1000/cancel/no-history. Completion:interactive-completion-test.rkt and actual CLI completion methods; full current terminal gate passes. |
+| A16 terminal usability/restoration | CLIProbe advanced editing/paste/cancellation/EOF/exit; DescriptorProbe restoration including flush/break failures; full current terminal gate43+6 methods passes. Exact artifact rerun pending. |
+| A17 measured repeated use | interactive-memory-test.rkt three200-entry sessions, observed elapsed/heap, weak old state reclamation and stable descriptors. Current three200-entry observations recorded above; no universal memory bound claimed. |
+| A18 standalone artifact | distribution-test.rkt plus tooling/test-linux-distribution.sh existing no-Racket/layout/notices/examples/relocation checks.Interactive/runtime-input/PTY checks are wired; exact11.1–11.2 clean build/consumer gate pending. |
 
 §6.2 cleanup regression remains EditorProbe.test_harness_failure_closes_waiting_reader_and_descriptors
 and stdin-stream-test.rkt's failing-case teardown. These deliberately take the
 failure path; no generic testing framework is added.9.1 closes only after final
 completion assertions and packaging check locations are reconciled.
-- [ ] **9.2 — Update user documentation and executable examples.** Update README/API/help/release notes for runtime input, `atta>`, commands, snapshot redefinition, lazy effects, echo-off, load semantics, and transcript status behavior. **Check:** execute the documented examples, confirm uppercase canonical rendering, and remove obsolete references to `att>` or special literal-lambda printing.
+- [x] **9.2 — Update user documentation and executable examples.** Update README/API/help/release notes for runtime input, `atta>`, commands, snapshot redefinition, lazy effects, echo-off, load semantics, and transcript status behavior. **Check:** execute the documented examples, confirm uppercase canonical rendering, and remove obsolete references to `att>` or special literal-lambda printing.
 
 README/API/archive guide and new unreleased0.8.0 notes now describe implemented
 shell/input behavior, preserving the published0.7.0 links and explicitly leaving
@@ -1271,7 +1328,7 @@ bytes in9-consumer-input-source-fixed.log. Its first standalone probe omitted
 collection registration; a read-only collection-file-path probe proved the
 missing attalambda/lang collection, then a temporary -S collection alias supplied
 the ordinary source installation context. No production change was involved.
-- [ ] **9.3 — Reconcile architecture and specification records.** Document the narrow REPL-tooling exception, shared expansion path, unchanged host-input contract, source inventory, and dependency direction. Update canonical amendment/index evidence as required. **Check:** docs describe observed code separately from remaining release work and contain no blanket purity exception for arbitrary runner modules.
+- [x] **9.3 — Reconcile architecture and specification records.** Document the narrow REPL-tooling exception, shared expansion path, unchanged host-input contract, source inventory, and dependency direction. Update canonical amendment/index evidence as required. **Check:** docs describe observed code separately from remaining release work and contain no blanket purity exception for arbitrary runner modules.
 
 Architecture, host/distribution design, specification index and acceptance map
 now distinguish exact tooling classes, shared checked expansion, fresh session
@@ -1290,7 +1347,7 @@ tables and version fixtures retain all prior approved states plus this one.
 Focused9.4 checks pass7interactive-boundary groups,146boundary assertions,
 291runner assertions and216distribution assertions. Logs9.4-*.log. All processes
 finished. No tag/publication.
-- [ ] **9.5 — Include the editor and new runner modules in distribution.** Adjust only the dependency/bundling inputs needed by the existing build machinery, including any modules reached through dynamic lookup. **Check:** declared package closure and bundled modules cover the real code path, with no dependence on a developer package home or unbundled source checkout.
+- [x] **9.5 — Include the editor and new runner modules in distribution.** Adjust only the dependency/bundling inputs needed by the existing build machinery, including any modules reached through dynamic lookup. **Check:** declared package closure and bundled modules cover the real code path, with no dependence on a developer package home or unbundled source checkout.
 
 9.5 is split into fixed-module declaration/namespace repair (a), focused source
 and extracted-development validation (b), diagnosed embedded dependency
@@ -1516,7 +1573,7 @@ merge, tag or publication occurred in this continuation. Canonical byte/hash,
 saved-contract and active-document link checks pass in
 /tmp/attalambda-interactive-handoff-integrity.log; dotenv-safe diff --check passes.
 
-- [ ] **9.6 — Preserve notices and packaging integrity.** Add any required notices for newly bundled dependencies through the existing notice/hash process without deleting prior notices or weakening checks. **Check:** version, notices, archive layout, and source-selection validations all remain explicit and reproducible.
+- [x] **9.6 — Preserve notices and packaging integrity.** Add any required notices for newly bundled dependencies through the existing notice/hash process without deleting prior notices or weakening checks. **Check:** version, notices, archive layout, and source-selection validations all remain explicit and reproducible.
 
 Read-only source-closure/notice preparation by command_loop_cold_review identifies
 four required package attributions; final archive closure remains unverified.
@@ -1550,7 +1607,7 @@ all15 prior inventory rows and22 verbatim blocks remain byte-identical; allfour
 package revisions/licenses/source URLs and the later2021dual-license provenance
 match installed and pinned upstream sources. Evidence:
 /tmp/attalambda-notice-review.{py,log}. Exact archive verification remains open.
-- [ ] **9.7 — Extend the existing Linux consumer tests.** Add REPL and runtime-input cases to the current consumer workflow, using external test-only PTY tooling when needed. **Check:** the consumer still proves there is no system Racket/raco and covers default/explicit REPL, fallback/transcript, editing, input, cancellation, load/reset, and the old examples. Preserve existing internal portability evidence without claiming new public platforms.
+- [x] **9.7 — Extend the existing Linux consumer tests.** Add REPL and runtime-input cases to the current consumer workflow, using external test-only PTY tooling when needed. **Check:** the consumer still proves there is no system Racket/raco and covers default/explicit REPL, fallback/transcript, editing, input, cancellation, load/reset, and the old examples. Preserve existing internal portability evidence without claiming new public platforms.
 
 Subdivide before implementation:9.7a prepares the existing pinned Ubuntu consumer
 with only test-side Python3 standard library;9.7b transfers the existing Python
@@ -1666,6 +1723,31 @@ bytes, file/needle/hash/size/offset and153bytes of bounded context, preserving
 positive exit2 and negative exit0. Log:
 `/tmp/attalambda-macos-path-diagnostic-probe.log`. Native outcome remains pending.
 
+Phase9 final reconciliation: current README/API/architecture/acceptance/release
+notes describe observed completion and source behavior; no stale contract-choice
+or unfinished-completion claim remains in active user docs. Published0.7.0 links
+and all three canonical documents are preserved. Current full source evidence is
+69 files/26845 assertions/43+6 terminal methods; current-head CI and final artifact
+remain explicitly pending. All18 acceptance rows name actual assertions or final
+artifact gates. The final docs/provenance review is closed without findings in
+`/tmp/attalambda-expeditor-preparation-review-ihudogrm/review.md`.
+Next9-checkpoint action: full source/gates with these documentation inputs before
+its separate phase commit; inspect new-head CI in parallel and diagnose any failure.
+
+Checkpoint 9 evidence is complete: the full source run and both gates pass;
+217 distribution assertions pass again on the final workflow. Canonical prior
+bytes/index hashes, exact saved contract, active links and source-review hashes
+pass. Remote preflight at 2026-09-15T16:42:52Z still finds no v0.8.0 tag/release;
+main remains71232f7. All18 acceptance rows identify executable checks or the
+explicit Phase11 artifact gate. Actual docs examples are included in the passing
+source suite. No executable product, tests, dependency pins or build/consumer
+script changed after the Phase8 commit; this phase changes docs and CI setup.
+Current-head CI and clean artifact evidence remain Phase10–11 work.
+The final independent ownership/compilation/packaging control completed and
+cleaned successfully; no confirmed review finding remains. Evidence:
+`/tmp/attalambda-phase9-checkpoint-review-7jrtn7b_/ownership02-cache-results.json`
+and `review.md`. This control is not the final clean archive/consumer acceptance.
+
 **Checkpoint 9 — Documentation and packaging review.** Use release-readiness review. Check executable docs and static packaging coverage before the final clean build. The full suite and existing CI configuration must include the new tests or invoke them explicitly; a successful old test count alone is not evidence of the new feature.
 
 ### Phase 10 — Review and freeze the candidate source
@@ -1691,6 +1773,15 @@ Update the exact boundary pins; existing same-terminal and pipe tests must pass.
 ### Phase 11 — Build and verify the exact release candidate
 
 **Purpose:** test the artifact from the frozen source, then record artifact-only evidence separately.
+
+11.1a/11.2a — Before execution, harden only the temporary invocation drivers.
+Independent review confirms the existing consumer selects25 real CLI/transcript
+methods at both paths, but the wrapper's early expected-HEAD check must also be
+checked around the build and against the exact output manifest/clean-tree state.
+Its cleanup must retain transfer removal and JSON evidence even if container
+removal raises or times out. Add these guards to the `/tmp` drivers, check their
+syntax and obtain a read-only re-review. Product/build/consumer scripts and
+acceptance criteria remain unchanged. These drivers have not run a candidate.
 
 - [ ] **11.1 — Build from the clean candidate revision.** Use the repository's approved Racket CS build runtime and existing Linux build script, with a fresh output directory outside the checkout. Do not use `--allow-dirty` for the candidate artifact. **Check:** record the clean source revision, product/package versions, build command, artifact names, and checksums.
 - [ ] **11.2 — Consume the exact artifact without development dependencies.** Run the existing isolated Linux consumer on the output directory, including real terminal tests and relocation to a path with spaces. **Check:** the extracted executable supports both new feature themes without external Racket, source checkout, personal packages, or user initialization files. Artifact failures require a fix, refreshed source verification as affected, and a new clean build.
@@ -4553,10 +4644,3 @@ and `docs/ACCEPTANCE.md`, none of which enters the shipped package or Linux
 archive inputs; the accepted implementation artifact therefore does not need
 rebuilding. The branch is complete after that documentation-only commit is
 pushed. No tag, Release, upload, merge, or pull request was created.
-
-Patch-format whitespace check: the staged whole-diff check reports18 whitespace
-lines, all validated as unchanged unified-diff context in the two SHA-pinned
-dependency patches (blank context markers and existing upstream indentation).
-No added patch source line is implicated. Source whitespace passes with patch
-serialization paths excluded; exact patch application/source hashes remain checked.
-No source rule or acceptance test was weakened.
