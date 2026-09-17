@@ -147,6 +147,8 @@
                  (build-path root "lang" "expander.rkt"))
       (copy-file (build-path project-root "lang" "reader.rkt")
                  (build-path root "lang" "reader.rkt"))
+      (for ([name '("static-data.rkt" "static-source.rkt")])
+        (copy-file (build-path project-root "lang" name) (build-path root "lang" name)))
       (copy-file (build-path project-root "info.rkt")
                  (build-path root "info.rkt"))
       (copy-file (build-path project-root "VERSION")
@@ -157,6 +159,9 @@
                  (build-path root "runner" "source-reader.rkt"))
       (copy-file (build-path project-root "runner" "session.rkt")
                  (build-path root "runner" "session.rkt"))
+      (make-directory (build-path root "runner" "static"))
+      (copy-file (build-path project-root "runner" "static" "frontend.rkt")
+                 (build-path root "runner" "static" "frontend.rkt"))
       (copy-file (build-path project-root "runner" "source-file.rkt")
                  (build-path root "runner" "source-file.rkt"))
       (copy-file (build-path project-root "runner" "diagnostics.rkt")
@@ -238,7 +243,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
-   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader test tooling))
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-data static-frontend static-source test tooling))
 
 (check-equal?
  (count (lambda (classification)

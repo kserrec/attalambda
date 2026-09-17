@@ -10,10 +10,14 @@ Completed historical plans below grant no further authority.
 
 The supplied specification defines six phases and 39 focused steps. Execute
 steps serially and retain each phase's checkpoint before its local commit.
-Phases 1–5 need multiple passes: a subsequent `next` selects the first unfinished
-step, retaining its full Work/Check requirements. If a step proves too large,
+Phases 1–5 need multiple passes. On 2026-09-17 Kyle explicitly directed autonomous
+continuation: finish and verify each pass, then start the next without requiring
+another `next`. Stop only for a genuine owner-dependent blocker or serious
+unresolved doubt. This overrides the next skill's one-pass stopping rule, while
+retaining every step's full Work/Check requirements. If a step proves too large,
 subdivide it into stable lettered substeps before implementation, as the
-specification requires. The current pass establishes Phase 0 only.
+specification requires. Phase 0 is committed as `8bde48d`; Phase 1 has passed
+its checkpoint. Phase 2 starts with Step 2.1 after the local Phase 1 commit.
 
 ## Verified starting state and change boundary
 
@@ -217,27 +221,74 @@ Phase 0 is complete; remaining steps are unchecked. Run focused tests with each 
 **Purpose:** resolve binding, source-location, and metadata transport risk before inference.
 **Prerequisites:** Checkpoint 0 and understanding of the current restricted reader and expander.
 
-- [ ] **1.1a — Add the expansion-only preparation seam.**
+- [x] **1.1a — Add the expansion-only preparation seam.**
   **Work:** Use the existing validated source snapshot and restricted parser to prepare a fresh module for trusted expansion only. Reuse the fixed language-declaration/embedding machinery as appropriate; do not call the session's evaluating preparation routine. Classify the new private helper and its exact imports in the same change.
   **Check:** Focused frontend tests accept valid source and reject bad headers/readers, unsupported literals, and unknown names. Instrument the user-module boundary to establish that no evaluation/instantiation/demand occurs. Fresh preparations cannot inherit REPL bindings or an earlier input's namespace state.
+  **Evidence:** `runner/static/frontend.rkt` uses a validated snapshot and fresh
+  expansion namespace. Focused frontend, static-boundary mutation, and existing
+  boundary tests passed (167 checks); the whole boundary gate passed. Log:
+  `/tmp/attalambda-static-implementation-mmgdshl_/step-1.1a.log`. No user evaluation,
+  demand, input consumption, or output occurred. Phase 1 continues with 1.1b.
 
-- [ ] **1.1b — Expose a complete inert source analysis view.**
+- [x] **1.1b — Expose a complete inert source analysis view.**
   **Work:** Add the smallest private opt-in expander seam retaining literal kinds, lexical identities, original source IDs, declaration dependencies, and explicit `let`/`rec` nodes before representation lowering. Validate the metadata's shape and source-accounting invariants. Keep type algorithms outside the expander.
   **Check:** Recover literals, a curried function, an alias, a nested lambda, a local let, and a recursive definition. Missing/corrupted/duplicated IDs or a missing final form fail internally rather than passing an incomplete program. Without the request, existing expanded computation remains binding-equivalent to the original path; compare structural terms modulo fresh binder names and inert source properties, not incidental pretty-print bytes.
+  **Evidence:** Actual expansion transports validated prefabs through distinct
+  request/result properties, preserving source IDs and exact counts. View,
+  mutation, existing boundary tests, and gate passed; ordinary expanded terms
+  compare equal modulo generated binders/properties. A test observer initially
+  confused the trusted static-source helper with user modules; an identity probe
+  established the cause, and the corrected observer/positive control passed.
+  Logs: `step-1.1b.log` and `step-1.1b-observer-final.log` in the current evidence
+  directory. No inference exists yet; Step 1.2 follows.
 
-- [ ] **1.2 — Preserve binding, sugar, forward references, and source abstraction boundaries.**
+- [x] **1.2 — Preserve binding, sugar, forward references, and source abstraction boundaries.**
   **Work:** Reuse expander logic for sequential lets, repeated binders, `list`, `cond`, acyclic forward references, zero-argument `rec`, and shadowed declaration keywords. Retain let-generalization boundaries while normalizing currying/list/cond mechanically.
   **Check:** Actual-expander fixtures distinguish a user `add`/`if`/`cons` from the built-in and preserve hygienic generated operations. Source-local references identify their real binders even when names repeat. Ordinary datum-equivalent reader notation must be handled like the existing parser; do not invent new restrictions for an otherwise valid quoted/escaped spelling of an identifier. Preserve `rec` instead of only its fixed-point encoding. Existing direct/mutual-cycle rejection, literal validation, and original source locations remain unchanged; no symbol-only mock is sufficient.
+  **Evidence:** Six focused actual-expander tests passed, including every public
+  value's resolved catalog identity, escaped identifier spellings, shadowed
+  declarations, hygienic cons/if, repeated binders, forward edges, and zero-argument
+  rec. Log: `step-1.2.log`. No new source notation or runtime behavior was added.
 
-- [ ] **1.3 — Prove preparation does not perform program effects.**
+- [x] **1.3 — Prove preparation does not perform program effects.**
   **Work:** Add synthetic user modules containing demanded stdout, input, file writes, exit, raw-host/network calls, and divergence. Include an effectful first form followed by invalid syntax.
   **Check:** Preparation finishes or reports source errors without program output, consumed input bytes, marker-file writes, program exit, or network attempts. Combine instrumentation with actual isolated file/input/loopback observations; use bounded harness cleanup. The checker never calls the program to discover its types.
+  **Evidence:** `static-effects-test.rkt` passed both cases: instrumented file and
+  network guards have positive controls, then actual source analysis performs no
+  reads/writes of program data, connections, stdout, input consumption, or exit.
+  Demanded divergence and invalid final forms finish within the bounded harness.
+  Temporary files and an ephemeral loopback listener are cleaned up. Log:
+  `step-1.3.log`.
 
-- [ ] **1.4 — Exercise the same frontend through executable embedding.**
+- [x] **1.4 — Exercise the same frontend through executable embedding.**
   **Work:** Compile a minimal test-only driver around the actual analysis seam using the existing embedding approach. Do not create a second parser or temporary public flag.
   **Check:** Outside the checkout, the embedded driver analyzes source and retains metadata without source-path assumptions. Request and result properties remain distinct and validated. Retain the useful regression, not a parallel implementation or permanent probe framework.
+  **Evidence:** The actual frontend driver compiled and passed after both its
+  staged sources and isolated package installation were hidden. It recovered
+  the expected declarations, 11 source expressions, and resolved builtins;
+  the source stdout form never ran. Log: `step-1.4.log` in the current evidence
+  directory. The driver lives only under tests/helpers.
 
 **Checkpoint 1 — Frontend feasibility gate.** Run frontend/effect/embedding probes, affected source-reader and `tests/interactive-expansion-test.rkt` tests, full suite, and structural gates. Review binding/hygiene and non-execution counterexamples. Adapt failed metadata transport narrowly before investing in inference. Trusted compile-time expansion is allowed; evaluating the user's program is not.
+
+**Checkpoint 1 passed.** `./run-all-tests.sh` exited 0 in the isolated Racket
+9.3 container: 75 Racket test files, 26879 reported Racket tests, 49 Python
+terminal methods, purity for all 40 production modules, and the complete boundary
+gate. This includes the existing source-reader/interactive-expansion regressions
+and all six new static frontend test files. `phase1-full.log` and
+`phase1-result.json` in `/tmp/attalambda-static-implementation-mmgdshl_/` retain
+the run and byte hashes of all tested executable inputs; those inputs match the
+checkout. The final documentation-only checkpoint record does not change them.
+
+The checkpoint is a fresh self-review, not an independent review. It checked
+binding identity, shadowing, generated-operation hygiene, source accounting,
+source positions, recursive/declaration boundaries, fresh namespaces, cleanup,
+ordinary expanded-term equivalence, and actual executable embedding. No finding
+remains open. Executable changes add only inert frontend metadata and its private
+expansion seam; tests add the focused probes; tooling classifies exact modules
+and imports. PLAN/HANDOFF record results. Core, effects, runtime, public grammar,
+launcher behavior, version metadata, dependencies, and release assets retain
+their existing behavior. No inference or public check flag exists yet.
 
 ## Phase 2 — Build the small inference engine and run the usefulness pilot
 

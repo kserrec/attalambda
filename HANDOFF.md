@@ -1,4 +1,26 @@
-# Optional static checking — Phase 0 complete
+# Optional static checking — autonomous milestone in progress
+
+Kyle explicitly authorized continuing from one verified pass to the next on
+2026-09-17 without waiting for another `next`. Complete the whole specified local
+candidate autonomously; stop only for an owner-dependent blocker or serious
+unresolved doubt. The next skill's one-pass stop is overridden. Remote/release
+actions remain outside this assignment. Phase 0 is committed as `8bde48d`;
+Phase 1 passed its full checkpoint: 75 Racket files, 26879 reported Racket tests,
+49 Python terminal methods, purity over 40 modules, and complete source boundaries.
+The source view retains binding identity, exact source accounting, let/rec
+boundaries, and locations without evaluating user code. Its real embedded driver
+works after hiding both staged sources and the isolated package installation.
+The checkpoint self-review has no open finding; no independent review is claimed.
+`phase1-full.log` and `phase1-result.json` preserve results and executable-input
+hashes. Next is Step 2.1, structural types/proof state, after the local phase
+commit. Inference and the public command do not yet exist.
+The reusable isolated container is `attalambda-static-implementation`,
+with source/evidence at `/tmp/attalambda-static-implementation-mmgdshl_/`.
+Its `sync.py` copies only explicit non-dotenv source paths; use it before tests.
+Run tests through `runuser --login attatest` inside that container, with working
+directory `/evidence/source`. The owner's Racket installation is never modified.
+
+## Completed Phase 0 baseline record
 
 Branch: `optional-static-checking`. Base and fully tested executable source:
 `f6938b286329532230be210de0eaaa398286d38a`. Phase 0 adds only the saved revision-3
