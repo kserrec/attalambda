@@ -2538,3 +2538,54 @@ The contract specifies source/input ownership, failure statuses, non-rollback,
 loading, reset, bounded inert history, and the verified candidate gate. This
 amendment overrides earlier absence of a REPL only within that contract's scope.
 The runtime-input operation, representations and pure computation remain unchanged.
+
+
+---
+
+# Optional Static Checking Amendment (2026-09-17)
+
+The [Optional Static Inference and Checking specification, revision 3](../optional-static-checking-spec.md)
+authorizes one optional standalone-file analysis command, `attalambda --check
+FILE.attl`. It supersedes the earlier exclusion of static typing only within
+that specification's scope. It does not change ordinary file execution, the
+interactive shell, runtime typing, source notation, representations, evaluation,
+or host capabilities. Implementation progress and evidence belong in PLAN.md;
+this amendment does not claim that the command is implemented or released.
+
+The checker infers a supported source subset without annotations. It checks all
+source definitions, nested function bodies, and expressions, including unused
+and unselected code. Its finite type algebra, rank-1 def/let generalization,
+monomorphic lambda parameters and recursive assumptions, data restrictions,
+contract inventory, and precise source accounting follow the linked contract.
+Source rec is checked before fixed-point lowering. No runtime type tag, cast,
+coercion, Function/Any value, or modification to the generalized runtime checker
+is introduced. Error remains an ordinary value, distinct from Result Err.
+
+FULL PASS establishes every source obligation relative to the audited trusted
+contracts. A supported finite type contradiction is FAIL, including incompatible
+homogeneous List elements or common-result branches. An obligation outside the
+represented contracts is PARTIAL, including unsupported recursive types,
+unrepresented Error alternatives, and unsupported data domains. These static
+outcomes do not prohibit ordinary dynamic execution. They do not prove
+termination, successful external operations, application correctness, or the
+absence of intentionally returned Error/Result Err values. No success-only
+signature may conceal a normal Error alternative or an incomplete dependency.
+
+Check mode reads the explicit source snapshot through the existing restricted
+input path, validates the complete source, and never executes the user's module
+or performs its effects. Its launcher statuses are 0 for FULL PASS, 1 for FAIL,
+2 for PARTIAL, 64 for invalid arguments, 65 for invalid source, 66 for unavailable
+source, 70 for internal or catchable report-delivery failure, and 130 for an
+interrupted analysis. A conflict wins over gaps while both remain reported.
+Invalid source and operational defects are not coverage gaps. Complete analysis
+and successful report emission/flush are required before exit 0. Cancellation
+during analysis produces no completed report; interrupted delivery can leave
+already-written bytes and must not report process success or replay the report.
+These statuses do not change the public program-level exit 0/1 operation.
+
+No annotations, new source forms, automatic checking, REPL type command,
+combined check-and-execute mode, project system, optimizer, runtime-check removal,
+higher-rank polymorphism, polymorphic recursion, recursive types, unions, or
+predicate/range refinements are authorized. Delivery is an unmerged, unpublished
+local candidate with verified local phase commits; remote push, PR, merge, tag,
+asset replacement, or publication requires separate authorization.

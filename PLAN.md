@@ -1,3 +1,397 @@
+# Optional static checking — local implementation milestone
+
+Kyle assigned the [complete revision-3 specification](docs/optional-static-checking-spec.md)
+on 2026-09-17 and explicitly authorized the isolated Docker test-image build
+with Python 3 and Git on resumption. The authorized endpoint is a fully tested,
+reviewed, standalone-verified local candidate. Use the existing milestone branch
+`optional-static-checking` and verified local phase commits. No push, pull
+request, merge, tag, release-asset replacement, or publication is authorized.
+Completed historical plans below grant no further authority.
+
+The supplied specification defines six phases and 39 focused steps. Execute
+steps serially and retain each phase's checkpoint before its local commit.
+Phases 1–5 need multiple passes: a subsequent `next` selects the first unfinished
+step, retaining its full Work/Check requirements. If a step proves too large,
+subdivide it into stable lettered substeps before implementation, as the
+specification requires. The current pass establishes Phase 0 only.
+
+## Verified starting state and change boundary
+
+The untouched checkout, local main, and remote main were at
+`f6938b286329532230be210de0eaaa398286d38a`. There was no matching milestone branch,
+open PR, or pre-existing local modification. The current branch was created at
+that revision. All three canonical specifications and their amendments were
+read in full, together with the relevant frontend, input/session, runtime
+contracts, examples, and preparation/build/consumer/CI machinery.
+
+The temporary 0.8.0 release receipt is absent. Its recorded fallback was checked:
+all ten current-main CI jobs passed, and its delta from the tagged/build source
+`f309199baa170ba5b12ff6b18b60dc49c114a8a1` contains only publication documents.
+The public tag, release ID 389458950, and both asset IDs/digests match the
+historical handoff. These read-only checks do not repeat release actions or
+attribute its archive to the later documentation revision.
+
+Phase 0 creates only `docs/optional-static-checking-spec.md`, as an exact copy
+of the supplied file, and changes PLAN.md, HANDOFF.md, and the four files in
+`docs/specifications/`. Canonical amendments are appended; every preceding
+canonical byte and every historical plan/handoff byte is retained. Executable
+code, tests, structural gates, build scripts, dependencies, VERSION, info.rkt,
+README/API, examples, and release records have no change in this phase.
+
+Later phases may modify the existing expander, launcher, exact structural gate,
+tests, Linux consumer, and relevant current documentation, and create explicitly
+classified checker modules and focused tests. They must preserve ordinary
+execution, interactive behavior, runtime type checks, representation, host
+capabilities, source grammar, and version metadata. No checker command or static
+contract inventory is implemented at the end of Phase 0.
+
+## Pilot expectations fixed before implementation
+
+Step 2.9 uses the real frontend/kernel and one audited seed inventory. The
+required supported pilot is reusable identity/apply/compose, partial arithmetic,
+the source-let versus monomorphic-lambda distinction, acyclic forward bindings,
+and ordinary factorial/summation. The two definitions and arithmetic call from
+specification Section 3.2 must be established at Checkpoint 2; its rendering and
+stdout calls join at Phase 3. Existing actual recursion examples are in
+`tests/language-test.rkt` and `tests/interactive-expansion-test.rkt`.
+
+Guarded `unwrap-ok`, empty-list access, and range/integrality-dependent
+constructors remain partial without variant, nonempty, or range refinements.
+Raw self-application requires unsupported recursive types. Incomplete references
+remain incomplete through aliases, nested bodies, returned functions, and
+dependent callers. An explanatory success hint cannot establish a result or
+manufacture a downstream conflict. A known later argument mismatch still fails
+when an earlier argument has a gap. These are required expectations, not measured
+checker outcomes. No percentage of the existing corpus is promised.
+
+The revision-3 correction is explicit: finite contradictions in homogeneous
+List elements or common-result branches produce FAIL, including through aliases
+and higher-order calls. Ordinary runtime behavior stays unchanged.
+
+| Supplied fixtures | Required outcome and gate |
+| --- | --- |
+| C01, C02, C05, C09 | FULL PASS at the Phase 2 inference gate; C05 is check-only and must never execute. |
+| C03, C04, C06, C07, C16 | FAIL at Phase 2, with captured variables and recursive self-calls monomorphic; C16 preserves the established declaration of double. |
+| C11, C13, C14 | PARTIAL at Phase 2; Error alternatives, bare unwrap alias, and nested bodies cannot be hidden. |
+| C08, C10 | FAIL at Phase 3: cons aliases obey homogeneous List constraints and filter requires Bool even on NIL. |
+| C12 | FAIL plus the head-NIL Error-alternative gap at Phase 3; the seed-only pilot uses unwrap-ok in its first argument. |
+| C15, C17 | PARTIAL at Phase 3: nested data restrictions and an unchecked stored Map comparator cannot be hidden. |
+| C18 | FULL PASS with Error result at Phase 3; deliberate Error values are allowed. |
+| C19 | Invalid source, status 65, with no program output at the frontend and CLI gates. |
+| C20 | Internal failure for missing source accounting at Phase 1 and pending final contracts at Phase 4; CLI status 70. |
+| C21 | Stable repeated backend analyses at Phase 2 and subsequent report/CLI gates. |
+| C22 | Nonzero report-delivery failure and interrupted analysis at Phase 4; no provisional full-pass success or replay. |
+
+All five public example files were inspected. `hello.attl` and `stdout.attl`
+use the required complete stdout contract. `foundations.attl` combines exact
+arithmetic, Option/Map, and Result unwraps; `file-round-trip.attl` contains guarded
+unwraps and result branches; `http-server.attl` includes unwrap/head access,
+numeric boundary conditions, and raw host. Those operations require the stated
+V1 gaps, and any independently established finite conflict must still be
+reported. Phase 5 measures each whole-file verdict and reason; source inspection
+here is not a substitute for that corpus run or the Phase 3 contract audit.
+
+## Environment and checkpoint evidence
+
+The untouched baseline at `f6938b286329532230be210de0eaaa398286d38a` passed
+`./run-all-tests.sh` with exit 0: 69 Racket test files and
+26845 reported Racket tests. The Python terminal harness ran
+49 methods in its two suites. The same full-suite command
+passed the expanded purity check for 40 production modules and the complete
+source inventory/boundary gate. No new production or test unit was added.
+Because this phase changes only planning/contracts, these unchanged executable
+inputs retain that baseline evidence; separate document checks verify the final
+specification bytes, historical prefixes/suffixes, hashes, links, and scope.
+
+Evidence directory: `/tmp/attalambda-static-phase0-q0w_ycsc/`.
+`baseline-unprivileged.log` is the completed run; `baseline-result.json` records its
+process result and counts. `baseline-input-hashes.json` proves all 205 tracked
+snapshot files match the baseline. `environment.log` records Racket CS 9.3,
+Python 3.13.5, Git 2.47.3, Linux x86-64, retained Racket packages, and available
+builder utilities. `preflight.json` records read-only Git/GitHub reconciliation.
+
+The prepared Docker image is
+`sha256:5366fd60f701ca1cbf5172c17bfa1150ca8a5e7500c3a9d19f5bbca4236be59c`,
+derived from the verified full Racket image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+It adds only isolated test/build tooling and its native dependencies; no Racket
+package version or AttaLambda dependency changed. The existing reviewed promise
+and Expeditor corrections were applied inside the disposable test container and
+verified with `racket tooling/prepare-racket-runtime.rkt --check`. The image
+itself remains unpatched: future containers must apply/check the same corrections.
+Package installation and tests ran as isolated UID/GID 1000, after root-only
+preparation of the agent-owned container. `runner-unprivileged.log` records the
+focused launcher pass before the complete suite; `unprivileged-preparation.log`
+and `runner-unprivileged.sh` retain the setup output and exact test sequence.
+`prepare-unprivileged.sh` creates the container-only test user and assigns its
+Racket installation to that user so corrected dependency bytecode can rebuild.
+The run had no external network and a 30-minute outer deadline. The normal
+installed Racket 8.10 was not modified.
+
+Exact in-container preparation/test commands were `racket --version`,
+`python3 --version`, `git --version`,
+`racket tooling/prepare-racket-runtime.rkt --apply`,
+`racket tooling/prepare-racket-runtime.rkt --check`,
+`raco pkg install --batch --scope user --link --name attalambda --deps fail --no-docs --fail-fast /evidence/baseline-unprivileged`,
+`raco make tests/runner-test.rkt`, `raco test tests/runner-test.rkt`,
+and `./run-all-tests.sh`. The fresh snapshot excluded dotenv paths before copying.
+
+The existing isolated consumer image
+`sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`
+passes its prerequisite probe: Python 3.12.3 and pseudo-terminal/standard-library
+facilities work, with Racket/raco absent, no external network, a read-only root,
+non-root user, and dropped capabilities. Log: `consumer-prerequisites.log`.
+This is environment readiness only, not a build or artifact consumer pass.
+There is no new archive, measured static example-corpus result, or audited static
+contract inventory yet. macOS/Windows checks were not run for this local phase;
+their existing source and CI configuration are unchanged.
+
+Earlier unsuccessful preparation attempts remain recorded. `baseline.log`
+stopped at private snapshot directory permissions; `baseline-run.log` stopped
+at the package source `.` being rejected. `baseline-full.log` passed 21 checks
+before deliberate interruption (137) after discovering missing Python/Git.
+The elevated image-build requests were rejected by the execution layer.
+Following Kyle's authorization, the build succeeded within sandbox permissions
+using `docker --config /tmp/attalambda-static-phase0-q0w_ycsc/docker-client build`;
+the recipe and output are `Dockerfile` and `toolchain-build-contained.log`.
+No failed attempt is counted as a complete baseline and no assertion, test
+deadline, or product source was changed to obtain success.
+
+The first prepared-image run, `baseline-prepared.log`, exited 1 at three launcher
+assertions for a single unreadable-file fixture. Root bypassed its mode-000
+permissions and executed the file. A direct root/unprivileged probe established
+that cause (`permissions-diagnosis.json`). A fresh, byte-verified snapshot and
+unprivileged test user corrected the environment; the focused launcher test
+passed before the final full-suite run. No product or test source was changed.
+The first unprivileged setup stopped before tests because the root-owned Racket
+installation rejected bytecode writes (`unprivileged-cache-denied.log`). Giving
+the disposable installation to its test user resolved that prerequisite.
+
+Checkpoint review is a fresh self-review of authority, amendments, baseline
+evidence, static/runtime separation, and the fixed C01–C22 expectations; no
+independent reviewer or implementation review is claimed. Document verification
+uses `python3 /tmp/attalambda-static-phase0-q0w_ycsc/verify-phase0.py` and records
+`documentation-verification.json`. The supplied specification is byte-for-byte
+identical to the upload, including its intentional Markdown hard breaks. Other
+changed files pass ordinary whitespace checks. Previous canonical bytes and
+historical plan/handoff records are preserved. No open finding remains.
+
+Phase 0 closes with one local documentation/contract commit; its exact hash is
+recorded in the external `state.json` and final response after commit, not inside
+a self-referential record. No push or other remote mutation occurs. Owned test
+containers are removed; the recorded image, snapshot, and logs are retained for
+later steps. **Next unfinished step: 1.1a, expansion-only preparation.**
+No owner action is required to start that step.
+
+## Active phases and steps
+
+
+
+Phase 0 is complete; remaining steps are unchecked. Run focused tests with each step. Phase checkpoints collect evidence and close verified local commits; they do not replace the focused kernel, frontend, and contract reviews named inside the phases. Subdivide an unexpectedly large step before implementing it rather than sacrificing its checks.
+
+## Phase 0 — Confirm the workspace, constraints, and usable V1 scope
+
+**Purpose:** establish the actual baseline, authority, environment, and expected limitations.
+**Prerequisites:** explicit implementation assignment and repository read access.
+
+- [x] **0.1 — Reconcile the checkout and choose the safe workspace.**
+  **Work:** Read current project instructions, all canonical contracts/amendments, active plan/handoff, affected source, relevant PRs, ancestry, and local changes. Compare with the pinned baseline. Choose or reuse one milestone branch/worktree without disturbing other work. Do not update project source/contracts before the baseline in 0.2.
+  **Check:** Record `git rev-parse HEAD`, `git branch --show-current`, `git status --short --branch`, relevant changes, and applicable authority. A clean, separate authorized worktree is preferable to resetting/stashing another person's work. Existing public refs/assets are unchanged; a local-only assignment does not require remote write access.
+
+- [x] **0.2 — Establish the isolated test and candidate environment.**
+  **Work:** Inspect preparation/build/consumer scripts. Provision or reuse an agent-owned supported runtime; confirm Linux build/consumer prerequisites and available review tools.
+  **Check:** Record `racket --version`, dependency-correction `--check`, and untouched `./run-all-tests.sh` results. Name unavailable essential infrastructure now. Do not modify the owner's runtime or claim a historical test count as the new baseline.
+
+- [x] **0.3a — Save the active plan and narrowly authorize checker scaffolding.**
+  **Work:** After the baseline, save/link this complete specification and record the active phase plan using repository conventions. Add only necessary canonical amendments for optional source analysis, its private classified scaffolding, and checker exit statuses. Preserve prior bytes and update specification hashes.
+  **Check:** Historical plans and canonical bytes are preserved, index hashes/links match, and the initial diff contains only intended planning/contract changes. No runtime primitive, tag, capability, typing extension, or release authority is introduced.
+
+- [x] **0.3b — Record realistic pilot expectations.**
+  **Work:** Inspect representative existing arithmetic/recursive, container, and boundary examples. Map the Section 9.2 counterexamples to required FULL PASS, FAIL, PARTIAL, or invalid-source expectations before implementation can bias the expected results.
+  **Check:** The active plan names the early pilot in Step 2.9, the guarded-unwrap/nonempty/range limitations, and the explicit heterogeneous-join verdict correction. No promised corpus percentage or undocumented feature is needed to meet those expectations.
+
+**Checkpoint 0 — Baseline gate.** Review authority, baseline, and the actual supported-versus-partial expectations; run required repository gates before committing. Stop dependent work on a relevant unexplained baseline failure. Missing packaging infrastructure may permit independent kernel work but remains a final-delivery blocker.
+
+## Phase 1 — Prove the non-evaluating frontend and embedding path
+
+**Purpose:** resolve binding, source-location, and metadata transport risk before inference.
+**Prerequisites:** Checkpoint 0 and understanding of the current restricted reader and expander.
+
+- [ ] **1.1a — Add the expansion-only preparation seam.**
+  **Work:** Use the existing validated source snapshot and restricted parser to prepare a fresh module for trusted expansion only. Reuse the fixed language-declaration/embedding machinery as appropriate; do not call the session's evaluating preparation routine. Classify the new private helper and its exact imports in the same change.
+  **Check:** Focused frontend tests accept valid source and reject bad headers/readers, unsupported literals, and unknown names. Instrument the user-module boundary to establish that no evaluation/instantiation/demand occurs. Fresh preparations cannot inherit REPL bindings or an earlier input's namespace state.
+
+- [ ] **1.1b — Expose a complete inert source analysis view.**
+  **Work:** Add the smallest private opt-in expander seam retaining literal kinds, lexical identities, original source IDs, declaration dependencies, and explicit `let`/`rec` nodes before representation lowering. Validate the metadata's shape and source-accounting invariants. Keep type algorithms outside the expander.
+  **Check:** Recover literals, a curried function, an alias, a nested lambda, a local let, and a recursive definition. Missing/corrupted/duplicated IDs or a missing final form fail internally rather than passing an incomplete program. Without the request, existing expanded computation remains binding-equivalent to the original path; compare structural terms modulo fresh binder names and inert source properties, not incidental pretty-print bytes.
+
+- [ ] **1.2 — Preserve binding, sugar, forward references, and source abstraction boundaries.**
+  **Work:** Reuse expander logic for sequential lets, repeated binders, `list`, `cond`, acyclic forward references, zero-argument `rec`, and shadowed declaration keywords. Retain let-generalization boundaries while normalizing currying/list/cond mechanically.
+  **Check:** Actual-expander fixtures distinguish a user `add`/`if`/`cons` from the built-in and preserve hygienic generated operations. Source-local references identify their real binders even when names repeat. Ordinary datum-equivalent reader notation must be handled like the existing parser; do not invent new restrictions for an otherwise valid quoted/escaped spelling of an identifier. Preserve `rec` instead of only its fixed-point encoding. Existing direct/mutual-cycle rejection, literal validation, and original source locations remain unchanged; no symbol-only mock is sufficient.
+
+- [ ] **1.3 — Prove preparation does not perform program effects.**
+  **Work:** Add synthetic user modules containing demanded stdout, input, file writes, exit, raw-host/network calls, and divergence. Include an effectful first form followed by invalid syntax.
+  **Check:** Preparation finishes or reports source errors without program output, consumed input bytes, marker-file writes, program exit, or network attempts. Combine instrumentation with actual isolated file/input/loopback observations; use bounded harness cleanup. The checker never calls the program to discover its types.
+
+- [ ] **1.4 — Exercise the same frontend through executable embedding.**
+  **Work:** Compile a minimal test-only driver around the actual analysis seam using the existing embedding approach. Do not create a second parser or temporary public flag.
+  **Check:** Outside the checkout, the embedded driver analyzes source and retains metadata without source-path assumptions. Request and result properties remain distinct and validated. Retain the useful regression, not a parallel implementation or permanent probe framework.
+
+**Checkpoint 1 — Frontend feasibility gate.** Run frontend/effect/embedding probes, affected source-reader and `tests/interactive-expansion-test.rkt` tests, full suite, and structural gates. Review binding/hygiene and non-execution counterexamples. Adapt failed metadata transport narrowly before investing in inference. Trusted compile-time expansion is allowed; evaluating the user's program is not.
+
+## Phase 2 — Build the small inference engine and run the usefulness pilot
+
+**Purpose:** establish finite types, ordinary inferred polymorphism/recursion, and honest incomplete results.
+**Prerequisites:** Checkpoint 1. Seed contracts are created in Step 2.5a; the full library inventory is not a prerequisite.
+
+- [ ] **2.1 — Implement structural types and separate proof state.**
+  **Work:** Add nominal types, arrows, containers, variables/schemes, and established/unproved/conflict results in classified checker modules. Keep display separate.
+  **Check:** Distinguish String from List(Char), Rat from Byte, a scheme variable from a hole, and Error from other types. Validate constructor arities. No solver, runtime dependency, or generalized type-system framework is introduced.
+
+- [ ] **2.2a — Implement substitution, instantiation, and eligible generalization.**
+  **Work:** Add fresh variables, free-variable sets, substitutions/composition, and fresh scheme instantiation. Implement generalization over the substituted environment as specified in 5.3. Keep schemes separate from monotypes and state local to an analysis.
+  **Check:** Independent identity instances have fresh variables; captured environment variables do not. Substitution respects bound scheme variables and composition order. Quantifiers never enter an arrow/container. Unit tests expose the stale-environment generalization bug before source integration.
+
+- [ ] **2.2b — Implement finite structural unification and failure isolation.**
+  **Work:** Unify nominal types, arrows, and containers with an occurs check using one small solver. Keep unsuccessful equation updates tentative or discardable.
+  **Check:** Hand-derived and bounded generated equations cover success, nominal conflicts, arrow/container mismatch, chains, and `a = a -> b`. Successful substitutions satisfy input equations and repeated substitution stabilizes. A failure cannot leak state into a separate problem, erase a sibling conflict, or allocate a cyclic/infinite type.
+
+- [ ] **2.3 — Enforce the one data-variable restriction.**
+  **Work:** Preserve Section 5.2's restricted domain through unification, substitution, and schemes. Use a small admissibility rule, not a type-class or constraint-plugin framework.
+  **Check:** Rat/nested supported data are accepted; an arrow or Error is not silently admitted. Restriction survives instantiation/generalization. Unsupported data-domain use remains distinct from a concrete Rat/String conflict; no runtime Data/Function tag is added.
+
+- [ ] **2.4 — Render types deterministically and close the kernel review.**
+  **Work:** Render stable variable names, quantified restrictions, containers, and correctly grouped arrows. Review the kernel before inference depends on it.
+  **Check:** Golden tests cover `a -> b -> c`, `(a -> b) -> a -> b`, Error, and restricted schemes. Recheck freshening, substitution, occurs-check, and hole separation with focused tests. Rendering never calls an object-language evaluator. This is a focused review, not an extra mandatory full-suite/commit phase.
+
+- [ ] **2.5a — Create the real seed-contract inventory.**
+  **Work:** Inspect actual implementations/tests and audit Rat/Bool constants plus the arithmetic and first-class `if` schemes needed for double/factorial. Include Result-valued `div`, `is-ok`, a conditional `unwrap-ok` input contract, and the fixed `error-to-string : Error -> String` contract for the pilot. Associate catalog IDs only with their resolved built-in bindings.
+  **Check:** Record source locators and valid/invalid-domain evidence. `if` works as a value and alias, not only a syntactic head. `div` is Result-valued; `unwrap-ok` has no verified success-only signature. Other known exports may be explicitly pending audit, never unknown identifiers or fabricated safe signatures. This is the same inventory completed in Phase 3.
+
+- [ ] **2.5b — Infer elementary source expressions.**
+  **Work:** Infer literals, references, lambdas, and curried applications through the actual frontend/kernel and seed inventory. Preserve complete input obligations when an earlier argument is incomplete; keep conditional hints out of established types.
+  **Check:** Infer double, identity, application, nested lambdas, and partial `add`; locate a String/Rat conflict. A shadowed function never inherits a catalog contract. Calls through a first-class `if` alias obey the same homogeneous-result equations as direct calls.
+
+- [ ] **2.6 — Infer lexical bindings with source-level generalization.**
+  **Work:** Use actual acyclic dependency order and sequential-let scope. Generalize completed `def`/`let` bindings using the solved current environment; instantiate each use. Keep lambda parameters and captured environment variables monomorphic where required.
+  **Check:** Forward definitions and repeated/shadowed names work without runtime reordering. Identity works at Rat and String; `(identity identity)` checks. Section 5.4.1's let form passes and its lambda-parameter counterpart fails. The captured-function counterexample in 9.2 fails. Unknown names/forbidden cycles remain source errors, not gaps.
+
+- [ ] **2.7 — Infer ordinary source `rec` and discharge its local assumption.**
+  **Work:** Use one monomorphic recursive assumption, unify with the inferred curried body, discharge the self edge, and generalize eligible variables afterward. Include zero-source-argument recursive values without evaluation.
+  **Check:** Factorial/summation infer `Rat -> Rat`; locate recursive conflicts. Self-dependencies do not make all recursion partial. Finite-typed nonterminating recursive fixtures are checked without being run. Raw self-application reports the occurs-check limitation. Direct/mutual module recursion and pure fixed-point lowering remain unchanged; no polymorphic recursion is introduced.
+
+- [ ] **2.8 — Apply uniform constraints through source sugars and aliases.**
+  **Work:** Check source list/conditional normalization using original IDs and first-class built-in schemes. Treat finite homogeneous-element/common-result contradictions as TYPE_CONFLICT in every representation. Preserve explicit let/rec boundaries.
+  **Check:** Currying, sequential-let nesting, list/cons, and cond/if mappings agree under their supported rules. Heterogeneous direct/aliased `if` calls fail identically; homogeneous function-valued branches pass. Both branches and all independent children are visited. List typing tests may use explicitly pending constructor contracts until 3.2, but no production completeness is claimed for an unaudited contract.
+
+- [ ] **2.9 — Close gap propagation and run the early backend pilot.**
+  **Work:** Finish component isolation, proof-state propagation, and the representative cases in 1.3 using the actual frontend/kernel/seed inventory. Treat incomplete built-in references as incomplete even before invocation. Preserve established upstream declarations after a bad call.
+  **Check:** Arithmetic/identity/recursion establish types; bad `add` and incompatible branch types conflict; raw self-application, guarded unwraps, and their dependent callers remain partial. A closure cannot hide a gap in an unused nested body. An earlier gap cannot hide a later independent argument mismatch: use `(add (unwrap-ok (div 1 0)) "bad")` while only seed contracts exist. Best-case unwrap output hints cannot invent a conflict in C11; its Error renderer is included in the seed audit. Reordering independent definitions or checking twice changes no result. Record pilot outcomes; fix required supported cases before the broader audit.
+
+**Checkpoint 2 — Inference and practical-scope gate.** Review scope, generalization, recursive assumptions, and unchecked-result propagation; prefer independent read-only review when available. Run kernel/frontend/inference tests, affected language/recursion tests, full suite, and gates. The two definitions in Section 3.2 and `(factorial (double 3))` must be established without execution. Rendering/stdout arrive in Phase 3. Documented partial pilot results are an accepted V1 limitation, not a reason to invent refinements or request routine owner decisions.
+
+## Phase 3 — Complete the auditable library and host contracts
+
+**Purpose:** broaden useful coverage while preserving every actual failure alternative.
+**Prerequisites:** Checkpoint 2; the pilot works and the seed inventory is reused.
+
+- [ ] **3.1 — Complete export classification and scalar contracts.**
+  **Work:** Inventory every actual public value binding separately from syntax/scaffolding. Complete supported scalar contracts; retain explicit range-dependent gaps.
+  **Check:** Export drift fails closed; `div`/`exp`/`recip` are Result-valued. Wrong nominal inputs fail with correct argument order. No private Nat/Int, public alias, or success-only signature is invented. Previously audited seeds remain consistent.
+
+- [ ] **3.2 — Add container construction and safe non-callback List contracts.**
+  **Work:** Add data-restricted schemes for constants/constructors, `len`, `append`, `reverse`, and other audited fixed-shape operations. Record empty/count/nesting failure limits and preserve restrictions through nested type parameters.
+  **Check:** Homogeneous Lists retain element types; String is not List(Char). Heterogeneous `(list ...)`, direct `cons`, and a `cons` alias produce the same finite conflict. Functions hidden beneath a generalized nested-data variable cannot bypass its restriction. `head NIL`/`tail NIL` remain partial; `zip` does not gain an invented Pair. No runtime-valid construct is disabled in ordinary execution.
+
+- [ ] **3.3 — Add higher-order List and Map contracts.**
+  **Work:** Inspect actual callback order, element/result restrictions, and Map equality/key/value relationships. Model the stored Map comparator's typed invariant, not merely its data fields. Leave unrepresented failure paths partial.
+  **Check:** `map` changes element type; `filter` requires Bool; `reduce` takes accumulator then element. Bad callbacks are checked even on NIL. Map equality ties both key inputs and its uncertainty taints an initially empty Map. Raw functions are not assumed admissible data elements. Generalized key/value restrictions survive subsequent updates. Do not modify library algorithms.
+
+- [ ] **3.4 — Complete Option, Result, and Error contracts.**
+  **Work:** Encode fixed Error payloads, constructors/predicates, `option-case`, and conservative unwrapping. Distinguish make-ok's propagation from make-err's intentional Error consumption.
+  **Check:** `make-err 1` fails; `unwrap-ok` is not a total `Result(a) -> a`; guarded unwraps stay partial; `unwrap-err` has its audited Error output. Error cannot be coerced to Rat or an arrow. Aliases retain these rules.
+
+- [ ] **3.5 — Audit pure rendering and the remaining value operations.**
+  **Work:** Finish scalar/restricted generic rendering; classify remaining value operations, including flatten/count/index cases. Inventory effectful print, completing its contract in Step 3.6. Review the complete value-contract set for missing Error alternatives before adding host signatures.
+  **Check:** Supported rendering returns String; direct/nested raw-function cases never receive universal safe signatures. Every completed entry has source and valid/invalid-domain evidence; unsupported entries have precise reasons. No runtime function detection or tag changes. Repair invalid seed assumptions and refresh dependent inference tests.
+
+- [ ] **3.6 — Establish the four required I/O wrappers and print.**
+  **Work:** Verify stdout/read-line/read-file/write-file against wrappers, host branches, codec, and existing tests. Complete print from its rendering and stdout dependencies without changing runtime implementations.
+  **Check:** Catch String versus List(Byte) misuse; represent expected I/O failure as Result Err. Analyzing read-file never reads the program's requested data file. Separately test actual wrappers with isolated runtime resources. The complete Section 3.2 example now establishes all obligations without program execution.
+
+- [ ] **3.7 — Classify raw host, TCP, HTTP, and exit.**
+  **Work:** Keep raw host explicitly unproved; audit remaining operations for numeric/value-dependent failures. Close all pending inventory entries as supported or specifically partial.
+  **Check:** Raw-host aliases and higher-order uses remain gaps. No invented nominal handles, String-returning read-file, new host operation, or successful-exit assumption. Every actual public export is accounted for; unsupported is not the same as absent.
+
+- [ ] **3.8 — Close the combined boundary counterexamples.**
+  **Work:** Exercise partial outputs, higher-order use, callbacks, partial application, and the library's Error-absorbing continuations together.
+  **Check:** Possible Error cannot acquire a verified arrow type; an earlier gap cannot swallow a later nominal mismatch; ordinary user lambdas do not inherit library absorption semantics. Existing runtime outputs remain unchanged. Independently audit source coverage versus trusted contracts rather than claiming to have inferred the library's internals.
+
+**Checkpoint 3 — Contract and trusted-boundary gate.** Review complete signatures against both success and failure domains, including data restrictions, callback order, and source/effect separation. Run contract/non-execution regressions, affected library/host/codec tests, full suite, and gates. Ordinary supported I/O is not unknown merely because it is effectful; partial wrappers/raw host are not complete merely because a return shape is desired. No refinements, unions, or effect system are needed to close this gate.
+
+## Phase 4 — Deliver exact reports and the real checking command
+
+**Purpose:** expose the established backend without changing ordinary execution.
+**Prerequisites:** Checkpoint 3.
+
+- [ ] **4.1a — Compute exact complete-source coverage and final status.**
+  **Work:** Finalize source-node and definition states from the established proof data, retaining all registered source obligations and the closed verdict precedence. Keep local self assumptions separate from external gaps.
+  **Check:** Exact-count fixtures cover literals/apps/list/let/lambdas, data definitions, nested/unused bodies, empty modules, and rounding traps. A bad call preserves its valid function's declaration count; an incomplete top-level expression prevents FULL PASS. A missing source ID, pending catalog entry, or unfinished solver item is operational failure, never silently excluded from the denominator.
+
+- [ ] **4.1b — Render types, primary diagnostics, and bounded dependency explanations.**
+  **Work:** Render original file/line/column, enclosing binding/lambda, reason code, established expected/actual types, and one deterministic path per dependent definition. Separate conditional hints from verified signatures and output from computation.
+  **Check:** Golden reports are stable across repeated checks and preserve positions across CRLF/Unicode/tabs/comments/shadowing. Control characters in names/paths are escaped. Large alias graphs do not enumerate exponentially many paths. Reports never expose arbitrary internal exception text or imply that source coverage certifies the trusted library.
+
+- [ ] **4.2 — Integrate `--check` with precise launcher and output failure handling.**
+  **Work:** Add the exact invocation, help text, embedded lazy-load reference if needed, exit mapping, and narrow boundary-vocabulary updates. Leave file/REPL dispatch unchanged. Finalize analysis before report emission and require successful emission/flush before exit 0.
+  **Check:** Real subprocesses via `racket runner/attalambda.rkt --check ...` verify 0/1/2 and 64/65/66/70. Missing/extra paths, duplicate/incompatible flags, and private injected source/frontend/internal faults map correctly. A broken report sink cannot return 0 or replay output. Do not add public failure-injection switches or import the auto-running launcher as the backend.
+
+- [ ] **4.3 — Prove CLI non-execution, interruption, and repeated-run isolation.**
+  **Work:** Run the existing effect/divergence fixtures through the real CLI. Exercise a controlled interruption during analysis and a report-delivery failure separately. Reuse the backend twice in one test process to reveal stale state.
+  **Check:** No program output/input/file/network/history effect occurs, including invalid-late-form cases. Interrupted analysis returns 130, cleans owned resources, and emits no completed analysis report. Interrupted delivery is nonzero even if earlier report bytes exist. Do not demand impossible output retraction or disable cancellation around blocking writes. Inspect rendered diagnostics as well as structured results.
+
+**Checkpoint 4 — User-facing gate.** Run report/CLI tests and affected existing interactive/file-mode tests, full suite, and gates. Existing `attalambda FILE.attl`, help/version, and REPL behavior remain intact. Review exact status/coverage semantics, escape handling, and untouched runtime behavior. The checker itself never executes the analyzed file.
+
+## Phase 5 — Verify realistic use and the exact standalone candidate
+
+**Purpose:** finish documentation, full corpus evidence, cold review, and a tested deliverable.
+**Prerequisites:** Checkpoint 4, authorized local commits, and the confirmed Linux consumer environment.
+
+- [ ] **5.1 — Measure the complete existing example corpus.**
+  **Work:** Analyze every current public `.attl` example and the minimum acceptance fixtures. Record status and every gap/conflict reason, distinguishing intentional dynamic/error demonstrations from regressions.
+  **Check:** Every file is accounted for; supported fixtures fully pass and known limitations are accurately classified. Compare with the early pilot. Do not rewrite examples/signatures to improve percentages or silently skip files. No arbitrary coverage target is imposed.
+
+- [ ] **5.2 — Document the feature and exact limitations.**
+  **Work:** Update relevant README/API/architecture/getting-started material with invocation, statuses, trust scope, inferred types, restricted data, and Error/variant limitations. Identify the capability as unreleased source/candidate work.
+  **Check:** Examples are exercised; links/commands exist. The public 0.8.0 binary is not claimed to contain the feature. No claim of termination, all-error freedom, erased runtime tags, or whole-runtime formal verification appears.
+
+- [ ] **5.3 — Extend the real standalone consumer.**
+  **Work:** Add compact full/partial/fail/invalid/no-effect check-mode fixtures to the existing Linux consumer. Verify embedding of checker/frontend dependencies. Preserve other native builders/CI; change only acceptance inputs necessitated by the shared launcher.
+  **Check:** Static distribution tests cover new inputs. Consumer tests use the delivered executable and temporary source only: no Racket install, checkout, network fetch, or personal configuration. Dependencies/notices remain unchanged absent an evidenced necessity. Source-only tests cannot replace consumer acceptance.
+
+- [ ] **5.4 — Review the final implementation afresh and freeze tested inputs.**
+  **Work:** Prefer independent read-only counterexample review; otherwise label self-review honestly. Inspect contract, diff, tests, scope, and unused abstractions. Correct evidenced findings narrowly.
+  **Check:** Address binding impersonation, gap laundering, Error alternatives, generalization/recursion, non-execution, and embedding. Each finding has a disposition; no minimum finding count. Run corrections' focused tests and the complete required suite on final inputs. Close a clean local source commit under project rules before building.
+
+- [ ] **5.5a — Build the exact clean, local candidate.**
+  **Work:** Record the reviewed source SHA/runtime identity and build with the known builder into a fresh external directory, without `--allow-dirty`. Confirm that the checkout/ref was not changed by another process during preparation.
+  **Check:** Record archive SHA-256 and build evidence; every executable/embedded input belongs to the recorded source. Current-version metadata is explicitly labeled an unpublished feature candidate, not the public asset. Preserve unrelated work and existing candidate outputs rather than overwriting them.
+
+- [ ] **5.5b — Verify the transferred standalone artifact.**
+  **Work:** Transfer that exact archive to the isolated consumer and run the extended new check-mode and existing file/REPL acceptance. Use only the delivered executable and synthetic source fixtures.
+  **Check:** Verify archive digest before/after transfer and record consumer environment plus `consumer_acceptance=passed`. Include complete, conflicting, partial, invalid-source, and no-effect fixtures. Any code/build-input or consumer-logic correction requires affected rebuild/retest evidence. Report unavailable native-platform checks separately; do not claim the current archive came from a later handoff-only commit.
+
+- [ ] **5.6 — Close the handoff and clean owned resources.**
+  **Work:** Update the existing durable plan/handoff with Section 10's source, test, review, coverage, artifact, limitation, and authority records. Clean only owned probes/containers/transfers.
+  **Check:** Distinguish the tested build source from later record-only commits. Every acceptance item has evidence or an explicit blocker/next step. Preserve unrelated work and existing releases. No push, PR, merge, tag, asset replacement, or publication occurs under the default endpoint; follow project gate rules for any final record-only commit.
+
+**Checkpoint 5 — Delivery gate.** Completion requires final-input tests, disposed review findings, full-corpus results, and the exact digest-identified standalone candidate's consumer evidence. Missing infrastructure/authority is reported as a blocked gate, never a passed check. Finish independent safe work, record the precise next step, and stop at the authorized local candidate.
+
+
+---
+
+# Historical plan — Interactive AttaLambda, published 0.8.0
+
 # Interactive AttaLambda — published 0.8.0
 
 Kyle authorized phases 0–11 of the [supplied contract](docs/interactive-implementation-spec.md)

@@ -1,3 +1,102 @@
+# Optional static checking — Phase 0 complete
+
+Branch: `optional-static-checking`. Base and fully tested executable source:
+`f6938b286329532230be210de0eaaa398286d38a`. Phase 0 adds only the saved revision-3
+specification, scoped append-only canonical amendments and index hashes, and the
+active PLAN.md/HANDOFF.md records. Executable code, tests, build scripts, package
+dependencies, version metadata, README/API, and examples remain byte-identical.
+The checker is not implemented yet. Historical records below retain their bytes.
+
+**Next unfinished step: 1.1a — add the expansion-only preparation seam.**
+Follow the complete Work/Check requirements in PLAN.md and
+[the supplied specification](docs/optional-static-checking-spec.md). Use the
+validated source snapshot and existing restricted reader in a fresh namespace.
+Do not reuse `prepare-entry`: it expands, evaluates, and instantiates user code.
+Classify each new private helper and exact import direction in the same step.
+The later source-analysis view and executable-embedding probe must precede
+inference. Phase 0's counterexample expectations are fixed before implementation.
+
+Kyle authorized implementation and, on resumption, the isolated Docker image
+with Python 3 and Git. Do not request the same permission again. Work remains
+local-only: verified local phase commits are authorized, but no push, PR, merge,
+tag, asset replacement, or publication. Do not change VERSION or imply that the
+published 0.8.0 binary includes optional checking. The Phase 0 commit's exact
+identity is in the final response and `/tmp/attalambda-static-phase0-q0w_ycsc/state.json`.
+If that temporary receipt is gone, inspect the current branch/log and PLAN.md;
+do not reconstruct or repeat historical release actions.
+
+## Environment and evidence
+
+Prepared image:
+`sha256:5366fd60f701ca1cbf5172c17bfa1150ca8a5e7500c3a9d19f5bbca4236be59c`.
+Its base is the verified full Racket CS 9.3 image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+Python is 3.13.5; Git is 2.47.3. Docker client bookkeeping was confined to the
+task's writable /tmp directory, resolving the earlier sandbox build blocker
+without elevated execution. The owner’s installed Racket 8.10 is untouched.
+Reuse the image, with fresh agent-owned source snapshots that exclude every
+dotenv variant; do not use the old baseline snapshot to test later source edits.
+
+The image does not bake in the existing dependency corrections. Inside each
+disposable container, apply/check them before testing; never apply them to the
+owner's runtime. The completed baseline used these exact commands at the
+unchanged snapshot path `/evidence/baseline-unprivileged`. Root performs only
+the disposable container preparation; package setup and tests run as its
+unprivileged UID/GID 1000 user:
+
+```sh
+racket --version
+python3 --version
+git --version
+racket tooling/prepare-racket-runtime.rkt --apply
+racket tooling/prepare-racket-runtime.rkt --check
+raco pkg install --batch --scope user --link --name attalambda --deps fail --no-docs --fail-fast /evidence/baseline-unprivileged
+raco make tests/runner-test.rkt
+raco test tests/runner-test.rkt
+./run-all-tests.sh
+```
+
+The full run exited 0: 69 Racket files, 26845
+reported Racket tests, 49 Python terminal methods, expanded
+purity over 40 production modules, and complete source boundaries. The phase is
+record-only, with identical executable/test inputs and separately verified final
+documentation. No production unit or test assertion was added.
+
+Evidence directory: `/tmp/attalambda-static-phase0-q0w_ycsc/`. Retain
+`baseline-unprivileged.log`, `baseline-result.json`, `baseline-input-hashes.json`,
+`environment.log`, `preflight.json`, `documentation-verification.json`, and
+the final `state.json`. `runner-unprivileged.log` is the focused launcher pass;
+`runner-unprivileged.sh`, `prepare-unprivileged.sh`, and
+`unprivileged-preparation.log` record the test sequence and user setup. The test
+user owns the disposable Racket installation for dependency bytecode rebuilding.
+The first prepared run failed because root bypassed
+an unreadable-file fixture's permissions; a direct probe established the cause.
+PLAN.md also records the unsuccessful setup attempts
+without relabeling them as successful baseline runs. The original uploaded spec
+SHA-256 is `56aa3e0e8ef7688b439168e8f382698dcafa9e8f043097241fb29f588299f6c0`;
+its repository copy matches exactly. Canonical preceding bytes and index hashes,
+39 step IDs, 22 counterexample mappings, local links, change scope, and history
+preservation pass the phase's document check.
+
+Consumer prerequisites pass for existing image
+`sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`
+with Python 3.12.3, no Racket/raco, and real pseudo-terminal creation. This is
+not standalone artifact evidence. No static candidate archive, completed contract
+inventory, measured corpus verdicts, or native macOS/Windows checks exist yet.
+All remain their original later-phase gates. Review at this checkpoint is
+self-review only; no independent review is claimed and no finding remains open.
+Owned containers are removed. The toolchain image and isolated evidence snapshot
+are retained for resumption; no program/source resource is running.
+
+The previous temporary release receipt was absent; current main's ten passing
+CI checks, publication-only delta, and public tag/release/asset metadata were
+verified instead. That reconciles historical release state only. Its old
+next-step wording below grants no authority for more release work.
+
+---
+
+# Historical handoff — published AttaLambda 0.8.0
+
 # AttaLambda 0.8.0 — published release handoff
 
 ## Outcome and resumption
