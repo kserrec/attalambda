@@ -19,7 +19,10 @@ subdivide it into stable lettered substeps before implementation, as the
 specification requires. Phase 0 is committed as `8bde48d`; Phase 1 is committed
 as `20b6241`. Phase 2 Steps 2.1–2.9 and Checkpoint 2 are complete: the full
 87-file suite, both structural gates, bounded robustness probes, and self-review
-passed. Phase 3's complete library contract audit follows the local phase commit.
+passed. Phase 2 is committed as `de39c732bf7cf571689fdf3677b094b9d67bc1ba`.
+Phase 3 Steps 3.1–3.8 have passed their focused checks. All 129 public contracts
+are audited (106 complete, 23 partial); Checkpoint 3 passed its full suite,
+structural gates, input-hash comparison, and self-review. Continue with 4.1a.
 
 ## Verified starting state and change boundary
 
@@ -458,39 +461,112 @@ commit and continue directly with Step 3.1; no remote action is authorized.
 **Purpose:** broaden useful coverage while preserving every actual failure alternative.
 **Prerequisites:** Checkpoint 2; the pilot works and the seed inventory is reused.
 
-- [ ] **3.1 — Complete export classification and scalar contracts.**
+- [x] **3.1 — Complete export classification and scalar contracts.**
   **Work:** Inventory every actual public value binding separately from syntax/scaffolding. Complete supported scalar contracts; retain explicit range-dependent gaps.
   **Check:** Export drift fails closed; `div`/`exp`/`recip` are Result-valued. Wrong nominal inputs fail with correct argument order. No private Nat/Int, public alias, or success-only signature is invented. Previously audited seeds remain consistent.
+  **Evidence:** `step-3.1.log` passed 2101 reported checks across scalar/catalog/
+  mutation tests and existing Rat, Char, Byte, and String tests, plus the boundary
+  gate. All 129 actual facade exports remain inventoried. Thirty-three additional
+  scalar/text entries are audited; range-dependent Char/Byte and empty String
+  access retain Error-alternative gaps. Native print/read-line mutation probes
+  join the existing exit check. No runtime/library implementation changed.
 
-- [ ] **3.2 — Add container construction and safe non-callback List contracts.**
+- [x] **3.2 — Add container construction and safe non-callback List contracts.**
   **Work:** Add data-restricted schemes for constants/constructors, `len`, `append`, `reverse`, and other audited fixed-shape operations. Record empty/count/nesting failure limits and preserve restrictions through nested type parameters.
   **Check:** Homogeneous Lists retain element types; String is not List(Char). Heterogeneous `(list ...)`, direct `cons`, and a `cons` alias produce the same finite conflict. Functions hidden beneath a generalized nested-data variable cannot bypass its restriction. `head NIL`/`tail NIL` remain partial; `zip` does not gain an invented Pair. No runtime-valid construct is disabled in ordinary execution.
+  **Evidence:** `step-3.2.log` passed 344 checks across List/sugar/catalog/mutation
+  tests and existing List/transform/count runtime tests, plus the boundary gate.
+  Ten contracts now establish constructors, length, append/reverse/concat, and
+  homogeneous two-element-List zip; head/tail remain partial. Direct and aliased
+  heterogeneous Lists conflict, nested generalized function payloads retain data
+  restrictions, and C12 reports both the head gap and later Rat/String conflict.
 
-- [ ] **3.3 — Add higher-order List and Map contracts.**
+- [x] **3.3 — Add higher-order List and Map contracts.**
   **Work:** Inspect actual callback order, element/result restrictions, and Map equality/key/value relationships. Model the stored Map comparator's typed invariant, not merely its data fields. Leave unrepresented failure paths partial.
   **Check:** `map` changes element type; `filter` requires Bool; `reduce` takes accumulator then element. Bad callbacks are checked even on NIL. Map equality ties both key inputs and its uncertainty taints an initially empty Map. Raw functions are not assumed admissible data elements. Generalized key/value restrictions survive subsequent updates. Do not modify library algorithms.
+  **Evidence:** `step-3.3.log` passed 352 checks across callback/catalog/mutation
+  cases and existing transform/search/Map runtime tests, plus the boundary gate.
+  Seventeen entries cover callbacks/search and Map operations. C10 conflicts on
+  NIL, C17 remains partial, accumulator-first order is verified with differing
+  element/accumulator types, and comparator/key/value relationships survive
+  aliases, generalization, and persistent updates. No algorithms changed.
 
-- [ ] **3.4 — Complete Option, Result, and Error contracts.**
+- [x] **3.4 — Complete Option, Result, and Error contracts.**
   **Work:** Encode fixed Error payloads, constructors/predicates, `option-case`, and conservative unwrapping. Distinguish make-ok's propagation from make-err's intentional Error consumption.
   **Check:** `make-err 1` fails; `unwrap-ok` is not a total `Result(a) -> a`; guarded unwraps stay partial; `unwrap-err` has its audited Error output. Error cannot be coerced to Rat or an arrow. Aliases retain these rules.
+  **Evidence:** `step-3.4.log` passed 256 checks across variant/catalog/mutation
+  tests and existing Option/Result runtime tests, plus the boundary gate. Nine
+  entries complete Option and fixed-Error Result handling; C15 retains its nested
+  data-domain gap and C18 establishes Error. User lambdas can deliberately ignore
+  an Error, but arithmetic/calls cannot coerce it. Guarded unwraps remain partial.
 
-- [ ] **3.5 — Audit pure rendering and the remaining value operations.**
+- [x] **3.5 — Audit pure rendering and the remaining value operations.**
   **Work:** Finish scalar/restricted generic rendering; classify remaining value operations, including flatten/count/index cases. Inventory effectful print, completing its contract in Step 3.6. Review the complete value-contract set for missing Error alternatives before adding host signatures.
   **Check:** Supported rendering returns String; direct/nested raw-function cases never receive universal safe signatures. Every completed entry has source and valid/invalid-domain evidence; unsupported entries have precise reasons. No runtime function detection or tag changes. Repair invalid seed assumptions and refresh dependent inference tests.
+  **Evidence:** `step-3.5.log` passed 2870 checks across rendering/count/catalog/
+  mutation tests and existing pure renderer/Error/count runtime tests, plus the
+  boundary gate. Seventeen entries cover scalar/data rendering, count/index
+  operations and flatten. Generic rendering uses the recursive data restriction;
+  direct Error overloads remain outside that scheme (error-to-string is complete).
+  Count/integrality alternatives and arbitrary flatten nesting stay specifically
+  partial. No seed signature needed correction. Print remains pending Step 3.6.
 
-- [ ] **3.6 — Establish the four required I/O wrappers and print.**
+- [x] **3.6 — Establish the four required I/O wrappers and print.**
   **Work:** Verify stdout/read-line/read-file/write-file against wrappers, host branches, codec, and existing tests. Complete print from its rendering and stdout dependencies without changing runtime implementations.
   **Check:** Catch String versus List(Byte) misuse; represent expected I/O failure as Result Err. Analyzing read-file never reads the program's requested data file. Separately test actual wrappers with isolated runtime resources. The complete Section 3.2 example now establishes all obligations without program execution.
+  **Evidence:** `step-3.6.log` passed 673 checks across static I/O/catalog/mutation
+  cases and existing stdout, stdin, files, real file-host, print, codec, and host
+  tests, plus the boundary gate. Five entries record facade/wrapper/host/codec
+  locators; read-file returns Result(List(Byte)), never String. A positive-control
+  file guard observes real reads, then confirms backend analysis makes no program
+  reads/writes, consumes no input, and prints nothing. Section 3.2 fully establishes
+  all obligations, including stdout and rendering, without executing factorial.
 
-- [ ] **3.7 — Classify raw host, TCP, HTTP, and exit.**
+- [x] **3.7 — Classify raw host, TCP, HTTP, and exit.**
   **Work:** Keep raw host explicitly unproved; audit remaining operations for numeric/value-dependent failures. Close all pending inventory entries as supported or specifically partial.
   **Check:** Raw-host aliases and higher-order uses remain gaps. No invented nominal handles, String-returning read-file, new host operation, or successful-exit assumption. Every actual public export is accounted for; unsupported is not the same as absent.
+  **Evidence:** `step-3.7.log` passed 1856 checks across boundary/catalog/mutation/
+  full-backend non-execution cases and existing TCP, HTTP, HTTP-server, and exit
+  runtime tests, plus the boundary gate. All 129 actual exports are now audited:
+  106 complete, 23 specifically partial, zero pending (`catalog-results.json`).
+  Every analysis validates the catalog. TCP keeps Rat handles and pre-host count
+  gaps; HTTP parse/render failures are represented Result Err; injected factories,
+  raw host, and exit remain partial. Actual input/file/network/exit observers now
+  surround the complete backend. [The inventory](docs/static-checking-contracts.md)
+  records each signature/input hint, reason, implementation locator, and test.
 
-- [ ] **3.8 — Close the combined boundary counterexamples.**
+- [x] **3.8 — Close the combined boundary counterexamples.**
   **Work:** Exercise partial outputs, higher-order use, callbacks, partial application, and the library's Error-absorbing continuations together.
   **Check:** Possible Error cannot acquire a verified arrow type; an earlier gap cannot swallow a later nominal mismatch; ordinary user lambdas do not inherit library absorption semantics. Existing runtime outputs remain unchanged. Independently audit source coverage versus trusted contracts rather than claiming to have inferred the library's internals.
+  **Evidence:** `step-3.8.log` passed 13 combined/robustness/pilot/catalog/mutation
+  cases and the boundary gate. The reusable acceptance set contains all semantic
+  C01–C18 cases (C05 in both forms), retained pilot extras, and complete Section
+  3.2. Partial outputs cannot gain arrows or manufacture conflicts from hints;
+  later known inputs still conflict through aliases and partial application.
+  Deliberate Error-returning user lambdas establish their actual types. The
+  bounded Phase 2 probes are now retained regressions, including intervening
+  failed analyses. Source coverage counts only original registered expressions;
+  the audited library remains the explicitly trusted basis. No runtime edits.
 
 **Checkpoint 3 — Contract and trusted-boundary gate.** Review complete signatures against both success and failure domains, including data restrictions, callback order, and source/effect separation. Run contract/non-execution regressions, affected library/host/codec tests, full suite, and gates. Ordinary supported I/O is not unknown merely because it is effectful; partial wrappers/raw host are not complete merely because a return shape is desired. No refinements, unions, or effect system are needed to close this gate.
+
+**Checkpoint 3 passed.** The isolated Racket 9.3 full suite exited 0 with 96
+Racket test files, 26944 reported Racket tests, 49 Python terminal methods, purity
+over 40 production modules, and the complete boundary gate. `phase3-full.log`
+and `phase3-result.json` retain the run and 201 matching executable-input hashes
+in `/tmp/attalambda-static-implementation-mmgdshl_/`. Final record-only edits do
+not alter those tested inputs. The fresh self-review (`phase3-review.md` there)
+has no open finding; no independent review is claimed.
+
+Review covered success/failure domains, recursive data restrictions, callback
+order, Error alternatives, partial application, aliases/closures, actual
+non-execution, and exact capability-rejection mutations. Executable changes
+complete the catalog and validate it at analysis entry; tooling records exact
+permissions. Tests add nine focused suites and a reusable acceptance fixture
+helper, and update catalog/non-execution/sugar/boundary cases. Documentation
+adds the full audited inventory and this evidence. Core/effects/runtime code,
+ordinary source execution, grammar, launcher, version, dependencies, and release
+assets are untouched in this phase. No public checking command exists yet.
 
 ## Phase 4 — Deliver exact reports and the real checking command
 

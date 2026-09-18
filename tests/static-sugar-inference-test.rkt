@@ -34,11 +34,16 @@
   (if (eq? (source-node-kind node) 'group)
       (normalized (car (source-node-children node)))
       (list (source-node-kind node) (source-node-data node) (map normalized (source-node-children node)))))
-(test-case "list syntax has the actual cons normalization while its audit remains explicitly pending"
+(test-case "list syntax and actual cons normalization have the same homogeneous rules"
   (define sugar (view "(list 1 2)"))
   (define explicit (view "(cons 1 (cons 2 NIL))"))
   (check-equal? (normalized (car (source-view-expressions sugar)))
                 (normalized (car (source-view-expressions explicit))))
   (check-equal? (length (source-view-registry sugar)) 3)
   (for ([source (list sugar explicit)])
-    (check-exn #rx"pending builtin audit" (lambda () (analyze-view source)))))
+    (define result (analyze-view source))
+    (check-eq? (proof-status (analysis-proof result)) 'established)
+    (check-equal? (type->string (judgment-type (car (analysis-expressions result)))) "List(Rat)"))
+  (for ([text '("(list 1 \"s\")" "(cons 1 (cons \"s\" NIL))"
+                "(def push = cons) (push 1 (push \"s\" NIL))")])
+    (check-eq? (proof-status (analysis-proof (analyze text))) 'conflict text)))

@@ -18,6 +18,7 @@
          (file-boundary-violations target class directory))
        (check-equal? (check original) '() name)
        (for ([injected '((eval '(lambda (x) x)) (display "source output") (exit 0)
+                        (print "source output") (read-line)
                         (getenv "ATTALAMBDA_TEST") (require racket/tcp)
                         (require "../../runtime/host.rkt") (provide eval))])
          (define mutated (list (car original) (cadr original) (caddr original)

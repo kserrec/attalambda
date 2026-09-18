@@ -2,7 +2,7 @@
 
 (require rackunit racket/async-channel racket/file racket/tcp
          "../runner/static/frontend.rkt" "../runner/source-file.rkt"
-         "../lang/static-data.rkt")
+         "../lang/static-data.rkt" "../runner/static/analysis.rkt")
 
 (define directory (make-temporary-file "attalambda-static-effects-~a" 'directory))
 (define marker (build-path directory "marker.txt"))
@@ -36,7 +36,8 @@
                  (async-channel-put
                   channel
                   (with-handlers ([exn? values])
-                    (prepare-source (validated-source 'effects.attl text 2 0 17) #:analysis? #t))))))
+                    (define view (prepare-source (validated-source 'effects.attl text 2 0 17) #:analysis? #t))
+                    (if (source-problem? view) view (analyze-view view)))))))
      (define result (sync/timeout 20 channel))
      (unless result (error 'test "source analysis exceeded its deadline"))
      (when (exn? result) (raise result))
@@ -54,7 +55,7 @@
      (check-equal? network-attempts 1)
      (set! file-attempts 0)
      (set! network-attempts 0))
-   (test-case "demanded program effects and divergence are only expanded"
+   (test-case "demanded program effects and divergence are analyzed without execution"
      (define input (open-input-string "answer one\nanswer two\n"))
      (define output (open-output-string))
      (parameterize ([current-security-guard guard]
@@ -68,7 +69,7 @@
                          (format "(tcp-connect \"127.0.0.1\" ~a)" port)
                          "(rec loop x = (loop x)) (loop 0)"
                          "(rec loop = loop) loop")])
-         (check-true (source-view? (bounded-prepare text)) text))
+         (check-true (analysis? (bounded-prepare text)) text))
        (for ([text '("(stdout \"prefix\") missing" "(stdout \"prefix\") (")])
          (check-true (source-problem? (bounded-prepare text)) text)))
      (check-equal? (file-position input) 0)

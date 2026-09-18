@@ -2,7 +2,7 @@
 
 ;; Dependency order is for analysis only. No runtime module is reordered or run.
 (require racket/list "../../lang/static-data.rkt" "inference.rkt" "proof.rkt"
-         "types.rkt" "substitution.rkt" "unification.rkt")
+         "types.rkt" "substitution.rkt" "unification.rkt" "contracts.rkt")
 (provide (struct-out definition-result) (struct-out analysis) analyze-view analysis-proof)
 (struct definition-result (binding signature proof) #:transparent)
 (struct analysis (view definitions expressions nodes) #:transparent)
@@ -12,6 +12,7 @@
                  (map judgment-proof (analysis-expressions result)))))
 
 (define (analyze-view view)
+  (validate-catalog catalog)
   (validate-source-view view (length (source-view-forms view)))
   (define bindings (source-view-bindings view))
   (define sources (for/hasheqv ([binding (in-list bindings)]) (values (source-binding-id binding) binding)))

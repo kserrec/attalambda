@@ -35,8 +35,22 @@ modules, and complete source boundaries. `phase2-result.json` verifies 191
 executable input hashes against the tested snapshot. Bounded nested/application,
 independent-definition, and 100-alias probes repeat identically with exact counts
 (`phase2-robustness.log`). Fresh self-review has no open finding. Phase 2 closes
-with one local commit; its exact identity is recorded in external `state.json`.
-**Next: Step 3.1, then the remaining Phase 3 contract audit steps in order.**
+with local commit `de39c732bf7cf571689fdf3677b094b9d67bc1ba`.
+Phase 3 Steps 3.1–3.8 also passed their focused checks and gates. All 129 actual
+public value exports now have audited entries: 106 complete, 23 partial, zero
+pending. `docs/static-checking-contracts.md` and `catalog-results.json` retain
+shapes, reasons, implementation and test locators. Full analysis is covered by
+real input/file/network/exit non-execution observations. The complete Section
+3.2 example and all semantic C01–C18 fixtures meet their fixed expectations;
+combined alias/callback/Error cases and retained bounded robustness tests pass.
+`step-3.1.log` through `step-3.8.log` record the focused runs. No core/effects/
+runtime implementation changed. Checkpoint 3 passed: 96 Racket files, 26944
+reported Racket tests, 49 Python methods, purity over 40 modules, and complete
+boundaries. `phase3-result.json` verifies 201 executable inputs match the tested
+snapshot; `phase3-review.md` records a fresh self-review with no open finding.
+No independent review is claimed. The phase closes with a local commit whose
+identity is retained in the external `state.json` and Git log.
+**Next: 4.1a, exact coverage, then reports and the checking command.**
 The public command does not yet exist. Continue autonomously;
 do not wait for `next`.
 The reusable isolated container is `attalambda-static-implementation`,

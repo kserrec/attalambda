@@ -37,10 +37,12 @@
   (check-eq? (library-contract-gap-code unwrap) 'UNREPRESENTED_ERROR_ALTERNATIVE)
   (check-equal? (library-contract-arity unwrap) 1)
   (check-not-false (member '("core/result.rkt" raw-result-unwrap-ok) (library-contract-implementations unwrap)))
-  (check-exn #rx"pending builtin audit" (lambda () (contract-ref 'stdout)))
-  (check-exn #rx"pending or malformed" (lambda () (validate-catalog catalog)))
+  (check-equal? (validate-catalog catalog) catalog)
+  (check-exn #rx"pending or malformed"
+             (lambda () (validate-catalog (cons (struct-copy library-contract (car catalog) [status 'pending])
+                                                (cdr catalog)))))
   (check-exn #rx"unregistered" (lambda () (contract-ref 'not-a-language-binding)))
-  (check-not-exn (lambda () (validate-catalog (filter (lambda (entry) (not (eq? (library-contract-status entry) 'pending))) catalog)))))
+  (check-exn #rx"invalid contract inventory" (lambda () (validate-catalog (cons (car catalog) catalog)))))
 
 (test-case "every audited locator names a real implementation and a focused test"
   (for ([entry (in-list catalog)] #:unless (eq? (library-contract-status entry) 'pending))
@@ -50,8 +52,10 @@
           (lambda (input) (parameterize ([read-accept-reader #t]) (read input)))))
       (define definitions
         (for/list ([form (in-list (cdr (cadddr module)))]
-                   #:when (and (pair? form) (eq? (car form) 'def)))
-          (cadr form)))
-      (check-not-false (memq (cadr locator) definitions) (format "~s" locator)))
+                   #:when (and (pair? form) (memq (car form) '(def define))))
+          (if (pair? (cadr form)) (caadr form) (cadr form))))
+      (define name (cadr locator))
+      (check-not-false (memq (if (string? name) (string->symbol name) name) definitions)
+                       (format "~s" locator)))
     (for ([test (in-list (library-contract-tests entry))])
       (check-true (file-exists? (build-path project test)) test))))

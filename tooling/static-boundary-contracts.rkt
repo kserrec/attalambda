@@ -703,25 +703,37 @@
               validate-catalog)
      (=
       Bool
+      Byte
+      Char
+      EMPTY-STRING
       Error
       FALSE
+      NIL
+      NONE
       Rat
       String
       TRUE
+      UNIT
       UNREPRESENTED_ERROR_ALTERNATIVE
       UNSUPPORTED_CONTRACT
+      Unit
       a
+      abs
       add
       and
       andmap
       append
       arity
       arrow-type
+      b
       base-type
       bool
+      byte
+      caddr
       cadr
       car
       catalog
+      char
       complete
       cond
       contract-ref
@@ -736,7 +748,9 @@
       error-to-string
       error-type
       exact-nonnegative-integer?
+      exp
       findf
+      floor
       foldr
       for
       for/list
@@ -748,7 +762,9 @@
       if
       implementations
       in-list
+      is-nonnegative-whole
       is-ok
+      is-whole
       is-zero
       lambda
       length
@@ -763,13 +779,17 @@
       library-contract-tests
       library-contract?
       list
+      list-type
       list?
       lt
       lte
       map
+      map-type
       memq
       mult
+      neg
       not
+      option-type
       or
       pair?
       parameters
@@ -779,10 +799,18 @@
       quote
       racket/list
       rat
+      raw-comparison-boolean
+      raw-make-checked-byte
+      raw-make-checked-char-rat
       raw-make-rat
       raw-rat-div
+      raw-render-map
+      raw-result-unwrap-err
       raw-result-unwrap-ok
+      raw-value-to-chars
+      raw-zip-step
       reason
+      recip
       remove-duplicates
       require
       restricted
@@ -796,6 +824,7 @@
       status
       string
       string->symbol
+      string-append
       string?
       struct
       struct-out
@@ -804,28 +833,111 @@
       symbol?
       tests
       type-variable
+      typed-all?
       typed-and
+      typed-any?
+      typed-append
+      typed-bool-to-string
+      typed-byte-equal
+      typed-byte-greater
+      typed-byte-greater-equal
+      typed-byte-less
+      typed-byte-less-equal
+      typed-byte-to-string
+      typed-byte-value
+      typed-bytes-to-string
+      typed-char-equal
+      typed-char-greater
+      typed-char-greater-equal
+      typed-char-less
+      typed-char-less-equal
+      typed-char-to-string
+      typed-concat
+      typed-cons
+      typed-contains?
+      typed-drop-rat
+      typed-drop-while
       typed-error-to-string
+      typed-filter
+      typed-find
+      typed-find-index
+      typed-flatten
+      typed-head
       typed-if
+      typed-is-nil
+      typed-len-rat
+      typed-list-to-string
+      typed-make-byte
+      typed-make-char-rat
+      typed-make-err
+      typed-make-map
+      typed-make-ok
+      typed-make-some
+      typed-make-string
+      typed-map
+      typed-map-contains?
+      typed-map-empty?
+      typed-map-lookup
+      typed-map-remove
+      typed-map-set
+      typed-map-size
+      typed-map-to-string
       typed-not
+      typed-nth-rat
+      typed-option-case
+      typed-option-is-none
+      typed-option-is-some
+      typed-option-to-string
       typed-or
+      typed-range-rat
+      typed-rat-abs
       typed-rat-add
       typed-rat-div
       typed-rat-equal
+      typed-rat-exp
+      typed-rat-floor
       typed-rat-greater
       typed-rat-greater-equal
+      typed-rat-is-nonnegative-whole
+      typed-rat-is-whole
       typed-rat-is-zero
       typed-rat-less
       typed-rat-less-equal
       typed-rat-mult
+      typed-rat-negate
+      typed-rat-recip
       typed-rat-sub
       typed-rat-succ
+      typed-rat-to-string
+      typed-reduce
+      typed-repeat-rat
+      typed-result-is-err
       typed-result-is-ok
+      typed-result-to-string
+      typed-result-unwrap-err
       typed-result-unwrap-ok
+      typed-reverse
+      typed-string-append
+      typed-string-contains?
+      typed-string-empty?
+      typed-string-equal
+      typed-string-head
+      typed-string-length-rat
+      typed-string-prefix?
+      typed-string-tail
+      typed-string-to-bytes
+      typed-string-to-string
+      typed-tail
+      typed-take-rat
+      typed-take-while
+      typed-unit-to-string
       typed-xor
+      typed-zip
+      unit
       unless
       unwrap-ok
       validate-catalog
+      value-to-string
       variables
       when
       xor))
@@ -1013,7 +1125,8 @@
                "proof.rkt"
                "types.rkt"
                "substitution.rkt"
-               "unification.rkt"))
+               "unification.rkt"
+               "contracts.rkt"))
      (provide (struct-out definition-result)
               (struct-out analysis)
               analyze-view
@@ -1041,6 +1154,7 @@
       call-inputs
       call-inputs-type
       car
+      catalog
       children
       classified
       collect
@@ -1151,6 +1265,7 @@
       unless
       unsatisfied-problems
       unsatisfied?
+      validate-catalog
       validate-source-view
       values
       view
