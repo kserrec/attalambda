@@ -1,4 +1,27 @@
-# Independent static-checker review — verified local candidate complete
+# AttaLambda 0.9.0 — release preparation active
+
+Kyle explicitly requested release 0.9.0. The active PLAN.md supersedes the
+historical local-only endpoint below and authorizes push/PR, verified merge,
+tag, release publication and public-download verification. Continue autonomously.
+Evidence and side-effect state: `/tmp/attalambda-090-release-g5_0101v/`.
+
+Start is clean branch `optional-static-checking` at
+`8afe9609f33dac67b0e6d1c9508601e2d587b7c4`; remote main remains `f6938b2`.
+Version/tag/release 0.9.0 is unused. Prior seven releases, fourteen assets and
+all tags are snapshotted. Phase 1 has prepared explicit version approvals, guide,
+release notes and the 45-minute source CI ceiling. Local checks pass: 661 focused
+assertions, then 104 Racket files / 26982 reported tests, 49 Python methods,
+40-module purity and the boundary gate in 29m42s. `release-result.json` verifies
+226 executable/packaging/workflow input hashes against the isolated snapshot.
+Next: commit/push this preparation, open the milestone PR and verify all exact-head
+CI jobs, then follow the authorized merge/build/publication phases without stopping.
+The tested implementation below is retained; new source/build identities must
+be recorded for the real 0.9.0 archive. Public download claims remain factual
+until publication. No new language, dependency or binary-platform scope is added.
+
+---
+
+# Independent static-checker review — verified local candidate complete (historical)
 
 The user-approved focused independent review found four defects in the original
 candidate. All four are corrected, with retained regression drivers and a fresh

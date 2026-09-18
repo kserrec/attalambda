@@ -12,10 +12,10 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    # The printing milestone has 45 files and 17,064 assertions. Its merge
-    # passed in 18m22s; a documentation-only run reached the 20-minute cap
-    # after all assertions passed, before the final structural checks finished.
-    timeout-minutes: 30
+    # The optional-checking suite has 104 files and passed locally in 34m36s.
+    # Keep room for the full suite and final structural checks; individual
+    # test deadlines are unchanged.
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -268,11 +268,13 @@ different syntax, so build tooling checks this closed projection:
 | `0.6.0` | `0.6` |
 | `0.7.0` | `0.7` |
 | `0.8.0` | `0.8` |
+| `0.9.0` | `0.9` |
 
-A new version state requires an explicit plan change. Kyle separately authorized
-the interactive milestone's merge, tag and 0.8.0 publication after its verified
-candidate checkpoint. That release is now published and its public download
-verified. Completed releases do not authorize another release. The ledger
+A new version state requires an explicit plan change. Kyle authorized preparing,
+merging and publishing optional static checking as 0.9.0 after its verified local
+candidate and independent review. The active plan records that release work;
+0.8.0 remains the published download until the new release is verified and
+published. Completed releases do not authorize another release. The ledger
 separates prepared inputs from observed publication.
 
 ## Build, archive, and consumer contract

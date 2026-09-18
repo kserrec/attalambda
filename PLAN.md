@@ -1,4 +1,64 @@
-# Optional static checking — independent review follow-up
+# Release 0.9.0 — optional static checking (authorized)
+
+Kyle requested “let's get it released - version 0.9.0 right?” after the completed
+independent review. This authorizes the version preparation, milestone push/PR,
+reviewed merge, exact merged-source build and consumer, annotated `v0.9.0` tag,
+GitHub Release with the Linux archive and checksum, fresh public-download
+verification, and final publication records. It supersedes the local-only
+endpoint below. Continue autonomously through all phases. Preserve all earlier
+releases, assets and tags; Linux x86-64 remains the only public binary target.
+
+Verified start: clean `optional-static-checking` at
+`8afe9609f33dac67b0e6d1c9508601e2d587b7c4`; local/remote main
+`f6938b286329532230be210de0eaaa398286d38a`; no remote milestone branch or 0.9.0
+tag/release. Seven earlier releases and fourteen assets are snapshotted in
+`/tmp/attalambda-090-release-g5_0101v/previous-releases.json`; tag identities are
+in `previous-tags.txt`. The reviewed 0.8.0-metadata candidate remains historical.
+
+## Phase 1 — prepare and verify release inputs
+
+- [x] 1.1 Update VERSION to 0.9.0 and package projection to 0.9; extend only the
+  exact approved-version tables and matching tests. Prepare the archive guide and
+  0.9.0 notes. Current public-download claims remain 0.8.0 until publication.
+  Raise only the source CI outer deadline to 45 minutes: the preceding 104-file
+  run took 34m36s locally, exceeding the existing 30-minute ceiling. No individual
+  test deadline, runtime behavior, inference algorithm or dependency changes.
+- [ ] 1.2 Run focused version/distribution checks, then the full corrected isolated
+  Racket CS 9.3 suite and both structural gates. Review the scoped release diff,
+  commit/push the milestone, open the PR and verify every exact-head CI job.
+
+Local verification for 1.2 is complete: 661 focused assertions and both gates;
+the full run passed 104 Racket files / 26982 reported tests, 49 Python methods,
+40 pure production modules and the boundary inventory in 29m42s.
+`release-result.json` in the evidence root verifies all 226 executable,
+packaging and workflow inputs against the tested snapshot. The release diff
+changes version approvals/expectations, the guide and CI ceiling; checker and
+runtime implementations are unchanged from the independent review. PR and
+exact-head remote checks remain pending at this preparation checkpoint.
+
+## Phase 2 — merge and verify the release archive
+
+- [ ] 2.1 Merge the exact reviewed PR head with an expected-SHA guard; verify
+  the resulting tree and all merged-head CI jobs. Fast-forward local main.
+- [ ] 2.2 Build from the exact clean merged commit, verify its manifest and input
+  identities, and run the transferred no-Racket consumer at both paths. Record
+  archive/checksum/manifest hashes and preserve the verified bytes.
+
+## Phase 3 — publish and verify the public download
+
+- [ ] 3.1 Recheck unused version/tag and unchanged prior assets, create/push an
+  unsigned annotated tag at the build commit, create one draft with that verified
+  tag and exact two assets, then compare authenticated draft downloads.
+- [ ] 3.2 Publish that verified draft as latest, fetch fresh unauthenticated public
+  copies, compare hashes and run the same consumer on the actual public archive.
+- [ ] 3.3 Update README/API/architecture/acceptance/release ledger/instructions and
+  handoff to observed publication. Commit/push records only, verify current-head
+  checks and preservation of older releases, clean owned resources and leave Git
+  clean. The archive retains its earlier source identity.
+
+---
+
+# Completed optional static-checking independent review (historical)
 
 Kyle approved one focused independent correctness review and a security review
 of the new checker's source/command boundaries after the completed candidate.

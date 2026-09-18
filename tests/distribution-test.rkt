@@ -277,9 +277,9 @@
   (define product-version (string-trim (file->string (build-path project-root "VERSION"))))
   (check-true (regexp-match? matcher
                              (format "attalambda-~a-windows-x86_64.zip" product-version)))
-  (for ([name '("attalambda-0.9.0-windows-x86_64.zip"
-                "attalambda-0.8.0-linux-x86_64.zip"
-                "attalambda-0.8.0-windows-x86_64.zip.extra")])
+  (for ([name '("attalambda-0.10.0-windows-x86_64.zip"
+                "attalambda-0.9.0-linux-x86_64.zip"
+                "attalambda-0.9.0-windows-x86_64.zip.extra")])
     (check-false (regexp-match? matcher name))))
 (check-true (regexp-match? #rx"consumer unexpectedly has a racket command" windows-consumer-source))
 (check-true (regexp-match? #rx"consumer unexpectedly has a source checkout" windows-consumer-source))
@@ -420,7 +420,7 @@
           "## Command results and exit statuses"
           "## Optional static checking"
           "@EXECUTABLE@ --check my-program.attl"
-          "unpublished optional-static-checking feature candidate"
+          "self-contained AttaLambda release archive"
           "## Authority and safety"
           "## Release notes"
           "## Known limitations"

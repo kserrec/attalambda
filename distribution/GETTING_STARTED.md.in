@@ -1,21 +1,15 @@
 # AttaLambda @VERSION@ — @TARGET_NAME@
 
-This is an **unpublished optional-static-checking feature candidate** for the
-target named above. It retains version @VERSION@ metadata for local verification;
-it is not the published 0.8.0 download, which does not contain `--check`.
-`BUILD-MANIFEST.txt` identifies the exact source commit. This guide describes
-the candidate; publication requires a separate release decision.
-
+This is the self-contained AttaLambda release archive for the target named
+above. `BUILD-MANIFEST.txt` identifies its exact source commit.
 It contains the `attalambda` command, its private Racket CS 9.3 runtime,
 and five example programs. You do not need to install Racket, run `raco`, or
 register a package.
 
 ## Download, verify, and extract
 
-For a published release, obtain both `@ARCHIVE_NAME@` and its sibling
-`SHA256SUMS` from the same AttaLambda GitHub Release. For this local candidate,
-use its supplied archive/checksum pair; it is not a GitHub release. Keep both
-files in the same directory. Before
+Obtain both `@ARCHIVE_NAME@` and its sibling `SHA256SUMS` from the same
+AttaLambda GitHub Release, and keep them in the same directory. Before
 extracting the archive, verify that its bytes match the supplied checksum:
 
 ```@COMMAND_LANGUAGE@
@@ -101,7 +95,7 @@ Check the program without running it:
 @EXECUTABLE@ --check my-program.attl
 ```
 
-The candidate reports exact coverage and inferred types, using the same existing
+The checker reports exact coverage and inferred types, using the same existing
 source syntax without annotations. It reads one source snapshot and never
 executes the program, consumes its answers, performs its file/network/output or
 exit effects, or accesses shell history. Other command flags cannot accompany
@@ -146,8 +140,7 @@ runtime tags or guards and is not a formal-verification claim.
 
 Running afterward is a separate invocation that reads the file again. A check
 applies to the captured snapshot, not subsequent edits; checking and running
-are not an atomic operation. This unpublished candidate does not replace any
-existing release asset.
+are not an atomic operation.
 
 ## Interactive shell and program input
 
@@ -239,7 +232,13 @@ you are willing to expose.
 
 ## Release notes
 
-The interactive milestone combines program line input with the `atta>` shell.
+Version 0.9.0 adds optional `--check FILE.attl` static checking without running
+the program. It reports full passes, definite conflicts and partial results,
+with exact coverage, inferred signatures and source locations. Existing syntax,
+runtime type checks, ordinary execution and the interactive shell are preserved.
+The checking section above describes the supported types and deliberate limits.
+
+Version 0.8.0 combines program line input with the `atta>` shell.
 It preserves the existing language, lazy effects, lexical binding snapshots,
 standalone source validation, and absolute object-language purity. The shell
 adds only private tooling for source entry, terminal editing, and session state.
