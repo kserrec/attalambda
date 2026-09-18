@@ -129,9 +129,9 @@ design.
   did on `milestone-4-rationals`) and merges to `main` only with Kyle's
   explicit approval.
 - The public API/List (0.4.0), recursive-purity (0.5.0), pure-printing
-  (0.6.0), small Lisp sugar (0.7.0), and interactive (0.8.0) milestones are
-  complete. PR #7 is merged; 0.8.0 was published and its public download
-  verified on 2026-09-15.
+  (0.6.0), small Lisp sugar (0.7.0), interactive (0.8.0), and optional static
+  checking (0.9.0) milestones are complete. PR #8 is merged; 0.9.0 was published
+  and its public download verified on 2026-09-18 UTC.
   Completed plans grant no authority for another release. Linux x86-64 remains the only supported
   binary download.
 - Commit and push after each meaningful, verified phase.

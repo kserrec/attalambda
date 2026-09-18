@@ -1,11 +1,10 @@
 # Public API
 
-This reference describes the released 0.8.0 API and interactive shell,
-including `read-line`. The full source suite and fresh public Linux download
-pass their tests; [the handoff](../HANDOFF.md) records delivery evidence.
-The older 0.7.0 binary includes neither shell nor line input.
-The separately marked optional static checker below is local, unreleased
-source/candidate work; the published 0.8.0 binary does not include it.
+This reference describes the released 0.9.0 API, optional static checker and
+interactive shell, including `read-line`. The full source suite and fresh public
+Linux download pass their tests; [the handoff](../HANDOFF.md) records delivery
+evidence. The older 0.8.0 binary lacks static checking; the older 0.7.0 binary
+includes neither shell nor line input.
 Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
@@ -29,15 +28,18 @@ Expected computational failures return Result Err. There is no implicit
 printing in file mode or conversion from Error to a process exit status.
 The shell's optional automatic echo observes expression values.
 
-## Optional static checking (unreleased)
+<a id="optional-static-checking-unreleased"></a>
 
-From this registered feature checkout:
+## Optional static checking
+
+From the extracted 0.9.0 archive:
 
 ```sh
-racket runner/attalambda.rkt --check examples/hello.attl
+./bin/attalambda --check examples/hello.attl
 ```
 
-The equivalent local candidate command is `attalambda --check FILE.attl`.
+From a registered source checkout, the equivalent command is
+`racket runner/attalambda.rkt --check examples/hello.attl`.
 Exactly one path is accepted; no other flags accompany `--check`. All existing
 source-path, lowercase-extension, UTF-8, declaration, reader, binding, symlink,
 and dotenv restrictions remain in force. Checking reads one validated snapshot,

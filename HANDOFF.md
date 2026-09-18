@@ -1,23 +1,78 @@
-# AttaLambda 0.9.0 — release preparation active
+# AttaLambda 0.9.0 — published; public download verified
 
-Kyle explicitly requested release 0.9.0. The active PLAN.md supersedes the
-historical local-only endpoint below and authorizes push/PR, verified merge,
-tag, release publication and public-download verification. Continue autonomously.
-Evidence and side-effect state: `/tmp/attalambda-090-release-g5_0101v/`.
+[Release 0.9.0](https://github.com/kserrec/attalambda/releases/tag/v0.9.0) is
+published and latest, at `2026-09-18T06:25:52Z`, release ID `391256649`. PR #8
+is merged. Optional static checking is complete; the actual downloaded Linux
+archive passes the complete isolated consumer. Linux x86-64 remains the only
+public binary target. This release grants no authority for a later version.
 
-Start is clean branch `optional-static-checking` at
-`8afe9609f33dac67b0e6d1c9508601e2d587b7c4`; remote main remains `f6938b2`.
-Version/tag/release 0.9.0 is unused. Prior seven releases, fourteen assets and
-all tags are snapshotted. Phase 1 has prepared explicit version approvals, guide,
-release notes and the 45-minute source CI ceiling. Local checks pass: 661 focused
-assertions, then 104 Racket files / 26982 reported tests, 49 Python methods,
-40-module purity and the boundary gate in 29m42s. `release-result.json` verifies
-226 executable/packaging/workflow input hashes against the isolated snapshot.
-Next: commit/push this preparation, open the milestone PR and verify all exact-head
-CI jobs, then follow the authorized merge/build/publication phases without stopping.
-The tested implementation below is retained; new source/build identities must
-be recorded for the real 0.9.0 archive. Public download claims remain factual
-until publication. No new language, dependency or binary-platform scope is added.
+## Source and verification
+
+The exact build/tag commit is `0960a79ae797007da850a6d6f1c449482d333614`, tree
+`af74508c74cc7f3ca710cb0566914c67ab56c58a`. Annotated tag `v0.9.0` has object
+`ad7fa3a6b5e31a599e7f1ef5a4aaadf8a343d0ba`. The later publication record changes
+documents only; it is not the artifact's source. Local main was fast-forwarded
+to the verified merge before that record.
+
+Local release verification passes 661 focused assertions and the full 104
+Racket files / 26982 reported tests, 49 Python terminal methods, purity over 40
+production modules and the complete boundary gate in 29m42s. All 226 executable,
+packaging and workflow hashes match the tested snapshot and clean build clone.
+All ten exact-head jobs pass in [PR CI](https://github.com/kserrec/attalambda/actions/runs/35311618086)
+and [merged-head CI](https://github.com/kserrec/attalambda/actions/runs/35312808000),
+with the same source counts/gates. Neither run retains temporary native artifacts.
+The independent review below remains the scope/limitations record.
+
+## Published assets and consumers
+
+| Item | Identity |
+| --- | --- |
+| Archive | `attalambda-0.9.0-linux-x86_64.tar.gz`, 19,873,515 bytes, asset `571975742` |
+| Archive SHA-256 | `1dc9493bf041463fa9ec7226af2fbe5f078a43e4d707f4f4e2d502f4dccf8186` |
+| SHA256SUMS | 103 bytes, asset `571975740` |
+| SHA256SUMS SHA-256 | `dc8e14364c9cc17d94822085ce07cafc5c2b0bff0880c0a6edb4f5781e3d2138` |
+| Internal manifest SHA-256 | `ecd5ca1fef96e9acbbbb8133691b47ae512d0a6b06678330547448a020712afb` |
+
+The 11-file archive includes two runtime files and no Python. The transferred
+no-Racket consumer passes static checking, prior API/input/guide/dependency
+checks and all 25 terminal methods at both paths in 64.910s and 59.393s.
+Authenticated draft downloads match the verified files. Fresh unauthenticated
+public downloads return HTTP 200 and match both hashes. The actual public
+archive passes the same complete consumer, with terminal groups in 48.968s and
+48.750s. Build/consumer containers and consumer transfer directories are removed.
+Seven older releases, fourteen assets and seven annotated tags are unchanged.
+Original pre-release candidates and all verification evidence are retained.
+
+## Evidence and final record
+
+Evidence root: `/tmp/attalambda-090-release-g5_0101v/`.
+
+- `release-result.json`, `release-full.log`, `focused.log`: source checks and
+  tested input identities. `pr-ci.json`, `merged-ci.json` and matching logs/results
+  retain full remote run/job evidence and cleanup.
+- `release-source.json`, `build.log`, `archive-result.json`, `archive-manifest.txt`:
+  exact clean build clone and artifact identities. The archive/checksum are under
+  `release-archive-wt2rwn29/`; the clean build clone is `build-source-kmmsijqa/`.
+- `archive-consumer-result.json` and `public-consumer-result.json`, plus matching
+  logs, retain each actual transferred digest, container/image identity, timing
+  and cleanup. Authenticated copies are in `draft-download-qgeu8xd2/`; the actual
+  tested public copies are in `public-download-wpb0ho4y/`.
+- The build image is `sha256:5366fd60f701ca1cbf5172c17bfa1150ca8a5e7500c3a9d19f5bbca4236be59c`,
+  with corrected Racket CS 9.3, Python 3 and Git. Archive/public consumer images
+  are `sha256:e813247f535bfc2f48d8bf860265365a6542a896b8a70e68c2d05d6958190f1e` and
+  `sha256:161afecb3a081b821e28eee3a43ac8dadc55b6fe52924ea47749335600982bc1`.
+  Consumers use pinned Ubuntu 24.04, test-only Python, non-root UID 65534,
+  read-only roots and no external network. The owner's runtime is untouched.
+- `state.json` records remote side effects. `published-release.json`, download
+  receipts and preservation snapshots retain the release evidence.
+- `final-result.json` tracks the publication-record commit, push, exact-head CI,
+  final preservation check and clean Git. It stays outside the worktree so recording
+  a commit's own identity does not change that commit. Current main checks are
+  also visible in [GitHub Actions](https://github.com/kserrec/attalambda/actions/workflows/tests.yml).
+
+The final delivery action is to commit/push this documentation-only record,
+verify its exact-head CI and clean main, and complete that external receipt.
+Do not rebuild or retag the published archive to include publication records.
 
 ---
 

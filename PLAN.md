@@ -1,60 +1,61 @@
-# Release 0.9.0 — optional static checking (authorized)
+# Release 0.9.0 — published and public download verified
 
-Kyle requested “let's get it released - version 0.9.0 right?” after the completed
-independent review. This authorizes the version preparation, milestone push/PR,
-reviewed merge, exact merged-source build and consumer, annotated `v0.9.0` tag,
-GitHub Release with the Linux archive and checksum, fresh public-download
-verification, and final publication records. It supersedes the local-only
-endpoint below. Continue autonomously through all phases. Preserve all earlier
-releases, assets and tags; Linux x86-64 remains the only public binary target.
+Kyle authorized the complete 0.9.0 release after the independent review. That
+work superseded the historical local-only endpoint below. PR #8 is merged;
+`v0.9.0` is published and latest. The actual public Linux download passes the
+complete isolated consumer. No new feature, dependency or public binary target
+was added during release preparation. Completed releases grant no authority for
+another release.
 
-Verified start: clean `optional-static-checking` at
-`8afe9609f33dac67b0e6d1c9508601e2d587b7c4`; local/remote main
-`f6938b286329532230be210de0eaaa398286d38a`; no remote milestone branch or 0.9.0
-tag/release. Seven earlier releases and fourteen assets are snapshotted in
-`/tmp/attalambda-090-release-g5_0101v/previous-releases.json`; tag identities are
-in `previous-tags.txt`. The reviewed 0.8.0-metadata candidate remains historical.
+Evidence root: `/tmp/attalambda-090-release-g5_0101v/`. The final publication
+record changes documents only; the archive remains the exact clean merged
+source `0960a79ae797007da850a6d6f1c449482d333614`.
 
-## Phase 1 — prepare and verify release inputs
+## Phase 1 — release inputs and PR verification
 
-- [x] 1.1 Update VERSION to 0.9.0 and package projection to 0.9; extend only the
-  exact approved-version tables and matching tests. Prepare the archive guide and
-  0.9.0 notes. Current public-download claims remain 0.8.0 until publication.
-  Raise only the source CI outer deadline to 45 minutes: the preceding 104-file
-  run took 34m36s locally, exceeding the existing 30-minute ceiling. No individual
-  test deadline, runtime behavior, inference algorithm or dependency changes.
-- [ ] 1.2 Run focused version/distribution checks, then the full corrected isolated
-  Racket CS 9.3 suite and both structural gates. Review the scoped release diff,
-  commit/push the milestone, open the PR and verify every exact-head CI job.
+- [x] 1.1 Set VERSION to 0.9.0 and its package projection to 0.9, extend exact
+  approved-version tables and expectations, and prepare the guide/notes. Raise
+  only the source CI outer deadline from 30 to 45 minutes after the preceding
+  suite took 34m36s; individual deadlines and runtime/checker behavior are unchanged.
+- [x] 1.2 Pass 661 focused assertions, then 104 Racket files / 26982 reported
+  tests, 49 Python methods, 40-module purity and the boundary gate in 29m42s.
+  Verify all 226 executable, packaging and workflow inputs against the snapshot.
+  Commit/push `46c2849f779ce00ce115ce6283ad80a4bcbb2403`, open PR #8 and pass
+  all ten exact-head CI jobs in run `35311618086`. No temporary CI artifacts remain.
 
-Local verification for 1.2 is complete: 661 focused assertions and both gates;
-the full run passed 104 Racket files / 26982 reported tests, 49 Python methods,
-40 pure production modules and the boundary inventory in 29m42s.
-`release-result.json` in the evidence root verifies all 226 executable,
-packaging and workflow inputs against the tested snapshot. The release diff
-changes version approvals/expectations, the guide and CI ceiling; checker and
-runtime implementations are unchanged from the independent review. PR and
-exact-head remote checks remain pending at this preparation checkpoint.
+## Phase 2 — exact merged-source artifact
 
-## Phase 2 — merge and verify the release archive
+- [x] 2.1 Merge with the expected-head guard. Verify both parents and tree
+  `af74508c74cc7f3ca710cb0566914c67ab56c58a`; fast-forward local main. All ten
+  merged-head jobs pass in run `35312808000`, with the same source counts/gates
+  and no remaining temporary native artifacts.
+- [x] 2.2 Build the exact clean merge in isolated corrected Racket CS 9.3 and
+  verify the manifest and all tested input identities. The 19,873,515-byte archive
+  has SHA-256 `1dc9493bf041463fa9ec7226af2fbe5f078a43e4d707f4f4e2d502f4dccf8186`.
+  Its no-Racket consumer passes static/runtime/guide/relocation checks and all
+  25 terminal methods at both paths in 64.910s and 59.393s.
 
-- [ ] 2.1 Merge the exact reviewed PR head with an expected-SHA guard; verify
-  the resulting tree and all merged-head CI jobs. Fast-forward local main.
-- [ ] 2.2 Build from the exact clean merged commit, verify its manifest and input
-  identities, and run the transferred no-Racket consumer at both paths. Record
-  archive/checksum/manifest hashes and preserve the verified bytes.
+## Phase 3 — publication and records
 
-## Phase 3 — publish and verify the public download
+- [x] 3.1 Recheck version availability and preservation. Create/push unsigned
+  annotated tag `v0.9.0`, object `ad7fa3a6b5e31a599e7f1ef5a4aaadf8a343d0ba`,
+  at the build commit. Create one draft with the exact archive/checksum assets;
+  authenticated draft downloads match both verified hashes.
+- [x] 3.2 Publish release `391256649` at `2026-09-18T06:25:52Z` as latest.
+  Fresh unauthenticated public downloads return HTTP 200 and match the verified
+  files. The actual downloaded archive passes the complete consumer and all
+  25 terminal methods at both paths in 48.968s and 48.750s.
+- [x] 3.3 Prepare the final publication record: current download/API/architecture
+  docs, acceptance evidence, release notes, ledger, project instructions and
+  handoff. Remove the owned build container, both consumers and their transfer
+  directories; retain evidence and all candidates. Earlier seven releases,
+  fourteen assets and seven annotated tags are preserved.
 
-- [ ] 3.1 Recheck unused version/tag and unchanged prior assets, create/push an
-  unsigned annotated tag at the build commit, create one draft with that verified
-  tag and exact two assets, then compare authenticated draft downloads.
-- [ ] 3.2 Publish that verified draft as latest, fetch fresh unauthenticated public
-  copies, compare hashes and run the same consumer on the actual public archive.
-- [ ] 3.3 Update README/API/architecture/acceptance/release ledger/instructions and
-  handoff to observed publication. Commit/push records only, verify current-head
-  checks and preservation of older releases, clean owned resources and leave Git
-  clean. The archive retains its earlier source identity.
+The final delivery gate applies to the resulting documentation-only commit:
+commit/push this record, verify every exact-head CI job and clean main, and
+record the actual SHA, run and preservation readback in `final-result.json`
+outside the worktree. This avoids changing the commit being verified merely to
+record its own identity. The handoff and GitHub Actions retain that lookup.
 
 ---
 

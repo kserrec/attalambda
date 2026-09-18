@@ -6,12 +6,13 @@ is defined by the [specifications](../specifications/README.md); the
 [host-boundary design](host-boundary.md) defines the effects available to a
 running program.
 
-The current published release is 0.8.0, adding runtime line input and the
-interactive shell. It retains the four small Lisp sugars, twelve pure value renderers
+The current published release is 0.9.0, adding optional static checking without
+running the program. It retains runtime line input, the interactive shell,
+the four small Lisp sugars, twelve pure value renderers
 and generic `print` through the existing stdout capability, pure `rec`,
 rejection of recursive module bindings, explicit exit, lowercase public
 callables, ASCII Char literals, and the complete List library. The
-[0.8.0 release notes](../releases/0.8.0.md) describe input, shell and compatibility;
+[0.9.0 release notes](../releases/0.9.0.md) describe checking and compatibility;
 the release ledger records published artifacts.
 
 ## Current public support
@@ -40,11 +41,9 @@ the corresponding downloaded-user path.
 
 ## Source and command contract
 
-The current feature checkout adds optional static checking as **unreleased
-local source/candidate work**. The published 0.8.0 archive does not contain that
-command. Its local candidate retains existing version metadata; the exact
-source/archive/consumer identities belong to the current handoff, separate from
-the published release ledger below.
+Optional static checking is released in 0.9.0. The exact source, archive and
+public-download consumer identities are recorded in the release ledger below
+and the current handoff. Earlier local candidates remain historical evidence.
 
 [`runner/attalambda.rkt`](../../runner/attalambda.rkt) implements the complete
 command surface:
@@ -72,7 +71,7 @@ the same source validation and restricted reader, then expansion-only type
 inference over the captured snapshot. It does not instantiate/evaluate the user
 module, perform program effects, consume answers, or access shell history.
 Completed reports use stdout; source/operational diagnostics use stderr. See
-the [checking contract](../API.md#optional-static-checking-unreleased) for exact
+the [checking contract](../API.md#optional-static-checking) for exact
 coverage, trusted contracts and deliberately partial cases.
 
 There are no aliases, short flags, program arguments, compiler, or package-manager
@@ -270,12 +269,10 @@ different syntax, so build tooling checks this closed projection:
 | `0.8.0` | `0.8` |
 | `0.9.0` | `0.9` |
 
-A new version state requires an explicit plan change. Kyle authorized preparing,
-merging and publishing optional static checking as 0.9.0 after its verified local
-candidate and independent review. The active plan records that release work;
-0.8.0 remains the published download until the new release is verified and
-published. Completed releases do not authorize another release. The ledger
-separates prepared inputs from observed publication.
+A new version state requires an explicit plan change. Kyle authorized the
+completed 0.9.0 release after its verified local candidate and independent review.
+The release ledger records observed publication and public-download verification.
+Completed releases do not authorize another release.
 
 ## Build, archive, and consumer contract
 
@@ -371,6 +368,48 @@ Each publication needs Kyle's explicit approval for the exact commit, tag,
 files, checksums, support claims, and public action.
 
 ## Public release ledger
+
+### AttaLambda 0.9.0 — 2026-09-18 UTC
+
+The [optional-static-checking release](../releases/0.9.0.md) was built from the
+clean merged source `0960a79ae797007da850a6d6f1c449482d333614`, tree
+`af74508c74cc7f3ca710cb0566914c67ab56c58a`, using isolated corrected Racket CS
+9.3. The 226 executable, packaging and workflow inputs match the local full-suite
+receipt: 104 Racket files / 26982 reported tests, 49 Python methods, 40-module
+purity and the complete source boundary gate. All ten exact-head jobs pass in
+[PR CI](https://github.com/kserrec/attalambda/actions/runs/35311618086) and
+[merged-head CI](https://github.com/kserrec/attalambda/actions/runs/35312808000).
+Their temporary macOS/Windows transfer artifacts are removed.
+
+Unsigned annotated tag `v0.9.0`, object
+`ad7fa3a6b5e31a599e7f1ef5a4aaadf8a343d0ba`, peels to that build commit.
+GitHub Release `391256649` was published at `2026-09-18T06:25:52Z` and marked
+latest: <https://github.com/kserrec/attalambda/releases/tag/v0.9.0>.
+
+| Asset | GitHub asset ID | Bytes | SHA-256 |
+| --- | --- | ---: | --- |
+| `attalambda-0.9.0-linux-x86_64.tar.gz` | `571975742` | 19,873,515 | `1dc9493bf041463fa9ec7226af2fbe5f078a43e4d707f4f4e2d502f4dccf8186` |
+| `SHA256SUMS` | `571975740` | 103 | `dc8e14364c9cc17d94822085ce07cafc5c2b0bff0880c0a6edb4f5781e3d2138` |
+
+The internal manifest SHA-256 is
+`ecd5ca1fef96e9acbbbb8133691b47ae512d0a6b06678330547448a020712afb`.
+The archive contains 11 files, two runtime files and no Python. Its actual
+transferred consumer has no external Racket/raco or checkout, uses a non-root
+user and read-only root, and disables external network access. Static checking,
+guide/runtime/input checks and all 25 terminal methods pass at both paths;
+terminal groups take 64.910s and 59.393s.
+
+Authenticated draft downloads and fresh unauthenticated public downloads match
+both verified hashes. Both public requests return HTTP 200. The actual public
+archive passes the same complete consumer, with all 25 terminal methods in
+48.968s and 48.750s before/after relocation. Build and consumer containers and
+consumer transfer directories are removed. Exact images, paths, logs and receipts
+are retained under `/tmp/attalambda-090-release-g5_0101v/` and in the handoff.
+
+Seven earlier releases, fourteen assets and seven annotated tags remain
+unchanged. Linux x86-64 is the only public binary target. Earlier 0.8.0-metadata
+checking candidates are preserved as historical evidence. This later
+documentation record is not the archive's source.
 
 ### AttaLambda 0.8.0 — 2026-09-15
 

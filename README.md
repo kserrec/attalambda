@@ -19,30 +19,31 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.8.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.9.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.8.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.9.0>
 
-Version 0.8.0 adds `(read-line UNIT)` and the `atta>` interactive shell, with
-lazy definitions, multiline editing, completion, history, and file loading.
-Existing Lisp syntax, pure value rendering and `print`, exact rational
+Version 0.9.0 adds optional `--check FILE.attl` static checking without running
+the program. It reports full passes, definite conflicts and partial results,
+with exact coverage and inferred signatures. The `atta>` shell, runtime line
+input, Lisp syntax, pure value rendering and `print`, exact rational
 arithmetic, the complete List API, and the pure `rec` rules remain available.
 The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
-See the [0.8.0 release notes](docs/releases/0.8.0.md) for the new features
+See the [0.9.0 release notes](docs/releases/0.9.0.md) for the new features
 and compatibility.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.8.0/attalambda-0.8.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.8.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.9.0/attalambda-0.9.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.9.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.8.0-linux-x86_64.tar.gz
-cd attalambda-0.8.0-linux-x86_64
+tar -xzf attalambda-0.9.0-linux-x86_64.tar.gz
+cd attalambda-0.9.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -50,7 +51,7 @@ cd attalambda-0.8.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.8.0
+AttaLambda 0.9.0
 Hello from AttaLambda.
 ```
 
@@ -64,14 +65,13 @@ bypass operating-system security protections to try the language, so macOS
 builds without Apple signing and notarization and Windows builds without
 Authenticode signing are not distributed.
 
-## Optional static checking — unreleased local feature
+## Optional static checking
 
-This feature checkout adds `--check FILE.attl`. The published 0.8.0 download
-does **not** contain it. In this registered checkout, check an existing program
-without running it:
+Version 0.9.0 includes `--check FILE.attl`. From the extracted archive, check an
+existing program without running it:
 
 ```sh
-racket runner/attalambda.rkt --check examples/hello.attl
+./bin/attalambda --check examples/hello.attl
 ```
 
 The report says `FULL PASS` (status 0), `FAIL` (1), or `PARTIAL` (2), with exact
@@ -83,15 +83,16 @@ The first version infers finite function and container types, reusable rank-1
 polymorphic definitions, source lets, and ordinary `rec`. It conservatively
 leaves unwrapping, empty-list access, numeric refinements, and raw host protocols
 partial. A full pass relies on audited built-in contracts and does not prove
-termination or successful external operations. See the [checking reference](docs/API.md#optional-static-checking-unreleased),
+termination or successful external operations. See the [checking reference](docs/API.md#optional-static-checking),
 [audited contracts](docs/static-checking-contracts.md), and
 [measured results for all five examples](docs/static-checking-corpus.md).
-Local candidate/build identities are recorded in [HANDOFF.md](HANDOFF.md);
-this work has not been published.
+Exact build and public-download evidence is recorded in the
+[0.9.0 release notes](docs/releases/0.9.0.md) and [HANDOFF.md](HANDOFF.md).
 
 ## Run it from source
 
-The `main` branch includes the released runtime input and interactive shell.
+The `main` branch includes released static checking, runtime input and the
+interactive shell.
 The full source suite and fresh public Linux download pass their tests,
 including terminal interaction and relocation. [HANDOFF.md](HANDOFF.md) records
 the tagged build revision and the later publication records.
@@ -196,8 +197,9 @@ particular, `file-round-trip.attl` creates or truncates
 
 ## Project status
 
-Version 0.8.0 is the seventh public release. It adds runtime line input and
-an interactive shell while preserving the existing pure lambda calculus.
+Version 0.9.0 is the eighth public release. It adds optional static checking
+while preserving ordinary execution, the interactive shell and pure lambda
+calculus.
 It includes pure value renderers and generic `print` through the stdout boundary. See
 [Value Rendering and Printing](docs/API.md#value-rendering-and-printing).
 The purity rule against recursive module bindings continues to apply. Rat

@@ -2,8 +2,9 @@
 
 Measured from local source `61a87c2ee56c3dd5e74ebf3173f6336f1ce8ff5e`
 with corrected Racket CS 9.3 in the isolated implementation container.
-This is unreleased feature evidence; the published 0.8.0 binary does not include
-`--check`. All five tracked public `.attl` examples were analyzed unchanged with
+These pre-release measurements describe the checker now released in 0.9.0.
+The independent review confirmed that all five reports remained identical.
+All five tracked public `.attl` examples were analyzed unchanged with
 `racket runner/attalambda.rkt --check FILE.attl`. No example was executed to
 obtain these results. Commands exited with their reported static status and
 empty stderr. Exact logs, example hashes, and machine-readable results are in

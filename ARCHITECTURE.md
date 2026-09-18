@@ -80,7 +80,9 @@ Option construction uses existing core terms. Prompting and sequencing remain
 ordinary program choices. The [input contract](docs/terminal-input-spec.md)
 defines separators, failures, demand, and the shell/program input boundary.
 
-## Optional static checking (unreleased)
+<a id="optional-static-checking-unreleased"></a>
+
+## Optional static checking
 
 `--check FILE.attl` is a separate tooling path. It reads through the existing
 `inspect-source-file`, preserving its snapshot, reader offsets, and path policy.
@@ -123,10 +125,10 @@ the production computation graph; only the narrowly classified command adapter
 reads its explicit source and writes diagnostics/reports. No core, effects,
 codec, or host algorithm is inferred or changed. The library, recursive lowering,
 and host/codec contracts remain an explicit trusted basis. See the
-[checking reference](docs/API.md#optional-static-checking-unreleased),
+[checking reference](docs/API.md#optional-static-checking),
 [contract audit](docs/static-checking-contracts.md), and
-[measured corpus](docs/static-checking-corpus.md). This feature is not in the
-published 0.8.0 binary.
+[measured corpus](docs/static-checking-corpus.md). This feature is released in
+0.9.0.
 
 ## Pure value rendering and printing
 

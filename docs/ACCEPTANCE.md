@@ -7,7 +7,34 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
-## Independent review of optional static checking
+## Published 0.9.0 — optional static checking
+
+The clean merged build revision is `0960a79ae797007da850a6d6f1c449482d333614`.
+Versioned local verification passes 104 Racket files / 26982 reported tests,
+49 Python terminal methods, 40-module purity and the complete source boundary
+inventory in 29m42s. All 226 executable, packaging and workflow input hashes
+match the tested snapshot. The same counts and gates pass in both
+[PR CI](https://github.com/kserrec/attalambda/actions/runs/35311618086) and
+[merged-head CI](https://github.com/kserrec/attalambda/actions/runs/35312808000),
+with all ten jobs successful in each. Native transfer artifacts are removed.
+
+The exact 19,873,515-byte Linux archive has SHA-256
+`1dc9493bf041463fa9ec7226af2fbe5f078a43e4d707f4f4e2d502f4dccf8186`.
+Its isolated no-Racket consumer passes static checking and all prior
+runtime/input/guide/relocation checks, including 25 terminal methods in 64.910s
+and 59.393s at the two paths. Fresh unauthenticated public downloads return
+HTTP 200 and match both uploaded hashes. The actual downloaded archive passes
+the same complete consumer, with terminal groups in 48.968s and 48.750s.
+Build/consumer containers and consumer transfers are removed; original archives
+and evidence remain. [Release notes](releases/0.9.0.md) record exact identities.
+
+The independent review below remains the scoped correctness/security evidence;
+no formal soundness proof is claimed. PR #8 is merged, and 0.9.0 was published
+at `2026-09-18T06:25:52Z`. Seven earlier releases, fourteen assets and seven
+annotated tags are preserved. The final publication record changes documents
+only and does not alter the tagged artifact.
+
+## Independent review of optional static checking (pre-release)
 
 The [focused independent review](static-checking-independent-review.md) corrected
 four defects in the original candidate below. A fresh cold review found no
