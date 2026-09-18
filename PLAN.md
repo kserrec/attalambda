@@ -16,8 +16,10 @@ another `next`. Stop only for a genuine owner-dependent blocker or serious
 unresolved doubt. This overrides the next skill's one-pass stopping rule, while
 retaining every step's full Work/Check requirements. If a step proves too large,
 subdivide it into stable lettered substeps before implementation, as the
-specification requires. Phase 0 is committed as `8bde48d`; Phase 1 has passed
-its checkpoint. Phase 2 starts with Step 2.1 after the local Phase 1 commit.
+specification requires. Phase 0 is committed as `8bde48d`; Phase 1 is committed
+as `20b6241`. Phase 2 Steps 2.1–2.9 and Checkpoint 2 are complete: the full
+87-file suite, both structural gates, bounded robustness probes, and self-review
+passed. Phase 3's complete library contract audit follows the local phase commit.
 
 ## Verified starting state and change boundary
 
@@ -295,51 +297,161 @@ their existing behavior. No inference or public check flag exists yet.
 **Purpose:** establish finite types, ordinary inferred polymorphism/recursion, and honest incomplete results.
 **Prerequisites:** Checkpoint 1. Seed contracts are created in Step 2.5a; the full library inventory is not a prerequisite.
 
-- [ ] **2.1 — Implement structural types and separate proof state.**
+- [x] **2.1 — Implement structural types and separate proof state.**
   **Work:** Add nominal types, arrows, containers, variables/schemes, and established/unproved/conflict results in classified checker modules. Keep display separate.
   **Check:** Distinguish String from List(Char), Rat from Byte, a scheme variable from a hole, and Error from other types. Validate constructor arities. No solver, runtime dependency, or generalized type-system framework is introduced.
+  **Evidence:** `types.rkt` and `proof.rkt` are exact classified checker modules.
+  Constructor/nominal/hole tests plus the existing boundary tests passed (149
+  reported checks), followed by the complete source boundary gate. Log:
+  `step-2.1.log`. Proof state preserves concurrent gaps/conflicts and dependency
+  IDs independently of monotypes. Next: substitution and generalization.
 
-- [ ] **2.2a — Implement substitution, instantiation, and eligible generalization.**
+- [x] **2.2a — Implement substitution, instantiation, and eligible generalization.**
   **Work:** Add fresh variables, free-variable sets, substitutions/composition, and fresh scheme instantiation. Implement generalization over the substituted environment as specified in 5.3. Keep schemes separate from monotypes and state local to an analysis.
   **Check:** Independent identity instances have fresh variables; captured environment variables do not. Substitution respects bound scheme variables and composition order. Quantifiers never enter an arrow/container. Unit tests expose the stale-environment generalization bug before source integration.
+  **Evidence:** Structural substitution, composition, freshening, restriction
+  transport, and substituted-environment generalization passed focused tests.
+  An additional composition probe exposed double substitution; simultaneous
+  substitution corrected it, and bounded composition equations now cover the
+  class. Solver states reject unresolved/cyclic mappings. The final type/kernel
+  and existing boundary batch passed 154 checks and the gate; separate mutation
+  tests reject evaluation, output, environment reads, and unapproved imports.
+  Logs: `step-2.2a-composition.log`, `step-2.2a-final.log`, and
+  `step-2.2a-boundary.log` in the current evidence directory.
 
-- [ ] **2.2b — Implement finite structural unification and failure isolation.**
+- [x] **2.2b — Implement finite structural unification and failure isolation.**
   **Work:** Unify nominal types, arrows, and containers with an occurs check using one small solver. Keep unsuccessful equation updates tentative or discardable.
   **Check:** Hand-derived and bounded generated equations cover success, nominal conflicts, arrow/container mismatch, chains, and `a = a -> b`. Successful substitutions satisfy input equations and repeated substitution stabilizes. A failure cannot leak state into a separate problem, erase a sibling conflict, or allocate a cyclic/infinite type.
+  **Evidence:** The focused kernel/mutation batch passed all 13 test cases,
+  including 2025 bounded structural equation pairs and independent sibling
+  failures. The complete boundary gate passed. `step-2.2b.log` records the run.
+  Unification returns an immutable solution or explicit failed obligations;
+  unsuccessful equations expose no partially updated state.
 
-- [ ] **2.3 — Enforce the one data-variable restriction.**
+- [x] **2.3 — Enforce the one data-variable restriction.**
   **Work:** Preserve Section 5.2's restricted domain through unification, substitution, and schemes. Use a small admissibility rule, not a type-class or constraint-plugin framework.
   **Check:** Rat/nested supported data are accepted; an arrow or Error is not silently admitted. Restriction survives instantiation/generalization. Unsupported data-domain use remains distinct from a concrete Rat/String conflict; no runtime Data/Function tag is added.
+  **Evidence:** All 16 focused kernel test cases passed, including nested
+  payloads, variable linking, generalization/freshening, failure isolation, and
+  simultaneous unsupported-domain/nominal failures. The separate mutation test
+  and complete boundary gate passed. Logs: `step-2.3.log` and
+  `step-2.3-boundary.log`. No runtime representation changed.
 
-- [ ] **2.4 — Render types deterministically and close the kernel review.**
+- [x] **2.4 — Render types deterministically and close the kernel review.**
   **Work:** Render stable variable names, quantified restrictions, containers, and correctly grouped arrows. Review the kernel before inference depends on it.
   **Check:** Golden tests cover `a -> b -> c`, `(a -> b) -> a -> b`, Error, and restricted schemes. Recheck freshening, substitution, occurs-check, and hole separation with focused tests. Rendering never calls an object-language evaluator. This is a focused review, not an extra mandatory full-suite/commit phase.
+  **Evidence:** Golden display, all focused kernel/mutation tests, and the
+  existing boundary suite passed (165 reported checks), followed by the complete
+  boundary gate (`step-2.4.log`). Self-review checked simultaneous substitution,
+  solved-state normalization, fresh variable ownership, substituted environments,
+  occurs checks, atomic failures, recursive data restrictions, and proof/type
+  separation. The evidenced composition finding from 2.2a is resolved. No open
+  kernel finding or independent-review claim remains. Phase 2's full suite and
+  commit remain after source inference and its pilot.
 
-- [ ] **2.5a — Create the real seed-contract inventory.**
+- [x] **2.5a — Create the real seed-contract inventory.**
   **Work:** Inspect actual implementations/tests and audit Rat/Bool constants plus the arithmetic and first-class `if` schemes needed for double/factorial. Include Result-valued `div`, `is-ok`, a conditional `unwrap-ok` input contract, and the fixed `error-to-string : Error -> String` contract for the pilot. Associate catalog IDs only with their resolved built-in bindings.
   **Check:** Record source locators and valid/invalid-domain evidence. `if` works as a value and alias, not only a syntactic head. `div` is Result-valued; `unwrap-ok` has no verified success-only signature. Other known exports may be explicitly pending audit, never unknown identifiers or fabricated safe signatures. This is the same inventory completed in Phase 3.
+  **Evidence:** `contracts.rkt` contains the audited Rat/Bool/if seeds, Result
+  division/predicate, partial unwrap input contract, and explicit Error renderer.
+  Each records implementation symbols/paths and focused runtime tests. The exact
+  facade export inventory and actual frontend binding identities match; all other
+  exports are explicitly pending and fail internally if requested. Shipping
+  catalog validation rejects pending entries. Focused catalog/boundary tests
+  passed (4 cases), followed by the whole boundary gate and 3519 existing runtime
+  checks for typed rationals, logic, Results, and rendering (`step-2.5a.log`).
 
-- [ ] **2.5b — Infer elementary source expressions.**
+  Audit observed `typed-if` selecting untagged branches after its Bool check;
+  `raw-rat-div` represents zero division as Result Err, and the strict wrapper
+  tags successful Rat payloads. `raw-result-unwrap-ok` returns WrongResultVariant
+  Error on Err, so its output remains unproved; `typed-error-to-string` deliberately
+  consumes Error. A negative gate probe caught native `exit` accidentally admitted
+  by a quoted catalog label. Labels for pending operations are now inert strings,
+  the excess vocabulary is removed, and the retained execution mutation test
+  passes. No runtime implementation was changed.
+
+- [x] **2.5b — Infer elementary source expressions.**
   **Work:** Infer literals, references, lambdas, and curried applications through the actual frontend/kernel and seed inventory. Preserve complete input obligations when an earlier argument is incomplete; keep conditional hints out of established types.
   **Check:** Infer double, identity, application, nested lambdas, and partial `add`; locate a String/Rat conflict. A shadowed function never inherits a catalog contract. Calls through a first-class `if` alias obey the same homogeneous-result equations as direct calls.
+  **Evidence:** The actual frontend/kernel infers literals, identity/apply/compose,
+  double, partial add, Result division, and function-valued branches. Tests verify
+  shadowing, first-class if aliases, precise argument locations, and 3/4 independent
+  expression obligations for bad add. Partial outputs have no verified value type;
+  known remaining inputs still expose later conflicts. An exhausted conditional
+  cursor cannot turn its speculative function result into proof. Focused inference
+  and mutation tests plus the boundary gate passed (`step-2.5b.log`), followed by
+  the additional alias fixtures (`step-2.5b-aliases.log`). Let/module/rec rules are
+  the following steps, not implied by this elementary-expression result.
 
-- [ ] **2.6 — Infer lexical bindings with source-level generalization.**
+- [x] **2.6 — Infer lexical bindings with source-level generalization.**
   **Work:** Use actual acyclic dependency order and sequential-let scope. Generalize completed `def`/`let` bindings using the solved current environment; instantiate each use. Keep lambda parameters and captured environment variables monomorphic where required.
   **Check:** Forward definitions and repeated/shadowed names work without runtime reordering. Identity works at Rat and String; `(identity identity)` checks. Section 5.4.1's let form passes and its lambda-parameter counterpart fails. The captured-function counterexample in 9.2 fails. Unknown names/forbidden cycles remain source errors, not gaps.
+  **Evidence:** Actual-source bindings, elementary inference, mutation tests, and
+  the existing boundary suite passed 154 checks plus the whole gate (`step-2.6.log`).
+  C01–C04, C07, C09, C13, and C16 have their required binding/type outcomes.
+  Reported dependency edges are checked against resolved source references before
+  topological analysis. Incomplete aliases retain only conditional input templates;
+  they publish no verified value scheme. Recursion is the next rule.
 
-- [ ] **2.7 — Infer ordinary source `rec` and discharge its local assumption.**
+- [x] **2.7 — Infer ordinary source `rec` and discharge its local assumption.**
   **Work:** Use one monomorphic recursive assumption, unify with the inferred curried body, discharge the self edge, and generalize eligible variables afterward. Include zero-source-argument recursive values without evaluation.
   **Check:** Factorial/summation infer `Rat -> Rat`; locate recursive conflicts. Self-dependencies do not make all recursion partial. Finite-typed nonterminating recursive fixtures are checked without being run. Raw self-application reports the occurs-check limitation. Direct/mutual module recursion and pure fixed-point lowering remain unchanged; no polymorphic recursion is introduced.
+  **Evidence:** Twelve focused recursion/binding/inference/mutation cases and
+  the boundary gate passed (`step-2.7.log`). Factorial and sum establish Rat-to-Rat;
+  both divergent C05 forms and a zero-argument recursive Rat establish finite
+  constraints without execution. C06 conflicts, and recursive infinite types or
+  external gaps remain unproved. A failed self consistency check invalidates only
+  source nodes that used its provisional assumption; successful rec has no false
+  external self dependency. Runtime fixed-point lowering was not changed.
 
-- [ ] **2.8 — Apply uniform constraints through source sugars and aliases.**
+- [x] **2.8 — Apply uniform constraints through source sugars and aliases.**
   **Work:** Check source list/conditional normalization using original IDs and first-class built-in schemes. Treat finite homogeneous-element/common-result contradictions as TYPE_CONFLICT in every representation. Preserve explicit let/rec boundaries.
   **Check:** Currying, sequential-let nesting, list/cons, and cond/if mappings agree under their supported rules. Heterogeneous direct/aliased `if` calls fail identically; homogeneous function-valued branches pass. Both branches and all independent children are visited. List typing tests may use explicitly pending constructor contracts until 3.2, but no production completeness is claimed for an unaudited contract.
+  **Evidence:** Three actual-source sugar cases passed (`step-2.8.log`), covering
+  curried/nested lambda/application equivalence, sequential/nested let, cond/if,
+  shadowed public if, unselected conflicts, and coexisting gaps/conflicts. List
+  sugar has the exact cons normalization and original 3-node denominator; both
+  forms explicitly fail on the pending cons audit in this intermediate catalog.
+  List typing is deliberately not claimed before Step 3.2.
 
-- [ ] **2.9 — Close gap propagation and run the early backend pilot.**
+- [x] **2.9 — Close gap propagation and run the early backend pilot.**
   **Work:** Finish component isolation, proof-state propagation, and the representative cases in 1.3 using the actual frontend/kernel/seed inventory. Treat incomplete built-in references as incomplete even before invocation. Preserve established upstream declarations after a bad call.
   **Check:** Arithmetic/identity/recursion establish types; bad `add` and incompatible branch types conflict; raw self-application, guarded unwraps, and their dependent callers remain partial. A closure cannot hide a gap in an unused nested body. An earlier gap cannot hide a later independent argument mismatch: use `(add (unwrap-ok (div 1 0)) "bad")` while only seed contracts exist. Best-case unwrap output hints cannot invent a conflict in C11; its Error renderer is included in the seed audit. Reordering independent definitions or checking twice changes no result. Record pilot outcomes; fix required supported cases before the broader audit.
+  **Evidence:** All 18 fixed seed fixtures matched their pre-recorded outcomes;
+  four pilot test cases also establish alias/closure/higher-order gap propagation,
+  three-binding dependency paths, conditional input-template isolation and captured
+  monomorphism, independent components, and C01/C07/C01 equality. The measured
+  [pilot record](docs/static-checking-pilot.md) reports every fixture and limitation.
+  Logs: `step-2.9-final.log` and `pilot-results.json`. The earlier `step-2.9.log`
+  stopped at one extra closing parenthesis in the new test; that syntax error was
+  corrected before the successful run. No production inference correction was
+  required by these pilot cases. The public catalog has 21 audited seed entries
+  and 108 explicitly pending entries; no shipping/whole-corpus claim is made.
 
 **Checkpoint 2 — Inference and practical-scope gate.** Review scope, generalization, recursive assumptions, and unchecked-result propagation; prefer independent read-only review when available. Run kernel/frontend/inference tests, affected language/recursion tests, full suite, and gates. The two definitions in Section 3.2 and `(factorial (double 3))` must be established without execution. Rendering/stdout arrive in Phase 3. Documented partial pilot results are an accepted V1 limitation, not a reason to invent refinements or request routine owner decisions.
+
+Checkpoint 2 passed. `./run-all-tests.sh` exited 0 with 87 Racket test files,
+26919 reported Racket tests, 49 Python terminal methods, purity over all 40
+production modules, and the complete source/boundary gate. Evidence:
+`phase2-full.log` and `phase2-result.json` in the implementation evidence directory;
+191 executable input hashes match the tested snapshot. Additional bounded probes
+cover 60 nested lambdas (61 expressions), 120 nested applications (361), 80
+independent definitions (320), and 100 dependent aliases after a partial seed
+(101 definitions/expressions). Each run repeats identically, preserves exact
+counts, and has the independently expected established/unproved verdict.
+`phase2-robustness.rkt` and `phase2-robustness.log` retain these check-only probes.
+
+Fresh self-review covered simultaneous substitution, restricted generalization,
+monomorphic captures/self assumptions, conditional input cursors, discarded
+failed equations, complete source accounting, binding identity, and exact helper
+permissions. No open finding remains; no independent review is claimed. The
+composition and native-exit label findings were resolved before this full run.
+Executable additions are eight private checker modules plus exact gate rules;
+tests add twelve focused files and the fixed pilot fixtures. Documentation records
+the measured intermediate pilot and this checkpoint. Core, effects, runtime,
+language frontend, ordinary launcher, and version metadata have no Phase 2 diff.
+No public check command or complete catalog is claimed yet. Close one local phase
+commit and continue directly with Step 3.1; no remote action is authorized.
 
 ## Phase 3 — Complete the auditable library and host contracts
 

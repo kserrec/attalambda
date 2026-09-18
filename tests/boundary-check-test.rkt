@@ -160,8 +160,9 @@
       (copy-file (build-path project-root "runner" "session.rkt")
                  (build-path root "runner" "session.rkt"))
       (make-directory (build-path root "runner" "static"))
-      (copy-file (build-path project-root "runner" "static" "frontend.rkt")
-                 (build-path root "runner" "static" "frontend.rkt"))
+      (for ([name '("frontend.rkt" "types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt")])
+        (copy-file (build-path project-root "runner" "static" name)
+                   (build-path root "runner" "static" name)))
       (copy-file (build-path project-root "runner" "source-file.rkt")
                  (build-path root "runner" "source-file.rkt"))
       (copy-file (build-path project-root "runner" "diagnostics.rkt")
@@ -243,7 +244,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
-   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-data static-frontend static-source test tooling))
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-analysis static-contracts static-data static-frontend static-inference static-proof static-source static-substitution static-type-display static-types static-unification test tooling))
 
 (check-equal?
  (count (lambda (classification)

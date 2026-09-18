@@ -2732,7 +2732,8 @@
           [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
           [(static-frontend) (static-frontend-violations source info root)]
-          [(static-data static-source) (static-helper-violations source info root class)]
+          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis)
+           (static-helper-violations source info root class)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
           [(host) (host-violations source info root)]
@@ -3006,9 +3007,9 @@
                 (remove-duplicates
                  (module-symbols info)))]
               #:when (and (memq name privileged-host-only-identifiers)
-                          ;; Scoped host-data bookkeeping in these two exact
-                          ;; frontend helpers is outside object computation.
-                          (not (and (memq (source-class source project-root) '(static-data static-source))
+                          ;; Scoped host-data bookkeeping in exact, individually
+                          ;; allowlisted frontend/checker modules only.
+                          (not (and (assq (source-class source project-root) static-helper-rules)
                                     (memq name '(set! hash-ref hash-set!))))))
            (violation source
                       'privileged-identifier-outside-host
@@ -3225,7 +3226,7 @@
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader session source-file diagnostics repl shell-output editor-output editor history static-frontend) equal?))
+                 #:unless (member path (append (list runner source-reader session source-file diagnostics repl shell-output editor-output editor history static-frontend) static-helper-files) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

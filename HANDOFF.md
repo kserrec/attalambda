@@ -12,8 +12,33 @@ boundaries, and locations without evaluating user code. Its real embedded driver
 works after hiding both staged sources and the isolated package installation.
 The checkpoint self-review has no open finding; no independent review is claimed.
 `phase1-full.log` and `phase1-result.json` preserve results and executable-input
-hashes. Next is Step 2.1, structural types/proof state, after the local phase
-commit. Inference and the public command do not yet exist.
+hashes. Phase 1 is committed as `20b6241c4868fada5930376315a5cce47d0a7aeb`.
+Phase 2 Steps 2.1–2.4 are complete: structural types,
+separate proof records, simultaneous substitution, fresh instantiation,
+eligible generalization, finite unification, recursive data restrictions, and
+deterministic display. `step-2.4.log` records 165 focused/kernel/boundary checks
+and the complete boundary gate. A composition probe found double substitution;
+the simultaneous replacement correction is covered by bounded equations.
+The kernel self-review has no open finding. Step 2.5a also passed: the single
+catalog contains audited Rat/Bool/if, division/Result, partial unwrap, and Error
+rendering seeds; other real exports are explicitly pending. `step-2.5a.log`
+records four catalog/boundary cases, the complete boundary gate, and 3519 focused
+existing runtime checks. A catalog label initially let the vocabulary gate admit
+native exit; inert string labels and a retained mutation regression resolved it.
+Steps 2.5b–2.9 also passed elementary, lexical/module, recursion, sugar, and gap
+propagation checks. All 18 seed pilot fixtures matched expectations, including
+C01/C07/C01 repeated-process equality. The measured intermediate results are in
+`docs/static-checking-pilot.md` and evidence `pilot-results.json`; the final
+focused run is `step-2.9-final.log`. Checkpoint 2 passed the full suite with 87
+Racket files, 26919 reported Racket tests, 49 Python methods, purity over 40
+modules, and complete source boundaries. `phase2-result.json` verifies 191
+executable input hashes against the tested snapshot. Bounded nested/application,
+independent-definition, and 100-alias probes repeat identically with exact counts
+(`phase2-robustness.log`). Fresh self-review has no open finding. Phase 2 closes
+with one local commit; its exact identity is recorded in external `state.json`.
+**Next: Step 3.1, then the remaining Phase 3 contract audit steps in order.**
+The public command does not yet exist. Continue autonomously;
+do not wait for `next`.
 The reusable isolated container is `attalambda-static-implementation`,
 with source/evidence at `/tmp/attalambda-static-implementation-mmgdshl_/`.
 Its `sync.py` copies only explicit non-dotenv source paths; use it before tests.
