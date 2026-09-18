@@ -19,9 +19,17 @@ snapshot. The unchanged five-example corpus retains identical reports.
 Regressions retain independent partial-callable input constraints without proving
 unknown results, ordinary explicit application/literal syntax, all six actual
 TCP success shapes, and correct user-versus-internal syntax-fault classification.
-The new standalone consumer includes the corrected conflict/partial/syntax cases
-at both installation paths. Clean candidate rebuilding and consumer verification
-remain pending; [HANDOFF.md](../HANDOFF.md) records the current delivery state.
+The new standalone consumer passes the corrected conflict/partial/syntax cases
+at both installation paths. The clean tested/build source is
+`7d577444bca5b8c101125d7cbf10e638a6e26cd0`. Its 19,873,969-byte archive has SHA-256
+`a39febf5db4c7e6b2871252e52d863d903c04d3e62ad01377252e9a7690b0828`.
+The transferred no-Racket consumer also passes all 25 terminal methods at each
+path, failed/interrupted report delivery, existing API, guide, input, file/network
+and relocation checks. Original/transferred/final digests match. The cold review
+has no open finding; no fix is deferred. Owned temporary containers/transfer
+state are removed. [HANDOFF.md](../HANDOFF.md) records exact paths and identities.
+This later documentation record is not the archive's source. Remote CI and
+native macOS/Windows runs remain outside this local-only verification.
 
 ## Original unreleased optional static-checking candidate (historical)
 

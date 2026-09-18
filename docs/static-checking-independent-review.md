@@ -145,6 +145,19 @@ checks and structural boundaries passed. `review-full.log` records the completed
 full run: 104 Racket test files, 26981 reported tests, 49 Python terminal methods,
 purity over 40 production files, and the repository-wide source boundary gate.
 `review-result.json` verifies all 225 executable/packaging inputs against that
-snapshot. The replacement-candidate build and consumer remain the final delivery
-step. Remote CI and native macOS/Windows execution have not been run in this
-local-only review.
+snapshot. The replacement candidate was built from clean source
+`7d577444bca5b8c101125d7cbf10e638a6e26cd0` without `--allow-dirty`.
+Its SHA-256 is `a39febf5db4c7e6b2871252e52d863d903c04d3e62ad01377252e9a7690b0828`.
+The actual transferred no-Racket consumer passed at both paths, including the
+new static regressions, real failed/interrupted delivery and all 25 terminal
+methods per path. The original, transferred and final digests match. Build and
+consumer logs, exact identities and cleanup are in `candidate-result.json` and
+[HANDOFF.md](../HANDOFF.md). This later record is not the archive's source.
+
+All confirmed findings are fixed; the cold review leaves none open. No generic
+refactor, runtime algorithm change, new dependency or remote action was needed.
+The executable changes are confined to checker metadata, inference, catalog and
+fault classification; accompanying tests, consumer cases and structural rules
+pin those changes. Documentation records the correction and delivery evidence.
+Remote CI and native macOS/Windows execution have not been run in this local-only
+review. The original archive is retained as historical evidence.

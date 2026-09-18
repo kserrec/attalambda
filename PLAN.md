@@ -32,9 +32,15 @@ scenarios are retained in the review reports. The isolated corrected Racket CS
   verifies 225 executable/packaging inputs against the tested snapshot. All five
   example reports exactly match the original candidate. Freeze this reviewed,
   verified source as a clean local commit before building.
-- [ ] Build a new exact clean candidate and run its transferred no-Racket consumer.
-  Preserve the original archive, record the new digest/source identity separately,
-  clean owned resources and commit the final evidence record locally.
+- [x] Build a new exact clean candidate and run its transferred no-Racket consumer.
+  Tested/build source is `7d577444bca5b8c101125d7cbf10e638a6e26cd0`; new archive
+  SHA-256 is `a39febf5db4c7e6b2871252e52d863d903c04d3e62ad01377252e9a7690b0828`,
+  19,873,969 bytes. Both path checks pass, including all 25 terminal methods at
+  each path and the new static regressions. Original/transferred/final digests
+  match. The original archive is preserved. Owned build/test and consumer
+  containers and transfer state are removed. HANDOFF.md records exact paths and
+  receipts; the final local record changes documents only. No remote action was
+  taken and no review finding or authorized delivery step remains open.
 
 ---
 

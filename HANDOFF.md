@@ -1,4 +1,4 @@
-# Independent static-checker review — source verified
+# Independent static-checker review — verified local candidate complete
 
 The user-approved focused independent review found four defects in the original
 candidate. All four are corrected, with retained regression drivers and a fresh
@@ -12,10 +12,59 @@ the tested snapshot. All five public example reports are identical to the
 original candidate. Evidence: `/tmp/attalambda-static-review-5du21rkr/`, especially
 `review-full.log`, `review-result.json`, `corpus-results.json`, and `cold/report.md`.
 
-The next authorized step is a clean local source commit, rebuild, transferred
-no-Racket consumer, then final delivery record and owned-resource cleanup.
-No owner input is required. No push, PR, merge, tag or publication is authorized.
-The existing candidate below is preserved but predates these four corrections.
+## Current source and candidate
+
+The clean tested/build source is
+`7d577444bca5b8c101125d7cbf10e638a6e26cd0`, tree
+`139ac8acd09c5087fc88124d4f8567b390bc02a5`, on `optional-static-checking`.
+The clean build clone is
+`/tmp/attalambda-static-review-5du21rkr/build-source-_qza4s2b`.
+All 225 tested executable/packaging inputs match that clone. The normal builder
+ran without `--allow-dirty`; original and clone remained clean.
+
+Current archive:
+`/tmp/attalambda-static-review-5du21rkr/candidate-6cba9qzj/attalambda-0.8.0-linux-x86_64.tar.gz`
+
+SHA-256:
+`a39febf5db4c7e6b2871252e52d863d903c04d3e62ad01377252e9a7690b0828`.
+Size: **19,873,969 bytes**. The sibling `SHA256SUMS` verifies it. This supersedes
+the original local candidate for use; the old archive remains preserved.
+Version metadata stays 0.8.0 and the guide explicitly identifies the archive as
+an unpublished optional-static-checking candidate. Public 0.8.0 is unchanged.
+
+`candidate-build.log` and `candidate-consumer.log` both record exit 0. The
+transferred Ubuntu consumer has no Racket/raco or source checkout, and uses a
+read-only root, UID/GID 65534, dropped capabilities and loopback-only networking.
+The static checker passes at both paths, including the new regression cases,
+failed output and interrupted delivery. All 25 terminal methods pass at each
+path (79.020s and 80.773s), as do public API, guide, file/network, input and
+relocation checks. Original, transferred and final archive digests match.
+
+The pinned consumer base is
+`ubuntu:24.04@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`;
+the actual prepared image is
+`sha256:3ded025a96a0143ab876d2a0ccd1bbdda37c5e3dbe4b26b23f88a031c8ff46f7`,
+with test-only Python 3.12.3. The build uses the same isolated Racket CS 9.3
+image and reviewed dependency corrections recorded below. The owner's runtime
+was not changed. Remote CI and native macOS/Windows execution were not run;
+Linux x86-64 remains the supported binary target.
+
+## Completed endpoint and cleanup
+
+All four findings are fixed; none is deferred. The fresh cold review has no open
+finding. Full source and exact archive validation are complete. The owned
+`attalambda-static-review` container was stopped and removed; consumer
+`4695406840e1` and transfer directory `/tmp/attalambda-linux-transfer-AshSaf` are
+verified absent. Builder staging is cleaned by its normal exit trap. Logs,
+snapshots, build clone, images and both verified archives remain available.
+
+This final delivery record changes only PLAN.md, HANDOFF.md, docs/ACCEPTANCE.md
+and docs/static-checking-independent-review.md. Its later commit is not the
+archive's source; its identity and clean status are recorded externally in
+`state.json` and `candidate-result.json`. The unchanged local main remains
+`f6938b286329532230be210de0eaaa398286d38a`. No push, PR, merge, tag, release-asset
+replacement or publication occurred. No owner input or unfinished authorized
+implementation/review step remains. Further remote or release work is separate.
 
 ---
 
