@@ -650,3 +650,33 @@ Generated interaction exports and module plumbing remain private. User source
 must not acquire native evaluator, import, port, registry or codec identities
 from the runner. This amendment changes shell naming only and does not extend
 the public language export surface or the existing host operation inventory.
+
+
+---
+
+# Optional Static Checking Amendment (2026-09-17)
+
+The [Optional Static Inference and Checking specification, revision 3](../optional-static-checking-spec.md)
+adds exactly the executable invocation `attalambda --check FILE.attl` for
+standalone source analysis. The flag is launcher syntax, not an AttaLambda
+identifier or REPL command. Existing invocation forms and public language
+exports retain their meanings. No annotation syntax, compatibility alias,
+reserved type-name identifier, `--full` flag, or check-and-run command is added.
+
+Reports use the exact verdicts `Static type check: FULL PASS`, `Static type
+check: FAIL`, and `Static type check: PARTIAL`, with definition and expression
+coverage, source-located reasons, inferred established bindings, and the stated
+trusted basis. Locations follow the existing one-based line and zero-based
+column convention. Source-controlled paths and names are escaped safely.
+Conditional type shapes are not displayed as established signatures.
+
+Static names Rat, Bool, String, Char, Byte, Unit, Error, List, Option, Result,
+Map, arrow types, and quantified variables denote analysis metadata only.
+Result has one success parameter and a fixed Error payload for Err. String
+remains distinct from List(Char), and Nat, Int, native Pair, Any, Function,
+Listener, and Connection do not become public types or bindings. Trusted
+contracts identify resolved public bindings, preserving aliases, lexical
+shadowing, and hygienic generated operations. Private analysis IDs, source
+properties, scaffolding, and catalog entries are unavailable to user source.
+Existing strict if/cons, pure lowering, host isolation, and public naming rules
+remain unchanged outside the explicitly added launcher/report surface.

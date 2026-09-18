@@ -147,6 +147,8 @@
                  (build-path root "lang" "expander.rkt"))
       (copy-file (build-path project-root "lang" "reader.rkt")
                  (build-path root "lang" "reader.rkt"))
+      (for ([name '("static-data.rkt" "static-source.rkt")])
+        (copy-file (build-path project-root "lang" name) (build-path root "lang" name)))
       (copy-file (build-path project-root "info.rkt")
                  (build-path root "info.rkt"))
       (copy-file (build-path project-root "VERSION")
@@ -157,6 +159,10 @@
                  (build-path root "runner" "source-reader.rkt"))
       (copy-file (build-path project-root "runner" "session.rkt")
                  (build-path root "runner" "session.rkt"))
+      (make-directory (build-path root "runner" "static"))
+      (for ([name '("frontend.rkt" "types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt" "coverage.rkt" "report.rkt" "command.rkt")])
+        (copy-file (build-path project-root "runner" "static" name)
+                   (build-path root "runner" "static" name)))
       (copy-file (build-path project-root "runner" "source-file.rkt")
                  (build-path root "runner" "source-file.rkt"))
       (copy-file (build-path project-root "runner" "diagnostics.rkt")
@@ -238,7 +244,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
-   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader test tooling))
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-analysis static-command static-contracts static-coverage static-data static-frontend static-inference static-proof static-report static-source static-substitution static-type-display static-types static-unification test tooling))
 
 (check-equal?
  (count (lambda (classification)
@@ -1215,19 +1221,20 @@
                      (#"0.5.0\n" "0.5")
                      (#"0.6.0\n" "0.6")
                      (#"0.7.0\n" "0.7")
-                     (#"0.8.0\n" "0.8")))])
+                     (#"0.8.0\n" "0.8")
+                     (#"0.9.0\n" "0.9")))])
      (write-exact-bytes product-version-file (car version-pair))
      (write-datum
       package-info
       (replace-package-version clean-package-info-datum
                                (cadr version-pair)))
      (check-equal? (project-boundary-violations root) '()))
-   (write-exact-bytes product-version-file #"0.8.0\n")
+   (write-exact-bytes product-version-file #"0.9.0\n")
    (write-datum package-info clean-package-info-datum)
 
-   (write-exact-bytes product-version-file #"0.8.0")
+   (write-exact-bytes product-version-file #"0.9.0")
    (check-project-kind 'invalid-product-version)
-   (write-exact-bytes product-version-file #"0.8.0\n")
+   (write-exact-bytes product-version-file #"0.9.0\n")
 
    (define saved-version-file
      (build-path root "VERSION.backup"))
@@ -1235,7 +1242,7 @@
      (make-temporary-file "attalambda-version-target-~a"
                           #f
                           (path-only root)))
-   (write-exact-bytes version-target #"0.8.0\n")
+   (write-exact-bytes version-target #"0.9.0\n")
    (rename-file-or-directory product-version-file saved-version-file)
    (make-file-or-directory-link version-target product-version-file)
    (define-values (version-link-findings version-target-reads)

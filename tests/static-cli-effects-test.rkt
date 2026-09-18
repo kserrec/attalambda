@@ -1,0 +1,97 @@
+#lang racket/base
+(require rackunit racket/file racket/port racket/runtime-path racket/tcp
+         "helpers/fresh-language.rkt")
+(define-runtime-path launcher "../runner/attalambda.rkt")
+(define-runtime-path driver "helpers/static-cli-driver.rkt")
+(define directory (make-temporary-file "attalambda-static-cli-effects-~a" 'directory))
+(define source (build-path directory "effects.attl"))
+(define marker (build-path directory "program-write.bin"))
+(define data (build-path directory "program-data.bin"))
+(define profile (build-path directory "personal-state"))
+(define environment (environment-variables-copy (current-environment-variables)))
+(for ([key '(#"HOME" #"XDG_CONFIG_HOME" #"XDG_STATE_HOME")])
+  (environment-variables-set! environment key (path->bytes profile)))
+(define (run body [program launcher] [mode "--check"])
+  (write-source source (string-append "#lang attalambda\n" body))
+  (run-command environment racket-executable (list (path->string program) mode (path->string source)) 30))
+(define (finished result status)
+  (check-false (command-result-timed-out? result) (result-diagnostic result))
+  (check-equal? (command-result-status result) status (result-diagnostic result)))
+(dynamic-wind
+ void
+ (lambda ()
+   (test-case "checking has no stdout, input, data-file, write, exit, divergence or history effect"
+     (write-source data "original bytes")
+     (define body
+       (format "(stdout \"PROGRAM-MUST-NOT-RUN\") (read-line UNIT) (read-file ~s) (write-file ~s (string-to-bytes \"changed\"))"
+               (path->string data) (path->string marker)))
+     (define direct (run body))
+     (finished direct 0)
+     (check-false (regexp-match? #rx#"PROGRAM-MUST-NOT-RUN" (command-result-stdout direct)))
+     (check-equal? (command-result-stderr direct) #"")
+     (define observed (run body driver "observe-input-data"))
+     (finished observed 0)
+     (check-equal? (command-result-stderr observed) #"program-input-and-data-untouched\n")
+     (check-false (file-exists? marker))
+     (check-equal? (file->string data) "original bytes")
+     (for ([row '(("(exit 0)" 2) ("(rec loop = loop) loop" 0)
+                  ("(rec loop x = (loop x)) (loop 0)" 0)
+                  ("(stdout \"PROGRAM-MUST-NOT-RUN\") missing" 65)
+                  ("(stdout \"PROGRAM-MUST-NOT-RUN\") (" 65))])
+       (define result (run (car row)))
+       (finished result (cadr row))
+       (check-false (regexp-match? #rx#"PROGRAM-MUST-NOT-RUN" (command-result-stdout result)))
+       (when (= (cadr row) 65) (check-equal? (command-result-stdout result) #"")))
+     (check-false (directory-exists? profile)))
+
+   (test-case "actual CLI analysis does not connect to a ready ephemeral loopback listener"
+     (define listener (tcp-listen 0 4 #t "127.0.0.1"))
+     (dynamic-wind
+      void
+      (lambda ()
+        (define-values (address port peer peer-port) (tcp-addresses listener #t))
+        ;; A real connection establishes the observer's positive control.
+        (define-values (client-in client-out) (tcp-connect "127.0.0.1" port))
+        (define accepted (sync/timeout 5 (tcp-accept-evt listener)))
+        (check-not-false accepted)
+        (close-input-port client-in) (close-output-port client-out)
+        (close-input-port (car accepted)) (close-output-port (cadr accepted))
+        (define result (run (format "(tcp-connect \"127.0.0.1\" ~a)" port)))
+        (finished result 2)
+        (check-false (sync/timeout 0.1 (tcp-accept-evt listener))))
+      (lambda () (tcp-close listener))))
+
+   (test-case "interrupt during a final custom-port flush is nonzero even after report bytes"
+     (define result (run "1" driver "interrupt-flush"))
+     (finished result 130)
+     (check-equal? (length (regexp-match* #rx#"Static type check: FULL PASS" (command-result-stdout result))) 1)
+     (check-regexp-match #rx#"static checking interrupted" (command-result-stderr result)))
+
+   (test-case "an actual interrupt before analysis completion returns 130 and closes owned resources"
+     (write-source source "#lang attalambda\n1")
+     (define-values (process output input error-port)
+       (parameterize ([current-environment-variables environment])
+         (subprocess #f #f #f racket-executable (path->string driver) "interrupt-analysis" (path->string source))))
+     (dynamic-wind
+      void
+      (lambda ()
+        (close-output-port input)
+        (define ready (sync/timeout 30 (read-line-evt error-port 'any)))
+        (check-equal? ready "analysis-ready")
+        (unless (equal? ready "analysis-ready") (error 'test "analysis readiness failed"))
+        (subprocess-kill process #f)
+        (define completed (sync/timeout 10 process))
+        (check-not-false completed)
+        (unless completed (error 'test "analysis interrupt timed out"))
+        (check-equal? (subprocess-status process) 130)
+        (check-equal? (port->bytes output) #"")
+        (define diagnostic (port->bytes error-port))
+        (check-regexp-match #rx#"static checking interrupted" diagnostic)
+        (check-regexp-match #rx#"owned-resource-closed" diagnostic)
+        (check-false (regexp-match? #rx#"private|context:" diagnostic)))
+      (lambda ()
+        (when (eq? (subprocess-status process) 'running)
+          (subprocess-kill process #t) (subprocess-wait process))
+        (unless (port-closed? input) (close-output-port input))
+        (close-input-port output) (close-input-port error-port)))))
+ (lambda () (delete-directory/files directory)))

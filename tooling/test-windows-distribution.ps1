@@ -484,7 +484,7 @@ try {
     Assert-RegularNonsymlinkFile $archivePath 'transferred archive'
     Assert-RegularNonsymlinkFile $checksumPath 'transferred SHA256SUMS'
 
-    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0|0[.]7[.]0|0[.]8[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
+    $nameMatch = [regex]::Match($archiveName, '^attalambda-(0[.]2[.]0(?:-dev|-rc[.]1)?|0[.]3[.]0(?:-dev)?|0[.]4[.]0|0[.]5[.]0|0[.]6[.]0|0[.]7[.]0|0[.]8[.]0|0[.]9[.]0)-windows-x86_64[.]zip$', [Text.RegularExpressions.RegexOptions]::CultureInvariant)
     if (-not $nameMatch.Success) {
         Fail 'archive filename contains an unapproved product version or target'
     }
@@ -719,7 +719,7 @@ try {
     Assert-ProcessResult $versionResult 0 "AttaLambda $productVersion`n" '' 'packaged version'
     $firstStartupMilliseconds = $versionResult.Milliseconds
     $helpResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('--help') -WorkingDirectory $workRoot
-    Assert-ProcessResult $helpResult 0 "Usage:`n  attalambda [--no-history]`n  attalambda --repl [--no-history]`n  attalambda FILE.attl`n  attalambda --help`n  attalambda --version`n" '' 'packaged help'
+    Assert-ProcessResult $helpResult 0 "Usage:`n  attalambda [--no-history]`n  attalambda --repl [--no-history]`n  attalambda FILE.attl`n  attalambda --check FILE.attl`n  attalambda --help`n  attalambda --version`n" '' 'packaged help'
     $helloResult = Invoke-CapturedProcess -Executable $attalambda -Arguments @('examples\hello.attl') -WorkingDirectory $firstRoot
     Assert-ProcessResult $helloResult 0 "Hello from AttaLambda.`n" '' 'guide hello'
     $guideSource = [IO.Path]::Combine($firstRoot, 'my-program.attl')

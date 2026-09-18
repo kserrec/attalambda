@@ -729,3 +729,49 @@ Actual generated object-language terms remain only variables, unary lambdas and
 application, and both purity and boundary gates must reject violations. No new
 object-language effect, evaluator, mutable global, type or representation is added.
 This amendment overrides earlier tooling exclusions only for these responsibilities.
+
+
+---
+
+# Optional Static Checking Amendment (2026-09-17)
+
+The [Optional Static Inference and Checking specification, revision 3](../optional-static-checking-spec.md)
+permits narrowly classified host-side source analysis and report tooling. Static
+types, schemes, substitutions, constraints, proof states, and source metadata
+are tooling data; they are never object-language values or computations. Core,
+effects, runtime codec, runtime host, readers, and the generalized runtime type
+checker retain their existing roles. Every expanded object-language computation
+still consists only of variables, unary lambdas, and application.
+
+The trusted frontend may mechanically expose a private, opt-in inert analysis
+view before lowering erases literal kinds, source-level let/rec boundaries,
+lexical binding identity, declaration dependencies, and source locations.
+Inference algorithms stay outside the expander. Analysis reuses the existing
+restricted reader, binding rules, declaration recognition, and sugar semantics;
+it must not introduce a second grammar or attach built-in contracts by spelling.
+Separate request/result metadata keys have one defined owner and validated
+payloads. Missing or corrupt source accounting is an internal failure, never a
+successful empty analysis. Ordinary expansion remains binding-equivalent.
+
+Trusted expansion and loading the fixed trusted language declaration graph are
+permitted. Instantiating, evaluating, demanding, or rendering the user's module
+is forbidden in checking. The checker must not use the evaluating session
+preparation path or a live REPL namespace, follow source-supplied import paths,
+read program data files, perform program I/O, or reread the source snapshot.
+Existing declaration, encoding, reader-extension, regular-file, symlink, and
+dotenv-path restrictions remain intact. Analysis state is isolated between
+inputs; reports do not use object-language rendering or the runtime codec.
+
+Private checker modules may live under runner/static/, classified individually
+by exact path, required capabilities, and import direction as they are added.
+A necessary shared compile-time frontend helper requires the same explicit
+classification and remains independent of inference. The launcher may dispatch
+the exact check invocation, format/emit its completed report, and return its
+specified process status. The backend returns structured analysis data; it
+does not print, exit, open sockets, execute source, or mutate a REPL session.
+Pure production modules never depend on checker, reader, test, or tooling code.
+No blanket directory permission, new privileged binding, host operation, codec
+import path, evaluator, runtime function detection, or purity-gate exemption is
+authorized. Structural gates must still reject unknown sources and forbidden
+dependencies. This amendment overrides earlier tooling exclusions only for
+these responsibilities; all object-language purity requirements remain binding.

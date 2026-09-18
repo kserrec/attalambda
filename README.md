@@ -64,6 +64,31 @@ bypass operating-system security protections to try the language, so macOS
 builds without Apple signing and notarization and Windows builds without
 Authenticode signing are not distributed.
 
+## Optional static checking — unreleased local feature
+
+This feature checkout adds `--check FILE.attl`. The published 0.8.0 download
+does **not** contain it. In this registered checkout, check an existing program
+without running it:
+
+```sh
+racket runner/attalambda.rkt --check examples/hello.attl
+```
+
+The report says `FULL PASS` (status 0), `FAIL` (1), or `PARTIAL` (2), with exact
+definition and expression coverage and inferred signatures. Checking needs no
+annotations and performs no program input, output, file, network, or exit effect.
+Ordinary execution and runtime type checks remain available unchanged.
+
+The first version infers finite function and container types, reusable rank-1
+polymorphic definitions, source lets, and ordinary `rec`. It conservatively
+leaves unwrapping, empty-list access, numeric refinements, and raw host protocols
+partial. A full pass relies on audited built-in contracts and does not prove
+termination or successful external operations. See the [checking reference](docs/API.md#optional-static-checking-unreleased),
+[audited contracts](docs/static-checking-contracts.md), and
+[measured results for all five examples](docs/static-checking-corpus.md).
+Local candidate/build identities are recorded in [HANDOFF.md](HANDOFF.md);
+this work has not been published.
+
 ## Run it from source
 
 The `main` branch includes the released runtime input and interactive shell.
@@ -192,6 +217,7 @@ intentionally repeats neither.
 | [`runtime/host.rkt`](runtime/host.rkt) | The sole privileged `host`; start at `dispatch-request`. |
 | [`lang/expander.rkt`](lang/expander.rkt) | Public exports, literal expansion, currying, and one-time host injection. |
 | [`runner/attalambda.rkt`](runner/attalambda.rkt) | File/shell selection and sanitized launcher diagnostics. |
+| [`runner/static/`](runner/static) | Private non-evaluating type inference, audited contracts, coverage, reports, and the optional checking command. |
 | [`runner/repl.rkt`](runner/repl.rkt) | Commands, original-input handoff, echo, and history lifecycle. |
 | [`runner/session.rkt`](runner/session.rkt) | Checked entry modules, binding snapshots, loads, and resource ownership. |
 | [`macros/`](macros) | The two trusted mechanical-expansion modules every production file compiles through. |

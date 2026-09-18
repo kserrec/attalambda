@@ -1,6 +1,6 @@
 #lang lazy
 
-(require (for-syntax racket/base)
+(require (for-syntax racket/base "static-data.rkt" "static-source.rkt")
          (only-in racket/base
                   [void language-discard])
          (only-in "../macros/macros.rkt"
@@ -268,6 +268,143 @@
          make-http-serve-one
          make-http-server)
 
+;; Catalog labels are inert metadata. A source reference acquires one only by
+;; free-identifier equality with the actual trusted binding on the left.
+(define-for-syntax
+ (language-analysis-builtins)
+ (list
+  (cons #'language-if "if")
+  (cons #'language-cons "cons")
+  (cons #'language-host "host")
+  (cons #'language-exit "exit")
+  (cons #'language-print "print")
+  (cons #'language-read-line "read-line")
+  (cons #'HEAD "head")
+  (cons #'TAIL "tail")
+  (cons #'IS-NIL "is-nil")
+  (cons #'LEN "len")
+  (cons #'TAKE "take")
+  (cons #'DROP "drop")
+  (cons #'typed-nth-rat "nth")
+  (cons #'typed-take-while "take-while")
+  (cons #'typed-drop-while "drop-while")
+  (cons #'typed-append "append")
+  (cons #'typed-reverse "reverse")
+  (cons #'typed-zip "zip")
+  (cons #'typed-concat "concat")
+  (cons #'typed-flatten "flatten")
+  (cons #'typed-map "map")
+  (cons #'typed-filter "filter")
+  (cons #'typed-reduce "reduce")
+  (cons #'typed-any? "any?")
+  (cons #'typed-all? "all?")
+  (cons #'typed-find "find")
+  (cons #'typed-find-index "find-index")
+  (cons #'typed-contains? "contains?")
+  (cons #'typed-range-rat "range")
+  (cons #'typed-repeat-rat "repeat")
+  (cons #'NOT "not")
+  (cons #'AND "and")
+  (cons #'OR "or")
+  (cons #'XOR "xor")
+  (cons #'SUCC "succ")
+  (cons #'ADD "add")
+  (cons #'SUB "sub")
+  (cons #'MULT "mult")
+  (cons #'DIV "div")
+  (cons #'EQ "eq")
+  (cons #'LT "lt")
+  (cons #'LTE "lte")
+  (cons #'GT "gt")
+  (cons #'GTE "gte")
+  (cons #'IS-ZERO "is-zero")
+  (cons #'MAKE-CHAR "make-char")
+  (cons #'CHAR-EQ "char-eq")
+  (cons #'CHAR-LT "char-lt")
+  (cons #'CHAR-LTE "char-lte")
+  (cons #'CHAR-GT "char-gt")
+  (cons #'CHAR-GTE "char-gte")
+  (cons #'MAKE-STRING "make-string")
+  (cons #'STRING-EMPTY? "string-empty?")
+  (cons #'STRING-LENGTH "string-length")
+  (cons #'STRING-EQ "string-eq")
+  (cons #'STRING-APPEND "string-append")
+  (cons #'STRING-HEAD "string-head")
+  (cons #'STRING-TAIL "string-tail")
+  (cons #'STRING-PREFIX? "string-prefix?")
+  (cons #'STRING-CONTAINS? "string-contains?")
+  (cons #'EXP "exp")
+  (cons #'RECIP "recip")
+  (cons #'NEG "neg")
+  (cons #'ABS "abs")
+  (cons #'FLOOR "floor")
+  (cons #'IS-WHOLE "is-whole")
+  (cons #'IS-NONNEGATIVE-WHOLE "is-nonnegative-whole")
+  (cons #'MAKE-BYTE "make-byte")
+  (cons #'BYTE-VALUE "byte-value")
+  (cons #'BYTE-EQ "byte-eq")
+  (cons #'BYTE-LT "byte-lt")
+  (cons #'BYTE-LTE "byte-lte")
+  (cons #'BYTE-GT "byte-gt")
+  (cons #'BYTE-GTE "byte-gte")
+  (cons #'STRING-TO-BYTES "string-to-bytes")
+  (cons #'BYTES-TO-STRING "bytes-to-string")
+  (cons #'SOME "some")
+  (cons #'IS-SOME "is-some")
+  (cons #'IS-NONE "is-none")
+  (cons #'OPTION-CASE "option-case")
+  (cons #'MAKE-MAP "make-map")
+  (cons #'MAP-EMPTY? "map-empty?")
+  (cons #'MAP-SIZE "map-size")
+  (cons #'MAP-LOOKUP "map-lookup")
+  (cons #'MAP-CONTAINS? "map-contains?")
+  (cons #'MAP-SET "map-set")
+  (cons #'MAP-REMOVE "map-remove")
+  (cons #'TRUE "TRUE")
+  (cons #'FALSE "FALSE")
+  (cons #'NIL "NIL")
+  (cons #'UNIT "UNIT")
+  (cons #'NONE "NONE")
+  (cons #'error-to-string "error-to-string")
+  (cons #'bool-to-string "bool-to-string")
+  (cons #'list-to-string "list-to-string")
+  (cons #'result-to-string "result-to-string")
+  (cons #'char-to-string "char-to-string")
+  (cons #'string-to-string "string-to-string")
+  (cons #'rat-to-string "rat-to-string")
+  (cons #'unit-to-string "unit-to-string")
+  (cons #'byte-to-string "byte-to-string")
+  (cons #'option-to-string "option-to-string")
+  (cons #'map-to-string "map-to-string")
+  (cons #'value-to-string "value-to-string")
+  (cons #'make-ok "make-ok")
+  (cons #'make-err "make-err")
+  (cons #'is-ok "is-ok")
+  (cons #'is-err "is-err")
+  (cons #'unwrap-ok "unwrap-ok")
+  (cons #'unwrap-err "unwrap-err")
+  (cons #'EMPTY-STRING "EMPTY-STRING")
+  (cons #'stdout "stdout")
+  (cons #'read-file "read-file")
+  (cons #'write-file "write-file")
+  (cons #'tcp-connect "tcp-connect")
+  (cons #'tcp-listen "tcp-listen")
+  (cons #'tcp-accept "tcp-accept")
+  (cons #'tcp-read "tcp-read")
+  (cons #'tcp-write "tcp-write")
+  (cons #'tcp-close "tcp-close")
+  (cons #'parse-http-request "parse-http-request")
+  (cons #'HTTP-STATUS-OK "HTTP-STATUS-OK")
+  (cons #'HTTP-STATUS-BAD-REQUEST "HTTP-STATUS-BAD-REQUEST")
+  (cons #'HTTP-STATUS-NOT-FOUND "HTTP-STATUS-NOT-FOUND")
+  (cons
+   #'HTTP-STATUS-INTERNAL-SERVER-ERROR
+   "HTTP-STATUS-INTERNAL-SERVER-ERROR")
+  (cons #'render-http-response "render-http-response")
+  (cons #'make-http-path-handler "make-http-path-handler")
+  (cons #'make-http-serve-one "make-http-serve-one")
+  (cons #'make-http-server "make-http-server")))
+
 ;; Racket's ordinary module wrapper prints every top-level expression result.
 ;; A language program instead forces each expression for its effects and
 ;; discards the resulting lambda value. Definitions remain definitions.
@@ -397,6 +534,7 @@
             ;; Only trusted tooling constructs this property. Restricted source
             ;; reading cannot create syntax properties or native module forms.
             [interaction (syntax-property stx 'attalambda-interaction)]
+            [analysis (syntax-property stx analysis-request-key)]
             [imports (if interaction (car interaction) '())]
             [imported (map (lambda (binding) (datum->syntax stx (car binding))) imports)]
             [definitions (language-check-definitions forms imported)]
@@ -435,7 +573,25 @@
                           [interaction #`(def #,result = ((lambda (held) held) #,form))]
                           [else #`(language-discard #,form)]))
                   forms results)])
-         #'(#%module-begin import-form ... export-form ... prepared-form ...)))]))
+         (let ([prepared #'(#%module-begin import-form ... export-form ... prepared-form ...)])
+           (cond
+             [analysis
+              (unless (and (eq? analysis analysis-request) (not interaction))
+                (error 'static-source "invalid analysis request"))
+              ;; Validate the entire ordinary expansion first. Only then expose
+              ;; source metadata; invalid source never becomes a partial view.
+              (syntax-property
+               (local-expand prepared 'module-begin '()) analysis-result-key
+               (make-source-view
+                forms definitions language-definition-parts language-bound-name
+                language-dependencies language-sugar-expression
+                (list (cons 'lambda #'language-lambda) (cons 'let #'language-let)
+                      (cons 'application #'language-application) (cons 'datum #'language-datum)
+                      (cons 'unary-let #'language-unary-let) (cons 'list #'language-list)
+                      (cons 'cond #'language-cond) (cons 'rec #'language-rec)
+                      (cons 'nil #'NIL) (cons 'cons #'language-cons) (cons 'if #'language-if))
+                (language-analysis-builtins)))]
+             [else prepared]))))]))
 
 (define-syntax (language-rec stx)
   (syntax-case stx ()

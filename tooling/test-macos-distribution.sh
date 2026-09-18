@@ -109,7 +109,7 @@ artifact_root_name="${archive_name%.tar.gz}"
 product_version="${artifact_root_name#attalambda-}"
 product_version="${product_version%-$target_identifier}"
 case "$product_version" in
-  0.2.0-dev|0.2.0-rc.1|0.2.0|0.3.0-dev|0.3.0|0.4.0|0.5.0|0.6.0|0.7.0|0.8.0) ;;
+  0.2.0-dev|0.2.0-rc.1|0.2.0|0.3.0-dev|0.3.0|0.4.0|0.5.0|0.6.0|0.7.0|0.8.0|0.9.0) ;;
   *) die "archive filename contains an unapproved product version" ;;
 esac
 [[ "$artifact_root_name" == "attalambda-$product_version-$target_identifier" ]] ||
@@ -412,7 +412,7 @@ check_captured_output "AttaLambda $product_version"$'\n' "packaged version"
 
 run_attalambda --help >"$stdout_file" 2>"$stderr_file"
 check_captured_output \
-  $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n' \
+  $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --help\n  attalambda --version\n' \
   "packaged help"
 
 (cd "$first_root" && run_attalambda examples/hello.attl \

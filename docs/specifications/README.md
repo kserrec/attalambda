@@ -63,9 +63,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `f681a8c34548b81b219cd1a3bdd9ac8025b92ea266976291d45fa73f786ed448` |
-| `02-type-tags-and-absolute-lambda-purity.md` | `1223746f4b281195ee2a4bf2543b021067c6e73069098a7dd52340c36ad22d65` |
-| `03-canonical-public-naming-and-host-isolation.md` | `afb63b2a8a85ad77b91dc5c77059263ec617745bde4e077d0ad504e96358ee37` |
+| `01-greenfield-core-language.md` | `74a5c90ec3acb4364a14a296f5c4c91fd03124a3012c00b91ec8976ee933328c` |
+| `02-type-tags-and-absolute-lambda-purity.md` | `5bbe050ad8ddb223eac1681d738950248e70c2905c47faef4c985fe87be31409` |
+| `03-canonical-public-naming-and-host-isolation.md` | `4498613f146120a8437704eb5dcc9c7f2c094f1682befc357856c383fa8b6a6d` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -141,3 +141,26 @@ The session uses fixed language declarations and fresh runtime instances;
 source, editor, history, and result observation remain separate tooling roles.
 Completion and standalone candidate verification remain open. No additional
 canonical amendment or change to the preceding contract is made by this record.
+
+
+## Optional Static Checking Amendments (2026-09-17)
+
+The [complete revision-3 contract](../optional-static-checking-spec.md) authorizes
+optional standalone-file inference/checking and its narrowly classified private
+frontend/launcher scaffolding. These appended amendments supersede earlier
+exclusions only within that scope. They do not change runtime typing, grammar,
+representations, host capabilities, public expression bindings, or ordinary
+execution. The command is planned, not implemented or published; the active
+[plan](../../PLAN.md) records the baseline and subsequent steps.
+
+Every preceding canonical byte is preserved. The hashes immediately before
+these amendments were:
+
+- `01-greenfield-core-language.md`: `f681a8c34548b81b219cd1a3bdd9ac8025b92ea266976291d45fa73f786ed448`.
+- `02-type-tags-and-absolute-lambda-purity.md`: `1223746f4b281195ee2a4bf2543b021067c6e73069098a7dd52340c36ad22d65`.
+- `03-canonical-public-naming-and-host-isolation.md`: `afb63b2a8a85ad77b91dc5c77059263ec617745bde4e077d0ad504e96358ee37`.
+
+The supplied specification is saved verbatim with SHA-256
+`56aa3e0e8ef7688b439168e8f382698dcafa9e8f043097241fb29f588299f6c0`.
+Phase 0 changes only planning and contracts; later implementation must satisfy
+the unchanged structural gates and each specified acceptance checkpoint.

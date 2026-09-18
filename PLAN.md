@@ -1,3 +1,891 @@
+# Release 0.9.0 — optional static checking (authorized)
+
+Kyle requested “let's get it released - version 0.9.0 right?” after the completed
+independent review. This authorizes the version preparation, milestone push/PR,
+reviewed merge, exact merged-source build and consumer, annotated `v0.9.0` tag,
+GitHub Release with the Linux archive and checksum, fresh public-download
+verification, and final publication records. It supersedes the local-only
+endpoint below. Continue autonomously through all phases. Preserve all earlier
+releases, assets and tags; Linux x86-64 remains the only public binary target.
+
+Verified start: clean `optional-static-checking` at
+`8afe9609f33dac67b0e6d1c9508601e2d587b7c4`; local/remote main
+`f6938b286329532230be210de0eaaa398286d38a`; no remote milestone branch or 0.9.0
+tag/release. Seven earlier releases and fourteen assets are snapshotted in
+`/tmp/attalambda-090-release-g5_0101v/previous-releases.json`; tag identities are
+in `previous-tags.txt`. The reviewed 0.8.0-metadata candidate remains historical.
+
+## Phase 1 — prepare and verify release inputs
+
+- [x] 1.1 Update VERSION to 0.9.0 and package projection to 0.9; extend only the
+  exact approved-version tables and matching tests. Prepare the archive guide and
+  0.9.0 notes. Current public-download claims remain 0.8.0 until publication.
+  Raise only the source CI outer deadline to 45 minutes: the preceding 104-file
+  run took 34m36s locally, exceeding the existing 30-minute ceiling. No individual
+  test deadline, runtime behavior, inference algorithm or dependency changes.
+- [ ] 1.2 Run focused version/distribution checks, then the full corrected isolated
+  Racket CS 9.3 suite and both structural gates. Review the scoped release diff,
+  commit/push the milestone, open the PR and verify every exact-head CI job.
+
+Local verification for 1.2 is complete: 661 focused assertions and both gates;
+the full run passed 104 Racket files / 26982 reported tests, 49 Python methods,
+40 pure production modules and the boundary inventory in 29m42s.
+`release-result.json` in the evidence root verifies all 226 executable,
+packaging and workflow inputs against the tested snapshot. The release diff
+changes version approvals/expectations, the guide and CI ceiling; checker and
+runtime implementations are unchanged from the independent review. PR and
+exact-head remote checks remain pending at this preparation checkpoint.
+
+## Phase 2 — merge and verify the release archive
+
+- [ ] 2.1 Merge the exact reviewed PR head with an expected-SHA guard; verify
+  the resulting tree and all merged-head CI jobs. Fast-forward local main.
+- [ ] 2.2 Build from the exact clean merged commit, verify its manifest and input
+  identities, and run the transferred no-Racket consumer at both paths. Record
+  archive/checksum/manifest hashes and preserve the verified bytes.
+
+## Phase 3 — publish and verify the public download
+
+- [ ] 3.1 Recheck unused version/tag and unchanged prior assets, create/push an
+  unsigned annotated tag at the build commit, create one draft with that verified
+  tag and exact two assets, then compare authenticated draft downloads.
+- [ ] 3.2 Publish that verified draft as latest, fetch fresh unauthenticated public
+  copies, compare hashes and run the same consumer on the actual public archive.
+- [ ] 3.3 Update README/API/architecture/acceptance/release ledger/instructions and
+  handoff to observed publication. Commit/push records only, verify current-head
+  checks and preservation of older releases, clean owned resources and leave Git
+  clean. The archive retains its earlier source identity.
+
+---
+
+# Completed optional static-checking independent review (historical)
+
+Kyle approved one focused independent correctness review and a security review
+of the new checker's source/command boundaries after the completed candidate.
+Starting branch `optional-static-checking`, clean HEAD
+`ab521b034bd7ff0ea06daf70046518d1995c0499`; milestone base
+`f6938b286329532230be210de0eaaa398286d38a`. No general refactor or whole-repository
+audit is authorized. Existing local-commit authority continues; no remote action,
+merge or publication is authorized. The original candidate below is preserved.
+
+Evidence: `/tmp/attalambda-static-review-5du21rkr/`. Three fresh read-only reviewers
+cover inference, frontend/command security, and contracts; root covers changed
+structural checks, packaging and integration. Per-file coverage and proved
+scenarios are retained in the review reports. The isolated corrected Racket CS
+9.3 container is `attalambda-static-review`; the owner's runtime is untouched.
+
+- [x] Enumerate the milestone delta and interacting boundaries; close-read and
+  independently probe candidate failures. Four correctness findings are proven:
+  H1 loses known callable-input conflicts alongside gaps; H2 rejects valid explicit
+  application/datum forms internally; H3 gives tcp-listen the wrong success hint;
+  H4 maps trusted syntax faults to user-source status 65. No execution bypass is
+  demonstrated. These are defects in the completed milestone, not planned work.
+- [x] Fix each confirmed cause serially, pin siblings and preserve bounded hunters
+  as tests. The verified sequence was H3, H2, H1, H4. Ordinary source grammar,
+  runtime behavior, partial-result honesty and structural gates are preserved.
+- [x] Have a fresh agent cold-review the complete fix batch; settle every finding.
+  The cold review found no additional proved defect. Independent probes passed
+  18 inference cases, 34 syntax comparisons and five provenance cases.
+- [x] Run focused checks, full suite, purity/boundary checks and current corpus.
+  `review-full.log` exits 0: 104 Racket files / 26981 reported tests, 49 Python
+  methods, 40 pure production modules and the boundary gate. `review-result.json`
+  verifies 225 executable/packaging inputs against the tested snapshot. All five
+  example reports exactly match the original candidate. Freeze this reviewed,
+  verified source as a clean local commit before building.
+- [x] Build a new exact clean candidate and run its transferred no-Racket consumer.
+  Tested/build source is `7d577444bca5b8c101125d7cbf10e638a6e26cd0`; new archive
+  SHA-256 is `a39febf5db4c7e6b2871252e52d863d903c04d3e62ad01377252e9a7690b0828`,
+  19,873,969 bytes. Both path checks pass, including all 25 terminal methods at
+  each path and the new static regressions. Original/transferred/final digests
+  match. The original archive is preserved. Owned build/test and consumer
+  containers and transfer state are removed. HANDOFF.md records exact paths and
+  receipts; the final local record changes documents only. No remote action was
+  taken and no review finding or authorized delivery step remains open.
+
+---
+
+# Completed implementation milestone (before independent review)
+
+Kyle assigned the [complete revision-3 specification](docs/optional-static-checking-spec.md)
+on 2026-09-17 and explicitly authorized the isolated Docker test-image build
+with Python 3 and Git on resumption. The authorized endpoint is a fully tested,
+reviewed, standalone-verified local candidate. Use the existing milestone branch
+`optional-static-checking` and verified local phase commits. No push, pull
+request, merge, tag, release-asset replacement, or publication is authorized.
+Completed historical plans below grant no further authority.
+
+The supplied specification defines six phases and 39 focused steps. Execute
+steps serially and retain each phase's checkpoint before its local commit.
+Phases 1–5 need multiple passes. On 2026-09-17 Kyle explicitly directed autonomous
+continuation: finish and verify each pass, then start the next without requiring
+another `next`. Stop only for a genuine owner-dependent blocker or serious
+unresolved doubt. This overrides the next skill's one-pass stopping rule, while
+retaining every step's full Work/Check requirements. If a step proves too large,
+subdivide it into stable lettered substeps before implementation, as the
+specification requires. Phase 0 is committed as `8bde48d`; Phase 1 is committed
+as `20b6241`. Phase 2 Steps 2.1–2.9 and Checkpoint 2 are complete: the full
+87-file suite, both structural gates, bounded robustness probes, and self-review
+passed. Phase 2 is committed as `de39c732bf7cf571689fdf3677b094b9d67bc1ba`.
+Phase 3 Steps 3.1–3.8 have passed their focused checks. All 129 public contracts
+are audited (106 complete, 23 partial); Checkpoint 3 passed its full suite,
+structural gates, input-hash comparison, and self-review, then committed as
+`76c2c8b`. Phase 4 Steps 4.1a–4.3 and Checkpoint 4 passed: full regression suite,
+structural gates, 218 matching executable inputs, and self-review. Phase 5 Steps
+5.1–5.4 passed their final source checks: 102 Racket files, 26973 reported tests,
+49 Python methods, both structural gates, and 223 matching executable/packaging
+inputs. Fresh self-review has no open finding. The clean tested/build source is
+`576d8837797f254fb068d19fd839ea1174e28151`. Its exact Linux archive passed the
+transferred no-Racket consumer, including static checks and all 25 terminal
+methods at both paths. Steps 5.5a/b and 5.6 are complete. The authorized local
+milestone is finished; no owner action or unfinished implementation step remains.
+The later delivery-record commit changes only PLAN.md, HANDOFF.md and
+docs/ACCEPTANCE.md; its identity and final clean status are recorded externally.
+Nothing was pushed, opened as a PR, merged, tagged, or published.
+
+## Verified starting state and change boundary
+
+The untouched checkout, local main, and remote main were at
+`f6938b286329532230be210de0eaaa398286d38a`. There was no matching milestone branch,
+open PR, or pre-existing local modification. The current branch was created at
+that revision. All three canonical specifications and their amendments were
+read in full, together with the relevant frontend, input/session, runtime
+contracts, examples, and preparation/build/consumer/CI machinery.
+
+The temporary 0.8.0 release receipt is absent. Its recorded fallback was checked:
+all ten current-main CI jobs passed, and its delta from the tagged/build source
+`f309199baa170ba5b12ff6b18b60dc49c114a8a1` contains only publication documents.
+The public tag, release ID 389458950, and both asset IDs/digests match the
+historical handoff. These read-only checks do not repeat release actions or
+attribute its archive to the later documentation revision.
+
+Phase 0 creates only `docs/optional-static-checking-spec.md`, as an exact copy
+of the supplied file, and changes PLAN.md, HANDOFF.md, and the four files in
+`docs/specifications/`. Canonical amendments are appended; every preceding
+canonical byte and every historical plan/handoff byte is retained. Executable
+code, tests, structural gates, build scripts, dependencies, VERSION, info.rkt,
+README/API, examples, and release records have no change in this phase.
+
+Later phases may modify the existing expander, launcher, exact structural gate,
+tests, Linux consumer, and relevant current documentation, and create explicitly
+classified checker modules and focused tests. They must preserve ordinary
+execution, interactive behavior, runtime type checks, representation, host
+capabilities, source grammar, and version metadata. No checker command or static
+contract inventory is implemented at the end of Phase 0.
+
+## Pilot expectations fixed before implementation
+
+Step 2.9 uses the real frontend/kernel and one audited seed inventory. The
+required supported pilot is reusable identity/apply/compose, partial arithmetic,
+the source-let versus monomorphic-lambda distinction, acyclic forward bindings,
+and ordinary factorial/summation. The two definitions and arithmetic call from
+specification Section 3.2 must be established at Checkpoint 2; its rendering and
+stdout calls join at Phase 3. Existing actual recursion examples are in
+`tests/language-test.rkt` and `tests/interactive-expansion-test.rkt`.
+
+Guarded `unwrap-ok`, empty-list access, and range/integrality-dependent
+constructors remain partial without variant, nonempty, or range refinements.
+Raw self-application requires unsupported recursive types. Incomplete references
+remain incomplete through aliases, nested bodies, returned functions, and
+dependent callers. An explanatory success hint cannot establish a result or
+manufacture a downstream conflict. A known later argument mismatch still fails
+when an earlier argument has a gap. These are required expectations, not measured
+checker outcomes. No percentage of the existing corpus is promised.
+
+The revision-3 correction is explicit: finite contradictions in homogeneous
+List elements or common-result branches produce FAIL, including through aliases
+and higher-order calls. Ordinary runtime behavior stays unchanged.
+
+| Supplied fixtures | Required outcome and gate |
+| --- | --- |
+| C01, C02, C05, C09 | FULL PASS at the Phase 2 inference gate; C05 is check-only and must never execute. |
+| C03, C04, C06, C07, C16 | FAIL at Phase 2, with captured variables and recursive self-calls monomorphic; C16 preserves the established declaration of double. |
+| C11, C13, C14 | PARTIAL at Phase 2; Error alternatives, bare unwrap alias, and nested bodies cannot be hidden. |
+| C08, C10 | FAIL at Phase 3: cons aliases obey homogeneous List constraints and filter requires Bool even on NIL. |
+| C12 | FAIL plus the head-NIL Error-alternative gap at Phase 3; the seed-only pilot uses unwrap-ok in its first argument. |
+| C15, C17 | PARTIAL at Phase 3: nested data restrictions and an unchecked stored Map comparator cannot be hidden. |
+| C18 | FULL PASS with Error result at Phase 3; deliberate Error values are allowed. |
+| C19 | Invalid source, status 65, with no program output at the frontend and CLI gates. |
+| C20 | Internal failure for missing source accounting at Phase 1 and pending final contracts at Phase 4; CLI status 70. |
+| C21 | Stable repeated backend analyses at Phase 2 and subsequent report/CLI gates. |
+| C22 | Nonzero report-delivery failure and interrupted analysis at Phase 4; no provisional full-pass success or replay. |
+
+All five public example files were inspected. `hello.attl` and `stdout.attl`
+use the required complete stdout contract. `foundations.attl` combines exact
+arithmetic, Option/Map, and Result unwraps; `file-round-trip.attl` contains guarded
+unwraps and result branches; `http-server.attl` includes unwrap/head access,
+numeric boundary conditions, and raw host. Those operations require the stated
+V1 gaps, and any independently established finite conflict must still be
+reported. Phase 5 measures each whole-file verdict and reason; source inspection
+here is not a substitute for that corpus run or the Phase 3 contract audit.
+
+## Phase 0 environment and checkpoint evidence (historical)
+
+The untouched baseline at `f6938b286329532230be210de0eaaa398286d38a` passed
+`./run-all-tests.sh` with exit 0: 69 Racket test files and
+26845 reported Racket tests. The Python terminal harness ran
+49 methods in its two suites. The same full-suite command
+passed the expanded purity check for 40 production modules and the complete
+source inventory/boundary gate. No new production or test unit was added.
+Because this phase changes only planning/contracts, these unchanged executable
+inputs retain that baseline evidence; separate document checks verify the final
+specification bytes, historical prefixes/suffixes, hashes, links, and scope.
+
+Evidence directory: `/tmp/attalambda-static-phase0-q0w_ycsc/`.
+`baseline-unprivileged.log` is the completed run; `baseline-result.json` records its
+process result and counts. `baseline-input-hashes.json` proves all 205 tracked
+snapshot files match the baseline. `environment.log` records Racket CS 9.3,
+Python 3.13.5, Git 2.47.3, Linux x86-64, retained Racket packages, and available
+builder utilities. `preflight.json` records read-only Git/GitHub reconciliation.
+
+The prepared Docker image is
+`sha256:5366fd60f701ca1cbf5172c17bfa1150ca8a5e7500c3a9d19f5bbca4236be59c`,
+derived from the verified full Racket image
+`sha256:f9c540abe281413dc9e25bfbe6e35276f1a5bca1fa40213c40ac7bac6bb69c62`.
+It adds only isolated test/build tooling and its native dependencies; no Racket
+package version or AttaLambda dependency changed. The existing reviewed promise
+and Expeditor corrections were applied inside the disposable test container and
+verified with `racket tooling/prepare-racket-runtime.rkt --check`. The image
+itself remains unpatched: future containers must apply/check the same corrections.
+Package installation and tests ran as isolated UID/GID 1000, after root-only
+preparation of the agent-owned container. `runner-unprivileged.log` records the
+focused launcher pass before the complete suite; `unprivileged-preparation.log`
+and `runner-unprivileged.sh` retain the setup output and exact test sequence.
+`prepare-unprivileged.sh` creates the container-only test user and assigns its
+Racket installation to that user so corrected dependency bytecode can rebuild.
+The run had no external network and a 30-minute outer deadline. The normal
+installed Racket 8.10 was not modified.
+
+Exact in-container preparation/test commands were `racket --version`,
+`python3 --version`, `git --version`,
+`racket tooling/prepare-racket-runtime.rkt --apply`,
+`racket tooling/prepare-racket-runtime.rkt --check`,
+`raco pkg install --batch --scope user --link --name attalambda --deps fail --no-docs --fail-fast /evidence/baseline-unprivileged`,
+`raco make tests/runner-test.rkt`, `raco test tests/runner-test.rkt`,
+and `./run-all-tests.sh`. The fresh snapshot excluded dotenv paths before copying.
+
+The existing isolated consumer image
+`sha256:dabaae31057cbc79baf7e2afa65b8c8cfd378b5013e4e8a95a520265fc794803`
+passes its prerequisite probe: Python 3.12.3 and pseudo-terminal/standard-library
+facilities work, with Racket/raco absent, no external network, a read-only root,
+non-root user, and dropped capabilities. Log: `consumer-prerequisites.log`.
+This is environment readiness only, not a build or artifact consumer pass.
+There is no new archive, measured static example-corpus result, or audited static
+contract inventory yet. macOS/Windows checks were not run for this local phase;
+their existing source and CI configuration are unchanged.
+
+Earlier unsuccessful preparation attempts remain recorded. `baseline.log`
+stopped at private snapshot directory permissions; `baseline-run.log` stopped
+at the package source `.` being rejected. `baseline-full.log` passed 21 checks
+before deliberate interruption (137) after discovering missing Python/Git.
+The elevated image-build requests were rejected by the execution layer.
+Following Kyle's authorization, the build succeeded within sandbox permissions
+using `docker --config /tmp/attalambda-static-phase0-q0w_ycsc/docker-client build`;
+the recipe and output are `Dockerfile` and `toolchain-build-contained.log`.
+No failed attempt is counted as a complete baseline and no assertion, test
+deadline, or product source was changed to obtain success.
+
+The first prepared-image run, `baseline-prepared.log`, exited 1 at three launcher
+assertions for a single unreadable-file fixture. Root bypassed its mode-000
+permissions and executed the file. A direct root/unprivileged probe established
+that cause (`permissions-diagnosis.json`). A fresh, byte-verified snapshot and
+unprivileged test user corrected the environment; the focused launcher test
+passed before the final full-suite run. No product or test source was changed.
+The first unprivileged setup stopped before tests because the root-owned Racket
+installation rejected bytecode writes (`unprivileged-cache-denied.log`). Giving
+the disposable installation to its test user resolved that prerequisite.
+
+Checkpoint review is a fresh self-review of authority, amendments, baseline
+evidence, static/runtime separation, and the fixed C01–C22 expectations; no
+independent reviewer or implementation review is claimed. Document verification
+uses `python3 /tmp/attalambda-static-phase0-q0w_ycsc/verify-phase0.py` and records
+`documentation-verification.json`. The supplied specification is byte-for-byte
+identical to the upload, including its intentional Markdown hard breaks. Other
+changed files pass ordinary whitespace checks. Previous canonical bytes and
+historical plan/handoff records are preserved. No open finding remains.
+
+Phase 0 closes with one local documentation/contract commit; its exact hash is
+recorded in the external `state.json` and final response after commit, not inside
+a self-referential record. No push or other remote mutation occurs. Owned test
+containers are removed; the recorded image, snapshot, and logs are retained for
+later steps. **Next unfinished step: 1.1a, expansion-only preparation.**
+No owner action is required to start that step.
+
+## Active phases and steps
+
+
+
+All six phases are complete. The checked steps below retain their focused Work/Check requirements and checkpoint evidence. Final source and artifact identities are separate from the later delivery-record commit, as required by Section 10 of the specification.
+
+## Phase 0 — Confirm the workspace, constraints, and usable V1 scope
+
+**Purpose:** establish the actual baseline, authority, environment, and expected limitations.
+**Prerequisites:** explicit implementation assignment and repository read access.
+
+- [x] **0.1 — Reconcile the checkout and choose the safe workspace.**
+  **Work:** Read current project instructions, all canonical contracts/amendments, active plan/handoff, affected source, relevant PRs, ancestry, and local changes. Compare with the pinned baseline. Choose or reuse one milestone branch/worktree without disturbing other work. Do not update project source/contracts before the baseline in 0.2.
+  **Check:** Record `git rev-parse HEAD`, `git branch --show-current`, `git status --short --branch`, relevant changes, and applicable authority. A clean, separate authorized worktree is preferable to resetting/stashing another person's work. Existing public refs/assets are unchanged; a local-only assignment does not require remote write access.
+
+- [x] **0.2 — Establish the isolated test and candidate environment.**
+  **Work:** Inspect preparation/build/consumer scripts. Provision or reuse an agent-owned supported runtime; confirm Linux build/consumer prerequisites and available review tools.
+  **Check:** Record `racket --version`, dependency-correction `--check`, and untouched `./run-all-tests.sh` results. Name unavailable essential infrastructure now. Do not modify the owner's runtime or claim a historical test count as the new baseline.
+
+- [x] **0.3a — Save the active plan and narrowly authorize checker scaffolding.**
+  **Work:** After the baseline, save/link this complete specification and record the active phase plan using repository conventions. Add only necessary canonical amendments for optional source analysis, its private classified scaffolding, and checker exit statuses. Preserve prior bytes and update specification hashes.
+  **Check:** Historical plans and canonical bytes are preserved, index hashes/links match, and the initial diff contains only intended planning/contract changes. No runtime primitive, tag, capability, typing extension, or release authority is introduced.
+
+- [x] **0.3b — Record realistic pilot expectations.**
+  **Work:** Inspect representative existing arithmetic/recursive, container, and boundary examples. Map the Section 9.2 counterexamples to required FULL PASS, FAIL, PARTIAL, or invalid-source expectations before implementation can bias the expected results.
+  **Check:** The active plan names the early pilot in Step 2.9, the guarded-unwrap/nonempty/range limitations, and the explicit heterogeneous-join verdict correction. No promised corpus percentage or undocumented feature is needed to meet those expectations.
+
+**Checkpoint 0 — Baseline gate.** Review authority, baseline, and the actual supported-versus-partial expectations; run required repository gates before committing. Stop dependent work on a relevant unexplained baseline failure. Missing packaging infrastructure may permit independent kernel work but remains a final-delivery blocker.
+
+## Phase 1 — Prove the non-evaluating frontend and embedding path
+
+**Purpose:** resolve binding, source-location, and metadata transport risk before inference.
+**Prerequisites:** Checkpoint 0 and understanding of the current restricted reader and expander.
+
+- [x] **1.1a — Add the expansion-only preparation seam.**
+  **Work:** Use the existing validated source snapshot and restricted parser to prepare a fresh module for trusted expansion only. Reuse the fixed language-declaration/embedding machinery as appropriate; do not call the session's evaluating preparation routine. Classify the new private helper and its exact imports in the same change.
+  **Check:** Focused frontend tests accept valid source and reject bad headers/readers, unsupported literals, and unknown names. Instrument the user-module boundary to establish that no evaluation/instantiation/demand occurs. Fresh preparations cannot inherit REPL bindings or an earlier input's namespace state.
+  **Evidence:** `runner/static/frontend.rkt` uses a validated snapshot and fresh
+  expansion namespace. Focused frontend, static-boundary mutation, and existing
+  boundary tests passed (167 checks); the whole boundary gate passed. Log:
+  `/tmp/attalambda-static-implementation-mmgdshl_/step-1.1a.log`. No user evaluation,
+  demand, input consumption, or output occurred. Phase 1 continues with 1.1b.
+
+- [x] **1.1b — Expose a complete inert source analysis view.**
+  **Work:** Add the smallest private opt-in expander seam retaining literal kinds, lexical identities, original source IDs, declaration dependencies, and explicit `let`/`rec` nodes before representation lowering. Validate the metadata's shape and source-accounting invariants. Keep type algorithms outside the expander.
+  **Check:** Recover literals, a curried function, an alias, a nested lambda, a local let, and a recursive definition. Missing/corrupted/duplicated IDs or a missing final form fail internally rather than passing an incomplete program. Without the request, existing expanded computation remains binding-equivalent to the original path; compare structural terms modulo fresh binder names and inert source properties, not incidental pretty-print bytes.
+  **Evidence:** Actual expansion transports validated prefabs through distinct
+  request/result properties, preserving source IDs and exact counts. View,
+  mutation, existing boundary tests, and gate passed; ordinary expanded terms
+  compare equal modulo generated binders/properties. A test observer initially
+  confused the trusted static-source helper with user modules; an identity probe
+  established the cause, and the corrected observer/positive control passed.
+  Logs: `step-1.1b.log` and `step-1.1b-observer-final.log` in the current evidence
+  directory. No inference exists yet; Step 1.2 follows.
+
+- [x] **1.2 — Preserve binding, sugar, forward references, and source abstraction boundaries.**
+  **Work:** Reuse expander logic for sequential lets, repeated binders, `list`, `cond`, acyclic forward references, zero-argument `rec`, and shadowed declaration keywords. Retain let-generalization boundaries while normalizing currying/list/cond mechanically.
+  **Check:** Actual-expander fixtures distinguish a user `add`/`if`/`cons` from the built-in and preserve hygienic generated operations. Source-local references identify their real binders even when names repeat. Ordinary datum-equivalent reader notation must be handled like the existing parser; do not invent new restrictions for an otherwise valid quoted/escaped spelling of an identifier. Preserve `rec` instead of only its fixed-point encoding. Existing direct/mutual-cycle rejection, literal validation, and original source locations remain unchanged; no symbol-only mock is sufficient.
+  **Evidence:** Six focused actual-expander tests passed, including every public
+  value's resolved catalog identity, escaped identifier spellings, shadowed
+  declarations, hygienic cons/if, repeated binders, forward edges, and zero-argument
+  rec. Log: `step-1.2.log`. No new source notation or runtime behavior was added.
+
+- [x] **1.3 — Prove preparation does not perform program effects.**
+  **Work:** Add synthetic user modules containing demanded stdout, input, file writes, exit, raw-host/network calls, and divergence. Include an effectful first form followed by invalid syntax.
+  **Check:** Preparation finishes or reports source errors without program output, consumed input bytes, marker-file writes, program exit, or network attempts. Combine instrumentation with actual isolated file/input/loopback observations; use bounded harness cleanup. The checker never calls the program to discover its types.
+  **Evidence:** `static-effects-test.rkt` passed both cases: instrumented file and
+  network guards have positive controls, then actual source analysis performs no
+  reads/writes of program data, connections, stdout, input consumption, or exit.
+  Demanded divergence and invalid final forms finish within the bounded harness.
+  Temporary files and an ephemeral loopback listener are cleaned up. Log:
+  `step-1.3.log`.
+
+- [x] **1.4 — Exercise the same frontend through executable embedding.**
+  **Work:** Compile a minimal test-only driver around the actual analysis seam using the existing embedding approach. Do not create a second parser or temporary public flag.
+  **Check:** Outside the checkout, the embedded driver analyzes source and retains metadata without source-path assumptions. Request and result properties remain distinct and validated. Retain the useful regression, not a parallel implementation or permanent probe framework.
+  **Evidence:** The actual frontend driver compiled and passed after both its
+  staged sources and isolated package installation were hidden. It recovered
+  the expected declarations, 11 source expressions, and resolved builtins;
+  the source stdout form never ran. Log: `step-1.4.log` in the current evidence
+  directory. The driver lives only under tests/helpers.
+
+**Checkpoint 1 — Frontend feasibility gate.** Run frontend/effect/embedding probes, affected source-reader and `tests/interactive-expansion-test.rkt` tests, full suite, and structural gates. Review binding/hygiene and non-execution counterexamples. Adapt failed metadata transport narrowly before investing in inference. Trusted compile-time expansion is allowed; evaluating the user's program is not.
+
+**Checkpoint 1 passed.** `./run-all-tests.sh` exited 0 in the isolated Racket
+9.3 container: 75 Racket test files, 26879 reported Racket tests, 49 Python
+terminal methods, purity for all 40 production modules, and the complete boundary
+gate. This includes the existing source-reader/interactive-expansion regressions
+and all six new static frontend test files. `phase1-full.log` and
+`phase1-result.json` in `/tmp/attalambda-static-implementation-mmgdshl_/` retain
+the run and byte hashes of all tested executable inputs; those inputs match the
+checkout. The final documentation-only checkpoint record does not change them.
+
+The checkpoint is a fresh self-review, not an independent review. It checked
+binding identity, shadowing, generated-operation hygiene, source accounting,
+source positions, recursive/declaration boundaries, fresh namespaces, cleanup,
+ordinary expanded-term equivalence, and actual executable embedding. No finding
+remains open. Executable changes add only inert frontend metadata and its private
+expansion seam; tests add the focused probes; tooling classifies exact modules
+and imports. PLAN/HANDOFF record results. Core, effects, runtime, public grammar,
+launcher behavior, version metadata, dependencies, and release assets retain
+their existing behavior. No inference or public check flag exists yet.
+
+## Phase 2 — Build the small inference engine and run the usefulness pilot
+
+**Purpose:** establish finite types, ordinary inferred polymorphism/recursion, and honest incomplete results.
+**Prerequisites:** Checkpoint 1. Seed contracts are created in Step 2.5a; the full library inventory is not a prerequisite.
+
+- [x] **2.1 — Implement structural types and separate proof state.**
+  **Work:** Add nominal types, arrows, containers, variables/schemes, and established/unproved/conflict results in classified checker modules. Keep display separate.
+  **Check:** Distinguish String from List(Char), Rat from Byte, a scheme variable from a hole, and Error from other types. Validate constructor arities. No solver, runtime dependency, or generalized type-system framework is introduced.
+  **Evidence:** `types.rkt` and `proof.rkt` are exact classified checker modules.
+  Constructor/nominal/hole tests plus the existing boundary tests passed (149
+  reported checks), followed by the complete source boundary gate. Log:
+  `step-2.1.log`. Proof state preserves concurrent gaps/conflicts and dependency
+  IDs independently of monotypes. Next: substitution and generalization.
+
+- [x] **2.2a — Implement substitution, instantiation, and eligible generalization.**
+  **Work:** Add fresh variables, free-variable sets, substitutions/composition, and fresh scheme instantiation. Implement generalization over the substituted environment as specified in 5.3. Keep schemes separate from monotypes and state local to an analysis.
+  **Check:** Independent identity instances have fresh variables; captured environment variables do not. Substitution respects bound scheme variables and composition order. Quantifiers never enter an arrow/container. Unit tests expose the stale-environment generalization bug before source integration.
+  **Evidence:** Structural substitution, composition, freshening, restriction
+  transport, and substituted-environment generalization passed focused tests.
+  An additional composition probe exposed double substitution; simultaneous
+  substitution corrected it, and bounded composition equations now cover the
+  class. Solver states reject unresolved/cyclic mappings. The final type/kernel
+  and existing boundary batch passed 154 checks and the gate; separate mutation
+  tests reject evaluation, output, environment reads, and unapproved imports.
+  Logs: `step-2.2a-composition.log`, `step-2.2a-final.log`, and
+  `step-2.2a-boundary.log` in the current evidence directory.
+
+- [x] **2.2b — Implement finite structural unification and failure isolation.**
+  **Work:** Unify nominal types, arrows, and containers with an occurs check using one small solver. Keep unsuccessful equation updates tentative or discardable.
+  **Check:** Hand-derived and bounded generated equations cover success, nominal conflicts, arrow/container mismatch, chains, and `a = a -> b`. Successful substitutions satisfy input equations and repeated substitution stabilizes. A failure cannot leak state into a separate problem, erase a sibling conflict, or allocate a cyclic/infinite type.
+  **Evidence:** The focused kernel/mutation batch passed all 13 test cases,
+  including 2025 bounded structural equation pairs and independent sibling
+  failures. The complete boundary gate passed. `step-2.2b.log` records the run.
+  Unification returns an immutable solution or explicit failed obligations;
+  unsuccessful equations expose no partially updated state.
+
+- [x] **2.3 — Enforce the one data-variable restriction.**
+  **Work:** Preserve Section 5.2's restricted domain through unification, substitution, and schemes. Use a small admissibility rule, not a type-class or constraint-plugin framework.
+  **Check:** Rat/nested supported data are accepted; an arrow or Error is not silently admitted. Restriction survives instantiation/generalization. Unsupported data-domain use remains distinct from a concrete Rat/String conflict; no runtime Data/Function tag is added.
+  **Evidence:** All 16 focused kernel test cases passed, including nested
+  payloads, variable linking, generalization/freshening, failure isolation, and
+  simultaneous unsupported-domain/nominal failures. The separate mutation test
+  and complete boundary gate passed. Logs: `step-2.3.log` and
+  `step-2.3-boundary.log`. No runtime representation changed.
+
+- [x] **2.4 — Render types deterministically and close the kernel review.**
+  **Work:** Render stable variable names, quantified restrictions, containers, and correctly grouped arrows. Review the kernel before inference depends on it.
+  **Check:** Golden tests cover `a -> b -> c`, `(a -> b) -> a -> b`, Error, and restricted schemes. Recheck freshening, substitution, occurs-check, and hole separation with focused tests. Rendering never calls an object-language evaluator. This is a focused review, not an extra mandatory full-suite/commit phase.
+  **Evidence:** Golden display, all focused kernel/mutation tests, and the
+  existing boundary suite passed (165 reported checks), followed by the complete
+  boundary gate (`step-2.4.log`). Self-review checked simultaneous substitution,
+  solved-state normalization, fresh variable ownership, substituted environments,
+  occurs checks, atomic failures, recursive data restrictions, and proof/type
+  separation. The evidenced composition finding from 2.2a is resolved. No open
+  kernel finding or independent-review claim remains. Phase 2's full suite and
+  commit remain after source inference and its pilot.
+
+- [x] **2.5a — Create the real seed-contract inventory.**
+  **Work:** Inspect actual implementations/tests and audit Rat/Bool constants plus the arithmetic and first-class `if` schemes needed for double/factorial. Include Result-valued `div`, `is-ok`, a conditional `unwrap-ok` input contract, and the fixed `error-to-string : Error -> String` contract for the pilot. Associate catalog IDs only with their resolved built-in bindings.
+  **Check:** Record source locators and valid/invalid-domain evidence. `if` works as a value and alias, not only a syntactic head. `div` is Result-valued; `unwrap-ok` has no verified success-only signature. Other known exports may be explicitly pending audit, never unknown identifiers or fabricated safe signatures. This is the same inventory completed in Phase 3.
+  **Evidence:** `contracts.rkt` contains the audited Rat/Bool/if seeds, Result
+  division/predicate, partial unwrap input contract, and explicit Error renderer.
+  Each records implementation symbols/paths and focused runtime tests. The exact
+  facade export inventory and actual frontend binding identities match; all other
+  exports are explicitly pending and fail internally if requested. Shipping
+  catalog validation rejects pending entries. Focused catalog/boundary tests
+  passed (4 cases), followed by the whole boundary gate and 3519 existing runtime
+  checks for typed rationals, logic, Results, and rendering (`step-2.5a.log`).
+
+  Audit observed `typed-if` selecting untagged branches after its Bool check;
+  `raw-rat-div` represents zero division as Result Err, and the strict wrapper
+  tags successful Rat payloads. `raw-result-unwrap-ok` returns WrongResultVariant
+  Error on Err, so its output remains unproved; `typed-error-to-string` deliberately
+  consumes Error. A negative gate probe caught native `exit` accidentally admitted
+  by a quoted catalog label. Labels for pending operations are now inert strings,
+  the excess vocabulary is removed, and the retained execution mutation test
+  passes. No runtime implementation was changed.
+
+- [x] **2.5b — Infer elementary source expressions.**
+  **Work:** Infer literals, references, lambdas, and curried applications through the actual frontend/kernel and seed inventory. Preserve complete input obligations when an earlier argument is incomplete; keep conditional hints out of established types.
+  **Check:** Infer double, identity, application, nested lambdas, and partial `add`; locate a String/Rat conflict. A shadowed function never inherits a catalog contract. Calls through a first-class `if` alias obey the same homogeneous-result equations as direct calls.
+  **Evidence:** The actual frontend/kernel infers literals, identity/apply/compose,
+  double, partial add, Result division, and function-valued branches. Tests verify
+  shadowing, first-class if aliases, precise argument locations, and 3/4 independent
+  expression obligations for bad add. Partial outputs have no verified value type;
+  known remaining inputs still expose later conflicts. An exhausted conditional
+  cursor cannot turn its speculative function result into proof. Focused inference
+  and mutation tests plus the boundary gate passed (`step-2.5b.log`), followed by
+  the additional alias fixtures (`step-2.5b-aliases.log`). Let/module/rec rules are
+  the following steps, not implied by this elementary-expression result.
+
+- [x] **2.6 — Infer lexical bindings with source-level generalization.**
+  **Work:** Use actual acyclic dependency order and sequential-let scope. Generalize completed `def`/`let` bindings using the solved current environment; instantiate each use. Keep lambda parameters and captured environment variables monomorphic where required.
+  **Check:** Forward definitions and repeated/shadowed names work without runtime reordering. Identity works at Rat and String; `(identity identity)` checks. Section 5.4.1's let form passes and its lambda-parameter counterpart fails. The captured-function counterexample in 9.2 fails. Unknown names/forbidden cycles remain source errors, not gaps.
+  **Evidence:** Actual-source bindings, elementary inference, mutation tests, and
+  the existing boundary suite passed 154 checks plus the whole gate (`step-2.6.log`).
+  C01–C04, C07, C09, C13, and C16 have their required binding/type outcomes.
+  Reported dependency edges are checked against resolved source references before
+  topological analysis. Incomplete aliases retain only conditional input templates;
+  they publish no verified value scheme. Recursion is the next rule.
+
+- [x] **2.7 — Infer ordinary source `rec` and discharge its local assumption.**
+  **Work:** Use one monomorphic recursive assumption, unify with the inferred curried body, discharge the self edge, and generalize eligible variables afterward. Include zero-source-argument recursive values without evaluation.
+  **Check:** Factorial/summation infer `Rat -> Rat`; locate recursive conflicts. Self-dependencies do not make all recursion partial. Finite-typed nonterminating recursive fixtures are checked without being run. Raw self-application reports the occurs-check limitation. Direct/mutual module recursion and pure fixed-point lowering remain unchanged; no polymorphic recursion is introduced.
+  **Evidence:** Twelve focused recursion/binding/inference/mutation cases and
+  the boundary gate passed (`step-2.7.log`). Factorial and sum establish Rat-to-Rat;
+  both divergent C05 forms and a zero-argument recursive Rat establish finite
+  constraints without execution. C06 conflicts, and recursive infinite types or
+  external gaps remain unproved. A failed self consistency check invalidates only
+  source nodes that used its provisional assumption; successful rec has no false
+  external self dependency. Runtime fixed-point lowering was not changed.
+
+- [x] **2.8 — Apply uniform constraints through source sugars and aliases.**
+  **Work:** Check source list/conditional normalization using original IDs and first-class built-in schemes. Treat finite homogeneous-element/common-result contradictions as TYPE_CONFLICT in every representation. Preserve explicit let/rec boundaries.
+  **Check:** Currying, sequential-let nesting, list/cons, and cond/if mappings agree under their supported rules. Heterogeneous direct/aliased `if` calls fail identically; homogeneous function-valued branches pass. Both branches and all independent children are visited. List typing tests may use explicitly pending constructor contracts until 3.2, but no production completeness is claimed for an unaudited contract.
+  **Evidence:** Three actual-source sugar cases passed (`step-2.8.log`), covering
+  curried/nested lambda/application equivalence, sequential/nested let, cond/if,
+  shadowed public if, unselected conflicts, and coexisting gaps/conflicts. List
+  sugar has the exact cons normalization and original 3-node denominator; both
+  forms explicitly fail on the pending cons audit in this intermediate catalog.
+  List typing is deliberately not claimed before Step 3.2.
+
+- [x] **2.9 — Close gap propagation and run the early backend pilot.**
+  **Work:** Finish component isolation, proof-state propagation, and the representative cases in 1.3 using the actual frontend/kernel/seed inventory. Treat incomplete built-in references as incomplete even before invocation. Preserve established upstream declarations after a bad call.
+  **Check:** Arithmetic/identity/recursion establish types; bad `add` and incompatible branch types conflict; raw self-application, guarded unwraps, and their dependent callers remain partial. A closure cannot hide a gap in an unused nested body. An earlier gap cannot hide a later independent argument mismatch: use `(add (unwrap-ok (div 1 0)) "bad")` while only seed contracts exist. Best-case unwrap output hints cannot invent a conflict in C11; its Error renderer is included in the seed audit. Reordering independent definitions or checking twice changes no result. Record pilot outcomes; fix required supported cases before the broader audit.
+  **Evidence:** All 18 fixed seed fixtures matched their pre-recorded outcomes;
+  four pilot test cases also establish alias/closure/higher-order gap propagation,
+  three-binding dependency paths, conditional input-template isolation and captured
+  monomorphism, independent components, and C01/C07/C01 equality. The measured
+  [pilot record](docs/static-checking-pilot.md) reports every fixture and limitation.
+  Logs: `step-2.9-final.log` and `pilot-results.json`. The earlier `step-2.9.log`
+  stopped at one extra closing parenthesis in the new test; that syntax error was
+  corrected before the successful run. No production inference correction was
+  required by these pilot cases. The public catalog has 21 audited seed entries
+  and 108 explicitly pending entries; no shipping/whole-corpus claim is made.
+
+**Checkpoint 2 — Inference and practical-scope gate.** Review scope, generalization, recursive assumptions, and unchecked-result propagation; prefer independent read-only review when available. Run kernel/frontend/inference tests, affected language/recursion tests, full suite, and gates. The two definitions in Section 3.2 and `(factorial (double 3))` must be established without execution. Rendering/stdout arrive in Phase 3. Documented partial pilot results are an accepted V1 limitation, not a reason to invent refinements or request routine owner decisions.
+
+Checkpoint 2 passed. `./run-all-tests.sh` exited 0 with 87 Racket test files,
+26919 reported Racket tests, 49 Python terminal methods, purity over all 40
+production modules, and the complete source/boundary gate. Evidence:
+`phase2-full.log` and `phase2-result.json` in the implementation evidence directory;
+191 executable input hashes match the tested snapshot. Additional bounded probes
+cover 60 nested lambdas (61 expressions), 120 nested applications (361), 80
+independent definitions (320), and 100 dependent aliases after a partial seed
+(101 definitions/expressions). Each run repeats identically, preserves exact
+counts, and has the independently expected established/unproved verdict.
+`phase2-robustness.rkt` and `phase2-robustness.log` retain these check-only probes.
+
+Fresh self-review covered simultaneous substitution, restricted generalization,
+monomorphic captures/self assumptions, conditional input cursors, discarded
+failed equations, complete source accounting, binding identity, and exact helper
+permissions. No open finding remains; no independent review is claimed. The
+composition and native-exit label findings were resolved before this full run.
+Executable additions are eight private checker modules plus exact gate rules;
+tests add twelve focused files and the fixed pilot fixtures. Documentation records
+the measured intermediate pilot and this checkpoint. Core, effects, runtime,
+language frontend, ordinary launcher, and version metadata have no Phase 2 diff.
+No public check command or complete catalog is claimed yet. Close one local phase
+commit and continue directly with Step 3.1; no remote action is authorized.
+
+## Phase 3 — Complete the auditable library and host contracts
+
+**Purpose:** broaden useful coverage while preserving every actual failure alternative.
+**Prerequisites:** Checkpoint 2; the pilot works and the seed inventory is reused.
+
+- [x] **3.1 — Complete export classification and scalar contracts.**
+  **Work:** Inventory every actual public value binding separately from syntax/scaffolding. Complete supported scalar contracts; retain explicit range-dependent gaps.
+  **Check:** Export drift fails closed; `div`/`exp`/`recip` are Result-valued. Wrong nominal inputs fail with correct argument order. No private Nat/Int, public alias, or success-only signature is invented. Previously audited seeds remain consistent.
+  **Evidence:** `step-3.1.log` passed 2101 reported checks across scalar/catalog/
+  mutation tests and existing Rat, Char, Byte, and String tests, plus the boundary
+  gate. All 129 actual facade exports remain inventoried. Thirty-three additional
+  scalar/text entries are audited; range-dependent Char/Byte and empty String
+  access retain Error-alternative gaps. Native print/read-line mutation probes
+  join the existing exit check. No runtime/library implementation changed.
+
+- [x] **3.2 — Add container construction and safe non-callback List contracts.**
+  **Work:** Add data-restricted schemes for constants/constructors, `len`, `append`, `reverse`, and other audited fixed-shape operations. Record empty/count/nesting failure limits and preserve restrictions through nested type parameters.
+  **Check:** Homogeneous Lists retain element types; String is not List(Char). Heterogeneous `(list ...)`, direct `cons`, and a `cons` alias produce the same finite conflict. Functions hidden beneath a generalized nested-data variable cannot bypass its restriction. `head NIL`/`tail NIL` remain partial; `zip` does not gain an invented Pair. No runtime-valid construct is disabled in ordinary execution.
+  **Evidence:** `step-3.2.log` passed 344 checks across List/sugar/catalog/mutation
+  tests and existing List/transform/count runtime tests, plus the boundary gate.
+  Ten contracts now establish constructors, length, append/reverse/concat, and
+  homogeneous two-element-List zip; head/tail remain partial. Direct and aliased
+  heterogeneous Lists conflict, nested generalized function payloads retain data
+  restrictions, and C12 reports both the head gap and later Rat/String conflict.
+
+- [x] **3.3 — Add higher-order List and Map contracts.**
+  **Work:** Inspect actual callback order, element/result restrictions, and Map equality/key/value relationships. Model the stored Map comparator's typed invariant, not merely its data fields. Leave unrepresented failure paths partial.
+  **Check:** `map` changes element type; `filter` requires Bool; `reduce` takes accumulator then element. Bad callbacks are checked even on NIL. Map equality ties both key inputs and its uncertainty taints an initially empty Map. Raw functions are not assumed admissible data elements. Generalized key/value restrictions survive subsequent updates. Do not modify library algorithms.
+  **Evidence:** `step-3.3.log` passed 352 checks across callback/catalog/mutation
+  cases and existing transform/search/Map runtime tests, plus the boundary gate.
+  Seventeen entries cover callbacks/search and Map operations. C10 conflicts on
+  NIL, C17 remains partial, accumulator-first order is verified with differing
+  element/accumulator types, and comparator/key/value relationships survive
+  aliases, generalization, and persistent updates. No algorithms changed.
+
+- [x] **3.4 — Complete Option, Result, and Error contracts.**
+  **Work:** Encode fixed Error payloads, constructors/predicates, `option-case`, and conservative unwrapping. Distinguish make-ok's propagation from make-err's intentional Error consumption.
+  **Check:** `make-err 1` fails; `unwrap-ok` is not a total `Result(a) -> a`; guarded unwraps stay partial; `unwrap-err` has its audited Error output. Error cannot be coerced to Rat or an arrow. Aliases retain these rules.
+  **Evidence:** `step-3.4.log` passed 256 checks across variant/catalog/mutation
+  tests and existing Option/Result runtime tests, plus the boundary gate. Nine
+  entries complete Option and fixed-Error Result handling; C15 retains its nested
+  data-domain gap and C18 establishes Error. User lambdas can deliberately ignore
+  an Error, but arithmetic/calls cannot coerce it. Guarded unwraps remain partial.
+
+- [x] **3.5 — Audit pure rendering and the remaining value operations.**
+  **Work:** Finish scalar/restricted generic rendering; classify remaining value operations, including flatten/count/index cases. Inventory effectful print, completing its contract in Step 3.6. Review the complete value-contract set for missing Error alternatives before adding host signatures.
+  **Check:** Supported rendering returns String; direct/nested raw-function cases never receive universal safe signatures. Every completed entry has source and valid/invalid-domain evidence; unsupported entries have precise reasons. No runtime function detection or tag changes. Repair invalid seed assumptions and refresh dependent inference tests.
+  **Evidence:** `step-3.5.log` passed 2870 checks across rendering/count/catalog/
+  mutation tests and existing pure renderer/Error/count runtime tests, plus the
+  boundary gate. Seventeen entries cover scalar/data rendering, count/index
+  operations and flatten. Generic rendering uses the recursive data restriction;
+  direct Error overloads remain outside that scheme (error-to-string is complete).
+  Count/integrality alternatives and arbitrary flatten nesting stay specifically
+  partial. No seed signature needed correction. Print remains pending Step 3.6.
+
+- [x] **3.6 — Establish the four required I/O wrappers and print.**
+  **Work:** Verify stdout/read-line/read-file/write-file against wrappers, host branches, codec, and existing tests. Complete print from its rendering and stdout dependencies without changing runtime implementations.
+  **Check:** Catch String versus List(Byte) misuse; represent expected I/O failure as Result Err. Analyzing read-file never reads the program's requested data file. Separately test actual wrappers with isolated runtime resources. The complete Section 3.2 example now establishes all obligations without program execution.
+  **Evidence:** `step-3.6.log` passed 673 checks across static I/O/catalog/mutation
+  cases and existing stdout, stdin, files, real file-host, print, codec, and host
+  tests, plus the boundary gate. Five entries record facade/wrapper/host/codec
+  locators; read-file returns Result(List(Byte)), never String. A positive-control
+  file guard observes real reads, then confirms backend analysis makes no program
+  reads/writes, consumes no input, and prints nothing. Section 3.2 fully establishes
+  all obligations, including stdout and rendering, without executing factorial.
+
+- [x] **3.7 — Classify raw host, TCP, HTTP, and exit.**
+  **Work:** Keep raw host explicitly unproved; audit remaining operations for numeric/value-dependent failures. Close all pending inventory entries as supported or specifically partial.
+  **Check:** Raw-host aliases and higher-order uses remain gaps. No invented nominal handles, String-returning read-file, new host operation, or successful-exit assumption. Every actual public export is accounted for; unsupported is not the same as absent.
+  **Evidence:** `step-3.7.log` passed 1856 checks across boundary/catalog/mutation/
+  full-backend non-execution cases and existing TCP, HTTP, HTTP-server, and exit
+  runtime tests, plus the boundary gate. All 129 actual exports are now audited:
+  106 complete, 23 specifically partial, zero pending (`catalog-results.json`).
+  Every analysis validates the catalog. TCP keeps Rat handles and pre-host count
+  gaps; HTTP parse/render failures are represented Result Err; injected factories,
+  raw host, and exit remain partial. Actual input/file/network/exit observers now
+  surround the complete backend. [The inventory](docs/static-checking-contracts.md)
+  records each signature/input hint, reason, implementation locator, and test.
+
+- [x] **3.8 — Close the combined boundary counterexamples.**
+  **Work:** Exercise partial outputs, higher-order use, callbacks, partial application, and the library's Error-absorbing continuations together.
+  **Check:** Possible Error cannot acquire a verified arrow type; an earlier gap cannot swallow a later nominal mismatch; ordinary user lambdas do not inherit library absorption semantics. Existing runtime outputs remain unchanged. Independently audit source coverage versus trusted contracts rather than claiming to have inferred the library's internals.
+  **Evidence:** `step-3.8.log` passed 13 combined/robustness/pilot/catalog/mutation
+  cases and the boundary gate. The reusable acceptance set contains all semantic
+  C01–C18 cases (C05 in both forms), retained pilot extras, and complete Section
+  3.2. Partial outputs cannot gain arrows or manufacture conflicts from hints;
+  later known inputs still conflict through aliases and partial application.
+  Deliberate Error-returning user lambdas establish their actual types. The
+  bounded Phase 2 probes are now retained regressions, including intervening
+  failed analyses. Source coverage counts only original registered expressions;
+  the audited library remains the explicitly trusted basis. No runtime edits.
+
+**Checkpoint 3 — Contract and trusted-boundary gate.** Review complete signatures against both success and failure domains, including data restrictions, callback order, and source/effect separation. Run contract/non-execution regressions, affected library/host/codec tests, full suite, and gates. Ordinary supported I/O is not unknown merely because it is effectful; partial wrappers/raw host are not complete merely because a return shape is desired. No refinements, unions, or effect system are needed to close this gate.
+
+**Checkpoint 3 passed.** The isolated Racket 9.3 full suite exited 0 with 96
+Racket test files, 26944 reported Racket tests, 49 Python terminal methods, purity
+over 40 production modules, and the complete boundary gate. `phase3-full.log`
+and `phase3-result.json` retain the run and 201 matching executable-input hashes
+in `/tmp/attalambda-static-implementation-mmgdshl_/`. Final record-only edits do
+not alter those tested inputs. The fresh self-review (`phase3-review.md` there)
+has no open finding; no independent review is claimed.
+
+Review covered success/failure domains, recursive data restrictions, callback
+order, Error alternatives, partial application, aliases/closures, actual
+non-execution, and exact capability-rejection mutations. Executable changes
+complete the catalog and validate it at analysis entry; tooling records exact
+permissions. Tests add nine focused suites and a reusable acceptance fixture
+helper, and update catalog/non-execution/sugar/boundary cases. Documentation
+adds the full audited inventory and this evidence. Core/effects/runtime code,
+ordinary source execution, grammar, launcher, version, dependencies, and release
+assets are untouched in this phase. No public checking command exists yet.
+
+## Phase 4 — Deliver exact reports and the real checking command
+
+**Purpose:** expose the established backend without changing ordinary execution.
+**Prerequisites:** Checkpoint 3.
+
+- [x] **4.1a — Compute exact complete-source coverage and final status.**
+  **Work:** Finalize source-node and definition states from the established proof data, retaining all registered source obligations and the closed verdict precedence. Keep local self assumptions separate from external gaps.
+  **Check:** Exact-count fixtures cover literals/apps/list/let/lambdas, data definitions, nested/unused bodies, empty modules, and rounding traps. A bad call preserves its valid function's declaration count; an incomplete top-level expression prevents FULL PASS. A missing source ID, pending catalog entry, or unfinished solver item is operational failure, never silently excluded from the denominator.
+  **Evidence:** `coverage.rkt` validates exact declaration/node identities, final
+  monotypes versus incomplete proofs, child/dependency closure, and bounded
+  primary-reason paths. `step-4.1a.log` passed 152 reported coverage/boundary checks
+  and the complete boundary gate. All semantic fixtures survive final accounting;
+  exact tiny counts match the specification. The 5001/5003 established-expression
+  fixture displays 100.0% while remaining PARTIAL. Corrupt/missing/unfinished
+  states fail internally; a 45-binding shared graph retains one path per binding.
+
+- [x] **4.1b — Render types, primary diagnostics, and bounded dependency explanations.**
+  **Work:** Render original file/line/column, enclosing binding/lambda, reason code, established expected/actual types, and one deterministic path per dependent definition. Separate conditional hints from verified signatures and output from computation.
+  **Check:** Golden reports are stable across repeated checks and preserve positions across CRLF/Unicode/tabs/comments/shadowing. Control characters in names/paths are escaped. Large alias graphs do not enumerate exponentially many paths. Reports never expose arbitrary internal exception text or imply that source coverage certifies the trusted library.
+  **Evidence:** `step-4.1b.log` passed 154 reported report/display/boundary checks
+  and the complete boundary gate. Golden complete/empty reports, actual CRLF/tab/
+  Unicode argument positions, anonymous lambda spans, control escaping, repeated
+  checks, and a 36-binding shared graph pass. Incomplete signatures are omitted;
+  primary reasons and one dependency path remain visible. Expected/actual types
+  share a stable variable-name map. Rendering only constructs host strings.
+
+- [x] **4.2 — Integrate `--check` with precise launcher and output failure handling.**
+  **Work:** Add the exact invocation, help text, embedded lazy-load reference if needed, exit mapping, and narrow boundary-vocabulary updates. Leave file/REPL dispatch unchanged. Finalize analysis before report emission and require successful emission/flush before exit 0.
+  **Check:** Real subprocesses via `racket runner/attalambda.rkt --check ...` verify 0/1/2 and 64/65/66/70. Missing/extra paths, duplicate/incompatible flags, and private injected source/frontend/internal faults map correctly. A broken report sink cannot return 0 or replay output. Do not add public failure-injection switches or import the auto-running launcher as the backend.
+  Split before implementation to keep the command and launcher checks focused:
+  **4.2a:** create the private command pipeline with one validated snapshot,
+  structured completion, safe operational diagnostics, owned-resource cleanup,
+  output/flush handling, and private test seams; verify directly with controlled
+  faults. **4.2b:** integrate the real launcher and exact boundary permissions,
+  update shared help expectations, and exercise the complete subprocess status
+  matrix with those private seams. Both are required to close 4.2.
+  **4.2a passed:** `step-4.2a.log` records 151 command/boundary checks and the
+  complete gate. One captured snapshot is used even when the backing test file
+  changes after inspection. Source faults remain 65/66; injected metadata,
+  pending-catalog, syntax/filesystem analyzer faults, and broken report writes/
+  flushes return 70 without leaking internal details or replaying output. Owned
+  resources close and caller ports stay open. Next: real launcher integration.
+  **4.2b passed:** `step-4.2b.log` records 150 CLI/boundary checks and the complete
+  gate. The real launcher returns 0/1/2 for all fixed semantic fixtures, 64 for
+  invalid flag combinations, 65 for whole-source faults, 66 for absent/unreadable/
+  symlink/dotenv paths, and 70 for injected analyzer/metadata/catalog/output
+  faults. Faults use only a test driver around the actual launcher. Linux/macOS/
+  Windows consumer help expectations add the shared invocation; native consumer
+  runs remain pending. File and REPL dispatch branches retain their behavior.
+
+- [x] **4.3 — Prove CLI non-execution, interruption, and repeated-run isolation.**
+  **Work:** Run the existing effect/divergence fixtures through the real CLI. Exercise a controlled interruption during analysis and a report-delivery failure separately. Reuse the backend twice in one test process to reveal stale state.
+  **Check:** No program output/input/file/network/history effect occurs, including invalid-late-form cases. Interrupted analysis returns 130, cleans owned resources, and emits no completed analysis report. Interrupted delivery is nonzero even if earlier report bytes exist. Do not demand impossible output retraction or disable cancellation around blocking writes. Inspect rendered diagnostics as well as structured results.
+  **Evidence:** `step-4.3.log` passes four real-CLI cases. Actual source effects,
+  input position, guarded data reads with a positive control, marker-file state,
+  a ready ephemeral loopback listener with a positive connection control, absent
+  history state, exit, divergence, and invalid final forms are observed. A real
+  subprocess interrupt after the private analyzer readiness signal returns 130,
+  closes its owned thread, and emits no report. A break queued by the final
+  custom-port flush returns 130 after one report, without replay. Repeated
+  backend/report equality remains covered by 3.8, 4.1a, and 4.1b. No product fault
+  flag or environment switch is introduced.
+
+**Checkpoint 4 — User-facing gate.** Run report/CLI tests and affected existing interactive/file-mode tests, full suite, and gates. Existing `attalambda FILE.attl`, help/version, and REPL behavior remain intact. Review exact status/coverage semantics, escape handling, and untouched runtime behavior. The checker itself never executes the analyzed file.
+
+**Checkpoint 4 passed.** `phase4-full.log` records one successful isolated
+Racket 9.3 `./run-all-tests.sh` run: 102 Racket test files, 26967 reported Racket
+tests, 49 Python terminal methods, 40 pure production modules, and the complete
+boundary gate. It includes all new report/CLI suites and existing file-mode,
+interactive, terminal, runtime, distribution-contract, and embedding regressions.
+`phase4-result.json` verifies 218 executable inputs against the staged snapshot,
+including native consumer scripts and public examples. Evidence remains under
+`/tmp/attalambda-static-implementation-mmgdshl_/`.
+
+Fresh self-review (`phase4-review.md` there) covered exact counts/statuses,
+incomplete-dependency closure, safe deterministic diagnostics, one-snapshot
+non-evaluation, output failure/cancellation, ownership, and scope. No open
+finding remains; no independent review is claimed. Executable changes create
+coverage/report/command helpers, extend private type display and exact launcher
+dispatch, and update exact tooling permissions. Six focused suites plus a
+private fault driver were added; existing runner/native-consumer help assertions
+were updated. PLAN/HANDOFF record the evidence. Runtime implementations, grammar,
+type tags, ordinary file/REPL branches, version, dependencies, and published
+artifacts are unchanged by this phase. Final Linux candidate testing is next;
+macOS/Windows consumer execution is not claimed.
+
+## Phase 5 — Verify realistic use and the exact standalone candidate
+
+**Purpose:** finish documentation, full corpus evidence, cold review, and a tested deliverable.
+**Prerequisites:** Checkpoint 4, authorized local commits, and the confirmed Linux consumer environment.
+
+- [x] **5.1 — Measure the complete existing example corpus.**
+  **Work:** Analyze every current public `.attl` example and the minimum acceptance fixtures. Record status and every gap/conflict reason, distinguishing intentional dynamic/error demonstrations from regressions.
+  **Check:** Every file is accounted for; supported fixtures fully pass and known limitations are accurately classified. Compare with the early pilot. Do not rewrite examples/signatures to improve percentages or silently skip files. No arbitrary coverage target is imposed.
+  **Evidence:** At `61a87c2`, all five examples ran through actual `--check`
+  without execution or source edits. hello/stdout fully pass (3/3 expressions
+  each). foundations is partial (126/138), file-round-trip partial (24/32), and
+  http-server partial (134/199); none has a conflict. All 13 primary gap regions,
+  declaration counts, reasons, locations, dependencies and example hashes are
+  retained in [the measured corpus](docs/static-checking-corpus.md). Logs and
+  machine-readable results are `step-5.1.log` and `corpus-results.json` in the
+  evidence directory. The 25 semantic fixtures already pass the same source
+  revision's real CLI and backend checkpoints; the seed pilot remains historical.
+
+- [x] **5.2 — Document the feature and exact limitations.**
+  **Work:** Update relevant README/API/architecture/getting-started material with invocation, statuses, trust scope, inferred types, restricted data, and Error/variant limitations. Identify the capability as unreleased source/candidate work.
+  **Check:** Examples are exercised; links/commands exist. The public 0.8.0 binary is not claimed to contain the feature. No claim of termination, all-error freedom, erased runtime tags, or whole-runtime formal verification appears.
+  **Evidence:** README/API/architecture, the actual guide template, distribution
+  contract and acceptance map now distinguish the unreleased local checker from
+  public 0.8.0. The API's new example fully checks with its exact documented
+  identity/apply/double signatures (3/3 definitions, 14/14 expressions). All 212
+  local links across seven relevant documents resolve; existing distribution
+  tests pass 217 checks. Log: `step-5.2-final.log`. The initial test command named
+  a nonexistent `api-test.rkt`; that command-selection error was corrected to the
+  actual distribution suite, with no implementation change. Guide commands are
+  also exercised by the forthcoming real consumer.
+
+- [x] **5.3 — Extend the real standalone consumer.**
+  **Work:** Add compact full/partial/fail/invalid/no-effect check-mode fixtures to the existing Linux consumer. Verify embedding of checker/frontend dependencies. Preserve other native builders/CI; change only acceptance inputs necessitated by the shared launcher.
+  **Check:** Static distribution tests cover new inputs. Consumer tests use the delivered executable and temporary source only: no Racket install, checkout, network fetch, or personal configuration. Dependencies/notices remain unchanged absent an evidenced necessity. Source-only tests cannot replace consumer acceptance.
+  **Evidence:** The existing Linux consumer now calls one inline Python-stdlib
+  acceptance block before and after relocation. It checks full/fail/partial/
+  empty/invalid cases, misuse/path statuses, exact counts/signatures, no effects,
+  actual input position, a blocking FIFO data-read probe, loopback positive and
+  negative controls, absent history, real `/dev/full` status 70, and interrupted
+  pipe delivery status 130 after an observed first report byte. Its assertions
+  passed against the real source launcher in `step-5.3.log`; this is deliberately
+  source-only preparation, not standalone evidence. An assertion initially ran
+  before its existing helper definition; the evidenced test-ordering correction
+  passes all 223 distribution checks and both gates (`step-5.3-final.log`).
+  The final delivered-command runs and embedding proof remain Steps 5.5a/b.
+
+- [x] **5.4 — Review the final implementation afresh and freeze tested inputs.**
+  **Work:** Prefer independent read-only counterexample review; otherwise label self-review honestly. Inspect contract, diff, tests, scope, and unused abstractions. Correct evidenced findings narrowly.
+  **Check:** Address binding impersonation, gap laundering, Error alternatives, generalization/recursion, non-execution, and embedding. Each finding has a disposition; no minimum finding count. Run corrections' focused tests and the complete required suite on final inputs. Close a clean local source commit under project rules before building.
+  **Evidence:** Fresh self-review (`phase5-review.md`) revisited the frontend,
+  kernel, all contracts, proof/coverage, command, consumer, documentation and
+  A01–A26 mapping; no finding remains open and no independent review is claimed.
+  The final `./run-all-tests.sh` exited 0: 102 Racket test files, 26973 reported
+  tests, 49 Python terminal methods, purity over 40 modules, and complete source
+  boundaries. `phase5-full.log` and `phase5-result.json` retain results and 223
+  matching executable/packaging input hashes, including the guide and consumer.
+  No executable input changed during the run. The local source commit closes
+  this step; its exact identity is recorded in the external candidate receipt
+  before the builder starts. Only delivery-record edits may follow that build
+  without repeating affected executable/build/consumer checks.
+
+- [x] **5.5a — Build the exact clean, local candidate.**
+  **Work:** Record the reviewed source SHA/runtime identity and build with the known builder into a fresh external directory, without `--allow-dirty`. Confirm that the checkout/ref was not changed by another process during preparation.
+  **Check:** Record archive SHA-256 and build evidence; every executable/embedded input belongs to the recorded source. Current-version metadata is explicitly labeled an unpublished feature candidate, not the public asset. Preserve unrelated work and existing candidate outputs rather than overwriting them.
+  **Evidence:** Clean local commit `576d8837797f254fb068d19fd839ea1174e28151`
+  was cloned without checking out dotenv paths. All 223 tested inputs matched;
+  owner checkout and clone retained that HEAD and clean status before/after the
+  normal builder, with no `--allow-dirty`. The corrected isolated Racket CS 9.3
+  build exited 0 (`candidate-build.log`). The 19,870,393-byte archive is
+  `/tmp/attalambda-static-implementation-mmgdshl_/candidate-g7g7_p8u/attalambda-0.8.0-linux-x86_64.tar.gz`;
+  SHA-256: `80c08ff21090d3b725a5c6df50b56783c5f434b5129dd60fc423c2abe35a3816`.
+  Its manifest names that clean source; its guide explicitly identifies an
+  unpublished feature candidate with retained 0.8.0 metadata. An initial
+  temporary receipt assertion omitted the guide's words `optional-static-checking`;
+  direct archive/template inspection established the mismatch and the exact
+  wording passed. No source, artifact, or consumer logic changed.
+
+- [x] **5.5b — Verify the transferred standalone artifact.**
+  **Work:** Transfer that exact archive to the isolated consumer and run the extended new check-mode and existing file/REPL acceptance. Use only the delivered executable and synthetic source fixtures.
+  **Check:** Verify archive digest before/after transfer and record consumer environment plus `consumer_acceptance=passed`. Include complete, conflicting, partial, invalid-source, and no-effect fixtures. Any code/build-input or consumer-logic correction requires affected rebuild/retest evidence. Report unavailable native-platform checks separately; do not claim the current archive came from a later handoff-only commit.
+  **Evidence:** The exact source clone's existing extended consumer exited 0
+  (`candidate-consumer.log`): `static_checking_acceptance=passed-at-both-paths`
+  and final `consumer_acceptance=passed`. The original, transferred and final
+  archive digests match. Both 25-method CLI/transcript runs passed (64.927s and
+  67.255s), alongside guide/public API, file/network/exit, check-mode statuses,
+  no-effects, actual failed output and interrupted delivery, and relocation.
+  The consumer had no Racket/raco or checkout; Ubuntu 24.04, Python 3.12.3,
+  read-only root, UID/GID 65534, no external network. Its actual prepared image
+  is `sha256:f79d9f4012586a4c571e94f0dbcf295cc85a55e9e0f1d79e9f71f9ef2c4c9644`.
+  Native macOS/Windows checks were not run; Linux x86-64 remains the supported
+  binary target. `candidate-source.json`, `candidate-result.json` and the copied
+  build manifest retain exact provenance. The archive predates this record.
+
+- [x] **5.6 — Close the handoff and clean owned resources.**
+  **Work:** Update the existing durable plan/handoff with Section 10's source, test, review, coverage, artifact, limitation, and authority records. Clean only owned probes/containers/transfers.
+  **Check:** Distinguish the tested build source from later record-only commits. Every acceptance item has evidence or an explicit blocker/next step. Preserve unrelated work and existing releases. No push, PR, merge, tag, asset replacement, or publication occurs under the default endpoint; follow project gate rules for any final record-only commit.
+  **Evidence:** HANDOFF.md and docs/ACCEPTANCE.md now close the A01–A26 map,
+  source/tests/self-review/corpus/contracts, exact artifact, limitations and
+  authority. The owned implementation container was stopped and removed; the
+  consumer container and transfer directory were verified absent. Images,
+  snapshots, logs and the candidate are retained. Only these three record files
+  change after the build; executable/packaging hashes, local links, whitespace,
+  local main and final clean Git state are checked before closing the record.
+  Its own commit identity is saved in the external `state.json`, avoiding a
+  self-referential commit. No blocker, deferred implementation, or owner action
+  remains within this local-only assignment.
+
+**Checkpoint 5 — Delivery gate.** Completion requires final-input tests, disposed review findings, full-corpus results, and the exact digest-identified standalone candidate's consumer evidence. Missing infrastructure/authority is reported as a blocked gate, never a passed check. Finish independent safe work, record the precise next step, and stop at the authorized local candidate.
+
+
+---
+
+# Historical plan — Interactive AttaLambda, published 0.8.0
+
 # Interactive AttaLambda — published 0.8.0
 
 Kyle authorized phases 0–11 of the [supplied contract](docs/interactive-implementation-spec.md)

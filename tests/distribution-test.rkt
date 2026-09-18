@@ -185,6 +185,8 @@
                    "printf 'guide_workflow=passed\\n'"))
 (check-true (regexp-match? #rx"guide custom program" consumer-source))
 (check-true (regexp-match? #rx"Artifact status: final release artifact" consumer-source))
+(check-true (string-contains? consumer-source "static_checking_acceptance=passed-at-both-paths"))
+(check-true (string-contains? consumer-source "STATIC_CHECK_ACCEPTANCE"))
 
 (define macos-build-source
   (file->string macos-build-script))
@@ -275,9 +277,9 @@
   (define product-version (string-trim (file->string (build-path project-root "VERSION"))))
   (check-true (regexp-match? matcher
                              (format "attalambda-~a-windows-x86_64.zip" product-version)))
-  (for ([name '("attalambda-0.9.0-windows-x86_64.zip"
-                "attalambda-0.8.0-linux-x86_64.zip"
-                "attalambda-0.8.0-windows-x86_64.zip.extra")])
+  (for ([name '("attalambda-0.10.0-windows-x86_64.zip"
+                "attalambda-0.9.0-linux-x86_64.zip"
+                "attalambda-0.9.0-windows-x86_64.zip.extra")])
     (check-false (regexp-match? matcher name))))
 (check-true (regexp-match? #rx"consumer unexpectedly has a racket command" windows-consumer-source))
 (check-true (regexp-match? #rx"consumer unexpectedly has a source checkout" windows-consumer-source))
@@ -325,6 +327,8 @@
 (define (substring-count text substring)
   (length
    (regexp-match* (regexp (regexp-quote substring)) text)))
+
+(check-equal? (substring-count consumer-source "\n  check_static_typing\n") 2)
 
 (check-true
  (regexp-match?
@@ -414,6 +418,9 @@
           "## Run the first program"
           "## Write an AttaLambda program"
           "## Command results and exit statuses"
+          "## Optional static checking"
+          "@EXECUTABLE@ --check my-program.attl"
+          "self-contained AttaLambda release archive"
           "## Authority and safety"
           "## Release notes"
           "## Known limitations"

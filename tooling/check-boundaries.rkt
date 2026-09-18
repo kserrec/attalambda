@@ -22,7 +22,8 @@
 (require racket/file
          racket/list
          racket/path
-         racket/runtime-path)
+         racket/runtime-path
+         "static-boundary-contracts.rkt")
 
 (provide (struct-out boundary-violation)
          (struct-out source-classification)
@@ -115,7 +116,7 @@
     unavailable-source-status unexpected-failure-status unless up validate-source
     validated-source-path vector->list when with-handlers
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
-    racket/runtime-path repl-index run-repl terminal-port?))
+    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
@@ -123,7 +124,7 @@
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
-    unexpected-failure-status repl-index help-text embedded-product-version stop validate-source
+    unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
     requested-source-missing? run-source main))
 
 (define expected-runner-status-definitions
@@ -347,7 +348,7 @@
 
 (define expected-language-expander-requires
   `((require
-     (for-syntax racket/base)
+     (for-syntax racket/base "static-data.rkt" "static-source.rkt")
      (only-in racket/base (void language-discard))
      (only-in "../macros/macros.rkt" def (lambda-let language-unary-let))
      (only-in "../core/fix.rkt" (raw-fix language-fix))
@@ -572,7 +573,7 @@
     language-datum))
 
 (define expected-language-for-syntax-definitions
-  '(language-definition-form?
+  '(language-analysis-builtins language-definition-form?
     language-curried-lambdas
     language-bound-name
     language-definition-parts
@@ -621,6 +622,9 @@
       map-contains? map-set map-remove
       #%app #%datum #%module-begin #%top ... = _ and argument body byte
       language-rec rec raw-fix language-fix
+      language-analysis-builtins analysis analysis-request-key analysis-result-key
+      analysis-request prepared local-expand module-begin make-source-view
+      unary-let nil static-source error unless application
       language-curried-lambdas language-bound-name language-definition-parts
       language-dependencies language-check-definitions imported retained
       interaction attalambda-interaction imports binding datum->syntax let*
@@ -681,7 +685,8 @@
     (#"0.5.0\n" . "0.5")
     (#"0.6.0\n" . "0.6")
     (#"0.7.0\n" . "0.7")
-    (#"0.8.0\n" . "0.8")))
+    (#"0.8.0\n" . "0.8")
+    (#"0.9.0\n" . "0.9")))
 
 (define runner-forbidden-version-literals
   (append-map
@@ -1624,7 +1629,7 @@
             (= (count (lambda (name)
                         (eq? name 'dynamic-require))
                       symbols)
-               2)
+               3)
             (= (datum-occurrence-count
                 '(dynamic-require source-path #f)
                 (module-info-forms info))
@@ -1632,6 +1637,10 @@
             (= (datum-occurrence-count '(dynamic-require repl-index 'run-repl)
                                         (module-info-forms info)) 1)
             (= (datum-occurrence-count '(define-runtime-module-path-index repl-index "repl.rkt")
+                                        (module-info-forms info)) 1)
+            (= (datum-occurrence-count '(dynamic-require check-index 'run-check)
+                                        (module-info-forms info)) 1)
+            (= (datum-occurrence-count '(define-runtime-module-path-index check-index "static/command.rkt")
                                         (module-info-forms info)) 1)
             (= (count (lambda (name) (eq? name 'current-input-port)) symbols) 1)
             (= (datum-occurrence-count '(terminal-port? (current-input-port))
@@ -2619,6 +2628,74 @@
                       forbidden-host-capabilities
                       'forbidden-host-capability)))
 
+;; Static frontend is a closed expansion-only boundary. The input is an already
+;; inspected snapshot; only the fixed embedded language graph may be loaded.
+(define static-frontend-vocabulary
+  '(#%module-begin #%variable-reference and body complete cond cons current-custodian
+    current-namespace custodian-shutdown-all datum->syntax define
+    define-runtime-module-path-index dynamic-require dynamic-wind else empty
+    exn:fail:syntax? expand expression failure file gensym if invalid lambda
+    language-index language-name language-origin language-reference make-base-namespace
+    make-custodian memq module module-path-index-resolve module-source namespace
+    namespace-attach-module-declaration not owner parameterize parse-source-buffer
+    parsed path->string path? prepare-source provide quasiquote quote racket/runtime-config
+    racket/runtime-path raise-argument-error require resolved-module-path-name source
+    source-buffer-column source-buffer-forms source-buffer-line source-buffer-message
+    source-buffer-status source-problem static-source symbol? syntax-column
+    syntax-failure-expression syntax-failure-reason syntax-line unless unquote
+    validated-source-column validated-source-line validated-source-path
+    validated-source-position validated-source-text validated-source?
+    variable-reference->namespace void when with-handlers
+    analysis? analysis-request-key analysis-request analysis-result-key
+    syntax-property syntax->list cadddr length let expanded validate-source-view
+    source-syntax value syntax? or equal? syntax-source origin syntax-e pair? car cdr
+    attributed exn:fail:syntax-exprs raise source-problem?))
+
+(define (static-frontend-violations path info root)
+  (define forms (module-info-forms info))
+  (append
+   (exact-language-violations path info 'racket/base 'invalid-static-language)
+   (exact-require-violations
+    path info '((require racket/runtime-path "../source-file.rkt" "../source-reader.rkt"
+                         "../../lang/static-data.rkt"))
+    'invalid-static-frontend-imports)
+   (exact-provide-violations path info '(provide prepare-source) 'invalid-static-frontend-exports)
+   (if (equal? (filter-map top-level-binding-name forms)
+               '(language-index language-origin language-name language-reference prepare-source))
+       '() (list (violation path 'invalid-static-frontend-definitions 'definitions)))
+   (for/list ([required
+               '((define-runtime-module-path-index language-index "../../lang/expander.rkt")
+                 (define language-origin (variable-reference->namespace (#%variable-reference)))
+                 (define language-name (resolved-module-path-name (module-path-index-resolve language-index)))
+                 (define language-reference (if (path? language-name)
+                                               `(file ,(path->string language-name))
+                                               `(quote ,language-name)))
+                 (when (symbol? language-name)
+                   (parameterize ([current-namespace language-origin])
+                     (dynamic-require language-reference #f)))
+                 (define namespace (make-base-namespace))
+                 (namespace-attach-module-declaration language-origin language-reference)
+                 (namespace-attach-module-declaration language-origin 'racket/runtime-config)
+                 (datum->syntax #f (cons '#%module-begin (source-buffer-forms parsed)))
+                 (datum->syntax #f `(module ,(gensym 'static-source) ,language-reference ,body))
+                 (expand module-source)
+                 (custodian-shutdown-all owner))]
+              #:unless (= (datum-occurrence-count required forms) 1))
+     (violation path 'invalid-static-frontend-scaffolding required))
+   (for/list ([operation '(dynamic-require expand make-base-namespace namespace-attach-module-declaration)]
+              [expected '(1 1 1 2)]
+              #:unless (= (count (lambda (name) (eq? name operation)) (module-symbols info)) expected))
+     (violation path 'invalid-static-frontend-operation operation))
+   (strict-vocabulary-violations path root static-frontend-vocabulary 'unapproved-static-frontend-identifier)))
+
+(define (static-helper-violations path info root class)
+  (define rule (assq class static-helper-rules))
+  (append
+   (exact-language-violations path info 'racket/base 'invalid-static-helper-language)
+   (exact-require-violations path info (caddr rule) 'invalid-static-helper-imports)
+   (exact-provide-violations path info (cadddr rule) 'invalid-static-helper-exports)
+   (strict-vocabulary-violations path root (list-ref rule 4) 'unapproved-static-helper-identifier)))
+
 (define (file-boundary-violations path class
                                   [project-root default-project-root])
   (define source (normalized path))
@@ -2661,6 +2738,9 @@
           [(editor) (editor-violations source info root)]
           [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
+          [(static-frontend) (static-frontend-violations source info root)]
+          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis static-coverage static-report static-command)
+           (static-helper-violations source info root class)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
           [(host) (host-violations source info root)]
@@ -2730,6 +2810,10 @@
                 (normalized (build-path root "runtime" "host.rkt")))
         'host]
        [else 'runtime])]
+    [(for/or ([rule (in-list static-helper-rules)])
+       (equal? source (normalized (build-path root (cadr rule)))))
+     (car (findf (lambda (rule) (equal? source (normalized (build-path root (cadr rule)))))
+                 static-helper-rules))]
     [(equal? first-part "lang")
      (cond
        [(equal? source
@@ -2761,6 +2845,8 @@
      'shell-output]
     [(equal? source (normalized (build-path root "runner" "session.rkt")))
      'session]
+    [(equal? source (normalized (build-path root "runner" "static" "frontend.rkt")))
+     'static-frontend]
     [(equal? first-part "runner") 'runner]
     [else #f]))
 
@@ -2927,7 +3013,11 @@
                (in-list
                 (remove-duplicates
                  (module-symbols info)))]
-              #:when (memq name privileged-host-only-identifiers))
+              #:when (and (memq name privileged-host-only-identifiers)
+                          ;; Scoped host-data bookkeeping in exact, individually
+                          ;; allowlisted frontend/checker modules only.
+                          (not (and (assq (source-class source project-root) static-helper-rules)
+                                    (memq name '(set! hash-ref hash-set!))))))
            (violation source
                       'privileged-identifier-outside-host
                       name))))
@@ -3021,6 +3111,8 @@
        (normalized (build-path runner-directory "source-reader.rkt")))
      (define session
        (normalized (build-path runner-directory "session.rkt")))
+     (define static-frontend
+       (normalized (build-path runner-directory "static" "frontend.rkt")))
      (define source-file
        (normalized (build-path runner-directory "source-file.rkt")))
      (define diagnostics
@@ -3045,6 +3137,8 @@
        (normalized (build-path language-directory "expander.rkt")))
      (define language-reader
        (normalized (build-path language-directory "reader.rkt")))
+     (define static-helper-files
+       (map (lambda (rule) (normalized (build-path root (cadr rule)))) static-helper-rules))
      (define effect-files (racket-files-under effects-directory))
      (define macro-files (racket-files-under macros-directory))
      (define runtime-files (racket-files-under runtime-directory))
@@ -3090,6 +3184,9 @@
       (file-boundary-violations runner 'runner root)
       (file-boundary-violations source-reader 'source-reader root)
       (file-boundary-violations session 'session root)
+      (file-boundary-violations static-frontend 'static-frontend root)
+      (append-map (lambda (path rule) (file-boundary-violations path (car rule) root))
+                  static-helper-files static-helper-rules)
       (file-boundary-violations source-file 'source-file root)
       (file-boundary-violations diagnostics 'diagnostics root)
       (file-boundary-violations repl 'repl root)
@@ -3132,11 +3229,11 @@
         (violation path 'unclassified-runtime-module path))
       (for/list ([path (in-list language-files)]
                  #:unless (member path
-                                  (list language-expander language-reader)
+                                  (append (list language-expander language-reader) static-helper-files)
                                   equal?))
         (violation path 'unclassified-language-module path))
       (for/list ([path (in-list runner-files)]
-                 #:unless (member path (list runner source-reader session source-file diagnostics repl shell-output editor-output editor history) equal?))
+                 #:unless (member path (append (list runner source-reader session source-file diagnostics repl shell-output editor-output editor history static-frontend) static-helper-files) equal?))
         (violation path 'unclassified-runner-module path))
       (unclassified-require-specs production-files root)
       (reintroduced-nat-surface-violations production-files root)

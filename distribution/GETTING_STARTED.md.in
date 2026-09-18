@@ -1,7 +1,8 @@
 # AttaLambda @VERSION@ — @TARGET_NAME@
 
 This is the self-contained AttaLambda release archive for the target named
-above. It contains the `attalambda` command, its private Racket CS 9.3 runtime,
+above. `BUILD-MANIFEST.txt` identifies its exact source commit.
+It contains the `attalambda` command, its private Racket CS 9.3 runtime,
 and five example programs. You do not need to install Racket, run `raco`, or
 register a package.
 
@@ -85,6 +86,61 @@ chooses the status; the host only performs that explicit request. Neither
 Error nor Result Err is automatically printed or translated into process
 failure. A performed exit does not return, so later effects do not run; an
 exit in an unselected branch remains unforced.
+
+## Optional static checking
+
+Check the program without running it:
+
+```@COMMAND_LANGUAGE@
+@EXECUTABLE@ --check my-program.attl
+```
+
+The checker reports exact coverage and inferred types, using the same existing
+source syntax without annotations. It reads one source snapshot and never
+executes the program, consumes its answers, performs its file/network/output or
+exit effects, or accesses shell history. Other command flags cannot accompany
+`--check`. Ordinary execution and runtime type checks remain unchanged.
+
+| Check status | Meaning |
+| ---: | --- |
+| 0 | FULL PASS: every source obligation is established and the report was written and flushed. |
+| 1 | FAIL: at least one supported type constraint conflicts. |
+| 2 | PARTIAL: no definite conflict, but some obligations remain unproved. |
+| 64 | Invalid arguments. |
+| 65 | Invalid source. |
+| 66 | Source unavailable or refused by the existing path policy. |
+| 70 | Internal analyzer or report-delivery failure. |
+| 130 | Checking was interrupted. Previously written report bytes may remain. |
+
+Definitions and expressions have separate exact counts, including unused bodies
+and unselected branches. Generated syntax does not inflate coverage. Zero
+denominators display `n/a`; an empty source explicitly passes vacuously. A
+rounded 100.0% can still be PARTIAL. Incomplete definitions have a reason or
+dependency path, never a verified success-only hint. Locations use one-based
+lines and zero-based columns. A static FAIL does not mean execution must crash.
+
+Identity infers `forall a. a -> a`, while `double` defined with `add` infers
+`Rat -> Rat`. Definitions and source lets support rank-1 polymorphism; lambda
+parameters and recursive self calls stay monomorphic. Lists and branch results
+have homogeneous static types. Variables marked `:data` exclude functions and
+Error from canonical container data; Error remains a separate type.
+
+This first version leaves `unwrap-ok` partial even behind `is-ok`, and `head`
+partial even on a visible nonempty List. It has no variant, nonempty, or numeric
+range refinements. Raw host protocols and unsupported data domains also remain
+unproved through aliases and callers. `div` returns Result(Rat), so division by
+zero is represented rather than a type conflict. Supported I/O wrappers retain
+their Result shapes without performing effects during checking.
+
+FULL PASS relies on trusted built-in, recursive-lowering, and host/codec
+contracts. It does not verify their implementations, prove termination,
+guarantee external operation success or resource lifetimes, exclude deliberate
+Error/Result Err values, or protect future unchecked callers. It adds no
+runtime tags or guards and is not a formal-verification claim.
+
+Running afterward is a separate invocation that reads the file again. A check
+applies to the captured snapshot, not subsequent edits; checking and running
+are not an atomic operation.
 
 ## Interactive shell and program input
 
@@ -176,7 +232,13 @@ you are willing to expose.
 
 ## Release notes
 
-The interactive milestone combines program line input with the `atta>` shell.
+Version 0.9.0 adds optional `--check FILE.attl` static checking without running
+the program. It reports full passes, definite conflicts and partial results,
+with exact coverage, inferred signatures and source locations. Existing syntax,
+runtime type checks, ordinary execution and the interactive shell are preserved.
+The checking section above describes the supported types and deliberate limits.
+
+Version 0.8.0 combines program line input with the `atta>` shell.
 It preserves the existing language, lazy effects, lexical binding snapshots,
 standalone source validation, and absolute object-language purity. The shell
 adds only private tooling for source entry, terminal editing, and session state.
