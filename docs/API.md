@@ -4,6 +4,8 @@ This reference describes the released 0.8.0 API and interactive shell,
 including `read-line`. The full source suite and fresh public Linux download
 pass their tests; [the handoff](../HANDOFF.md) records delivery evidence.
 The older 0.7.0 binary includes neither shell nor line input.
+The separately marked optional static checker below is local, unreleased
+source/candidate work; the published 0.8.0 binary does not include it.
 Older 0.6.0 binaries lack
 the four small syntax sugars. See the [0.7.0 notes](releases/0.7.0.md) for syntax
 and the [0.6.0 release notes](releases/0.6.0.md) for
@@ -26,6 +28,121 @@ arguments.
 Expected computational failures return Result Err. There is no implicit
 printing in file mode or conversion from Error to a process exit status.
 The shell's optional automatic echo observes expression values.
+
+## Optional static checking (unreleased)
+
+From this registered feature checkout:
+
+```sh
+racket runner/attalambda.rkt --check examples/hello.attl
+```
+
+The equivalent local candidate command is `attalambda --check FILE.attl`.
+Exactly one path is accepted; no other flags accompany `--check`. All existing
+source-path, lowercase-extension, UTF-8, declaration, reader, binding, symlink,
+and dotenv restrictions remain in force. Checking reads one validated snapshot,
+expands it through the real language frontend, and infers types without
+instantiating or evaluating the user module. It does not consume program input,
+perform program effects, access history, or start a shell. It never runs the
+file after checking it.
+
+| Status | Meaning |
+| ---: | --- |
+| 0 | `Static type check: FULL PASS`; every source obligation is established and the report was emitted and flushed successfully. |
+| 1 | `Static type check: FAIL`; at least one supported typing constraint conflicts. |
+| 2 | `Static type check: PARTIAL`; no definite conflict, but at least one obligation is unproved. |
+| 64 | Invalid command arguments. |
+| 65 | Invalid source, including unknown names or forbidden declaration cycles. |
+| 66 | Source unavailable or refused by the existing path policy. |
+| 70 | Unexpected analyzer or report-delivery failure. |
+| 130 | Checking was interrupted. Interrupted delivery can leave already-written bytes, but cannot return success. |
+
+A conflict takes precedence over gaps, and the report lists both. A static
+failure does not mean execution must crash: the runtime may return Error or
+leave the expression unselected. Invalid source has no meaningful whole-file
+coverage report. Operational diagnostics use stderr; completed reports use
+stdout. Internal exception text is not exposed. Source positions use one-based
+lines and zero-based columns, including the enclosing definition and anonymous
+lambda span where applicable; source-controlled names and paths are escaped.
+
+No annotation syntax is added. For example, these declarations infer reusable
+types:
+
+```racket
+#lang attalambda
+(def identity x = x)
+(def apply f x = (f x))
+(def double x = (add x x))
+(identity 1)
+(identity "text")
+```
+
+The signatures are `identity : forall a. a -> a`,
+`apply : forall a b. (a -> b) -> a -> b`, and `double : Rat -> Rat`.
+`forall` describes independently instantiated variables in a report; it is
+not source syntax. `def` and source `let` generalize variables not captured by
+their surrounding environment. Lambda parameters and a recursive definition's
+self assumption remain monomorphic. Ordinary finite-typed `rec` works, even
+when it diverges; raw self-application can require unsupported recursive types.
+Higher-rank types, polymorphic recursion, unions, and refinements are outside V1.
+
+Static base types are Rat, Bool, String, Char, Byte, Unit, and Error. Containers
+are `List(a)`, `Option(a)`, `Result(a)`, and `Map(k, v)`; Result's Err payload is
+always Error. String is distinct from List(Char), and Rat from Byte. List
+elements and `if`/`cond` result branches must have a common static type, including
+through aliases; heterogeneous finite contradictions fail. Function-valued
+branches are supported. A `:data` quantified variable ranges over canonical
+non-Error tagged data, recursively through containers, and excludes untagged
+functions. This is a static restriction, not a new runtime type or tag.
+
+`div`, `exp`, and `recip` return Result(Rat), so `(div 1 0)` can fully check:
+its computational failure is represented. The supported I/O contracts are
+`stdout : String -> Result(Unit)`,
+`read-line : Unit -> Result(Option(String))`,
+`read-file : String -> Result(List(Byte))`, and
+`write-file : String -> List(Byte) -> Result(Unit)`. Their effects are never
+performed during checking. `unwrap-err` has Error result type; deliberate Error
+values are compatible with a full pass where their consumers accept them.
+
+`unwrap-ok` remains partial even after `is-ok`, and `head` remains partial even
+on a visibly nonempty list: this version does not refine variants or emptiness.
+Range/integrality-dependent operations and raw `host` similarly retain explicit
+gaps. A possible Error return cannot become a verified success signature through
+an alias, callback, partial application, nested function, or caller. Restricted
+generic rendering cannot establish arbitrary function or direct Error overloads;
+use the explicit `error-to-string` contract for Error rendering. The complete
+[129-binding inventory](static-checking-contracts.md) records all supported and
+partial contracts and their reasons.
+
+Coverage has two exact denominators: every source `def`/`rec` binding, and every
+original expression, including unused bodies and unselected branches. Generated
+curried lambdas/applications and sugar internals do not inflate the counts.
+Quantified variables are solved parametrically, not holes. A bad call need not
+invalidate its independently established function declaration. Missing internal
+accounting is status 70, never a smaller denominator. Percentages have one
+decimal place, zero denominators say `n/a`, and an empty file explicitly passes
+vacuously. Rounded 100.0% does not select FULL PASS. Every incomplete definition
+has a primary reason or one deterministic path to one; conditional success hints
+are omitted from inferred signatures. [The complete example corpus](static-checking-corpus.md)
+shows why complete definitions alone do not establish a whole file.
+
+FULL PASS covers this file's definitions, bodies, and top-level expressions
+relative to trusted built-in contracts, recursive lowering, and host/codec
+contracts. It does not re-prove those implementations or the evaluator/operating
+system, prove termination or resource lifetimes, guarantee external operation
+success, exclude deliberate Error/Result Err values, or guard future unchecked
+callers. Function types describe input preconditions and normal result shape.
+Coverage is neither a probability of correctness nor test coverage; no formal
+verification theorem is claimed. Runtime tags and strict checks are retained.
+
+You may explicitly check and then run using two invocations:
+
+```sh
+attalambda --check program.attl && attalambda program.attl
+```
+
+Execution reads the file again. The earlier check applies to its captured
+snapshot, not later edits; this is not an atomic checked-execution guarantee.
 
 ## Syntax and values
 

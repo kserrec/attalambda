@@ -185,6 +185,8 @@
                    "printf 'guide_workflow=passed\\n'"))
 (check-true (regexp-match? #rx"guide custom program" consumer-source))
 (check-true (regexp-match? #rx"Artifact status: final release artifact" consumer-source))
+(check-true (string-contains? consumer-source "static_checking_acceptance=passed-at-both-paths"))
+(check-true (string-contains? consumer-source "STATIC_CHECK_ACCEPTANCE"))
 
 (define macos-build-source
   (file->string macos-build-script))
@@ -326,6 +328,8 @@
   (length
    (regexp-match* (regexp (regexp-quote substring)) text)))
 
+(check-equal? (substring-count consumer-source "\n  check_static_typing\n") 2)
+
 (check-true
  (regexp-match?
   #px"(?m:^on:\n  push:\n    branches:\n      - main\n  pull_request:\n)"
@@ -414,6 +418,9 @@
           "## Run the first program"
           "## Write an AttaLambda program"
           "## Command results and exit statuses"
+          "## Optional static checking"
+          "@EXECUTABLE@ --check my-program.attl"
+          "unpublished optional-static-checking feature candidate"
           "## Authority and safety"
           "## Release notes"
           "## Known limitations"

@@ -7,6 +7,31 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
+## Unreleased optional static checking
+
+The local feature branch implements the [revision-3 checking contract](optional-static-checking-spec.md).
+This is separate from published 0.8.0 evidence below; that public binary has no
+`--check` command. Phase 4's source checkpoint at
+`61a87c2ee56c3dd5e74ebf3173f6336f1ce8ff5e` passes 102 Racket test files / 26967
+reported tests, 49 Python terminal methods, purity over 40 production modules,
+and the complete boundary inventory. Its 218 recorded executable inputs match
+the tested snapshot. Reviews were self-reviews, with no open finding; no
+independent review or formal soundness theorem is claimed.
+
+| Requirement group | Observable evidence |
+| --- | --- |
+| Existing execution, grammar and authority (A01–A04, A19) | Full legacy suites, actual-expansion equivalence, binding/shadowing/hygiene tests, exact inventory and negative boundary mutations. |
+| Finite inference and recursion (A05–A09, A23) | Kernel equations, occurs/data checks, substitution composition, source let versus lambda, captured variables, forward definitions, ordinary and divergent `rec` checked without execution. |
+| Audited library and partial boundaries (A10–A15, A24) | [129 contracts](static-checking-contracts.md): 106 complete, 23 explicit partial, zero pending; export drift and source locators; real wrapper/host/codec tests; Error/alias/callback/partial-application counterexamples. |
+| Coverage and diagnostics (A16–A17, A25) | Exact original-source counts, empty and rounded-percentage cases, rejected missing/pending states, deterministic dependency paths, golden reports, original CRLF/Unicode/tab positions, escaped names and lambda spans. |
+| Real command and non-execution (A03, A18, A26) | Subprocess status matrix 0/1/2/64/65/66/70, actual input/file/network/history observations and positive controls, private faults, failed write/flush, real analysis interrupt and owned-resource cleanup, final-flush cancellation with status 130, repeated-process equality. |
+| Usefulness (A20) | Fixed seed/combined semantic fixtures and [all five unchanged examples](static-checking-corpus.md), with every gap reason and no imposed percentage target. |
+| Standalone delivery and handoff (A21–A22) | Early embedded frontend probe passed with source/package paths hidden. Final exact clean candidate/consumer gate is still pending; source-only evidence does not close it. |
+
+The active [plan](../PLAN.md) and [handoff](../HANDOFF.md) retain phase logs,
+input hashes, review scope and local-only authority. Version metadata,
+dependencies, runtime implementations and existing releases are preserved.
+
 ## Published 0.8.0 — Interactive AttaLambda
 
 The clean merged build revision is `f309199baa170ba5b12ff6b18b60dc49c114a8a1`. The

@@ -59,9 +59,23 @@ Racket tests, 49 Python terminal methods, purity over 40 modules and complete
 boundaries. `phase4-result.json` verifies 218 matching executable inputs;
 `phase4-review.md` records fresh self-review with no open finding, not an
 independent review. The local phase commit identity is in external `state.json`
-and Git history. **Next: Phase 5 corpus, documentation, final review, exact clean
-build and transferred consumer.** The evidence directory's `phase5-notes.md`
-contains read-only orientation, not completed Phase 5 work.
+and Git history: `61a87c2ee56c3dd5e74ebf3173f6336f1ce8ff5e`. Phase 5's complete
+five-example corpus is measured unchanged (hello/stdout full, three documented
+partial files, no conflicts), with all primary reasons retained in
+`docs/static-checking-corpus.md`. README/API/architecture/guide/distribution/
+acceptance documentation now distinguishes this unreleased work from public
+0.8.0. The new consumer logic passed against the real source launcher, including
+`/dev/full` and interrupted pipe delivery; this is not standalone acceptance.
+Steps 5.1–5.4 source checks passed. The final full suite exited 0 with 102 Racket
+files, 26973 reported tests, 49 Python methods, purity over 40 modules, and the
+complete boundary inventory. `phase5-result.json` verifies 223 executable and
+packaging inputs match the tested snapshot; `phase5-review.md` records fresh
+self-review with no open finding. No independent review is claimed.
+**Next: freeze this clean local source commit, then Steps 5.5a/b: exact clean
+build and transferred no-Racket consumer.** The source commit identity will be
+recorded externally before building, then cited in the final delivery record. The
+evidence directory's `phase5-notes.md` retains the build/delivery orientation;
+its earlier proposed items must be checked against actual completed work.
 Continue autonomously;
 do not wait for `next`.
 The reusable isolated container is `attalambda-static-implementation`,

@@ -51,6 +51,7 @@ Read only the row for the work you are doing:
 | Representation conversion | the matching exported function in [`runtime/codec.rkt`](runtime/codec.rkt) | raw constructors/accessors imported from `core/` |
 | Source syntax or public exports | [`lang/expander.rkt`](lang/expander.rkt) | [`lang/reader.rkt`](lang/reader.rkt) and [`macros/`](macros) only as needed |
 | Command-line launch | `main` in [`runner/attalambda.rkt`](runner/attalambda.rkt) | file validation/loading or [`runner/repl.rkt`](runner/repl.rkt) |
+| Optional static checking | [`runner/static/command.rkt`](runner/static/command.rkt) | expansion-only frontend, inference, exact coverage, then report construction |
 | Interactive definitions and lifetime | [`runner/session.rkt`](runner/session.rkt) | shared expander analysis, checked modules, per-entry and per-session custodians |
 | Terminal/history behavior | [`runner/editor.rkt`](runner/editor.rkt) | restricted source reader, scoped editor-output adapter, bounded inert history |
 | Human-readable observation | the matching file in [`readers/`](readers) | one-way conversion only |
@@ -78,6 +79,54 @@ Ok(Some(String)) or Ok(NONE). Only the host reads program answers; deterministic
 Option construction uses existing core terms. Prompting and sequencing remain
 ordinary program choices. The [input contract](docs/terminal-input-spec.md)
 defines separators, failures, demand, and the shell/program input boundary.
+
+## Optional static checking (unreleased)
+
+`--check FILE.attl` is a separate tooling path. It reads through the existing
+`inspect-source-file`, preserving its snapshot, reader offsets, and path policy.
+`runner/static/frontend.rkt` uses the restricted source reader and expands the
+trusted language in a fresh namespace/custodian. It never declares, instantiates,
+evaluates, or demands the user module. Embedded execution bootstraps only the
+fixed trusted language declaration graph. File mode and the REPL do not invoke
+the static inference engine.
+
+An opt-in syntax property asks the real expander for inert prefab metadata.
+`lang/static-source.rkt` mechanically preserves resolved binding identities,
+literal kinds, `let`/`rec` boundaries, original expression IDs and source spans;
+`lang/static-data.rkt` validates the transport. Request and result properties
+have distinct keys. Ordinary expansion has no analysis payload and preserves
+the same object-language computation. There is no parallel name-based parser
+or public source syntax for supplying trusted contracts.
+
+Private `runner/static/` modules separate structural types and rank-1 schemes,
+substitution/generalization, finite unification with an occurs check, proof
+states, binding-aware inference, and whole-file dependency ordering. Solver
+state and fresh variables belong to one analysis. Failed equations do not
+commit tentative substitutions. Incomplete proof remains separate from a type
+variable; a partial contract's conditional input obligations cannot establish
+its success hint. `contracts.rkt` owns the audited public inventory, including
+data restrictions and explicit Error/unsupported-protocol gaps. Its source/test
+locators are inert strings and identifiers, not runtime imports.
+
+`coverage.rkt` validates every final definition and registered source node,
+checks dependency/child closure, and derives exact counts and verdicts. It
+retains one memoized explanation path per incomplete binding. `report.rkt`
+constructs deterministic, escaped host strings with original positions and
+verified signatures; it never calls a language renderer. `command.rkt` owns
+source inspection, cleanup, final report emission/flush, safe operational
+diagnostics, and status selection. Private parameters permit fault tests around
+the real launcher; no product flag or environment variable injects failures.
+
+The boundary gate individually enumerates each helper, its exact imports,
+exports and host vocabulary. Pure checker helpers cannot perform I/O or enter
+the production computation graph; only the narrowly classified command adapter
+reads its explicit source and writes diagnostics/reports. No core, effects,
+codec, or host algorithm is inferred or changed. The library, recursive lowering,
+and host/codec contracts remain an explicit trusted basis. See the
+[checking reference](docs/API.md#optional-static-checking-unreleased),
+[contract audit](docs/static-checking-contracts.md), and
+[measured corpus](docs/static-checking-corpus.md). This feature is not in the
+published 0.8.0 binary.
 
 ## Pure value rendering and printing
 
@@ -177,7 +226,7 @@ The two files in
 modules. Their different lexical contexts are deliberate.
 
 [`runner/attalambda.rkt`](runner/attalambda.rkt) selects file mode, interactive
-mode, or explicit transcript mode. The shared `runner/source-file.rkt` validates
+mode, explicit transcript mode, or optional checking. The shared `runner/source-file.rkt` validates
 source paths, regular-file status, the exact first line, and UTF-8. File mode
 loads once without automatic echo. Shell commands and input phases live in
 `runner/repl.rkt`; sanitized source/native diagnostics live in

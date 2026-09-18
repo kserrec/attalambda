@@ -24,8 +24,11 @@ Phase 3 Steps 3.1–3.8 have passed their focused checks. All 129 public contrac
 are audited (106 complete, 23 partial); Checkpoint 3 passed its full suite,
 structural gates, input-hash comparison, and self-review, then committed as
 `76c2c8b`. Phase 4 Steps 4.1a–4.3 and Checkpoint 4 passed: full regression suite,
-structural gates, 218 matching executable inputs, and self-review. Continue with
-Phase 5's complete corpus and exact local candidate delivery.
+structural gates, 218 matching executable inputs, and self-review. Phase 5 Steps
+5.1–5.4 passed their final source checks: 102 Racket files, 26973 reported tests,
+49 Python methods, both structural gates, and 223 matching executable/packaging
+inputs. Fresh self-review has no open finding. Freeze this source in a clean
+local commit, then complete the exact build and no-Racket consumer gates.
 
 ## Verified starting state and change boundary
 
@@ -662,21 +665,61 @@ macOS/Windows consumer execution is not claimed.
 **Purpose:** finish documentation, full corpus evidence, cold review, and a tested deliverable.
 **Prerequisites:** Checkpoint 4, authorized local commits, and the confirmed Linux consumer environment.
 
-- [ ] **5.1 — Measure the complete existing example corpus.**
+- [x] **5.1 — Measure the complete existing example corpus.**
   **Work:** Analyze every current public `.attl` example and the minimum acceptance fixtures. Record status and every gap/conflict reason, distinguishing intentional dynamic/error demonstrations from regressions.
   **Check:** Every file is accounted for; supported fixtures fully pass and known limitations are accurately classified. Compare with the early pilot. Do not rewrite examples/signatures to improve percentages or silently skip files. No arbitrary coverage target is imposed.
+  **Evidence:** At `61a87c2`, all five examples ran through actual `--check`
+  without execution or source edits. hello/stdout fully pass (3/3 expressions
+  each). foundations is partial (126/138), file-round-trip partial (24/32), and
+  http-server partial (134/199); none has a conflict. All 13 primary gap regions,
+  declaration counts, reasons, locations, dependencies and example hashes are
+  retained in [the measured corpus](docs/static-checking-corpus.md). Logs and
+  machine-readable results are `step-5.1.log` and `corpus-results.json` in the
+  evidence directory. The 25 semantic fixtures already pass the same source
+  revision's real CLI and backend checkpoints; the seed pilot remains historical.
 
-- [ ] **5.2 — Document the feature and exact limitations.**
+- [x] **5.2 — Document the feature and exact limitations.**
   **Work:** Update relevant README/API/architecture/getting-started material with invocation, statuses, trust scope, inferred types, restricted data, and Error/variant limitations. Identify the capability as unreleased source/candidate work.
   **Check:** Examples are exercised; links/commands exist. The public 0.8.0 binary is not claimed to contain the feature. No claim of termination, all-error freedom, erased runtime tags, or whole-runtime formal verification appears.
+  **Evidence:** README/API/architecture, the actual guide template, distribution
+  contract and acceptance map now distinguish the unreleased local checker from
+  public 0.8.0. The API's new example fully checks with its exact documented
+  identity/apply/double signatures (3/3 definitions, 14/14 expressions). All 212
+  local links across seven relevant documents resolve; existing distribution
+  tests pass 217 checks. Log: `step-5.2-final.log`. The initial test command named
+  a nonexistent `api-test.rkt`; that command-selection error was corrected to the
+  actual distribution suite, with no implementation change. Guide commands are
+  also exercised by the forthcoming real consumer.
 
-- [ ] **5.3 — Extend the real standalone consumer.**
+- [x] **5.3 — Extend the real standalone consumer.**
   **Work:** Add compact full/partial/fail/invalid/no-effect check-mode fixtures to the existing Linux consumer. Verify embedding of checker/frontend dependencies. Preserve other native builders/CI; change only acceptance inputs necessitated by the shared launcher.
   **Check:** Static distribution tests cover new inputs. Consumer tests use the delivered executable and temporary source only: no Racket install, checkout, network fetch, or personal configuration. Dependencies/notices remain unchanged absent an evidenced necessity. Source-only tests cannot replace consumer acceptance.
+  **Evidence:** The existing Linux consumer now calls one inline Python-stdlib
+  acceptance block before and after relocation. It checks full/fail/partial/
+  empty/invalid cases, misuse/path statuses, exact counts/signatures, no effects,
+  actual input position, a blocking FIFO data-read probe, loopback positive and
+  negative controls, absent history, real `/dev/full` status 70, and interrupted
+  pipe delivery status 130 after an observed first report byte. Its assertions
+  passed against the real source launcher in `step-5.3.log`; this is deliberately
+  source-only preparation, not standalone evidence. An assertion initially ran
+  before its existing helper definition; the evidenced test-ordering correction
+  passes all 223 distribution checks and both gates (`step-5.3-final.log`).
+  The final delivered-command runs and embedding proof remain Steps 5.5a/b.
 
-- [ ] **5.4 — Review the final implementation afresh and freeze tested inputs.**
+- [x] **5.4 — Review the final implementation afresh and freeze tested inputs.**
   **Work:** Prefer independent read-only counterexample review; otherwise label self-review honestly. Inspect contract, diff, tests, scope, and unused abstractions. Correct evidenced findings narrowly.
   **Check:** Address binding impersonation, gap laundering, Error alternatives, generalization/recursion, non-execution, and embedding. Each finding has a disposition; no minimum finding count. Run corrections' focused tests and the complete required suite on final inputs. Close a clean local source commit under project rules before building.
+  **Evidence:** Fresh self-review (`phase5-review.md`) revisited the frontend,
+  kernel, all contracts, proof/coverage, command, consumer, documentation and
+  A01–A26 mapping; no finding remains open and no independent review is claimed.
+  The final `./run-all-tests.sh` exited 0: 102 Racket test files, 26973 reported
+  tests, 49 Python terminal methods, purity over 40 modules, and complete source
+  boundaries. `phase5-full.log` and `phase5-result.json` retain results and 223
+  matching executable/packaging input hashes, including the guide and consumer.
+  No executable input changed during the run. The local source commit closes
+  this step; its exact identity is recorded in the external candidate receipt
+  before the builder starts. Only delivery-record edits may follow that build
+  without repeating affected executable/build/consumer checks.
 
 - [ ] **5.5a — Build the exact clean, local candidate.**
   **Work:** Record the reviewed source SHA/runtime identity and build with the known builder into a fresh external directory, without `--allow-dirty`. Confirm that the checkout/ref was not changed by another process during preparation.

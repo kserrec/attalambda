@@ -40,6 +40,12 @@ the corresponding downloaded-user path.
 
 ## Source and command contract
 
+The current feature checkout adds optional static checking as **unreleased
+local source/candidate work**. The published 0.8.0 archive does not contain that
+command. Its local candidate retains existing version metadata; the exact
+source/archive/consumer identities belong to the current handoff, separate from
+the published release ledger below.
+
 [`runner/attalambda.rkt`](../../runner/attalambda.rkt) implements the complete
 command surface:
 
@@ -49,6 +55,7 @@ attalambda --no-history
 attalambda --repl
 attalambda --repl --no-history
 attalambda FILE.attl
+attalambda --check FILE.attl
 attalambda --help
 attalambda --version
 ```
@@ -59,6 +66,14 @@ download pass isolated terminal and relocation checks; the
 supports only file/help/version. `--repl` explicitly permits transcripts;
 without it, no-file startup requires terminal stdin and stderr. See the
 [shell contract and statuses](../API.md#interactive-shell).
+
+`--check` accepts exactly one source path and no accompanying flags. It uses
+the same source validation and restricted reader, then expansion-only type
+inference over the captured snapshot. It does not instantiate/evaluate the user
+module, perform program effects, consume answers, or access shell history.
+Completed reports use stdout; source/operational diagnostics use stderr. See
+the [checking contract](../API.md#optional-static-checking-unreleased) for exact
+coverage, trusted contracts and deliberately partial cases.
 
 There are no aliases, short flags, program arguments, compiler, or package-manager
 modes. A source path beginning with `-` must use
@@ -76,7 +91,8 @@ A runnable source has these properties:
   evaluator, or literal implementation.
 - Relative and absolute paths, spaces, and non-ASCII path characters are
   supported. The launcher leaves the caller's working directory unchanged.
-- The launcher loads exactly the supplied source once. It performs no project,
+- File mode loads exactly the supplied source once; checking analyzes its one
+  validated snapshot without instantiation. Neither performs project,
   import, package, directory, or network discovery.
 
 A path component is refused, case-insensitively, when its name matches
@@ -93,7 +109,8 @@ Validation has one fixed order:
 4. symbolic-link source entry;
 5. resolved parent path and its forbidden components;
 6. existence, regular-file status, and readability;
-7. declaration, encoding, read, expansion, and one module instantiation.
+7. declaration, encoding, read, and expansion; file mode then instantiates one
+   module, while check mode analyzes and reports without instantiating it.
 
 `--help` prints exactly:
 
@@ -102,6 +119,7 @@ Usage:
   attalambda [--no-history]
   attalambda --repl [--no-history]
   attalambda FILE.attl
+  attalambda --check FILE.attl
   attalambda --help
   attalambda --version
 ```
@@ -122,6 +140,14 @@ Launcher-controlled completion uses this table:
 | `65` | invalid source | suffix, declaration, encoding, read, syntax, or expansion failure |
 | `66` | unavailable/refused input | forbidden path, symlink, missing path, nonregular input, or inspection/read failure |
 | `70` | unexpected launcher failure | a catchable Racket failure outside the preceding classes and approved host Results |
+
+Checking has separate success semantics: 0 means FULL PASS plus successful
+report emission/flush, 1 means a static FAIL, and 2 means PARTIAL. It retains
+64/65/66 for arguments/source/path policy, uses 70 for analyzer or report-delivery
+failure, and returns 130 on interruption. A conflict wins over simultaneous gaps.
+There is no provisional success or report replay. Interrupted/failed delivery
+may leave report bytes but cannot return 0. These meanings do not change normal
+file-mode completion or map language Error values to process failures.
 
 The launcher imposes no execution timeout. External signals, forced process
 termination, or failures too severe for Racket to catch may produce another
@@ -144,7 +170,7 @@ incoming Errors bubble without dispatch. An unselected exit remains lazy; a
 performed exit prevents later expressions from running. The
 [host-boundary contract](host-boundary.md) defines this tenth operation.
 
-Diagnostics use one of these shapes, where `SOURCE` is the safely quoted
+Ordinary file-mode diagnostics use one of these shapes, where `SOURCE` is the safely quoted
 original spelling, line numbers are one-based, and columns are zero-based:
 
 ```text
@@ -157,7 +183,7 @@ The exact reasons are:
 
 | Class | Status | Reason |
 | --- | ---: | --- |
-| command misuse | 64 | `expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version` |
+| command misuse | 64 | `expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --help, or attalambda --version` |
 | implicit nonterminal startup | 64 | `a terminal is required; use attalambda --repl for redirected source` |
 | forbidden path | 66 | `refused source path because dotenv files are never read` |
 | wrong extension | 65 | `source file name must end in lowercase .attl` |
@@ -177,6 +203,13 @@ The exact reasons are:
 No exception message, stack trace, package path, checkout path, or build path
 is copied into a diagnostic.
 
+Checking uses the shared escaped source diagnostic formatter for operational
+errors. Its report names original source positions, inferred definitions,
+primary reasons and bounded dependency paths, with no internal exception text.
+The safe internal reason is `unexpected static checking or report-delivery
+failure`; failure to load the checking adapter instead requests installation
+verification. Cancellation says `static checking interrupted`.
+
 ## Trusted launcher boundary
 
 The runner is process-loading scaffolding, separate from object-language
@@ -184,6 +217,13 @@ computation. It may inspect its command-line arguments, write the fixed output
 above, set the process exit status, validate the one requested path and source,
 load that source once, classify failures, and read embedded product-version
 metadata.
+
+The exact private `runner/static/` classes additionally permit expansion-only
+preparation, structural host-data type inference, coverage validation, safe
+report construction, and the explicit command adapter's source/report I/O.
+Each module's imports, exports and vocabulary are closed individually. The
+checker cannot import session evaluation or perform program effects; the
+language's source grammar and host protocol are unchanged.
 
 It exports no binding. Production modules cannot import it, and AttaLambda
 source cannot name or invoke it. It imports neither the host nor the codec,

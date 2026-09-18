@@ -508,6 +508,135 @@ SOURCE
   }
   check_interactive_and_input
 
+  check_static_typing() {
+    # Only the delivered command and synthetic source enter these checks.
+    # The same acceptance runs again after the entire artifact is relocated.
+    python3 -I -B - "$attalambda" "$scratch_root" <<'STATIC_CHECK_ACCEPTANCE'
+import json
+import os
+from pathlib import Path
+import select
+import signal
+import socket
+import subprocess
+import sys
+import tempfile
+
+executable = sys.argv[1]
+with tempfile.TemporaryDirectory(prefix="static-checks-", dir=sys.argv[2]) as temporary:
+    work = Path(temporary)
+    profile = work / "unused-personal-state"
+    environment = dict(os.environ, XDG_CONFIG_HOME=str(profile), XDG_STATE_HOME=str(profile))
+    sequence = 0
+
+    def source(body):
+        global sequence
+        sequence += 1
+        path = work / f"source {sequence}.attl"
+        path.write_text("#lang attalambda\n" + body + "\n", encoding="utf-8")
+        return path
+
+    def invoke(arguments, status, **options):
+        result = subprocess.run([executable, *map(str, arguments)], cwd=work, env=environment,
+                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=45, **options)
+        assert result.returncode == status, (arguments, result.returncode, result.stdout, result.stderr)
+        return result
+
+    def check(body, status, reason=None, **options):
+        result = invoke(["--check", source(body)], status, **options)
+        header = {0: b"FULL PASS", 1: b"FAIL", 2: b"PARTIAL"}[status]
+        assert result.stdout.startswith(b"Static type check: " + header + b"\n"), result.stdout
+        assert result.stderr == b"", result.stderr
+        assert b"Trusted basis:" in result.stdout
+        if reason:
+            assert reason in result.stdout, result.stdout
+        return result
+
+    complete = check('(def identity x = x) (identity 1) (identity "s")', 0)
+    assert b"identity : forall a. a -> a" in complete.stdout
+    assert b"Expressions: 7/7 fully checked (100.0%)" in complete.stdout
+    conflict = check('(add 1 "bad")', 1, b"TYPE_CONFLICT")
+    assert b"Expressions: 3/4 fully checked (75.0%)" in conflict.stdout
+    assert b"add argument 2 expects Rat" in conflict.stdout
+    partial = check('(def extract = unwrap-ok)', 2, b"UNREPRESENTED_ERROR_ALTERNATIVE")
+    assert b"extract :" not in partial.stdout
+    check('(lambda (x) (x x))', 2, b"RECURSIVE_TYPE_REQUIRED")
+    check('(add (head NIL) "bad")', 1, b"UNREPRESENTED_ERROR_ALTERNATIVE")
+    check('(rec loop = loop) loop', 0)
+    check('(div 1 0)', 0)
+    empty = check('', 0)
+    assert b"0/0 fully checked (n/a)" in empty.stdout and b"pass is vacuous" in empty.stdout
+    for body in ('(stdout "PROGRAM-MUST-NOT-RUN") missing', '(stdout "PROGRAM-MUST-NOT-RUN") ('):
+        result = invoke(["--check", source(body)], 65)
+        assert result.stdout == b"" and b"PROGRAM-MUST-NOT-RUN" not in result.stderr
+    for arguments in (["--check"], ["--check", "--check"], ["--check", "one.attl", "two.attl"]):
+        assert invoke(arguments, 64).stdout == b""
+    for name in ("absent.attl", "service.env.attl"):
+        # Dotenv-spelled paths are never created or opened.
+        assert invoke(["--check", work / name], 66).stdout == b""
+
+    marker = work / "program-write.bin"
+    answers = work / "answers.txt"
+    answers.write_bytes(b"answer must remain unread\n")
+    body = ('(stdout "PROGRAM-MUST-NOT-RUN") (read-line UNIT) '
+            f'(write-file {json.dumps(str(marker))} (string-to-bytes "changed"))')
+    with answers.open("rb", buffering=0) as input_stream:
+        result = check(body, 0, stdin=input_stream)
+        assert input_stream.tell() == 0
+    assert b"PROGRAM-MUST-NOT-RUN" not in result.stdout and not marker.exists()
+    # A demanded read would block on this synthetic FIFO: no writer exists.
+    data_fifo = work / "program-data.fifo"
+    os.mkfifo(data_fifo)
+    check(f'(read-file {json.dumps(str(data_fifo))})', 0)
+    with socket.socket() as listener:
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(2)
+        address = listener.getsockname()
+        with socket.create_connection(address) as positive:
+            accepted, _ = listener.accept()
+            accepted.close()
+        check(f'(tcp-connect "127.0.0.1" {address[1]})', 2)
+        listener.settimeout(0.1)
+        try:
+            connection, _ = listener.accept()
+        except TimeoutError:
+            pass
+        else:
+            connection.close()
+            raise AssertionError("checking opened a program connection")
+    check('(exit 0)', 2)
+    assert not profile.exists(), "checking created personal/history state"
+
+    # The delivered executable must classify an actual failing output device.
+    with open("/dev/full", "wb", buffering=0) as failed_output:
+        result = subprocess.run([executable, "--check", str(source('1'))], cwd=work,
+                                env=environment, stdout=failed_output, stderr=subprocess.PIPE, timeout=45)
+    assert result.returncode == 70, (result.returncode, result.stderr)
+    assert b"report-delivery failure" in result.stderr
+
+    # A known-small pipe and a large inferred name hold report delivery open.
+    # The first byte is readiness evidence after analysis, not a timing guess.
+    large = source('(def ' + 'x' * 65536 + ' = 1)')
+    process = subprocess.Popen([executable, "--check", str(large)], cwd=work, env=environment,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE, pipesize=4096)
+    try:
+        assert select.select([process.stdout], [], [], 45)[0], "report did not begin"
+        first = os.read(process.stdout.fileno(), 1)
+        assert first == b"S", first
+        process.send_signal(signal.SIGINT)
+        rest, diagnostic = process.communicate(timeout=15)
+        assert process.returncode == 130, (process.returncode, diagnostic)
+        assert (first + rest).count(b"Static type check:") <= 1
+        assert b"static checking interrupted" in diagnostic
+    finally:
+        if process.poll() is None:
+            process.kill()
+            process.communicate()
+    print("packaged_static_checking=passed")
+STATIC_CHECK_ACCEPTANCE
+  }
+  check_static_typing
+
   # These classes exercise only the absolute executable and temporary fixtures.
   # Source-only probe classes are deliberately excluded from this consumer.
   # Their UTF-8 terminal input needs a matching native console locale; retain C
@@ -530,6 +659,7 @@ SOURCE
   check_captured_output $'Generated after packaging.\n' "relocated source"
 
   check_interactive_and_input
+  check_static_typing
   LC_ALL=C.UTF-8 ATTALAMBDA_TEST_EXECUTABLE="$attalambda" \
     timeout --kill-after=5s 600s python3 -I -B /transfer/interactive_pty.py -v CLIProbe TranscriptProbe
 
@@ -551,6 +681,7 @@ SOURCE
   printf 'relocation=passed\n'
   printf 'interactive_terminal_acceptance=passed-at-both-paths\n'
   printf 'runtime_input_and_snapshot_transcript=passed-at-both-paths\n'
+  printf 'static_checking_acceptance=passed-at-both-paths\n'
   printf 'first_startup_milliseconds=%s\n' "$first_startup_milliseconds"
   printf 'relocated_startup_milliseconds=%s\n' "$relocated_startup_milliseconds"
   printf 'consumer_acceptance=passed\n'
