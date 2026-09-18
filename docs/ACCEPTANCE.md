@@ -11,10 +11,10 @@ release facts are in the
 
 The local feature branch implements the [revision-3 checking contract](optional-static-checking-spec.md).
 This is separate from published 0.8.0 evidence below; that public binary has no
-`--check` command. Phase 4's source checkpoint at
-`61a87c2ee56c3dd5e74ebf3173f6336f1ce8ff5e` passes 102 Racket test files / 26967
+`--check` command. The final tested/build source at
+`576d8837797f254fb068d19fd839ea1174e28151` passes 102 Racket test files / 26973
 reported tests, 49 Python terminal methods, purity over 40 production modules,
-and the complete boundary inventory. Its 218 recorded executable inputs match
+and the complete boundary inventory. Its 223 recorded executable/packaging inputs match
 the tested snapshot. Reviews were self-reviews, with no open finding; no
 independent review or formal soundness theorem is claimed.
 
@@ -26,7 +26,20 @@ independent review or formal soundness theorem is claimed.
 | Coverage and diagnostics (A16–A17, A25) | Exact original-source counts, empty and rounded-percentage cases, rejected missing/pending states, deterministic dependency paths, golden reports, original CRLF/Unicode/tab positions, escaped names and lambda spans. |
 | Real command and non-execution (A03, A18, A26) | Subprocess status matrix 0/1/2/64/65/66/70, actual input/file/network/history observations and positive controls, private faults, failed write/flush, real analysis interrupt and owned-resource cleanup, final-flush cancellation with status 130, repeated-process equality. |
 | Usefulness (A20) | Fixed seed/combined semantic fixtures and [all five unchanged examples](static-checking-corpus.md), with every gap reason and no imposed percentage target. |
-| Standalone delivery and handoff (A21–A22) | Early embedded frontend probe passed with source/package paths hidden. Final exact clean candidate/consumer gate is still pending; source-only evidence does not close it. |
+| Standalone delivery and handoff (A21–A22) | Early embedded frontend probe passed with source/package paths hidden. Final clean-source archive passes the transferred no-Racket consumer, including the checker and all 25 terminal methods before/after relocation. The durable handoff records exact identities, cleanup and the completed local-only endpoint. |
+
+The 19,870,393-byte Linux candidate's SHA-256 is
+`80c08ff21090d3b725a5c6df50b56783c5f434b5129dd60fc423c2abe35a3816`.
+It was built from the clean source above with corrected Racket CS 9.3, without
+`--allow-dirty`. Original/transferred/final digests match. The actual Ubuntu
+24.04 consumer had no Racket/raco or checkout, test-only Python 3.12.3, no
+external network, a read-only root and non-root user. It reports
+`static_checking_acceptance=passed-at-both-paths` and `consumer_acceptance=passed`;
+the two 25-method terminal groups passed in 64.927s and 67.255s. Real failed
+output and interrupted delivery passed in the packaged command. Native
+macOS/Windows checks were not run. [HANDOFF.md](../HANDOFF.md) retains the exact
+archive path, image identities and logs. This later record is not the archive's
+source; retained 0.8.0 metadata does not make the candidate a published release.
 
 The active [plan](../PLAN.md) and [handoff](../HANDOFF.md) retain phase logs,
 input hashes, review scope and local-only authority. Version metadata,

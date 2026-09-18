@@ -27,8 +27,14 @@ structural gates, input-hash comparison, and self-review, then committed as
 structural gates, 218 matching executable inputs, and self-review. Phase 5 Steps
 5.1–5.4 passed their final source checks: 102 Racket files, 26973 reported tests,
 49 Python methods, both structural gates, and 223 matching executable/packaging
-inputs. Fresh self-review has no open finding. Freeze this source in a clean
-local commit, then complete the exact build and no-Racket consumer gates.
+inputs. Fresh self-review has no open finding. The clean tested/build source is
+`576d8837797f254fb068d19fd839ea1174e28151`. Its exact Linux archive passed the
+transferred no-Racket consumer, including static checks and all 25 terminal
+methods at both paths. Steps 5.5a/b and 5.6 are complete. The authorized local
+milestone is finished; no owner action or unfinished implementation step remains.
+The later delivery-record commit changes only PLAN.md, HANDOFF.md and
+docs/ACCEPTANCE.md; its identity and final clean status are recorded externally.
+Nothing was pushed, opened as a PR, merged, tagged, or published.
 
 ## Verified starting state and change boundary
 
@@ -106,7 +112,7 @@ V1 gaps, and any independently established finite conflict must still be
 reported. Phase 5 measures each whole-file verdict and reason; source inspection
 here is not a substitute for that corpus run or the Phase 3 contract audit.
 
-## Environment and checkpoint evidence
+## Phase 0 environment and checkpoint evidence (historical)
 
 The untouched baseline at `f6938b286329532230be210de0eaaa398286d38a` passed
 `./run-all-tests.sh` with exit 0: 69 Racket test files and
@@ -202,7 +208,7 @@ No owner action is required to start that step.
 
 
 
-Phase 0 is complete; remaining steps are unchecked. Run focused tests with each step. Phase checkpoints collect evidence and close verified local commits; they do not replace the focused kernel, frontend, and contract reviews named inside the phases. Subdivide an unexpectedly large step before implementing it rather than sacrificing its checks.
+All six phases are complete. The checked steps below retain their focused Work/Check requirements and checkpoint evidence. Final source and artifact identities are separate from the later delivery-record commit, as required by Section 10 of the specification.
 
 ## Phase 0 — Confirm the workspace, constraints, and usable V1 scope
 
@@ -721,17 +727,51 @@ macOS/Windows consumer execution is not claimed.
   before the builder starts. Only delivery-record edits may follow that build
   without repeating affected executable/build/consumer checks.
 
-- [ ] **5.5a — Build the exact clean, local candidate.**
+- [x] **5.5a — Build the exact clean, local candidate.**
   **Work:** Record the reviewed source SHA/runtime identity and build with the known builder into a fresh external directory, without `--allow-dirty`. Confirm that the checkout/ref was not changed by another process during preparation.
   **Check:** Record archive SHA-256 and build evidence; every executable/embedded input belongs to the recorded source. Current-version metadata is explicitly labeled an unpublished feature candidate, not the public asset. Preserve unrelated work and existing candidate outputs rather than overwriting them.
+  **Evidence:** Clean local commit `576d8837797f254fb068d19fd839ea1174e28151`
+  was cloned without checking out dotenv paths. All 223 tested inputs matched;
+  owner checkout and clone retained that HEAD and clean status before/after the
+  normal builder, with no `--allow-dirty`. The corrected isolated Racket CS 9.3
+  build exited 0 (`candidate-build.log`). The 19,870,393-byte archive is
+  `/tmp/attalambda-static-implementation-mmgdshl_/candidate-g7g7_p8u/attalambda-0.8.0-linux-x86_64.tar.gz`;
+  SHA-256: `80c08ff21090d3b725a5c6df50b56783c5f434b5129dd60fc423c2abe35a3816`.
+  Its manifest names that clean source; its guide explicitly identifies an
+  unpublished feature candidate with retained 0.8.0 metadata. An initial
+  temporary receipt assertion omitted the guide's words `optional-static-checking`;
+  direct archive/template inspection established the mismatch and the exact
+  wording passed. No source, artifact, or consumer logic changed.
 
-- [ ] **5.5b — Verify the transferred standalone artifact.**
+- [x] **5.5b — Verify the transferred standalone artifact.**
   **Work:** Transfer that exact archive to the isolated consumer and run the extended new check-mode and existing file/REPL acceptance. Use only the delivered executable and synthetic source fixtures.
   **Check:** Verify archive digest before/after transfer and record consumer environment plus `consumer_acceptance=passed`. Include complete, conflicting, partial, invalid-source, and no-effect fixtures. Any code/build-input or consumer-logic correction requires affected rebuild/retest evidence. Report unavailable native-platform checks separately; do not claim the current archive came from a later handoff-only commit.
+  **Evidence:** The exact source clone's existing extended consumer exited 0
+  (`candidate-consumer.log`): `static_checking_acceptance=passed-at-both-paths`
+  and final `consumer_acceptance=passed`. The original, transferred and final
+  archive digests match. Both 25-method CLI/transcript runs passed (64.927s and
+  67.255s), alongside guide/public API, file/network/exit, check-mode statuses,
+  no-effects, actual failed output and interrupted delivery, and relocation.
+  The consumer had no Racket/raco or checkout; Ubuntu 24.04, Python 3.12.3,
+  read-only root, UID/GID 65534, no external network. Its actual prepared image
+  is `sha256:f79d9f4012586a4c571e94f0dbcf295cc85a55e9e0f1d79e9f71f9ef2c4c9644`.
+  Native macOS/Windows checks were not run; Linux x86-64 remains the supported
+  binary target. `candidate-source.json`, `candidate-result.json` and the copied
+  build manifest retain exact provenance. The archive predates this record.
 
-- [ ] **5.6 — Close the handoff and clean owned resources.**
+- [x] **5.6 — Close the handoff and clean owned resources.**
   **Work:** Update the existing durable plan/handoff with Section 10's source, test, review, coverage, artifact, limitation, and authority records. Clean only owned probes/containers/transfers.
   **Check:** Distinguish the tested build source from later record-only commits. Every acceptance item has evidence or an explicit blocker/next step. Preserve unrelated work and existing releases. No push, PR, merge, tag, asset replacement, or publication occurs under the default endpoint; follow project gate rules for any final record-only commit.
+  **Evidence:** HANDOFF.md and docs/ACCEPTANCE.md now close the A01–A26 map,
+  source/tests/self-review/corpus/contracts, exact artifact, limitations and
+  authority. The owned implementation container was stopped and removed; the
+  consumer container and transfer directory were verified absent. Images,
+  snapshots, logs and the candidate are retained. Only these three record files
+  change after the build; executable/packaging hashes, local links, whitespace,
+  local main and final clean Git state are checked before closing the record.
+  Its own commit identity is saved in the external `state.json`, avoiding a
+  self-referential commit. No blocker, deferred implementation, or owner action
+  remains within this local-only assignment.
 
 **Checkpoint 5 — Delivery gate.** Completion requires final-input tests, disposed review findings, full-corpus results, and the exact digest-identified standalone candidate's consumer evidence. Missing infrastructure/authority is reported as a blocked gate, never a passed check. Finish independent safe work, record the precise next step, and stop at the authorized local candidate.
 

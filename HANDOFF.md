@@ -1,4 +1,127 @@
-# Optional static checking — autonomous milestone in progress
+# Optional static checking — verified local candidate complete
+
+The entire revision-3 milestone is implemented, tested, self-reviewed, built and
+verified as a local Linux candidate. All six phases are complete. There is no
+unfinished implementation step, blocker, or required owner action. No push, PR,
+merge, tag, release-asset replacement or publication occurred. Public 0.8.0 is
+preserved and does not contain this feature.
+
+## Final source and delivery identities
+
+- Workspace: `/home/serrecchia/Projects/attalambda`, branch
+  `optional-static-checking`.
+- Base and unchanged local main: `f6938b286329532230be210de0eaaa398286d38a`.
+- Final tested/build source: `576d8837797f254fb068d19fd839ea1174e28151`.
+  This clean local commit contains every executable, test, consumer and embedded
+  guide input. Earlier phases also have verified local commits, recorded below.
+- Clean build clone:
+  `/tmp/attalambda-static-implementation-mmgdshl_/build-source-n7a4gxle`.
+  Its tree is `4fda0111607004aeb10f77413f129e35cb5b540a`. Original and clone
+  HEAD/clean state were verified before and after building; all 223 tested
+  executable/packaging input hashes matched. No `--allow-dirty` was used.
+- This later delivery record changes only PLAN.md, HANDOFF.md and
+  docs/ACCEPTANCE.md. It is not the archive's source. Its own commit identity and
+  final clean workspace status are retained in the external `state.json` below
+  and the completion response; no commit tries to contain its own hash.
+
+Evidence root: `/tmp/attalambda-static-implementation-mmgdshl_/`.
+`state.json`, `phase5-result.json`, `candidate-source.json`,
+`candidate-result.json` and `candidate-build-manifest.txt` retain machine-readable
+identities/results. Earlier baseline evidence remains in
+`/tmp/attalambda-static-phase0-q0w_ycsc/`.
+
+## Verification and review
+
+The final `./run-all-tests.sh` ran through `runuser --login attatest` in the
+isolated container, from `/evidence/source`, with a 2400-second outer deadline.
+It exited 0: **102 Racket test files, 26973 reported Racket tests, 49 Python
+terminal methods**, expanded purity over 40 production modules, and the complete
+source inventory/boundary gate. `phase5-full.log` and `phase5-result.json` retain
+the actual final run and 223 matching input hashes. Focused logs `step-1.1a.log`
+through the recorded Phase 5 steps distinguish unit/contract/CLI checks from
+full-suite and artifact evidence; `step-5.3-final.log` passes 223 distribution
+checks plus both structural gates. Baseline/earlier checkpoints below are
+historical, not substituted for the final run.
+
+Testing/building used Linux x86-64, Racket CS 9.3, Python 3.13.5 and Git 2.47.3,
+in image `sha256:5366fd60f701ca1cbf5172c17bfa1150ca8a5e7500c3a9d19f5bbca4236be59c`.
+The existing reviewed promise/Expeditor corrections were applied and checked
+inside the disposable runtime using `tooling/prepare-racket-runtime.rkt`.
+That image is unpatched; future containers must repeat the recorded apply/check
+preparation. The owner's Racket 8.10 installation was not changed. No dependency
+or version metadata was added or updated.
+
+Reviews are explicitly **self-reviews**, not independent reviews or a formal
+soundness proof. `phase5-review.md` records the fresh final source review; all
+confirmed earlier findings have corrections and retained tests. The substantive
+kernel corrections were simultaneous substitution and closing a native-capability
+vocabulary leak. Temporary test/receipt mistakes and their diagnosed corrections
+are recorded in PLAN.md. No finding remains open. The A01–A26 evidence mapping
+is in [docs/ACCEPTANCE.md](docs/ACCEPTANCE.md).
+
+The [contract audit](docs/static-checking-contracts.md) accounts for all 129
+public values: 106 complete, 23 explicitly partial, zero pending. The
+[unchanged five-example corpus](docs/static-checking-corpus.md) has two full
+passes and three partial results, no conflicts: hello/stdout each 3/3 checked
+expressions; foundations 126/138, file-round-trip 24/32, http-server 134/199.
+All 13 primary gap regions and dependency explanations are retained. The V1
+limits remain deliberate: no variant/nonempty/range refinement, recursive types,
+polymorphic recursion, or higher-rank typing; partial built-ins/raw host are not
+laundered through aliases or callbacks. Checking never evaluates the program and
+does not prove termination, external success, or absence of deliberate Error.
+
+The user-directed deviation is autonomous continuation between verified passes;
+oversized steps were subdivided without dropping checks. The required early
+embedding probe, full corpus, clean build and actual consumer were completed.
+No post-milestone language feature, public annotation syntax, or runtime typing
+change was introduced.
+
+## Exact standalone candidate
+
+Archive:
+`/tmp/attalambda-static-implementation-mmgdshl_/candidate-g7g7_p8u/attalambda-0.8.0-linux-x86_64.tar.gz`
+
+SHA-256:
+`80c08ff21090d3b725a5c6df50b56783c5f434b5129dd60fc423c2abe35a3816`
+
+Size: **19,870,393 bytes**. Its sibling `SHA256SUMS` verifies that exact file.
+The guide clearly labels this an unpublished optional-static-checking candidate;
+0.8.0 metadata is retained as required. Its BUILD-MANIFEST source is the clean
+`576d8837797f254fb068d19fd839ea1174e28151` revision, not this later record.
+
+`tooling/build-linux-distribution.sh /evidence/candidate-g7g7_p8u` ran from the
+clean clone in the corrected isolated runtime and exited 0 (`candidate-build.log`).
+The clone's `tooling/test-linux-distribution.sh` then ran on that host output
+directory with task-owned Docker configuration; it exited 0
+(`candidate-consumer.log`). Original, transferred and final archive digests match.
+The log ends with `consumer_acceptance=passed`, and records
+`static_checking_acceptance=passed-at-both-paths`. All 25 CLI/transcript methods
+passed before and after relocation (64.927s and 67.255s). Static statuses,
+coverage/signatures, invalid sources, no effects, real `/dev/full` failure,
+interrupted report delivery, guide/public API, file/network/exit, terminal input,
+and relocation all passed using the delivered executable.
+
+Consumer: Ubuntu 24.04 pinned to
+`sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea`;
+actual prepared image
+`sha256:f79d9f4012586a4c571e94f0dbcf295cc85a55e9e0f1d79e9f71f9ef2c4c9644`.
+It uses test-only Python 3.12.3, UID/GID 65534, a read-only root, dropped
+capabilities and no external network. Racket/raco and a source checkout are
+absent; Python is not shipped in the archive. Native macOS/Windows runs were
+not performed. Linux x86-64 remains the only supported binary target.
+
+## Cleanup and endpoint
+
+The owned implementation container `attalambda-static-implementation` was
+stopped and removed. Consumer `1c462712afb9` and its transfer directory
+`/tmp/attalambda-linux-transfer-SrsKIy` are verified absent. The builder cleaned
+its own staging directory. Logs, source snapshots, images and the verified
+candidate remain available; unrelated resources were not touched. Final record
+checks compare input hashes, links, whitespace, unchanged local main and clean
+Git state. The authorized endpoint is complete locally. A later remote or
+publication action would be a separate assignment.
+
+## Implementation checkpoints (historical)
 
 Kyle explicitly authorized continuing from one verified pass to the next on
 2026-09-17 without waiting for another `next`. Complete the whole specified local
@@ -71,18 +194,17 @@ files, 26973 reported tests, 49 Python methods, purity over 40 modules, and the
 complete boundary inventory. `phase5-result.json` verifies 223 executable and
 packaging inputs match the tested snapshot; `phase5-review.md` records fresh
 self-review with no open finding. No independent review is claimed.
-**Next: freeze this clean local source commit, then Steps 5.5a/b: exact clean
-build and transferred no-Racket consumer.** The source commit identity will be
-recorded externally before building, then cited in the final delivery record. The
+At this source checkpoint, the next steps were the clean local source commit,
+exact build and transferred no-Racket consumer; all are now complete above. The
 evidence directory's `phase5-notes.md` retains the build/delivery orientation;
 its earlier proposed items must be checked against actual completed work.
-Continue autonomously;
-do not wait for `next`.
-The reusable isolated container is `attalambda-static-implementation`,
+Autonomous continuation completed the requested local candidate.
+The isolated container used for these checkpoints was `attalambda-static-implementation`,
 with source/evidence at `/tmp/attalambda-static-implementation-mmgdshl_/`.
 Its `sync.py` copies only explicit non-dotenv source paths; use it before tests.
-Run tests through `runuser --login attatest` inside that container, with working
-directory `/evidence/source`. The owner's Racket installation is never modified.
+Tests ran through `runuser --login attatest` inside that container, with working
+directory `/evidence/source`. It has now been removed. The owner's Racket
+installation was not modified.
 
 ## Completed Phase 0 baseline record
 
