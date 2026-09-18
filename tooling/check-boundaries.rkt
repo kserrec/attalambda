@@ -624,7 +624,7 @@
       language-rec rec raw-fix language-fix
       language-analysis-builtins analysis analysis-request-key analysis-result-key
       analysis-request prepared local-expand module-begin make-source-view
-      unary-let nil static-source error unless
+      unary-let nil static-source error unless application
       language-curried-lambdas language-bound-name language-definition-parts
       language-dependencies language-check-definitions imported retained
       interaction attalambda-interaction imports binding datum->syntax let*
@@ -2646,7 +2646,9 @@
     validated-source-position validated-source-text validated-source?
     variable-reference->namespace void when with-handlers
     analysis? analysis-request-key analysis-request analysis-result-key
-    syntax-property syntax->list cadddr length let expanded validate-source-view))
+    syntax-property syntax->list cadddr length let expanded validate-source-view
+    source-syntax value syntax? or equal? syntax-source origin syntax-e pair? car cdr
+    attributed exn:fail:syntax-exprs raise source-problem?))
 
 (define (static-frontend-violations path info root)
   (define forms (module-info-forms info))

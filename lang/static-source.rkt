@@ -60,19 +60,22 @@
                [body (lower-let (list-ref pieces 4) (cons (cons name id) environment) origin)])
           (node #f 'let origin id (list value body)))
         (translate stx environment)))
+  (define (literal-node stx datum)
+    (node (register stx 'literal) 'literal stx
+          (cond [(and (rational? datum) (exact? datum)) 'Rat]
+                [(string? datum) 'String] [(char? datum) 'Char]
+                [else (error 'static-source "invalid literal survived expansion")]) '()))
   (define (translate stx environment)
     (define pieces (syntax->list stx))
+    (define datum (syntax-e stx))
     (cond
       [(identifier? stx)
        (define id (register stx 'reference))
        (define local (binding stx environment))
        (if local (node id 'reference stx (cdr local) '()) (builtin id stx))]
-      [(not pieces)
-       (define datum (syntax-e stx))
-       (node (register stx 'literal) 'literal stx
-             (cond [(and (rational? datum) (exact? datum)) 'Rat]
-                   [(string? datum) 'String] [(char? datum) 'Char]
-                   [else (error 'static-source "invalid literal survived expansion")]) '())]
+      [(and (pair? datum) (special? (car datum) 'datum environment))
+       (literal-node stx (cdr (syntax->datum stx)))]
+      [(not pieces) (literal-node stx datum)]
       [(and (pair? pieces) (special? (car pieces) 'lambda environment))
        (abstraction (register stx 'lambda) stx (syntax->list (cadr pieces))
                     (caddr pieces) environment)]
@@ -102,8 +105,10 @@
        (node id 'group stx 'cond (list (clauses (cdr pieces))))]
       [else
        (define id (register stx 'application))
-       (applications id stx (translate (car pieces) environment)
-                     (map (lambda (argument) (translate argument environment)) (cdr pieces)))]))
+       (define application-pieces
+         (if (special? (car pieces) 'application environment) (cdr pieces) pieces))
+       (applications id stx (translate (car application-pieces) environment)
+                     (map (lambda (argument) (translate argument environment)) (cdr application-pieces)))]))
   (define result-bindings '())
   (define result-expressions '())
   (define result-forms '())

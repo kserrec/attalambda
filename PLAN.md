@@ -1,4 +1,44 @@
-# Optional static checking — local implementation milestone
+# Optional static checking — independent review follow-up
+
+Kyle approved one focused independent correctness review and a security review
+of the new checker's source/command boundaries after the completed candidate.
+Starting branch `optional-static-checking`, clean HEAD
+`ab521b034bd7ff0ea06daf70046518d1995c0499`; milestone base
+`f6938b286329532230be210de0eaaa398286d38a`. No general refactor or whole-repository
+audit is authorized. Existing local-commit authority continues; no remote action,
+merge or publication is authorized. The original candidate below is preserved.
+
+Evidence: `/tmp/attalambda-static-review-5du21rkr/`. Three fresh read-only reviewers
+cover inference, frontend/command security, and contracts; root covers changed
+structural checks, packaging and integration. Per-file coverage and proved
+scenarios are retained in the review reports. The isolated corrected Racket CS
+9.3 container is `attalambda-static-review`; the owner's runtime is untouched.
+
+- [x] Enumerate the milestone delta and interacting boundaries; close-read and
+  independently probe candidate failures. Four correctness findings are proven:
+  H1 loses known callable-input conflicts alongside gaps; H2 rejects valid explicit
+  application/datum forms internally; H3 gives tcp-listen the wrong success hint;
+  H4 maps trusted syntax faults to user-source status 65. No execution bypass is
+  demonstrated. These are defects in the completed milestone, not planned work.
+- [x] Fix each confirmed cause serially, pin siblings and preserve bounded hunters
+  as tests. The verified sequence was H3, H2, H1, H4. Ordinary source grammar,
+  runtime behavior, partial-result honesty and structural gates are preserved.
+- [x] Have a fresh agent cold-review the complete fix batch; settle every finding.
+  The cold review found no additional proved defect. Independent probes passed
+  18 inference cases, 34 syntax comparisons and five provenance cases.
+- [x] Run focused checks, full suite, purity/boundary checks and current corpus.
+  `review-full.log` exits 0: 104 Racket files / 26981 reported tests, 49 Python
+  methods, 40 pure production modules and the boundary gate. `review-result.json`
+  verifies 225 executable/packaging inputs against the tested snapshot. All five
+  example reports exactly match the original candidate. Freeze this reviewed,
+  verified source as a clean local commit before building.
+- [ ] Build a new exact clean candidate and run its transferred no-Racket consumer.
+  Preserve the original archive, record the new digest/source identity separately,
+  clean owned resources and commit the final evidence record locally.
+
+---
+
+# Completed implementation milestone (before independent review)
 
 Kyle assigned the [complete revision-3 specification](docs/optional-static-checking-spec.md)
 on 2026-09-17 and explicitly authorized the isolated Docker test-image build

@@ -562,11 +562,17 @@ with tempfile.TemporaryDirectory(prefix="static-checks-", dir=sys.argv[2]) as te
     assert b"extract :" not in partial.stdout
     check('(lambda (x) (x x))', 2, b"RECURSIVE_TYPE_REQUIRED")
     check('(add (head NIL) "bad")', 1, b"UNREPRESENTED_ERROR_ALTERNATIVE")
+    check('(rec bad n = (if (is-zero n) (head NIL) (bad TRUE)))', 1, b"TYPE_CONFLICT")
+    check('(map head (list 1))', 1, b"TYPE_CONFLICT")
+    check('(filter head (list NIL))', 2, b"UNREPRESENTED_ERROR_ALTERNATIVE")
+    check('(#%app . (add (#%datum . 1) 2))', 0)
+    check('(#%app add 1 "bad")', 1, b"TYPE_CONFLICT")
     check('(rec loop = loop) loop', 0)
     check('(div 1 0)', 0)
     empty = check('', 0)
     assert b"0/0 fully checked (n/a)" in empty.stdout and b"pass is vacuous" in empty.stdout
-    for body in ('(stdout "PROGRAM-MUST-NOT-RUN") missing', '(stdout "PROGRAM-MUST-NOT-RUN") ('):
+    for body in ('(stdout "PROGRAM-MUST-NOT-RUN") missing', '(stdout "PROGRAM-MUST-NOT-RUN") (',
+                 '(def x = (def y = 1))', '(lambda (x) (def y = 1))'):
         result = invoke(["--check", source(body)], 65)
         assert result.stdout == b"" and b"PROGRAM-MUST-NOT-RUN" not in result.stderr
     for arguments in (["--check"], ["--check", "--check"], ["--check", "one.attl", "two.attl"]):

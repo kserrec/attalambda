@@ -586,6 +586,7 @@
                 forms definitions language-definition-parts language-bound-name
                 language-dependencies language-sugar-expression
                 (list (cons 'lambda #'language-lambda) (cons 'let #'language-let)
+                      (cons 'application #'language-application) (cons 'datum #'language-datum)
                       (cons 'unary-let #'language-unary-let) (cons 'list #'language-list)
                       (cons 'cond #'language-cond) (cons 'rec #'language-rec)
                       (cons 'nil #'NIL) (cons 'cons #'language-cons) (cons 'if #'language-if))

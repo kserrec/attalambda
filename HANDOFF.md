@@ -1,4 +1,25 @@
-# Optional static checking — verified local candidate complete
+# Independent static-checker review — source verified
+
+The user-approved focused independent review found four defects in the original
+candidate. All four are corrected, with retained regression drivers and a fresh
+cold review finding no additional proved defect. The [review record](docs/static-checking-independent-review.md)
+gives exact scope, causes, corrections and evidence limitations.
+
+The full corrected Racket CS 9.3 run passed 104 Racket test files / 26981 reported
+tests, 49 Python terminal methods, purity over 40 production modules and the
+complete source boundary gate. All 225 executable/packaging input hashes match
+the tested snapshot. All five public example reports are identical to the
+original candidate. Evidence: `/tmp/attalambda-static-review-5du21rkr/`, especially
+`review-full.log`, `review-result.json`, `corpus-results.json`, and `cold/report.md`.
+
+The next authorized step is a clean local source commit, rebuild, transferred
+no-Racket consumer, then final delivery record and owned-resource cleanup.
+No owner input is required. No push, PR, merge, tag or publication is authorized.
+The existing candidate below is preserved but predates these four corrections.
+
+---
+
+# Original optional static-checking candidate (before independent review)
 
 The entire revision-3 milestone is implemented, tested, self-reviewed, built and
 verified as a local Linux candidate. All six phases are complete. There is no

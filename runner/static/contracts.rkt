@@ -268,7 +268,7 @@
                    "HTTP-STATUS-INTERNAL-SERVER-ERROR")])
      (entry id '() rat (list (list "effects/http-response.rkt" id)) '("tests/http-test.rkt")))
    (for/list ([row (list (list "tcp-connect" (list string rat) (result-type rat))
-                        (list "tcp-listen" (list string rat rat) (result-type rat))
+                        (list "tcp-listen" (list string rat rat) (result-type (list-type rat)))
                         (list "tcp-accept" (list rat) (result-type rat))
                         (list "tcp-read" (list rat rat) (result-type (list-type byte)))
                         (list "tcp-write" (list rat (list-type byte)) (result-type unit))

@@ -27,6 +27,21 @@
   (check-equal? (map source-node-data (source-view-expressions (view "1 \"s\" #\\A")))
                 '(Rat String Char)))
 
+(test-case "explicit application and datum retain original source accounting"
+  (for ([text '("(#%app add 1 2)" "(#%app . (add 1 2))"
+                "(#%app (#%app add 1) 2)"
+                "(#%datum . 1)" "(#%datum . \"s\")" "(#%datum . #\\A)")]
+        [count '(4 4 5 1 1 1)])
+    (define result (view text))
+    (check-true (source-view? result) text)
+    (check-equal? (length (source-view-registry result)) count text)
+    (check-equal? (length (filter source-node-id (view-nodes result))) count text)
+    (define location (source-node-location (car (source-view-expressions result))))
+    (check-equal? (source-location-source location) "metadata.attl")
+    (check-equal? (source-location-line location) 2)
+    (check-equal? (source-location-column location) 0)
+    (check-equal? (source-location-span location) (string-length text))))
+
 (test-case "lexical identities, aliases, dependencies and recursion survive lowering"
   (define result
     (view "(def later x = (early x)) (def early x = x) (def plus = add) (rec loop x = (loop x))"))
@@ -80,7 +95,10 @@
   (for ([text '("1 \"s\" #\\A" "(def f x = (add x 1)) (f 2)"
                 "(let ((id (lambda (x) x)) (n (id 1))) n)"
                 "(rec factorial n = (if (is-zero n) 1 (mult n (factorial (sub n 1)))))"
-                "(list 1 2) (cond (FALSE 1) (else 2))")])
+                "(list 1 2) (cond (FALSE 1) (else 2))"
+                "(#%app add (#%datum . 1) 2)"
+                "(#%app . (add 1 2)) (#%datum . \"s\") (#%datum . #\\A)"
+                "(def plus = add) (#%app (#%app plus 1) 2)")])
     (define ordinary (expand-for-view text #f))
     (define analyzed (expand-for-view text #t))
     (check-false (syntax-property (cadddr (syntax->list ordinary)) analysis-result-key))

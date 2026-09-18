@@ -5,7 +5,7 @@
 (require racket/list "../../lang/static-data.rkt" "types.rkt" "proof.rkt"
          "substitution.rkt" "unification.rkt" "contracts.rkt")
 (provide (struct-out judgment) (struct-out call-inputs) (struct-out binding-contract)
-         infer-expression bind-judgment)
+         infer-expression bind-judgment input-obligations)
 (struct judgment (type proof inputs) #:transparent)
 (struct call-inputs (type remaining name position) #:transparent)
 (struct binding-contract (signature proof inputs) #:transparent)
@@ -15,8 +15,23 @@
 (define (arrow-count type)
   (if (arrow? type) (add1 (arrow-count (cadr (type-form-arguments type)))) 0))
 
+;; Only these remaining domains are evidence. Replace the success-hint tail,
+;; preserving parameter identities and nested callback contracts verbatim.
+;; The resulting shape constrains inputs; it never establishes a value type.
+(define (input-obligations inputs fresh)
+  (and inputs
+       (let loop ([type (call-inputs-type inputs)] [remaining (call-inputs-remaining inputs)])
+         (if (zero? remaining) (fresh)
+             (arrow-type (car (type-form-arguments type))
+                         (loop (cadr (type-form-arguments type)) (sub1 remaining)))))))
+
 (define (bind-judgment item state environment #:proof [proof (judgment-proof item)] #:name [name #f])
-  (define signatures (filter values (map binding-contract-signature (hash-values environment))))
+  (define signatures
+    (filter values
+            (for/list ([binding (in-hash-values environment)])
+              (define inputs (binding-contract-inputs binding))
+              (or (binding-contract-signature binding)
+                  (and (input-template? inputs) (input-template-signature inputs))))))
   (define inputs (judgment-inputs item))
   (cond
     [(established? (judgment-proof item))
@@ -68,7 +83,8 @@
     (define operator (walk function environment))
     (define operand (walk argument environment))
     (define function-type (solved (judgment-type operator)))
-    (define argument-type (solved (judgment-type operand)))
+    (define argument-type
+      (solved (or (judgment-type operand) (input-obligations (judgment-inputs operand) fresh))))
     (define inherited (proof-join (judgment-proof operator) (judgment-proof operand)))
     (define inputs
       (or (judgment-inputs operator)
@@ -128,8 +144,15 @@
          (define parameter (fresh))
          (define body (walk (car children)
                             (hash-set environment data (binding-contract (scheme '() parameter '()) established-proof #f))))
-         (finish (and (judgment-type body) (arrow-type (solved parameter) (solved (judgment-type body))))
-                 (judgment-proof body))]
+         (define body-inputs (judgment-inputs body))
+         (define type
+           (arrow-type (solved parameter)
+                       (solved (or (judgment-type body) (input-obligations body-inputs fresh) (fresh)))))
+         (finish type (judgment-proof body)
+                 (call-inputs type
+                              (if (judgment-type body) (arrow-count type)
+                                  (add1 (if body-inputs (call-inputs-remaining body-inputs) 0)))
+                              #f 1))]
         [(application) (application node (car children) (cadr children) environment)]
         [(let)
          (define initializer (walk (car children) environment))

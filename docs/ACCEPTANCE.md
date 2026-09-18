@@ -7,7 +7,23 @@ completion is recorded in [`PLAN-ARCHIVE.md`](../PLAN-ARCHIVE.md), and binary
 release facts are in the
 [standalone-distribution ledger](design/standalone-distribution.md).
 
-## Unreleased optional static checking
+## Independent review of optional static checking
+
+The [focused independent review](static-checking-independent-review.md) corrected
+four defects in the original candidate below. A fresh cold review found no
+additional proved defect. The updated source passes all 104 Racket test files /
+26981 reported tests, 49 Python terminal methods, 40-module purity and the complete
+source boundary inventory. All 225 executable/packaging inputs match the tested
+snapshot. The unchanged five-example corpus retains identical reports.
+
+Regressions retain independent partial-callable input constraints without proving
+unknown results, ordinary explicit application/literal syntax, all six actual
+TCP success shapes, and correct user-versus-internal syntax-fault classification.
+The new standalone consumer includes the corrected conflict/partial/syntax cases
+at both installation paths. Clean candidate rebuilding and consumer verification
+remain pending; [HANDOFF.md](../HANDOFF.md) records the current delivery state.
+
+## Original unreleased optional static-checking candidate (historical)
 
 The local feature branch implements the [revision-3 checking contract](optional-static-checking-spec.md).
 This is separate from published 0.8.0 evidence below; that public binary has no

@@ -158,6 +158,7 @@
       and
       append
       application
+      application-pieces
       applications
       argument
       arguments
@@ -224,6 +225,7 @@
       list
       list-ref
       literal
+      literal-node
       local
       location
       lower-let
@@ -277,6 +279,7 @@
       symbol->string
       symbol?
       syntax->list
+      syntax->datum
       syntax-bindings
       syntax-column
       syntax-e
@@ -957,7 +960,8 @@
               (struct-out call-inputs)
               (struct-out binding-contract)
               infer-expression
-              bind-judgment)
+              bind-judgment
+              input-obligations)
      (>
       Arrow
       actual
@@ -978,6 +982,7 @@
       binding-contract-proof
       binding-contract-signature
       body
+      body-inputs
       builtin
       cadr
       call-detail
@@ -1017,6 +1022,7 @@
       filter
       finish
       for/hasheqv
+      for/list
       format
       freeze
       fresh
@@ -1032,10 +1038,12 @@
       id
       if
       in-hash
+      in-hash-values
       infer-expression
       inherited
       initial
       initializer
+      input-obligations
       input-template
       input-template-name
       input-template-position
@@ -1061,6 +1069,7 @@
       list
       literal
       local
+      loop
       make-fresh
       map
       monotype?
@@ -1119,7 +1128,8 @@
       unsatisfied-problems
       values
       walk
-      when))
+      when
+      zero?))
     (static-analysis
      "runner/static/analysis.rkt"
      ((require racket/list
@@ -1203,6 +1213,7 @@
       in-list
       infer-binding
       infer-expression
+      input-obligations
       inputs
       invalidate-self
       item
@@ -1213,6 +1224,7 @@
       key
       lambda
       length
+      let
       list
       make-fresh
       map
@@ -1222,6 +1234,7 @@
       nodes
       normalize
       not
+      obligations
       or
       ormap
       problem

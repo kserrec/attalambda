@@ -46,7 +46,9 @@
     (define-values (body classified state)
       (infer-expression (source-binding-value source) context #:fresh fresh #:owner id))
     (define consistency
-      (and recursive? (judgment-type body) (unify assumption (judgment-type body) state)))
+      (and recursive?
+           (let ([obligations (or (judgment-type body) (input-obligations (judgment-inputs body) fresh))])
+             (and obligations (unify assumption obligations state)))))
     (define final-state (if (solution? consistency) consistency state))
     (define final-proof
       (if (unsatisfied? consistency)

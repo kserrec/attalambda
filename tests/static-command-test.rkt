@@ -1,8 +1,9 @@
 #lang racket/base
-(require rackunit racket/file racket/port racket/string
+(require rackunit racket/file racket/port racket/string racket/runtime-path
          "../runner/static/command.rkt" "../runner/static/frontend.rkt"
          "../runner/static/analysis.rkt" "../runner/static/contracts.rkt"
          "../runner/source-file.rkt" "../lang/static-data.rkt")
+(define-runtime-path facade "../lang/expander.rkt")
 (define directory (make-temporary-file "attalambda-static-command-~a" 'directory))
 (define source (build-path directory "input.attl"))
 (define (write-source text)
@@ -19,6 +20,62 @@
 (dynamic-wind
  void
  (lambda ()
+   (test-case "trusted expansion syntax failures do not impersonate source diagnostics"
+     (define resolver (current-module-name-resolver))
+     (for ([foreign? '(#t #f)])
+       (define tripped? #f)
+       (define result
+         (parameterize
+             ([current-module-name-resolver
+               (lambda arguments
+                 (when (equal? (car arguments) `(file ,(path->string (simplify-path facade #f))))
+                   (set! tripped? #t)
+                   (if foreign?
+                       (raise-syntax-error
+                        #f "private dependency expansion detail"
+                        (datum->syntax #f 'private-library-binding
+                                       '("/trusted/runtime/implementation.rkt" 99 7 200 23)))
+                       (raise (exn:fail:syntax "private raw details" (current-continuation-marks) '()))))
+                 (apply resolver arguments))])
+           (run "#lang attalambda\n1")))
+       (check-true tripped?)
+       (check-equal? (car result) 70)
+       (check-equal? (cadr result) "")
+       (check-equal? (caddr result)
+                     (format "AttaLambda: ~a: unexpected static checking or report-delivery failure\n" source))))
+
+   (test-case "generated syntax keeps real source errors and source locations"
+     (for ([row '(("missing" 0) ("(lambda () 1)" 0) ("(def unused = #t)" 14)
+                  ("(def x = (def y = 1))" 10) ("(lambda (x) (def y = 1))" 12))])
+       (define result (run (string-append "#lang attalambda\n" (car row))))
+       (check-equal? (car result) 65 (car row))
+       (check-equal? (cadr result) "")
+       (check-true (string-contains? (caddr result) (format ":2:~a:" (cadr row))) (caddr result))
+       (check-false (regexp-match? #rx"/lang/|/pkgs/|unknown AttaLambda name: (y|def|define)" (caddr result))))
+     (for ([text '("(def unused = 1.5)" "(def unused = 1+2i)" "(def unused = #\\λ)"
+                   "(def x = x)" "(def x = y) (def y = x)"
+                   "(add (def y = 1) 2)" "(list (def y = 1))"
+                   "(def x = 1) (def x = 2)" "(#%app add)"
+                   "(#%datum . #t)" "(#%datum . #\\λ)")])
+       (define result (run (string-append "#lang attalambda\n" text)))
+       (check-equal? (car result) 65 text)
+       (check-equal? (cadr result) "")))
+
+   (test-case "ordinary explicit syntax has the same checking verdicts"
+     (for ([row '(("(#%app add 1 2)" 0)
+                  ("(#%app . (add 1 2))" 0)
+                  ("(def plus = add) (#%app (#%app plus 1) 2)" 0)
+                  ("(#%app add 1 \"bad\")" 1)
+                  ("(#%datum . 1) (#%datum . \"s\") (#%datum . #\\A)" 0)
+                  ("(#%app head NIL)" 2)
+                  ("(#%app stdout \"must-not-run\")" 0)
+                  ("(#%datum . #t)" 65)
+                  ("(#%datum . #\\λ)" 65)
+                  ("(#%app add)" 65))])
+       (define result (run (string-append "#lang attalambda\n" (car row))))
+       (check-equal? (car result) (cadr row) (car row))
+       (check-false (string-contains? (cadr result) "must-not-run"))
+       (when (= (cadr row) 65) (check-equal? (cadr result) ""))))
    (test-case "one source snapshot yields exact verdicts without evaluating its contents"
      (for ([row '(("(def id x = x) (id 1)" 0 "FULL PASS")
                   ("(add 1 \"bad\")" 1 "FAIL")

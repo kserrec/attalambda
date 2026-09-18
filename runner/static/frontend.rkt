@@ -24,6 +24,15 @@
 (define (prepare-source source #:analysis? [analysis? #f])
   (unless (validated-source? source)
     (raise-argument-error 'prepare-source "validated-source?" source))
+  ;; Macro-generated blame can retain user provenance in origins or children.
+  ;; A trusted failure with none must escape to the command's safe internal error.
+  (define (source-syntax value)
+    (cond [(syntax? value)
+           (or (and (equal? (syntax-source value) (validated-source-path source)) value)
+               (source-syntax (syntax-property value 'origin))
+               (source-syntax (syntax-e value)))]
+          [(pair? value) (or (source-syntax (car value)) (source-syntax (cdr value)))]
+          [else #f]))
   (define parsed
     (parse-source-buffer (validated-source-path source)
                          (validated-source-text source)
@@ -50,17 +59,24 @@
                 (if analysis? (syntax-property body analysis-request-key analysis-request) body)))
             (define module-source
               (datum->syntax #f `(module ,(gensym 'static-source) ,language-reference ,body)))
-            (with-handlers
+            (define expanded
+              (with-handlers
                 ([exn:fail:syntax?
                   (lambda (failure)
                     (define expression (syntax-failure-expression failure))
-                    (source-problem 'invalid (syntax-failure-reason expression)
-                                    (and expression (syntax-line expression))
-                                    (and expression (syntax-column expression))))])
-              (define expanded (expand module-source))
-              (if analysis?
-                  (validate-source-view
-                   (syntax-property (cadddr (syntax->list expanded)) analysis-result-key)
-                   (length (source-buffer-forms parsed)))
-                  expanded)))))
+                    (define attributed (source-syntax (exn:fail:syntax-exprs failure)))
+                    (unless attributed (raise failure))
+                    (source-problem
+                     'invalid
+                     (syntax-failure-reason
+                      (and expression
+                           (equal? (syntax-source expression) (validated-source-path source)) expression))
+                     (syntax-line attributed) (syntax-column attributed)))])
+                (expand module-source)))
+            (cond [(source-problem? expanded) expanded]
+                  [analysis?
+                   (validate-source-view
+                    (syntax-property (cadddr (syntax->list expanded)) analysis-result-key)
+                    (length (source-buffer-forms parsed)))]
+                  [else expanded]))))
       (lambda () (custodian-shutdown-all owner)))]))
