@@ -116,7 +116,7 @@
     unavailable-source-status unexpected-failure-status unless up validate-source
     validated-source-path vector->list when with-handlers
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
-    racket/runtime-path repl-index run-repl terminal-port?))
+    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
@@ -124,7 +124,7 @@
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
-    unexpected-failure-status repl-index help-text embedded-product-version stop validate-source
+    unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
     requested-source-missing? run-source main))
 
 (define expected-runner-status-definitions
@@ -1628,7 +1628,7 @@
             (= (count (lambda (name)
                         (eq? name 'dynamic-require))
                       symbols)
-               2)
+               3)
             (= (datum-occurrence-count
                 '(dynamic-require source-path #f)
                 (module-info-forms info))
@@ -1636,6 +1636,10 @@
             (= (datum-occurrence-count '(dynamic-require repl-index 'run-repl)
                                         (module-info-forms info)) 1)
             (= (datum-occurrence-count '(define-runtime-module-path-index repl-index "repl.rkt")
+                                        (module-info-forms info)) 1)
+            (= (datum-occurrence-count '(dynamic-require check-index 'run-check)
+                                        (module-info-forms info)) 1)
+            (= (datum-occurrence-count '(define-runtime-module-path-index check-index "static/command.rkt")
                                         (module-info-forms info)) 1)
             (= (count (lambda (name) (eq? name 'current-input-port)) symbols) 1)
             (= (datum-occurrence-count '(terminal-port? (current-input-port))
@@ -2732,7 +2736,7 @@
           [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
           [(static-frontend) (static-frontend-violations source info root)]
-          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis)
+          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis static-coverage static-report static-command)
            (static-helper-violations source info root class)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]

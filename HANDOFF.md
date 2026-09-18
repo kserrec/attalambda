@@ -49,9 +49,20 @@ reported Racket tests, 49 Python methods, purity over 40 modules, and complete
 boundaries. `phase3-result.json` verifies 201 executable inputs match the tested
 snapshot; `phase3-review.md` records a fresh self-review with no open finding.
 No independent review is claimed. The phase closes with a local commit whose
-identity is retained in the external `state.json` and Git log.
-**Next: 4.1a, exact coverage, then reports and the checking command.**
-The public command does not yet exist. Continue autonomously;
+identity is `76c2c8b`, retained in the external `state.json` and Git log.
+Phase 4 Steps 4.1a–4.3 passed their focused checks: exact accounting, safe reports,
+the real `--check FILE.attl` status matrix, failed writes/flushes, interruption,
+resource cleanup, and observable CLI non-execution. Logs are `step-4.1a.log`,
+`step-4.1b.log`, `step-4.2a.log`, `step-4.2b.log`, and `step-4.3.log`.
+The public command passed Checkpoint 4: 102 Racket test files, 26967 reported
+Racket tests, 49 Python terminal methods, purity over 40 modules and complete
+boundaries. `phase4-result.json` verifies 218 matching executable inputs;
+`phase4-review.md` records fresh self-review with no open finding, not an
+independent review. The local phase commit identity is in external `state.json`
+and Git history. **Next: Phase 5 corpus, documentation, final review, exact clean
+build and transferred consumer.** The evidence directory's `phase5-notes.md`
+contains read-only orientation, not completed Phase 5 work.
+Continue autonomously;
 do not wait for `next`.
 The reusable isolated container is `attalambda-static-implementation`,
 with source/evidence at `/tmp/attalambda-static-implementation-mmgdshl_/`.

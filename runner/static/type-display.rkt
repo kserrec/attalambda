@@ -2,7 +2,7 @@
 
 ;; Stable display names are unrelated to fresh solver identities.
 (require racket/list racket/string "types.rkt" "substitution.rkt")
-(provide type->string scheme->string)
+(provide type->string types->strings scheme->string)
 (define (variable-name index)
   (string-append (string (integer->char (+ 97 (modulo index 26))))
                  (if (< index 26) "" (number->string (quotient index 26)))))
@@ -25,6 +25,9 @@
                     (if (null? arguments) ""
                         (string-append "(" (string-join (map (lambda (arg) (display-type arg names)) arguments) ", ") ")")))]))
 (define (type->string type) (display-type type (names-for (type-variables type))))
+(define (types->strings types)
+  (define names (names-for (append-map type-variables types)))
+  (map (lambda (type) (display-type type names)) types))
 (define (scheme->string value)
   (define variables (scheme-variables value))
   (define names (names-for (append variables (type-variables (scheme-type value)))))

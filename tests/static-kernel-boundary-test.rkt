@@ -7,8 +7,8 @@
   (dynamic-wind
    void
    (lambda ()
-     (for ([name '("types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt")]
-           [class '(static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis)])
+     (for ([name '("types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt" "coverage.rkt" "report.rkt")]
+           [class '(static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis static-coverage static-report)])
        (define original
          (call-with-input-file (build-path checker name)
            (lambda (input) (parameterize ([read-accept-reader #t]) (read input)))))

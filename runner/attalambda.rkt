@@ -9,6 +9,7 @@
 (define unavailable-source-status 66)
 (define unexpected-failure-status 70)
 (define-runtime-module-path-index repl-index "repl.rkt")
+(define-runtime-module-path-index check-index "static/command.rkt")
 
 (define help-text
   (string-append
@@ -16,6 +17,7 @@
    "  attalambda [--no-history]\n"
    "  attalambda --repl [--no-history]\n"
    "  attalambda FILE.attl\n"
+   "  attalambda --check FILE.attl\n"
    "  attalambda --help\n"
    "  attalambda --version\n"))
 
@@ -116,6 +118,15 @@
      (display "AttaLambda ")
      (display product-version)
      (newline)]
+    [(and (= (length arguments) 2) (equal? (car arguments) "--check")
+          (not (regexp-match? #px"^-" (cadr arguments))))
+     (with-handlers ([exn:break? (lambda (_)
+                                 (stop 130 #f "static checking interrupted"))]
+                     [exn:fail? (lambda (_)
+                                 (stop unexpected-failure-status #f
+                                       "unexpected static checking failure; verify the AttaLambda installation"))])
+       (define run-check (dynamic-require check-index 'run-check))
+       (exit (run-check (cadr arguments))))]
     [(and (= (length arguments) 1)
           (not (regexp-match? #px"^-" (car arguments))))
      (run-source (car arguments))]
@@ -134,6 +145,6 @@
                        #:history? (not (member "--no-history" arguments)))))]
     [else
      (stop command-misuse-status #f
-           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version")]))
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --help, or attalambda --version")]))
 
 (main)

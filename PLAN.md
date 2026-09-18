@@ -22,7 +22,10 @@ as `20b6241`. Phase 2 Steps 2.1–2.9 and Checkpoint 2 are complete: the full
 passed. Phase 2 is committed as `de39c732bf7cf571689fdf3677b094b9d67bc1ba`.
 Phase 3 Steps 3.1–3.8 have passed their focused checks. All 129 public contracts
 are audited (106 complete, 23 partial); Checkpoint 3 passed its full suite,
-structural gates, input-hash comparison, and self-review. Continue with 4.1a.
+structural gates, input-hash comparison, and self-review, then committed as
+`76c2c8b`. Phase 4 Steps 4.1a–4.3 and Checkpoint 4 passed: full regression suite,
+structural gates, 218 matching executable inputs, and self-review. Continue with
+Phase 5's complete corpus and exact local candidate delivery.
 
 ## Verified starting state and change boundary
 
@@ -573,23 +576,86 @@ assets are untouched in this phase. No public checking command exists yet.
 **Purpose:** expose the established backend without changing ordinary execution.
 **Prerequisites:** Checkpoint 3.
 
-- [ ] **4.1a — Compute exact complete-source coverage and final status.**
+- [x] **4.1a — Compute exact complete-source coverage and final status.**
   **Work:** Finalize source-node and definition states from the established proof data, retaining all registered source obligations and the closed verdict precedence. Keep local self assumptions separate from external gaps.
   **Check:** Exact-count fixtures cover literals/apps/list/let/lambdas, data definitions, nested/unused bodies, empty modules, and rounding traps. A bad call preserves its valid function's declaration count; an incomplete top-level expression prevents FULL PASS. A missing source ID, pending catalog entry, or unfinished solver item is operational failure, never silently excluded from the denominator.
+  **Evidence:** `coverage.rkt` validates exact declaration/node identities, final
+  monotypes versus incomplete proofs, child/dependency closure, and bounded
+  primary-reason paths. `step-4.1a.log` passed 152 reported coverage/boundary checks
+  and the complete boundary gate. All semantic fixtures survive final accounting;
+  exact tiny counts match the specification. The 5001/5003 established-expression
+  fixture displays 100.0% while remaining PARTIAL. Corrupt/missing/unfinished
+  states fail internally; a 45-binding shared graph retains one path per binding.
 
-- [ ] **4.1b — Render types, primary diagnostics, and bounded dependency explanations.**
+- [x] **4.1b — Render types, primary diagnostics, and bounded dependency explanations.**
   **Work:** Render original file/line/column, enclosing binding/lambda, reason code, established expected/actual types, and one deterministic path per dependent definition. Separate conditional hints from verified signatures and output from computation.
   **Check:** Golden reports are stable across repeated checks and preserve positions across CRLF/Unicode/tabs/comments/shadowing. Control characters in names/paths are escaped. Large alias graphs do not enumerate exponentially many paths. Reports never expose arbitrary internal exception text or imply that source coverage certifies the trusted library.
+  **Evidence:** `step-4.1b.log` passed 154 reported report/display/boundary checks
+  and the complete boundary gate. Golden complete/empty reports, actual CRLF/tab/
+  Unicode argument positions, anonymous lambda spans, control escaping, repeated
+  checks, and a 36-binding shared graph pass. Incomplete signatures are omitted;
+  primary reasons and one dependency path remain visible. Expected/actual types
+  share a stable variable-name map. Rendering only constructs host strings.
 
-- [ ] **4.2 — Integrate `--check` with precise launcher and output failure handling.**
+- [x] **4.2 — Integrate `--check` with precise launcher and output failure handling.**
   **Work:** Add the exact invocation, help text, embedded lazy-load reference if needed, exit mapping, and narrow boundary-vocabulary updates. Leave file/REPL dispatch unchanged. Finalize analysis before report emission and require successful emission/flush before exit 0.
   **Check:** Real subprocesses via `racket runner/attalambda.rkt --check ...` verify 0/1/2 and 64/65/66/70. Missing/extra paths, duplicate/incompatible flags, and private injected source/frontend/internal faults map correctly. A broken report sink cannot return 0 or replay output. Do not add public failure-injection switches or import the auto-running launcher as the backend.
+  Split before implementation to keep the command and launcher checks focused:
+  **4.2a:** create the private command pipeline with one validated snapshot,
+  structured completion, safe operational diagnostics, owned-resource cleanup,
+  output/flush handling, and private test seams; verify directly with controlled
+  faults. **4.2b:** integrate the real launcher and exact boundary permissions,
+  update shared help expectations, and exercise the complete subprocess status
+  matrix with those private seams. Both are required to close 4.2.
+  **4.2a passed:** `step-4.2a.log` records 151 command/boundary checks and the
+  complete gate. One captured snapshot is used even when the backing test file
+  changes after inspection. Source faults remain 65/66; injected metadata,
+  pending-catalog, syntax/filesystem analyzer faults, and broken report writes/
+  flushes return 70 without leaking internal details or replaying output. Owned
+  resources close and caller ports stay open. Next: real launcher integration.
+  **4.2b passed:** `step-4.2b.log` records 150 CLI/boundary checks and the complete
+  gate. The real launcher returns 0/1/2 for all fixed semantic fixtures, 64 for
+  invalid flag combinations, 65 for whole-source faults, 66 for absent/unreadable/
+  symlink/dotenv paths, and 70 for injected analyzer/metadata/catalog/output
+  faults. Faults use only a test driver around the actual launcher. Linux/macOS/
+  Windows consumer help expectations add the shared invocation; native consumer
+  runs remain pending. File and REPL dispatch branches retain their behavior.
 
-- [ ] **4.3 — Prove CLI non-execution, interruption, and repeated-run isolation.**
+- [x] **4.3 — Prove CLI non-execution, interruption, and repeated-run isolation.**
   **Work:** Run the existing effect/divergence fixtures through the real CLI. Exercise a controlled interruption during analysis and a report-delivery failure separately. Reuse the backend twice in one test process to reveal stale state.
   **Check:** No program output/input/file/network/history effect occurs, including invalid-late-form cases. Interrupted analysis returns 130, cleans owned resources, and emits no completed analysis report. Interrupted delivery is nonzero even if earlier report bytes exist. Do not demand impossible output retraction or disable cancellation around blocking writes. Inspect rendered diagnostics as well as structured results.
+  **Evidence:** `step-4.3.log` passes four real-CLI cases. Actual source effects,
+  input position, guarded data reads with a positive control, marker-file state,
+  a ready ephemeral loopback listener with a positive connection control, absent
+  history state, exit, divergence, and invalid final forms are observed. A real
+  subprocess interrupt after the private analyzer readiness signal returns 130,
+  closes its owned thread, and emits no report. A break queued by the final
+  custom-port flush returns 130 after one report, without replay. Repeated
+  backend/report equality remains covered by 3.8, 4.1a, and 4.1b. No product fault
+  flag or environment switch is introduced.
 
 **Checkpoint 4 — User-facing gate.** Run report/CLI tests and affected existing interactive/file-mode tests, full suite, and gates. Existing `attalambda FILE.attl`, help/version, and REPL behavior remain intact. Review exact status/coverage semantics, escape handling, and untouched runtime behavior. The checker itself never executes the analyzed file.
+
+**Checkpoint 4 passed.** `phase4-full.log` records one successful isolated
+Racket 9.3 `./run-all-tests.sh` run: 102 Racket test files, 26967 reported Racket
+tests, 49 Python terminal methods, 40 pure production modules, and the complete
+boundary gate. It includes all new report/CLI suites and existing file-mode,
+interactive, terminal, runtime, distribution-contract, and embedding regressions.
+`phase4-result.json` verifies 218 executable inputs against the staged snapshot,
+including native consumer scripts and public examples. Evidence remains under
+`/tmp/attalambda-static-implementation-mmgdshl_/`.
+
+Fresh self-review (`phase4-review.md` there) covered exact counts/statuses,
+incomplete-dependency closure, safe deterministic diagnostics, one-snapshot
+non-evaluation, output failure/cancellation, ownership, and scope. No open
+finding remains; no independent review is claimed. Executable changes create
+coverage/report/command helpers, extend private type display and exact launcher
+dispatch, and update exact tooling permissions. Six focused suites plus a
+private fault driver were added; existing runner/native-consumer help assertions
+were updated. PLAN/HANDOFF record the evidence. Runtime implementations, grammar,
+type tags, ordinary file/REPL branches, version, dependencies, and published
+artifacts are unchanged by this phase. Final Linux candidate testing is next;
+macOS/Windows consumer execution is not claimed.
 
 ## Phase 5 — Verify realistic use and the exact standalone candidate
 

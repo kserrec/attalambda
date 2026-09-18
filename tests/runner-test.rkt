@@ -13,7 +13,7 @@
   (simplify-path project-root-path #f))
 
 (define expected-help
-  #"Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --help\n  attalambda --version\n")
+  #"Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --help\n  attalambda --version\n")
 
 (define (check-runner-failure result expected-status expected-stderr)
   (check-false (command-result-timed-out? result)
@@ -92,7 +92,7 @@
       (command-diagnostic
        (if (null? arguments)
            "a terminal is required; use attalambda --repl for redirected source"
-           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --help, or attalambda --version"))))
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --help, or attalambda --version"))))
 
    ;; The retired subcommand is treated as a supplied filename, not retained
    ;; as a compatibility alias.
