@@ -1,3 +1,113 @@
+# `list-case` and a selectable static checker — active milestone (0.10.0 candidate)
+
+Kyle assigned [docs/comparable-checkers-spec.md](docs/comparable-checkers-spec.md)
+on 2026-09-19. Branch `milestone-10-comparable-checkers` from `main` `9069d11`
+(the spec named `fix/diagnostics-robustness` at `bcee97e`; that branch and the
+callable-constraints patch had both already landed on `main`, so the branch
+base is `main` and no later rebase is needed). Authority: implement, test,
+build and test the archive in a scratch directory, commit and push the branch.
+Not authorized: merge to `main`, tag, publish, or edit published notes. All
+checks run in a disposable Racket CS 9.3 container over this checkout as uid
+1000 (host Racket is 8.10).
+
+Three additive features: public `list-case` with a complete static contract;
+a type-system value threaded launcher → analysis → report (`hm` default, no
+behavior change); and the `simple` system (monomorphic user definitions, one
+shared solution state, polymorphic built-ins). Runtime otherwise unchanged.
+
+## Phase 0 — contracts and plan
+
+- [x] 0.1 Branch `milestone-10-comparable-checkers` created from `main`
+  `9069d11`. Baseline `./run-all-tests.sh` in the Racket CS 9.3 container on
+  `9069d11`: 104 test files, purity check (40 production files) and boundary
+  check passed, wall time 1829 s.
+- [x] 0.2 Dated amendments appended to specifications 01 and 03; hashes and a
+  "before" paragraph in `docs/specifications/README.md`. `sha256sum` of all
+  three files matches the table; `git diff` of the canonical files removes no
+  line. Baseline defect recorded: the README table had listed a stale hash for
+  03 since `f3afa42`; the true pre-amendment hash is recorded there.
+- [x] 0.3 This plan replaces the top of `PLAN.md`; each of the 28 step IDs
+  appears exactly once (grep-verified).
+
+Checkpoint 0: commit `Authorize list-case and selectable static checkers`, push.
+
+## Phase 1 — `list-case` at runtime
+
+- [ ] 1.1 `list-case-function-name`; `typed-list-case` in `core/lists.rkt`
+  mirroring `typed-option-case`; purity gate passes.
+- [ ] 1.2 `tests/lists-test.rkt`: NIL default; curried callback on head and
+  tail; unselected branch never forced; Error bubbles with kind; non-List text
+  `list-case(arg1 expected LIST got BOOL)`; unary chain.
+- [ ] 1.3 Expander import `[typed-list-case LIST-CASE]`, public rename
+  `list-case`, catalog label; E5 prints `1`, `0`, and the LIST/RAT error line.
+- [ ] 1.4 Catalog row `forall a:data b. List(a) -> (a -> List(a) -> b) -> b -> b`;
+  boundary vocabulary; `tests/static-contracts-test.rkt` passes.
+- [ ] 1.5 `docs/API.md` Bool and List row.
+
+Checkpoint 1: lists, language, all static tests and gates; commit `Add list-case eliminator`, push.
+
+## Phase 2 — `list-case` static behavior
+
+- [ ] 2.1 `tests/static-lists-test.rkt`: established `Rat`; E1 `sum :
+  List(Rat) -> Rat`; branch conflict; tag conflict; data-domain gap; E2
+  `head` sum still unproved.
+- [ ] 2.2 CLI fixtures (established E1, branch conflict) in
+  `tests/helpers/static-acceptance.rkt`; `tests/static-cli-test.rkt` passes.
+- [ ] 2.3 `docs/static-checking-contracts.md` row and counts (130/107/23),
+  string verified against `contract-ref`.
+
+Checkpoint 2: commit `Give list-case a complete static contract`, push.
+
+## Phase 3 — type-system selection plumbing
+
+- [ ] 3.1 Probe P2: new `runner/static/systems.rkt`; record boundary-gate
+  violations; add `static-systems` rule and class; gates pass.
+- [ ] 3.2 `tests/static-systems-test.rkt`.
+- [ ] 3.3 `analyze-view #:system`, `infer-expression #:system`,
+  `bind-judgment #:generalize?`; all static tests unchanged; gates pass.
+- [ ] 3.4 `render-report` prints `System: NAME` after `Scope:`; `run-check`
+  takes the system; launcher passes `hm-system`; report/command/CLI tests;
+  E4 example reports differ only by the `System: hm` line.
+
+Checkpoint 3: commit `Thread a selectable type system through static checking`, push.
+
+## Phase 4 — the `simple` system
+
+- [ ] 4.1 Probe P1: shared solver state across two `infer-expression` calls.
+- [ ] 4.2 Shared state threading under `simple`; new
+  `tests/static-simple-system-test.rkt`: E3 conflict at line 4, `identity`
+  still established.
+- [ ] 4.3 Final-state signatures: `Rat -> Rat` after E3, `a -> a` alone.
+- [ ] 4.4 Semantics: monomorphic `let`; polymorphic built-ins; `rec` (E1);
+  partial stays partial (E2); data restriction; independent definitions
+  survive a conflict; `hm` contrast asserted alongside.
+
+Checkpoint 4: commit `Add the simple monomorphic-definitions system`, push.
+
+## Phase 5 — launcher, help, reference docs
+
+- [ ] 5.1 Probe P3; parse `--check` / `--check=hm` / `--check=simple`; help
+  line; E6 misuse shapes and `--check=simple` runs in `tests/static-cli-test.rkt`.
+- [ ] 5.2 Distribution help text equals the runner's byte for byte.
+- [ ] 5.3 `docs/API.md` type systems subsection and E3 example; `README.md`;
+  `ARCHITECTURE.md`; `docs/static-checking-corpus.md` second table under
+  `--check=simple`; every shown command rerun.
+
+Checkpoint 5: commit `Select the static type system from the launcher`, push.
+
+## Phase 6 — release candidate
+
+- [ ] 6.1 `VERSION` 0.10.0, `info.rkt` "0.10", build-script table.
+- [ ] 6.2 `docs/releases/0.10.0.md` draft; publication paragraph pending Kyle.
+- [ ] 6.3 `./run-all-tests.sh` on the final revision; count, time, revision.
+- [ ] 6.4 Cold review by a fresh reader; disposition recorded.
+- [ ] 6.5 Distribution build and isolated consumer test; archive SHA-256.
+- [ ] 6.6 `HANDOFF.md`: candidate revision and what awaits Kyle.
+
+Checkpoint 6: commit `Prepare comparable-checkers release candidate 0.10.0`, push. Stop.
+
+---
+
 # Diagnostics and robustness fixes — merged to main via PR #10 on 2026-09-19 (historical)
 
 Kyle assigned the 0.9.0 diagnostics/robustness/safety specification (kept

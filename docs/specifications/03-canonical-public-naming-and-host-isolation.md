@@ -680,3 +680,26 @@ shadowing, and hygienic generated operations. Private analysis IDs, source
 properties, scaffolding, and catalog entries are unavailable to user source.
 Existing strict if/cons, pure lowering, host isolation, and public naming rules
 remain unchanged outside the explicitly added launcher/report surface.
+
+---
+
+# List Eliminator and Comparable Checkers Amendment (2026-09-19)
+
+The [comparable-checkers specification](../comparable-checkers-spec.md) adds
+exactly one new public spelling, `list-case`, used as
+`(list-case list cons-function nil-value)`. Its private facade binding is
+`LIST-CASE`, renamed only on export; its implementation is `typed-list-case`
+in the List module and its function-name metadata is
+`list-case-function-name`. No uppercase alias, raw public eliminator, or
+other List name is added. `head`, `tail`, `is-nil`, and `option-case` keep
+their existing spellings and contracts.
+
+The launcher accepts `attalambda --check=hm FILE.attl` and
+`attalambda --check=simple FILE.attl` beside the existing
+`attalambda --check FILE.attl`, which means `--check=hm`. Each form takes
+exactly one FILE that does not begin with `-`. Any other `--check=` value is
+command misuse with status 64. `hm` and `simple` are launcher tokens, not
+AttaLambda identifiers, REPL commands, or public bindings. The report gains
+exactly one line, `System: hm` or `System: simple`, directly after `Scope:`.
+Existing invocation forms, public language exports, host isolation, and
+canonical naming rules remain unchanged outside this explicitly added surface.
