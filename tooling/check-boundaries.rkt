@@ -109,7 +109,7 @@
     invalid-source-status lambda length line location locations main matched missing-path
     newline not only-in pair? path->complete-path path-only path? product-version quote
     racket/base racket/path raise-syntax-error read-bytes reason regexp-match regexp-match?
-    requested-source-missing? require run-source simplify-path source source-name source-path
+    requested-source-missing? require run-source run-validated-source simplify-path source source-name source-path
     source-problem-column source-problem-kind source-problem-line source-problem-reason
     source-problem? srcloc-column srcloc-line status stop string-append stx syntax-column
     syntax-failure-expression syntax-failure-reason syntax-line syntax-source
@@ -128,7 +128,7 @@
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
     unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
-    requested-source-missing? run-source main))
+    requested-source-missing? run-source run-validated-source main))
 
 (define expected-runner-status-definitions
   '((define command-misuse-status 64)
@@ -250,7 +250,8 @@
     exn:fail:contract? exn:fail:filesystem:errno-errno
     exn:fail:filesystem:errno? exn:fail:network:errno-errno
     exn:fail:network:errno? exn:fail? exn:fail:out-of-memory? expected? failure
-    file->bytes file-failure filesystem-failure-code first flush-output force
+    file->bytes file-exists? file-failure file-or-directory-permissions bits
+    filesystem-failure-code first flush-output force
     function gai handle handle-registry hash-ref hash-remove! hash-set! host
     host-failure host-list->object-list if input exact->object-rat
     invalid-codec-request invalid-handle-code invalid-path-code invalid-request
@@ -1705,7 +1706,7 @@
     (define (reject kind reason) (raise (source-problem kind reason #f #f)))
     (define supplied-path (string->path source-name))
     (when (dotenv-path? supplied-path)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (unless (equal? (path-get-extension supplied-path) #".attl")
       (reject 'invalid "source file name must end in lowercase .attl"))
     (define complete-path (path->complete-path supplied-path))
@@ -1716,7 +1717,7 @@
     (unless resolved-parent
       (reject 'unavailable "source path could not be inspected"))
     (when (dotenv-path? resolved-parent)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (define resolved-source (build-path resolved-parent name))
     (unless (or (file-exists? resolved-source) (directory-exists? resolved-source))
       (reject 'unavailable "source file was not found"))

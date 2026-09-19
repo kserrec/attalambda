@@ -169,13 +169,13 @@
     66
     (source-diagnostic
      ".env.rkt"
-     "refused source path because dotenv files are never read"))
+     "refused source path because dotenv files are never loaded as source"))
    (check-runner-failure
     (run '(".ENV.local/program.attl"))
     66
     (source-diagnostic
      ".ENV.local/program.attl"
-     "refused source path because dotenv files are never read"))
+     "refused source path because dotenv files are never loaded as source"))
    (check-runner-failure
     (run '("missing.rkt"))
     65
@@ -311,7 +311,7 @@
     (source-diagnostic
      (path->string
       (build-path ordinary-parent-link "program.attl"))
-     "refused source path because dotenv files are never read"))
+     "refused source path because dotenv files are never loaded as source"))
 
    (define allowed-parent-target
      (build-path working-directory "allowed-parent-target"))

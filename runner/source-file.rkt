@@ -87,7 +87,7 @@
     (define (reject kind reason) (raise (source-problem kind reason #f #f)))
     (define supplied-path (string->path source-name))
     (when (dotenv-path? supplied-path)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (unless (equal? (path-get-extension supplied-path) #".attl")
       (reject 'invalid "source file name must end in lowercase .attl"))
     (define complete-path (path->complete-path supplied-path))
@@ -98,7 +98,7 @@
     (unless resolved-parent
       (reject 'unavailable "source path could not be inspected"))
     (when (dotenv-path? resolved-parent)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (define resolved-source (build-path resolved-parent name))
     (unless (or (file-exists? resolved-source) (directory-exists? resolved-source))
       (reject 'unavailable "source file was not found"))

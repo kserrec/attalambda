@@ -73,14 +73,15 @@
         (simplify-path (path->complete-path source-path) #f))))
 
 (define (run-source source-name)
+  (with-handlers ([exn:break? (lambda (_) (stop 130 source-name "interrupted"))])
+    (run-validated-source source-name)))
+
+(define (run-validated-source source-name)
   (define source-path (validate-source source-name))
   (define complete-path (simplify-path (path->complete-path source-path)))
   (define load/use-compiled (current-load/use-compiled))
   (with-handlers
-      ([exn:break?
-        (lambda (_)
-          (stop 130 source-name "interrupted"))]
-       [exn:fail:read?
+      ([exn:fail:read?
         (lambda (failure)
           (define locations
             (exn:fail:read-srclocs failure))

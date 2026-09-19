@@ -153,7 +153,7 @@
     (check-ok-unit pending-write)
     (check-equal? (file->bytes content-path) #"outside-change")
 
-    ;; A fresh write truncates an existing longer file. Reads return complete,
+    ;; A fresh write replaces an existing longer file. Reads return complete,
     ;; byte-exact object Strings without a reader or text normalization.
     (define replacement #"short\0\377")
     (check-ok-unit
@@ -182,7 +182,8 @@
 
     ;; A write is atomic: the bytes land in a temporary file beside the
     ;; target that is renamed over it, so the target is never opened for
-    ;; truncation and a failed write leaves it intact with nothing left over.
+    ;; truncation, an existing target keeps its mode bits, and a failed write
+    ;; leaves it intact with nothing left over.
     (parameterize ([current-security-guard
                     (deny-guard 'open-output-file content-path)])
       (check-ok-unit
@@ -190,6 +191,13 @@
                content-path-value
                (bytes->object-byte-list #"atomic"))))
     (check-equal? (file->bytes content-path) #"atomic")
+    (file-or-directory-permissions content-path #o600)
+    (check-ok-unit
+     (apply2 write-file-with-host
+             content-path-value
+             (bytes->object-byte-list #"private")))
+    (check-equal? (file->bytes content-path) #"private")
+    (check-equal? (file-or-directory-permissions content-path 'bits) #o600)
     (define entries-before (directory-list temporary-root))
     (parameterize ([current-security-guard
                     (deny-guard 'rename-file-or-directory content-path)])
@@ -199,7 +207,7 @@
                (bytes->object-byte-list #"lost"))
        #"write-file"
        #"permission-denied"))
-    (check-equal? (file->bytes content-path) #"atomic")
+    (check-equal? (file->bytes content-path) #"private")
     (check-equal? (directory-list temporary-root) entries-before)
 
     ;; The rename replaces a symbolic link at the target path with a regular

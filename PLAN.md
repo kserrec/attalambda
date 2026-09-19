@@ -33,12 +33,18 @@ patch below is a separate pending assignment.
   boundary checks); committed and pushed on the branch.
 - [x] 1.4 Kyle decided A6, B1 and B2 on 2026-09-19. A6: the dotenv refusal
   now matches only components named `.env` or starting with `.env.`; a name
-  merely containing `env` runs like any other program. B1: `write-file` is
-  atomic through a temporary file renamed over the target, so a failed write
-  leaves the target intact; a symbolic link at the target path is replaced by
-  a regular file (the former symlink-follow contract is withdrawn). B2:
-  `tcp-listen` enables address reuse, so a port is bindable again right after
-  shutdown. Each has a regression test that fails on the old behavior.
+  merely containing `env` runs like any other program, and the message says
+  such files are never loaded as source. B1: `write-file` is atomic through a
+  temporary file renamed over the target, so a failed write leaves the target
+  intact; an existing target keeps its mode bits; a symbolic link at the
+  target path is replaced by a regular file, a read-only target in a writable
+  directory is replaced, and a target in an unwritable directory is refused
+  (the former truncate-in-place contract is withdrawn). B2: `tcp-listen`
+  enables address reuse, so a port is bindable again right after shutdown.
+  Each has a regression test that fails on the old behavior.
+- [x] 1.5 Cold review by a fresh agent found the code correct for every item
+  and raised the B1 mode-bit widening, the A6 wording, a Ctrl+C window before
+  the break handler, and three stale comments; all fixed above.
 
 Deferred, Kyle decides (unchanged in code):
 

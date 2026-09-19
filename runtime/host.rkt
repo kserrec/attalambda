@@ -295,7 +295,11 @@
                          (file-failure write-file-operation failure))])
         (call-with-atomic-output-file path
           (lambda (output temporary)
-            (write-bytes payload output)))
+            (write-bytes payload output)
+            (when (file-exists? path)
+              (file-or-directory-permissions
+               temporary
+               (file-or-directory-permissions path 'bits)))))
         (object-ok object-unit))
       path))
 
