@@ -7,19 +7,15 @@
   (render-report
    (summarize-analysis
     (analyze-view (prepare-source (validated-source name text 2 0 17) #:analysis? #t))) name))
-(define footer
-  (string-append "\nTrusted basis: built-in contracts, rec lowering, and host/codec contracts.\n"
-                 "Coverage counts source obligations; it does not certify the trusted implementations.\n"
-                 "This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.\n"))
 
-(test-case "complete and empty reports have exact stable counts, types and trust scope"
+(test-case "complete and empty reports have exact stable counts and types"
   (define source "(def identity x = x)\n(def double x = (add x x))\n(double 3)")
   (define expected
     (string-append
      "Static type check: FULL PASS\nScope: golden.attl; all source definitions and expressions\n"
      "Definitions: 2/2 fully checked (100.0%)\nExpressions: 8/8 fully checked (100.0%)\n"
      "Unproved regions: 0\nType conflicts: 0\n\nInferred definitions:\n"
-     "  identity : forall a. a -> a\n  double : Rat -> Rat\n" footer))
+     "  identity : forall a. a -> a\n  double : Rat -> Rat\n"))
   (check-equal? (report source) expected)
   (check-regexp-match #rx"Static type check: FAIL" (report "(add 1 \"bad\")"))
   (check-equal? (report source) expected)
@@ -29,7 +25,7 @@
     "Static type check: FULL PASS\nScope: golden.attl; all source definitions and expressions\n"
     "Definitions: 0/0 fully checked (n/a)\nExpressions: 0/0 fully checked (n/a)\n"
     "Unproved regions: 0\nType conflicts: 0\n"
-    "This source contains no definitions or expressions; the pass is vacuous.\n" footer))
+    "This source contains no definitions or expressions; the pass is vacuous.\n"))
   (check-equal? (types->strings (list (type-variable 7) (type-variable 9))) '("a" "b")))
 
 (test-case "diagnostics preserve actual CRLF Unicode tab positions and enclosing lambdas"

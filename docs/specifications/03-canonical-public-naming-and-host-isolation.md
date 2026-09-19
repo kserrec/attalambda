@@ -665,9 +665,9 @@ reserved type-name identifier, `--full` flag, or check-and-run command is added.
 
 Reports use the exact verdicts `Static type check: FULL PASS`, `Static type
 check: FAIL`, and `Static type check: PARTIAL`, with definition and expression
-coverage, source-located reasons, inferred established bindings, and the stated
-trusted basis. Locations follow the existing one-based line and zero-based
-column convention. Source-controlled paths and names are escaped safely.
+coverage, source-located reasons, and inferred established bindings.
+Locations follow the existing one-based line and zero-based column
+convention. Source-controlled paths and names are escaped safely.
 Conditional type shapes are not displayed as established signatures.
 
 Static names Rat, Bool, String, Char, Byte, Unit, Error, List, Option, Result,

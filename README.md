@@ -82,8 +82,7 @@ Ordinary execution and runtime type checks remain available unchanged.
 The first version infers finite function and container types, reusable rank-1
 polymorphic definitions, source lets, and ordinary `rec`. It conservatively
 leaves unwrapping, empty-list access, numeric refinements, and raw host protocols
-partial. A full pass relies on audited built-in contracts and does not prove
-termination or successful external operations. See the [checking reference](docs/API.md#optional-static-checking),
+partial. A full pass relies on audited built-in contracts. See the [checking reference](docs/API.md#optional-static-checking),
 [audited contracts](docs/static-checking-contracts.md), and
 [measured results for all five examples](docs/static-checking-corpus.md).
 Exact build and public-download evidence is recorded in the
