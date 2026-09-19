@@ -192,9 +192,6 @@ Type conflicts: 0
 Inferred definitions:
   double    : Rat -> Rat
   factorial : Rat -> Rat
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-This does not prove termination or successful external operations.
 ```
 
 Checking this file must not print `720`, write anything through the program's `stdout`, or execute factorial. Its type is inferred from the source constraints and contracts. A negative input could make factorial diverge; `Rat -> Rat` is not a proof of termination or of a nonnegative input.
@@ -214,7 +211,7 @@ program.attl:2:<column> [TYPE_CONFLICT] in broken
   add argument 2 expects Rat; this expression has type String.
 ```
 
-The column above is explanatory, not a hard-coded expected diagnostic. Tests must assert the actual location produced from the fixture. Keep the current runner/Racket convention: one-based lines and zero-based columns; document that convention. Do not substitute the location of generated lambda code or the implementation of `add` for the user's argument.
+The column above is explanatory, not a hard-coded expected diagnostic. Tests must assert the actual location produced from the fixture. Keep the current runner/Racket convention: one-based lines and zero-based columns. Do not substitute the location of generated lambda code or the implementation of `add` for the user's argument.
 
 ### 3.4 Partial coverage is not a disguised pass
 
@@ -565,7 +562,7 @@ Typing known wrappers does not mean proving external bytes in advance. It means 
 
 ### 6.4 Trust and source coverage stay separate
 
-User-source coverage excludes library implementation expressions and macro-generated lambda encodings. Every report states the trusted basis. The contract inventory is audited/tested, not recursively passed through this same simple type checker and called proven.
+User-source coverage excludes library implementation expressions and macro-generated lambda encodings. The contract inventory is audited/tested, not recursively passed through this same simple type checker and called proven.
 
 Do not advertise “the entire untyped lambda runtime is now statically verified.” The deliverable is a checker for the supported source subset relative to a documented, reviewable boundary.
 

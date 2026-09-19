@@ -130,10 +130,7 @@ shows why complete definitions alone do not establish a whole file.
 
 FULL PASS covers this file's definitions, bodies, and top-level expressions
 relative to trusted built-in contracts, recursive lowering, and host/codec
-contracts. It does not re-prove those implementations or the evaluator/operating
-system, prove termination or resource lifetimes, guarantee external operation
-success, exclude deliberate Error/Result Err values, or guard future unchecked
-callers. Function types describe input preconditions and normal result shape.
+contracts. Function types describe input preconditions and normal result shape.
 Coverage is neither a probability of correctness nor test coverage; no formal
 verification theorem is claimed. Runtime tags and strict checks are retained.
 

@@ -547,7 +547,6 @@ with tempfile.TemporaryDirectory(prefix="static-checks-", dir=sys.argv[2]) as te
         header = {0: b"FULL PASS", 1: b"FAIL", 2: b"PARTIAL"}[status]
         assert result.stdout.startswith(b"Static type check: " + header + b"\n"), result.stdout
         assert result.stderr == b"", result.stderr
-        assert b"Trusted basis:" in result.stdout
         if reason:
             assert reason in result.stdout, result.stdout
         return result

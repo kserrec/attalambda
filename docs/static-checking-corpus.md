@@ -64,13 +64,9 @@ Inferred definitions:
   path : String
   contents : String
 
-Diagnostics (one-based lines, zero-based columns):
+Diagnostics:
 examples/file-round-trip.attl:12:38 [UNREPRESENTED_ERROR_ALTERNATIVE]
   WrongResultVariant may return Error; V1 does not refine Result variants.
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-Coverage counts source obligations; it does not certify the trusted implementations.
-This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.
 ```
 
 ## foundations.attl
@@ -88,17 +84,13 @@ Type conflicts: 0
 Inferred definitions:
   show : String -> Bool -> Result(Unit)
 
-Diagnostics (one-based lines, zero-based columns):
+Diagnostics:
 examples/foundations.attl:12:28 [UNREPRESENTED_ERROR_ALTERNATIVE]
   WrongResultVariant may return Error; V1 does not refine Result variants.
 examples/foundations.attl:13:19 [UNREPRESENTED_ERROR_ALTERNATIVE]
   WrongResultVariant may return Error; V1 does not refine Result variants.
 examples/foundations.attl:14:28 [UNREPRESENTED_ERROR_ALTERNATIVE]
   WrongResultVariant may return Error; V1 does not refine Result variants.
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-Coverage counts source obligations; it does not certify the trusted implementations.
-This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.
 ```
 
 ## hello.attl
@@ -112,10 +104,6 @@ Definitions: 0/0 fully checked (n/a)
 Expressions: 3/3 fully checked (100.0%)
 Unproved regions: 0
 Type conflicts: 0
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-Coverage counts source obligations; it does not certify the trusted implementations.
-This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.
 ```
 
 ## http-server.attl
@@ -135,7 +123,7 @@ Inferred definitions:
   force-result : forall a:data b. Result(a) -> (Result(a) -> b) -> b
   handler : String -> Result(String)
 
-Diagnostics (one-based lines, zero-based columns):
+Diagnostics:
 examples/http-server.attl:30:30 [UNREPRESENTED_ERROR_ALTERNATIVE] in nat-to-decimal
   WrongResultVariant may return Error; V1 does not refine Result variants.
 examples/http-server.attl:42:23 [UNREPRESENTED_ERROR_ALTERNATIVE] in close-listener
@@ -163,10 +151,6 @@ Incomplete definitions (one reason path each):
 
 Dependent top-level expressions:
   examples/http-server.attl:55:0 depends on nat-to-decimal: [UNREPRESENTED_ERROR_ALTERNATIVE] at examples/http-server.attl:30:30
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-Coverage counts source obligations; it does not certify the trusted implementations.
-This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.
 ```
 
 ## stdout.attl
@@ -180,8 +164,4 @@ Definitions: 0/0 fully checked (n/a)
 Expressions: 3/3 fully checked (100.0%)
 Unproved regions: 0
 Type conflicts: 0
-
-Trusted basis: built-in contracts, rec lowering, and host/codec contracts.
-Coverage counts source obligations; it does not certify the trusted implementations.
-This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.
 ```

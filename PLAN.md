@@ -1,4 +1,28 @@
-# Release 0.9.0 — published and public download verified
+# Trim boilerplate from the `--check` report — completed
+
+Kyle asked on 2026-09-18 for a deletion-only change: the `--check` report no
+longer prints the `(one-based lines, zero-based columns)` parenthetical after
+`Diagnostics` or the three trailing sentences beginning `Trusted basis:`. What
+the checker proves, its verdicts, counts, diagnostics, locations and exit
+statuses are unchanged. The spec for this work lives outside the repository.
+No release is authorized; further work precedes the next release.
+
+## Phase 1 — remove the report text everywhere it is required or quoted
+
+- [x] 1.1 Amend both specification documents first: drop the stated trusted
+  basis from the report description in the canonical-naming specification and
+  the trailer, the "document that convention" clause and "Every report states
+  the trusted basis" from the static-checking specification.
+- [x] 1.2 Delete the header parenthetical and the three trailing strings in
+  `runner/static/report.rkt`; delete the expected footer in
+  `tests/static-report-test.rkt` and the `Trusted basis:` assertion in
+  `tooling/test-linux-distribution.sh`; delete the quoted lines from the
+  corpus document and the termination/external-success clauses from
+  `docs/API.md` and `README.md`. Release notes and HANDOFF.md are historical.
+- [x] 1.3 Focused report test passes; passing and failing reports end at their
+  last content section. Full suite result recorded in the commit message.
+
+# Release 0.9.0 — published and public download verified (historical)
 
 Kyle authorized the complete 0.9.0 release after the independent review. That
 work superseded the historical local-only endpoint below. PR #8 is merged;

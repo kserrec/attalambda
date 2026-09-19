@@ -93,7 +93,7 @@
                                     (format "  ~a : ~a\n"
                                             (name-text (source-binding-name (definition-result-binding item)))
                                             (scheme->string (definition-result-signature item)))) inferred))))
-   (if (null? problems) "" (string-append "\nDiagnostics (one-based lines, zero-based columns):\n"
+   (if (null? problems) "" (string-append "\nDiagnostics:\n"
                                           (apply string-append (map diagnostic problems))))
    (if (null? incomplete) ""
        (string-append "\nIncomplete definitions (one reason path each):\n"
@@ -104,7 +104,4 @@
                                                                           (source-binding-id (definition-result-binding item))))
                                                    "\n")) incomplete))))
    (if (null? top-level-dependencies) ""
-       (string-append "\nDependent top-level expressions:\n" (apply string-append top-level-dependencies)))
-   "\nTrusted basis: built-in contracts, rec lowering, and host/codec contracts.\n"
-   "Coverage counts source obligations; it does not certify the trusted implementations.\n"
-   "This does not prove termination or successful external operations, or exclude deliberate Error/Result Err values.\n"))
+       (string-append "\nDependent top-level expressions:\n" (apply string-append top-level-dependencies)))))
