@@ -7,7 +7,7 @@
          (only-in racket/port port->bytes))
 
 (provide (struct-out validated-source) (struct-out source-problem)
-         inspect-source-file syntax-failure-expression syntax-failure-reason)
+         inspect-source-file syntax-failure-expression source-syntax syntax-failure-reason)
 
 (struct validated-source (path text line column position) #:transparent)
 (struct source-problem (kind reason line column) #:transparent)
@@ -121,6 +121,15 @@
   (and (pair? expressions)
        (car expressions)))
 
+;; Macro-generated blame can retain user provenance in origins or children.
+(define (source-syntax value path)
+  (cond [(syntax? value)
+         (or (and (equal? (syntax-source value) path) value)
+             (source-syntax (syntax-property value 'origin) path)
+             (source-syntax (syntax-e value) path))]
+        [(pair? value) (or (source-syntax (car value) path) (source-syntax (cdr value) path))]
+        [else #f]))
+
 (define (datum-failure-expression? expression)
   (and expression
        (let ([value (syntax-e expression)])
@@ -134,6 +143,8 @@
      "recursive def binding is not allowed; use rec for self recursion"]
     [(and expression (eq? (syntax-property expression 'attalambda-recursion) 'cycle))
      "module-binding recursion is forbidden; rec supports only self recursion"]
+    [(and expression (syntax-property expression 'attalambda-duplicate))
+     (format "duplicate definition: ~s" (syntax-e expression))]
     [(and expression (identifier? expression))
      (format "unknown AttaLambda name: ~s" (syntax-e expression))]
     [(datum-failure-expression? expression)

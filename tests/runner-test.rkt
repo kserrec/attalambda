@@ -523,6 +523,81 @@
       (run (list filename)) 65
       (source-diagnostic filename (caddr case) #:line 3 #:column 5)))
 
+   ;; A repeated name blames its later definition; blame generated inside the
+   ;; language reports the user's location, never an expander position; and
+   ;; control characters in a user name are escaped rather than written raw.
+   (for ([case (in-list
+                '(("duplicate-def.attl" "(def x = 1)\n(def x = 2)"
+                   "duplicate definition: x" 4 5)
+                  ("nested-def.attl" "(stdout (def y = 1))"
+                   "source has invalid syntax" 3 9)
+                  ("control-name.attl" "(stdout na\u001bme)"
+                   "unknown AttaLambda name: na\\u{1b}me" 3 8)))])
+     (define filename (car case))
+     (write-source (build-path working-directory filename)
+                   (string-append "#lang attalambda\n(stdout \"must not run\")\n"
+                                  (cadr case) "\n"))
+     (check-runner-failure
+      (run (list filename)) 65
+      (source-diagnostic filename (caddr case)
+                         #:line (cadddr case) #:column (car (cddddr case)))))
+
+   ;; A body reader extension is refused before any of its host code runs, and
+   ;; bytecode planted beside a source file never replaces the source itself.
+   (write-source (build-path working-directory "planted-reader.rkt")
+                 (string-append
+                  "#lang racket/base\n(provide read read-syntax)\n"
+                  "(define (read input) (with-output-to-file \"planted-sentinel\" void) 1)\n"
+                  "(define (read-syntax source input) (datum->syntax #f (read input)))\n"))
+   (write-source (build-path working-directory "reader-extension.attl")
+                 "#lang attalambda\n(stdout #reader \"planted-reader.rkt\" 1)\n")
+   (check-runner-failure
+    (run '("reader-extension.attl")) 65
+    (source-diagnostic "reader-extension.attl"
+                       "source could not be read; check delimiters and UTF-8 encoding"
+                       #:line 2 #:column 8))
+   (check-false (file-exists? (build-path working-directory "planted-sentinel")))
+
+   (write-source (build-path working-directory "planted.attl")
+                 "#lang attalambda\n(stdout \"planted\")\n")
+   (write-source (build-path working-directory "victim.attl")
+                 "#lang attalambda\n(stdout \"source\")\n")
+   (check-command-success
+    (run-command environment racket-executable '("-l-" "raco" "make" "planted.attl") 60
+                 #:current-directory working-directory)
+    #"")
+   (copy-file (build-path working-directory "compiled" "planted_attl.zo")
+              (build-path working-directory "compiled" "victim_attl.zo"))
+   (check-command-success (run '("victim.attl")) #"source")
+
+   (unless (eq? (system-type) 'windows)
+     ;; A closed stderr never changes the exit status, and an interrupt ends
+     ;; the run with one fixed line and status 130.
+     (define shell (find-executable-path "sh"))
+     (define closed-stderr-result
+       (run-command environment shell
+                    (list "-c" "exec \"$0\" \"$@\" 2>&-"
+                          (path->string racket-executable) (path->string runner) "missing.attl")
+                    20 #:current-directory working-directory))
+     (check-equal? (command-result-status closed-stderr-result) 66
+                   (result-diagnostic closed-stderr-result))
+
+     (write-source (build-path working-directory "interrupted.attl")
+                   (string-append "#lang attalambda\n"
+                                  "(write-file \"started\" (string-to-bytes \"x\"))\n"
+                                  "(print (len (range 0 100000000)))\n"))
+     (define interrupted-result
+       (run-command environment shell
+                    (list "-c"
+                          (string-append
+                           "\"$0\" \"$@\" & pid=$!; tries=0; "
+                           "until [ -e started ] || [ \"$tries\" -ge 300 ]; do sleep 0.1; tries=$((tries + 1)); done; "
+                           "kill -INT \"$pid\"; wait \"$pid\"")
+                          (path->string racket-executable) (path->string runner) "interrupted.attl")
+                    60 #:current-directory working-directory))
+     (check-runner-failure interrupted-result 130
+                           (source-diagnostic "interrupted.attl" "interrupted")))
+
    (define reader-failure-source
      (build-path working-directory "reader-failure.attl"))
    (write-source reader-failure-source

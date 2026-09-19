@@ -6,7 +6,8 @@
                   source-problem-line source-problem-column
                   syntax-failure-expression syntax-failure-reason))
 
-(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
+(provide failure->source-problem format-source-problem format-user-name diagnostic-fragment
+         call-with-render-diagnostics)
 
 (define (same-source? actual expected)
   (and expected

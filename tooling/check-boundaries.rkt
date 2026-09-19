@@ -116,10 +116,13 @@
     unavailable-source-status unexpected-failure-status unless up validate-source
     validated-source-path vector->list when with-handlers
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
-    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?))
+    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?
+    diagnostic-fragment text void complete-path load/use-compiled current-load/use-compiled
+    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
+             (only-in "diagnostics.rkt" diagnostic-fragment)
              (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
@@ -634,7 +637,7 @@
       arguments name names candidate bound bound-identifier=? free-identifier=? ormap
       list quote andmap eq? equals expression part apply
       define definitions parts collect cadr caddr graph definition forms
-      finished visit path when memq self? syntax-property attalambda-recursion
+      finished visit path when memq self? syntax-property attalambda-recursion attalambda-duplicate loop duplicate
       self cycle foldl dependency assq
       bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
@@ -673,7 +676,13 @@
       make-write-file))))
 
 (define expected-language-reader-forms
-  '(attalambda/lang/expander))
+  '(attalambda/lang/expander
+    #:wrapper1 (lambda (read-body)
+                 (parameterize ([current-readtable #f]
+                                [read-accept-reader #f]
+                                [read-accept-lang #f]
+                                [read-accept-compiled #f])
+                   (read-body)))))
 
 (define product-version-projections
   '((#"0.2.0-dev\n" . "0.1.900")
@@ -1742,7 +1751,8 @@
     source-name source-preflight-result source-problem source-problem? split-path
     string->path string-downcase struct struct-copy struct-out supplied-path syntax-e
     syntax-failure-expression syntax-failure-reason syntax-property syntax? terminator
-    text unavailable unless validated-source value values when with-handlers))
+    text unavailable unless validated-source value values when with-handlers
+    source-syntax syntax-source origin attalambda-duplicate))
 
 (define (source-file-violations path info project-root)
   (define forms (module-info-forms info))
@@ -1756,12 +1766,13 @@
     'invalid-source-file-imports)
    (exact-provide-violations
     path info '(provide (struct-out validated-source) (struct-out source-problem)
-                         inspect-source-file syntax-failure-expression syntax-failure-reason)
+                         inspect-source-file syntax-failure-expression source-syntax syntax-failure-reason)
     'invalid-source-file-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(language-declaration dotenv-component? dotenv-path? resolve-parent-path
                       source-preflight-result regular-file? inspect-source-file
-                      syntax-failure-expression datum-failure-expression? syntax-failure-reason))
+                      syntax-failure-expression source-syntax datum-failure-expression?
+                      syntax-failure-reason))
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
                     '((struct validated-source (path text line column position) #:transparent)
                       (struct source-problem (kind reason line column) #:transparent))))
@@ -1805,7 +1816,8 @@
                                  syntax-failure-expression syntax-failure-reason)))
     'invalid-diagnostics-imports)
    (exact-provide-violations
-    path info '(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
+    path info '(provide failure->source-problem format-source-problem format-user-name diagnostic-fragment
+                        call-with-render-diagnostics)
     'invalid-diagnostics-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(same-source? failure->source-problem diagnostic-fragment format-user-name

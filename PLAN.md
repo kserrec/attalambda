@@ -1,3 +1,65 @@
+# Diagnostics and robustness fixes — active, branch `fix/diagnostics-robustness`
+
+Kyle assigned the 0.9.0 diagnostics/robustness/safety specification (kept
+outside the repository) on 2026-09-19: verify each reported issue on the
+current revision, fix only the real ones with the smallest change, escalate
+policy questions, no release. Work lands on `fix/diagnostics-robustness` off
+main `ea889e5`; merge, tag and release need Kyle. The callable-constraints
+patch below is a separate pending assignment.
+
+## Phase 1 — verify, fix, gate
+
+- [x] 1.1 Reproduce every item (Racket CS 9.3 in a disposable container over
+  this checkout). Real: A1 a `#reader` body extension ran host code and a
+  planted `compiled/<name>_attl.zo` replaced the source in file-run; A2 Ctrl+C
+  printed a stack trace with status 1; A3 a nested `def` reported an
+  expander-internal position; A4 control characters in a name reached stderr
+  raw; A5 a duplicate `def` reported "unknown AttaLambda name"; A7 a closed
+  stderr turned status 66 into 1; B2 a port could not be rebound right after
+  shutdown. Not reproducing, dropped: C1 (`let`-bound `NIL` at two element
+  types passed in twelve shapes: top level, inside `def` with and without
+  parameters, inside lambda, nested `let`, with `len`, `cons`, `list`, `add`)
+  and B3 (the inner fallback code applies only to contract exceptions).
+- [x] 1.2 Fix A1: `lang/reader.rkt` reads the module body with the same
+  locked reader as `--check` and `:load`; `run-source` compiles the source
+  file itself from source, never from a compiled file beside it. A2: a break
+  prints one line and exits 130. A3/A4: `run-source` shares the frontend's
+  provenance walk (`source-syntax`, now in `runner/source-file.rkt`) and the
+  diagnostics escaping. A5: the expander rejects a repeated definition at its
+  later occurrence in every entry path. A7: the message write cannot change
+  the exit status. Regression tests in `tests/runner-test.rkt` and
+  `tests/static-command-test.rkt`; boundary allowlists updated.
+- [x] 1.3 Full gate green on the final revision (104 test files, purity and
+  boundary checks); committed and pushed on the branch.
+
+Deferred, Kyle decides (unchanged in code):
+
+- A6: `dotenv-path?` refuses any path component matching `(^|.)env($|.)`, so
+  `env.attl` or an `env/` directory is refused as "dotenv files are never
+  read", while `read-file`/`write-file` have no such rule. The refusal is
+  pinned by existing launcher tests. Options: narrow it to real dotenv names
+  and reword, or keep it as policy.
+- B1: `write-file` truncates and then writes, so a failure mid-write leaves a
+  truncated file. The proposed temp-then-rename conflicts with the tested
+  contract in `tests/file-host-test.rkt`: a write through a symlink keeps the
+  symlink and needs write authority on the file only, whereas rename needs
+  directory write, replaces the symlink with a regular file, and resets the
+  inode, owner and permissions. Needs a decision on which contract wins.
+- B2: real on Linux (rebinding a port after the server closed a connection
+  fails with errno 98 without address reuse and succeeds with it). The fix is
+  the third `tcp-listen` argument in `runtime/host.rkt` becoming `#t`.
+- D1/D3: real. `typed-cons` forces its payload through
+  `(raw-is-type error-type)`, which applies an untagged lambda as if it were
+  an object: `(cons (lambda (x) (add x 1)) NIL)` makes `map` and `is-nil`
+  return ERROR(EMPTY-LIST) and the run hangs; `(map (add 1 "a") (cons 1 NIL))`
+  exhausts memory. No contained fix exists without a function tag in
+  `core/objects.rkt`, a representation change.
+- D2: an Error element makes the whole `cons` an Error, so `len`/`is-nil`
+  return that Error. This is the documented `cons` contract ("An Error value
+  propagates") and a language-design decision.
+
+---
+
 # Trim boilerplate from the `--check` report — completed
 
 Kyle asked on 2026-09-18 for a deletion-only change: the `--check` report no
