@@ -60,6 +60,51 @@ Deferred, Kyle decides (unchanged in code):
 
 ---
 
+# Callable constraints through unknown arguments — active source patch
+
+Kyle assigned the [verification-first patch specification](docs/static-checking-callable-constraints-patch-spec.md)
+on 2026-09-18. This is one diagnostic-correctness phase on `main`, with the
+repository's verified commit/push workflow. No version bump, release, tag or
+asset replacement is authorized. Historical plans below remain historical.
+
+Baseline: clean local and remote main
+`135263fe0774cf1233fe7e7e36e9e034fe94ec2f`, exactly the inspected revision.
+Evidence: `/tmp/attalambda-callable-patch-lgub6lwo/`. An owned source snapshot
+and disposable `attalambda-callable-patch` container isolate the checks.
+The retained image has Racket CS 9.3, Python 3 and Git; its corrections needed
+applying in this new container. Read-only preparation checks now verify the
+pinned promise/Expeditor sources and loaded behavior. Non-root compilation
+uses an owned `/tmp/attalambda-compiled` cache rather than installation writes.
+
+Expected change boundary: modify `runner/static/inference.rkt`, the existing
+incomplete-callable and CLI tests, PLAN.md and HANDOFF.md; create the linked
+verbatim patch specification. Runtime behavior, source syntax, library
+contracts, public API, dependencies, structural gates and versions remain
+behaviorally unchanged. Any neighboring executable change needs reproduction
+evidence showing it is necessary for this same defect.
+
+## Phase 1 — verified diagnostic-correctness patch
+
+- [ ] 1.1 Verify the isolated toolchain, five focused baseline modules and all
+  five public example reports through `--check` only.
+- [ ] 1.2 Record C01/C02 stdout, stderr, status and backend proof state; decide
+  confirmed, already fixed, disproved or blocked before changing production.
+- [ ] 1.3 Retain direct regressions, observe the intended baseline failure and
+  minimally repair only a confirmed missing callable-shape constraint.
+- [ ] 1.4 Pin C03–C06, N01–N05, P01/P02, independent good-definition evidence,
+  real CLI reporting/non-execution and absent speculative signatures; run all
+  static tests with refreshed dependencies.
+- [ ] 1.5 Obtain a fresh read-only focused review of the diff and evidence;
+  reproduce and resolve findings, and record its scope and limitations.
+- [ ] 1.6 Run final diff checks and the complete suite including both structural
+  gates; compare the five example reports, verify exact input identities,
+  update records, commit/push the phase, observe actual-head CI and clean up
+  owned scratch resources. Record Git/CI identity outside the checkout.
+
+Next: complete 1.1. No hypothesis has yet been confirmed by execution.
+
+---
+
 # Trim boilerplate from the `--check` report — completed
 
 Kyle asked on 2026-09-18 for a deletion-only change: the `--check` report no
