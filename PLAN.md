@@ -1,10 +1,10 @@
-# Diagnostics and robustness fixes — active, branch `fix/diagnostics-robustness`
+# Diagnostics and robustness fixes — merged to main via PR #10 on 2026-09-19 (historical)
 
 Kyle assigned the 0.9.0 diagnostics/robustness/safety specification (kept
 outside the repository) on 2026-09-19: verify each reported issue on the
 current revision, fix only the real ones with the smallest change, escalate
-policy questions, no release. Work lands on `fix/diagnostics-robustness` off
-main `ea889e5`; merge, tag and release need Kyle. The callable-constraints
+policy questions, no release. The branch landed on main as `bb0d25d` with
+Kyle's approval after green CI; no tag or release. The callable-constraints
 patch below is a separate pending assignment.
 
 ## Phase 1 — verify, fix, gate
