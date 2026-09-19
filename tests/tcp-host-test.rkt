@@ -540,7 +540,22 @@
     (check-host-failure
      (close-handle custodian-listener)
      #"tcp-close"
-     #"invalid-handle"))
+     #"invalid-handle")
+
+    ;; A port is bindable again right after the server closed a connection on
+    ;; it, without waiting out the kernel's TIME_WAIT delay.
+    (define rebind-result (ok-list (listen loopback 0 1)))
+    (define rebind-listener (track! (object-rat->exact (car rebind-result))))
+    (define rebind-port (object-rat->exact (cadr rebind-result)))
+    (define-values (rebind-in rebind-out) (tcp-connect "127.0.0.1" rebind-port))
+    (define rebind-server (track! (ok-nat (accept rebind-listener))))
+    (close-tracked! rebind-server)
+    (close-output-port rebind-out)
+    (close-input-port rebind-in)
+    (close-tracked! rebind-listener)
+    (define rebound
+      (track! (object-rat->exact (car (ok-list (listen loopback rebind-port 1))))))
+    (close-tracked! rebound))
   (lambda ()
     (for ([worker (in-list active-threads)])
       (unless (thread-dead? worker)

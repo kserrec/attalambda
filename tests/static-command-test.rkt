@@ -125,7 +125,7 @@
      (define err (open-output-string))
      (parameterize ([current-error-port err])
        (check-equal? (run-check (path->string (build-path directory "missing.attl"))) 66)
-       (check-equal? (run-check (path->string (build-path directory "service.env.attl"))) 66)))
+       (check-equal? (run-check (path->string (build-path directory ".env.attl"))) 66)))
 
    (test-case "owned resources close after internal failure while caller ports remain usable"
      (define owned #f)

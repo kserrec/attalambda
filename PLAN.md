@@ -31,23 +31,17 @@ patch below is a separate pending assignment.
   `tests/static-command-test.rkt`; boundary allowlists updated.
 - [x] 1.3 Full gate green on the final revision (104 test files, purity and
   boundary checks); committed and pushed on the branch.
+- [x] 1.4 Kyle decided A6, B1 and B2 on 2026-09-19. A6: the dotenv refusal
+  now matches only components named `.env` or starting with `.env.`; a name
+  merely containing `env` runs like any other program. B1: `write-file` is
+  atomic through a temporary file renamed over the target, so a failed write
+  leaves the target intact; a symbolic link at the target path is replaced by
+  a regular file (the former symlink-follow contract is withdrawn). B2:
+  `tcp-listen` enables address reuse, so a port is bindable again right after
+  shutdown. Each has a regression test that fails on the old behavior.
 
 Deferred, Kyle decides (unchanged in code):
 
-- A6: `dotenv-path?` refuses any path component matching `(^|.)env($|.)`, so
-  `env.attl` or an `env/` directory is refused as "dotenv files are never
-  read", while `read-file`/`write-file` have no such rule. The refusal is
-  pinned by existing launcher tests. Options: narrow it to real dotenv names
-  and reword, or keep it as policy.
-- B1: `write-file` truncates and then writes, so a failure mid-write leaves a
-  truncated file. The proposed temp-then-rename conflicts with the tested
-  contract in `tests/file-host-test.rkt`: a write through a symlink keeps the
-  symlink and needs write authority on the file only, whereas rename needs
-  directory write, replaces the symlink with a regular file, and resets the
-  inode, owner and permissions. Needs a decision on which contract wins.
-- B2: real on Linux (rebinding a port after the server closed a connection
-  fails with errno 98 without address reuse and succeeds with it). The fix is
-  the third `tcp-listen` argument in `runtime/host.rkt` becoming `#t`.
 - D1/D3: real. `typed-cons` forces its payload through
   `(raw-is-type error-type)`, which applies an untagged lambda as if it were
   an object: `(cons (lambda (x) (add x 1)) NIL)` makes `map` and `is-nil`

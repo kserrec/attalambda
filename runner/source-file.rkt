@@ -16,7 +16,7 @@
 (define (dotenv-component? part)
   (and (path? part)
        (regexp-match?
-        #px"(^|\\.)env($|\\.)"
+        #px"^\\.env($|\\.)"
         (string-downcase (path->string part)))))
 
 (define (dotenv-path? path)

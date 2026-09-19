@@ -4,7 +4,7 @@
 ;; contains exactly stdout, stdin line input, file, blocking TCP, and explicit
 ;; exit operations approved by the host design and its scoped amendments.
 
-(require (only-in racket/file file->bytes)
+(require (only-in racket/file file->bytes call-with-atomic-output-file)
          racket/promise
          (only-in racket/tcp
                   tcp-accept
@@ -293,9 +293,8 @@
       (with-handlers ([exn:fail?
                        (lambda (failure)
                          (file-failure write-file-operation failure))])
-        (call-with-output-file path
-          #:exists 'truncate
-          (lambda (output)
+        (call-with-atomic-output-file path
+          (lambda (output temporary)
             (write-bytes payload output)))
         (object-ok object-unit))
       path))
@@ -363,7 +362,7 @@
           (set! listener
                 (tcp-listen port
                             backlog
-                            #f
+                            #t
                             (if (string=? local "")
                                 #f
                                 local)))

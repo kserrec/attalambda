@@ -165,10 +165,10 @@
    ;; Validation precedence rejects names and metadata before source content.
    ;; None of the dotenv-spelled paths below is created or opened.
    (check-runner-failure
-    (run '("program.env.rkt"))
+    (run '(".env.rkt"))
     66
     (source-diagnostic
-     "program.env.rkt"
+     ".env.rkt"
      "refused source path because dotenv files are never read"))
    (check-runner-failure
     (run '(".ENV.local/program.attl"))
@@ -296,7 +296,7 @@
      "refused symbolic-link source; choose a regular .attl file"))
 
    (define dotenv-parent
-     (build-path working-directory "private.env.local"))
+     (build-path working-directory ".env.private"))
    (define ordinary-parent-link
      (build-path working-directory "ordinary-parent"))
    (make-directory dotenv-parent)
@@ -407,6 +407,12 @@
      "unknown AttaLambda name: display"
      #:line 2
      #:column 1))
+
+   ;; Only dotenv spellings are refused; a name merely containing env is a
+   ;; program like any other.
+   (write-source (build-path working-directory "env.attl")
+                 "#lang attalambda\n(stdout \"env program\")\n")
+   (check-command-success (run '("env.attl")) #"env program")
 
    (define relative-source
      (build-path working-directory "relative.attl"))

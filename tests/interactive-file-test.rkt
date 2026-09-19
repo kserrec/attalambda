@@ -58,7 +58,7 @@
           (when (memq 'read permissions) (set! reads (cons path reads))))
         (lambda (who host port mode) (void))))
      (parameterize ([current-security-guard guard])
-       (for ([name '("secret.env.attl" "nested.env.local/value.attl" "linked.attl")])
+       (for ([name '(".env.attl" ".env.local/value.attl" "linked.attl")])
          (check-eq? (source-problem-kind (inspect-source-file name)) 'unavailable)))
      (check-equal? reads '()))))
 
@@ -232,8 +232,8 @@
        (check-true (source-problem? (load-source-file current name))))
      (write-file "ordinary.attl" #"#lang attalambda\n(stdout \"never\")\n")
      (make-file-or-directory-link "ordinary.attl" "linked.attl")
-     (make-directory "private.env.local")
-     (make-file-or-directory-link "private.env.local" "ordinary-parent")
+     (make-directory ".env.private")
+     (make-file-or-directory-link ".env.private" "ordinary-parent")
      (define reads '())
      (parameterize
          ([current-security-guard
@@ -243,7 +243,7 @@
               (when (memq 'read permissions) (set! reads (cons path reads))))
             (lambda (who host port mode) (void)))])
        ;; No dotenv-spelled file is created, opened or inspected.
-       (for ([name '("secret.env.attl" ".ENV.local/value.attl" "ordinary-parent/value.attl"
+       (for ([name '(".env.attl" ".ENV.local/value.attl" "ordinary-parent/value.attl"
                                       "linked.attl")])
          (check-eq? (source-problem-kind (load-source-file current name)) 'unavailable)))
      (check-equal? reads '())

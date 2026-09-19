@@ -50,7 +50,7 @@
     read read-byte read-bytes read-line read-bytes-line write write-byte write-bytes
     display print printf eprintf flush-output
     open-input-file open-output-file call-with-input-file
-    call-with-output-file file->bytes file->string
+    call-with-output-file call-with-atomic-output-file file->bytes file->string
     directory-list make-directory make-directory* delete-directory
     delete-directory/files delete-file rename-file-or-directory copy-file
     tcp-connect tcp-listen tcp-accept tcp-close udp-open-socket
@@ -85,7 +85,7 @@
 (define forbidden-runner-capabilities
   '(current-environment-variables getenv putenv
     read read-char read-line read-string read-syntax
-    open-input-file open-output-file call-with-output-file
+    open-input-file open-output-file call-with-output-file call-with-atomic-output-file
     write write-byte write-bytes print printf
     file->bytes file->string
     directory-list make-directory make-directory* delete-directory
@@ -181,7 +181,7 @@
 
 (define privileged-host-only-identifiers
   '(current-output-port flush-output
-    file->bytes call-with-output-file
+    file->bytes call-with-atomic-output-file
     read-bytes-avail! write-bytes write-bytes-avail
     tcp-addresses
     close-input-port close-output-port
@@ -236,7 +236,7 @@
     object-none object-some
     and argument argument-count arguments attempt-close backlog begin bound-port broken-pipe-code buffer
     bytes-length bytes->object-string bytes->string/utf-8 bytes=? cadr caddr
-    cadddr call-with-output-file car case cdr cleanup-new-connection
+    cadddr call-with-atomic-output-file car case cdr cleanup-new-connection
     cleanup-new-listener close-entry close-input-port close-output-port
     close-procedure code codec-failure-reason codec-failure? cond connection
     connection-entry connection-entry-input connection-entry-output
@@ -275,7 +275,7 @@
     string? struct subbytes tcp-accept tcp-accept-operation tcp-addresses
     tcp-close tcp-close-operation tcp-connect tcp-connect-operation tcp-listen
     tcp-listen-operation tcp-read-operation tcp-write-operation timed-out-code
-    truncate unknown-operation-reason value void when windows windows-numbers with-handlers
+    temporary unknown-operation-reason value void when windows windows-numbers with-handlers
     write-all-bytes write-bytes write-bytes-avail write-file-operation written
     wrong-arity wrong-arity-reason wrong-handle-kind-code wrong-type-reason zero?))
 
@@ -1054,7 +1054,7 @@
     [(eq? base 'racket/promise) (eq? spec 'racket/promise)]
     [(eq? base 'racket/file)
      (and (only-in-spec? spec)
-          (equal? (only-in-identifiers spec) '(file->bytes)))]
+          (equal? (only-in-identifiers spec) '(file->bytes call-with-atomic-output-file)))]
     [(eq? base 'racket/tcp)
      (and (only-in-spec? spec)
           (equal? (only-in-identifiers spec)
