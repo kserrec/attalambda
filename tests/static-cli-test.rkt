@@ -32,6 +32,36 @@
          (check-true (regexp-match? (byte-regexp (string->bytes/utf-8 (symbol->string code)))
                                     (command-result-stdout result))))))
 
+   (test-case "a callable requirement survives an unproved argument in either use order"
+     (for ([row '(("(def bad f = (add (f (unwrap-ok (make-ok 1))) f))" 1 "FAIL")
+                  ("(def bad f = (add f (f (unwrap-ok (make-ok 1)))))" 1 "FAIL")
+                  ("(def invoke f = (f (unwrap-ok (make-ok 1))))" 2 "PARTIAL")
+                  ("(def identity x = x) (identity 1) (identity TRUE)" 0 "FULL PASS"))])
+       (write-source source (string-append "#lang attalambda\n" (car row) "\n"))
+       (define result (run (list "--check" (path->string source))))
+       (verify result (cadr row))
+       (define report (command-result-stdout result))
+       (check-regexp-match (byte-regexp (string->bytes/utf-8 (string-append "^Static type check: " (caddr row) "\n")))
+                           report)
+       (check-equal? (command-result-stderr result) #"")
+       (check-regexp-match #rx#"UNREPRESENTED_ERROR_ALTERNATIVE|identity : forall a[.] a -> a" report)
+       (when (= (cadr row) 1)
+         (check-regexp-match #rx#"\\.attl:2:[0-9]+ \\[TYPE_CONFLICT\\] in bad\n" report))
+       (check-false (regexp-match? #rx#"\n  (bad|invoke) :" report)))
+     ;; Checking reports the conflict without running the file, and an
+     ;; independent good definition beside the bad one keeps its signature.
+     (write-source source (string-append "#lang attalambda\n(stdout \"CHECK-MUST-NOT-RUN\")\n"
+                                         "(def good x = x)\n"
+                                         "(def bad f = (add (f (unwrap-ok (make-ok 1))) f))\n"))
+     (define result (run (list "--check" (path->string source))))
+     (verify result 1)
+     (define report (command-result-stdout result))
+     (check-regexp-match #rx#"^Static type check: FAIL\n" report)
+     (check-regexp-match #rx#"\n  good : forall a[.] a -> a\n" report)
+     (check-false (regexp-match? #rx#"\n  bad :" report))
+     (check-false (regexp-match? #rx#"CHECK-MUST-NOT-RUN" report))
+     (check-equal? (command-result-stderr result) #""))
+
    (test-case "exact argument shape rejects missing extra duplicate and incompatible arguments"
      (for ([arguments '(("--check") ("--check" "one.attl" "two.attl")
                         ("--check" "--check") ("--check" "--help")

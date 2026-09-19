@@ -22,7 +22,13 @@
                 "(let f = (lambda (x) (let ignored = (head NIL) (add x 1))) (f TRUE))"
                 "(def capture g = (let f = (lambda (x) (let gap = (head NIL) (g x))) (let a = (f 1) (f TRUE))))"
                 "((lambda (f) (f 1)) head)"
-                "((if (some (lambda (x) x)) 1) \"s\")")])
+                "((if (some (lambda (x) x)) 1) \"s\")"
+                "(def bad f = (add (f (unwrap-ok (make-ok 1))) f))"
+                "(def bad f = (add f (f (unwrap-ok (make-ok 1)))))"
+                "((lambda (f) (f (unwrap-ok (make-ok 1)))) 7)"
+                "(def invoke f = (f (unwrap-ok (make-ok 1)))) (def alias = invoke) (alias 7)"
+                "(def bad_capture f = (let invoke = (lambda (u) (f (unwrap-ok (make-ok 1)))) (add (invoke UNIT) f)))"
+                "(rec bad f = (add (f (unwrap-ok (make-ok 1))) (bad 1)))")])
     (define result (analyze text))
     (define evidence (analysis-proof result))
     (check-eq? (proof-status evidence) 'conflict text)
@@ -52,10 +58,19 @@
                 "(rec bad x = (some bad))"
                 "((lambda (f) f) head)"
                 "(((lambda (f) f) head) TRUE)"
-                "((lambda (x) (let y = (some x) (x 1))) (lambda (x) x))")])
+                "((lambda (x) (let y = (some x) (x 1))) (lambda (x) x))"
+                "(def invoke f = (f (unwrap-ok (make-ok 1))))"
+                "((head NIL) 1)"
+                "(add 1 (unwrap-ok (make-ok \"text\")))"
+                "(def data_only f = (let held = (some f) (f (unwrap-ok (make-ok 1)))))")])
     (define result (analyze text))
     (check-eq? (proof-status (analysis-proof result)) 'unproved text)
     (for ([entry (in-list (analysis-definitions result))])
       (check-false (definition-result-signature entry) text))
     (for ([item (in-list (analysis-expressions result))])
-      (check-false (judgment-type item) text))))
+      (check-false (judgment-type item) text)))
+  ;; A data-restricted callable stays an unsupported-domain gap, never a conflict.
+  (define restricted
+    (analyze "(def data_only f = (let held = (some f) (f (unwrap-ok (make-ok 1)))))"))
+  (check-not-false
+   (memq 'UNSUPPORTED_DATA_DOMAIN (map problem-code (proof-problems (analysis-proof restricted))))))

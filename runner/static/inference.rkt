@@ -102,9 +102,12 @@
        (finish output complete
                (or remaining (and (established? complete) (arrow? output)
                                   (call-inputs output (arrow-count output) #f 1))))]
-      [(and function-type (type-variable? function-type) argument-type)
+      [(and function-type (type-variable? function-type))
+       ;; An unproved argument still requires a callable operator; the
+       ;; application's own result stays unproved through the joined proof.
        (define output (fresh))
-       (define local (check-equation function-type (arrow-type argument-type output) node "function application"))
+       (define local
+         (check-equation function-type (arrow-type (or argument-type (fresh)) output) node "function application"))
        (finish (solved output) (proof-join inherited local))]
       [(and function-type (not (type-variable? function-type)))
        (finish #f (proof-join inherited

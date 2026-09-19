@@ -1,3 +1,27 @@
+# Static checker patch — callable constraints through unknown arguments
+
+Applied on `main` on 2026-09-19 after the diagnostics/robustness merge (PR #10).
+The 0.9.0 release below is unchanged: no version bump, tag, or binary. The
+published 0.9.0 checker still has this gap.
+
+Confirmed before the change: `(def bad f = (add (f (unwrap-ok (make-ok 1))) f))`
+reported PARTIAL with status 2 and no conflict, while the same two uses in the
+other order reported FAIL with status 1. The application branch for an operator
+whose type is an established type variable required an established argument
+type, so an unproved argument left the operator unconstrained. The branch now
+requires the operator to be an arrow whose domain is the argument type when
+known and a fresh variable otherwise. The application's own result stays
+unproved through the joined proof, so no unknown return type, no `unwrap-ok`
+payload, and no definition signature is established by this rule. A
+data-restricted operator meeting the arrow remains an unsupported-domain gap.
+Limits: diagnostics are still not order-independent in general; a failed
+equation is rolled back rather than recorded, exactly as before.
+
+Regressions: `tests/static-incomplete-callables-test.rkt` (C01–C06 conflicts,
+N01–N05 gaps) and `tests/static-cli-test.rkt` (real `--check` runs, the
+`CHECK-MUST-NOT-RUN` marker, a good sibling keeping its signature). The five
+public example reports are byte-identical before and after.
+
 # AttaLambda 0.9.0 — published; public download verified
 
 [Release 0.9.0](https://github.com/kserrec/attalambda/releases/tag/v0.9.0) is

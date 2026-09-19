@@ -60,48 +60,44 @@ Deferred, Kyle decides (unchanged in code):
 
 ---
 
-# Callable constraints through unknown arguments — active source patch
+# Callable constraints through unknown arguments — completed source patch
 
 Kyle assigned the [verification-first patch specification](docs/static-checking-callable-constraints-patch-spec.md)
-on 2026-09-18. This is one diagnostic-correctness phase on `main`, with the
-repository's verified commit/push workflow. No version bump, release, tag or
-asset replacement is authorized. Historical plans below remain historical.
+on 2026-09-18 and started it on 2026-09-19. One diagnostic-correctness phase
+on `main`; no version bump, release, tag or asset replacement is authorized.
 
-Baseline: clean local and remote main
-`135263fe0774cf1233fe7e7e36e9e034fe94ec2f`, exactly the inspected revision.
-Evidence: `/tmp/attalambda-callable-patch-lgub6lwo/`. An owned source snapshot
-and disposable `attalambda-callable-patch` container isolate the checks.
-The retained image has Racket CS 9.3, Python 3 and Git; its corrections needed
-applying in this new container. Read-only preparation checks now verify the
-pinned promise/Expeditor sources and loaded behavior. Non-root compilation
-uses an owned `/tmp/attalambda-compiled` cache rather than installation writes.
-
-Expected change boundary: modify `runner/static/inference.rkt`, the existing
-incomplete-callable and CLI tests, PLAN.md and HANDOFF.md; create the linked
-verbatim patch specification. Runtime behavior, source syntax, library
-contracts, public API, dependencies, structural gates and versions remain
-behaviorally unchanged. Any neighboring executable change needs reproduction
-evidence showing it is necessary for this same defect.
+Baseline: main `917c0ba` (the spec inspected `135263f`; the three merges since
+touched the launcher and host, not `runner/static/inference.rkt`). Checks run
+in a disposable Racket CS 9.3 container over this checkout, as the test user.
 
 ## Phase 1 — verified diagnostic-correctness patch
 
-- [ ] 1.1 Verify the isolated toolchain, five focused baseline modules and all
-  five public example reports through `--check` only.
-- [ ] 1.2 Record C01/C02 stdout, stderr, status and backend proof state; decide
-  confirmed, already fixed, disproved or blocked before changing production.
-- [ ] 1.3 Retain direct regressions, observe the intended baseline failure and
-  minimally repair only a confirmed missing callable-shape constraint.
-- [ ] 1.4 Pin C03–C06, N01–N05, P01/P02, independent good-definition evidence,
-  real CLI reporting/non-execution and absent speculative signatures; run all
-  static tests with refreshed dependencies.
-- [ ] 1.5 Obtain a fresh read-only focused review of the diff and evidence;
-  reproduce and resolve findings, and record its scope and limitations.
-- [ ] 1.6 Run final diff checks and the complete suite including both structural
-  gates; compare the five example reports, verify exact input identities,
-  update records, commit/push the phase, observe actual-head CI and clean up
-  owned scratch resources. Record Git/CI identity outside the checkout.
+- [x] 1.1 Runtime preparation check and the five focused baseline modules
+  pass; the five public example reports were captured through `--check`.
+- [x] 1.2 Confirmed. Before the change C01 reported PARTIAL with status 2 and
+  no conflict while C02 reported FAIL with status 1; C03–C06 were all PARTIAL.
+  Cause: the application branch for an operator whose type is an established
+  type variable required an established argument type, so an unproved
+  argument left the operator unconstrained until a later use.
+- [x] 1.3 Backend regressions for C01–C06 fail on the unfixed code. The fix
+  unifies the operator variable with an arrow whose domain is the argument
+  type when known and a fresh variable otherwise; the application's result
+  stays unproved through the joined proof. Baseline modules pass.
+- [x] 1.4 N01, N02, N04 and N05 pinned as unproved with no signatures (N03 was
+  already present); C01, C02, N01 and P01 run through the real `--check`
+  command with verdict, status, codes, locations, empty stderr and absent
+  speculative signatures; a fixture with `(stdout "CHECK-MUST-NOT-RUN")` and
+  a good sibling definition fails without running and keeps `good`'s
+  signature. Every static test module passes. The five example reports are
+  byte-identical to 1.1.
+- [x] 1.5 A fresh read-only review traced speculative success, return-type
+  leakage, branch ordering, captures, recursion, data restrictions and
+  rollback, and found the production change correct. Its one should-fix, that
+  the N05 regression did not pin `UNSUPPORTED_DATA_DOMAIN`, is fixed.
+- [x] 1.6 `git diff --check` clean; the complete suite (104 test files,
+  purity and boundary checks) passed on the final source; committed and
+  pushed to main. No release, tag, or version change.
 
-Next: complete 1.1. No hypothesis has yet been confirmed by execution.
 
 ---
 
