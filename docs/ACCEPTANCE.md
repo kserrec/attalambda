@@ -454,7 +454,7 @@ was created for this milestone.
 The project does not claim sandboxing or per-program permission prompts. A
 real-host program inherits the launching process's relevant authority. It has
 no program-argument API, general parser, optimizer, compiler, records, JSON,
-environment access or process spawning, directory operations, atomic file replacement,
+environment access or process spawning, directory operations,
 TLS, UDP, timeouts, asynchronous server, production concurrency, or general
 HTTP framework. The HTTP server implements only its documented blocking
 HTTP/1.1 subset and serves one connection at a time. Linux x86-64 is the sole

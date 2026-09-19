@@ -59,7 +59,9 @@
                    "(#%datum . #t)" "(#%datum . #\\λ)")])
        (define result (run (string-append "#lang attalambda\n" text)))
        (check-equal? (car result) 65 text)
-       (check-equal? (cadr result) "")))
+       (check-equal? (cadr result) ""))
+     (define duplicate (run "#lang attalambda\n(def x = 1)\n(def x = 2)"))
+     (check-equal? (caddr duplicate) (format "AttaLambda: ~a:3:5: duplicate definition: x\n" source)))
 
    (test-case "ordinary explicit syntax has the same checking verdicts"
      (for ([row '(("(#%app add 1 2)" 0)
@@ -123,7 +125,7 @@
      (define err (open-output-string))
      (parameterize ([current-error-port err])
        (check-equal? (run-check (path->string (build-path directory "missing.attl"))) 66)
-       (check-equal? (run-check (path->string (build-path directory "service.env.attl"))) 66)))
+       (check-equal? (run-check (path->string (build-path directory ".env.attl"))) 66)))
 
    (test-case "owned resources close after internal failure while caller ports remain usable"
      (define owned #f)

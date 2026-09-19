@@ -1,12 +1,13 @@
 #lang racket/base
 
-;; Interactive presentation only. Native exception text and paths are never
-;; diagnostic input; callers supply the submitted entry or load path explicitly.
+;; Diagnostic presentation for the shell and file runs. Native exception text
+;; and paths are never diagnostic input; callers supply the entry or path.
 (require (only-in "source-file.rkt" source-problem source-problem? source-problem-reason
                   source-problem-line source-problem-column
                   syntax-failure-expression syntax-failure-reason))
 
-(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
+(provide failure->source-problem format-source-problem format-user-name diagnostic-fragment
+         call-with-render-diagnostics)
 
 (define (same-source? actual expected)
   (and expected

@@ -1,6 +1,7 @@
 #lang racket/base
 
 (require "source-file.rkt" racket/runtime-path
+         (only-in "diagnostics.rkt" diagnostic-fragment)
          (for-syntax racket/base
                      (only-in racket/path path-only)))
 
@@ -42,14 +43,16 @@
                  (bytes->string/utf-8 (cadr matched))))
 
 (define (stop status source reason [line #f] [column #f])
-  (cond
-    [(and source line column)
-     (eprintf "AttaLambda: ~s:~a:~a: ~a\n"
-              source line column reason)]
-    [source
-     (eprintf "AttaLambda: ~s: ~a\n" source reason)]
-    [else
-     (eprintf "AttaLambda: ~a\n" reason)])
+  (define text (diagnostic-fragment reason #f))
+  (with-handlers ([exn:fail? void])
+    (cond
+      [(and source line column)
+       (eprintf "AttaLambda: ~s:~a:~a: ~a\n"
+                source line column text)]
+      [source
+       (eprintf "AttaLambda: ~s: ~a\n" source text)]
+      [else
+       (eprintf "AttaLambda: ~a\n" text)]))
   (exit status))
 
 (define (validate-source source-name)
@@ -70,7 +73,13 @@
         (simplify-path (path->complete-path source-path) #f))))
 
 (define (run-source source-name)
+  (with-handlers ([exn:break? (lambda (_) (stop 130 source-name "interrupted"))])
+    (run-validated-source source-name)))
+
+(define (run-validated-source source-name)
   (define source-path (validate-source source-name))
+  (define complete-path (simplify-path (path->complete-path source-path)))
+  (define load/use-compiled (current-load/use-compiled))
   (with-handlers
       ([exn:fail:read?
         (lambda (failure)
@@ -86,10 +95,13 @@
         (lambda (failure)
           (define expression
             (syntax-failure-expression failure))
+          (define attributed
+            (source-syntax (exn:fail:syntax-exprs failure) complete-path))
           (stop invalid-source-status source-name
-                (syntax-failure-reason expression)
-                (and expression (syntax-line expression))
-                (and expression (syntax-column expression))))]
+                (syntax-failure-reason
+                 (and expression (equal? (syntax-source expression) complete-path) expression))
+                (and attributed (syntax-line attributed))
+                (and attributed (syntax-column attributed))))]
        [exn:fail:filesystem:missing-module?
         (lambda (failure)
           (if (requested-source-missing? failure source-path)
@@ -105,7 +117,14 @@
         (lambda (failure)
           (stop unexpected-failure-status source-name
                 "unexpected launcher failure; verify the AttaLambda installation"))])
-    (dynamic-require source-path #f)))
+    ;; The source file itself is always compiled from source, never from
+    ;; bytecode planted beside it.
+    (parameterize ([current-load/use-compiled
+                    (lambda (path name)
+                      (if (equal? path complete-path)
+                          ((current-load) path name)
+                          (load/use-compiled path name)))])
+      (dynamic-require source-path #f))))
 
 (define (main)
   (define arguments

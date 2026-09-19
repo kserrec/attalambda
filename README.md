@@ -191,7 +191,7 @@ AttaLambda does not sandbox programs. A program can use the same relevant
 standard-output, filesystem, and network permissions as the Racket or
 AttaLambda process that launched it, and can terminate its own process with
 status 0 or 1. Inspect unfamiliar `.attl` files before running them. In
-particular, `file-round-trip.attl` creates or truncates
+particular, `file-round-trip.attl` creates or replaces
 `attalambda-round-trip.txt` in its current directory.
 
 ## Project status

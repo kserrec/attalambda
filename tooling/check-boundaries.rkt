@@ -50,7 +50,7 @@
     read read-byte read-bytes read-line read-bytes-line write write-byte write-bytes
     display print printf eprintf flush-output
     open-input-file open-output-file call-with-input-file
-    call-with-output-file file->bytes file->string
+    call-with-output-file call-with-atomic-output-file file->bytes file->string
     directory-list make-directory make-directory* delete-directory
     delete-directory/files delete-file rename-file-or-directory copy-file
     tcp-connect tcp-listen tcp-accept tcp-close udp-open-socket
@@ -85,7 +85,7 @@
 (define forbidden-runner-capabilities
   '(current-environment-variables getenv putenv
     read read-char read-line read-string read-syntax
-    open-input-file open-output-file call-with-output-file
+    open-input-file open-output-file call-with-output-file call-with-atomic-output-file
     write write-byte write-bytes print printf
     file->bytes file->string
     directory-list make-directory make-directory* delete-directory
@@ -109,23 +109,26 @@
     invalid-source-status lambda length line location locations main matched missing-path
     newline not only-in pair? path->complete-path path-only path? product-version quote
     racket/base racket/path raise-syntax-error read-bytes reason regexp-match regexp-match?
-    requested-source-missing? require run-source simplify-path source source-name source-path
+    requested-source-missing? require run-source run-validated-source simplify-path source source-name source-path
     source-problem-column source-problem-kind source-problem-line source-problem-reason
     source-problem? srcloc-column srcloc-line status stop string-append stx syntax-column
     syntax-failure-expression syntax-failure-reason syntax-line syntax-source
     unavailable-source-status unexpected-failure-status unless up validate-source
     validated-source-path vector->list when with-handlers
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
-    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?))
+    racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?
+    diagnostic-fragment text void complete-path load/use-compiled current-load/use-compiled
+    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
+             (only-in "diagnostics.rkt" diagnostic-fragment)
              (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
     unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
-    requested-source-missing? run-source main))
+    requested-source-missing? run-source run-validated-source main))
 
 (define expected-runner-status-definitions
   '((define command-misuse-status 64)
@@ -178,7 +181,7 @@
 
 (define privileged-host-only-identifiers
   '(current-output-port flush-output
-    file->bytes call-with-output-file
+    file->bytes call-with-atomic-output-file
     read-bytes-avail! write-bytes write-bytes-avail
     tcp-addresses
     close-input-port close-output-port
@@ -233,7 +236,7 @@
     object-none object-some
     and argument argument-count arguments attempt-close backlog begin bound-port broken-pipe-code buffer
     bytes-length bytes->object-string bytes->string/utf-8 bytes=? cadr caddr
-    cadddr call-with-output-file car case cdr cleanup-new-connection
+    cadddr call-with-atomic-output-file car case cdr cleanup-new-connection
     cleanup-new-listener close-entry close-input-port close-output-port
     close-procedure code codec-failure-reason codec-failure? cond connection
     connection-entry connection-entry-input connection-entry-output
@@ -247,7 +250,8 @@
     exn:fail:contract? exn:fail:filesystem:errno-errno
     exn:fail:filesystem:errno? exn:fail:network:errno-errno
     exn:fail:network:errno? exn:fail? exn:fail:out-of-memory? expected? failure
-    file->bytes file-failure filesystem-failure-code first flush-output force
+    file->bytes file-exists? file-failure file-or-directory-permissions bits
+    filesystem-failure-code first flush-output force
     function gai handle handle-registry hash-ref hash-remove! hash-set! host
     host-failure host-list->object-list if input exact->object-rat
     invalid-codec-request invalid-handle-code invalid-path-code invalid-request
@@ -272,7 +276,7 @@
     string? struct subbytes tcp-accept tcp-accept-operation tcp-addresses
     tcp-close tcp-close-operation tcp-connect tcp-connect-operation tcp-listen
     tcp-listen-operation tcp-read-operation tcp-write-operation timed-out-code
-    truncate unknown-operation-reason value void when windows windows-numbers with-handlers
+    temporary unknown-operation-reason value void when windows windows-numbers with-handlers
     write-all-bytes write-bytes write-bytes-avail write-file-operation written
     wrong-arity wrong-arity-reason wrong-handle-kind-code wrong-type-reason zero?))
 
@@ -634,7 +638,7 @@
       arguments name names candidate bound bound-identifier=? free-identifier=? ormap
       list quote andmap eq? equals expression part apply
       define definitions parts collect cadr caddr graph definition forms
-      finished visit path when memq self? syntax-property attalambda-recursion
+      finished visit path when memq self? syntax-property attalambda-recursion attalambda-duplicate loop duplicate
       self cycle foldl dependency assq
       bytes->list car cdr char=? char? char->integer <= cond datum def define-for-syntax
       define-syntax digit elements else exact? denominator numerator
@@ -673,7 +677,13 @@
       make-write-file))))
 
 (define expected-language-reader-forms
-  '(attalambda/lang/expander))
+  '(attalambda/lang/expander
+    #:wrapper1 (lambda (read-body)
+                 (parameterize ([current-readtable #f]
+                                [read-accept-reader #f]
+                                [read-accept-lang #f]
+                                [read-accept-compiled #f])
+                   (read-body)))))
 
 (define product-version-projections
   '((#"0.2.0-dev\n" . "0.1.900")
@@ -1045,7 +1055,7 @@
     [(eq? base 'racket/promise) (eq? spec 'racket/promise)]
     [(eq? base 'racket/file)
      (and (only-in-spec? spec)
-          (equal? (only-in-identifiers spec) '(file->bytes)))]
+          (equal? (only-in-identifiers spec) '(file->bytes call-with-atomic-output-file)))]
     [(eq? base 'racket/tcp)
      (and (only-in-spec? spec)
           (equal? (only-in-identifiers spec)
@@ -1696,7 +1706,7 @@
     (define (reject kind reason) (raise (source-problem kind reason #f #f)))
     (define supplied-path (string->path source-name))
     (when (dotenv-path? supplied-path)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (unless (equal? (path-get-extension supplied-path) #".attl")
       (reject 'invalid "source file name must end in lowercase .attl"))
     (define complete-path (path->complete-path supplied-path))
@@ -1707,7 +1717,7 @@
     (unless resolved-parent
       (reject 'unavailable "source path could not be inspected"))
     (when (dotenv-path? resolved-parent)
-      (reject 'unavailable "refused source path because dotenv files are never read"))
+      (reject 'unavailable "refused source path because dotenv files are never loaded as source"))
     (define resolved-source (build-path resolved-parent name))
     (unless (or (file-exists? resolved-source) (directory-exists? resolved-source))
       (reject 'unavailable "source file was not found"))
@@ -1742,7 +1752,8 @@
     source-name source-preflight-result source-problem source-problem? split-path
     string->path string-downcase struct struct-copy struct-out supplied-path syntax-e
     syntax-failure-expression syntax-failure-reason syntax-property syntax? terminator
-    text unavailable unless validated-source value values when with-handlers))
+    text unavailable unless validated-source value values when with-handlers
+    source-syntax syntax-source origin attalambda-duplicate))
 
 (define (source-file-violations path info project-root)
   (define forms (module-info-forms info))
@@ -1756,12 +1767,13 @@
     'invalid-source-file-imports)
    (exact-provide-violations
     path info '(provide (struct-out validated-source) (struct-out source-problem)
-                         inspect-source-file syntax-failure-expression syntax-failure-reason)
+                         inspect-source-file syntax-failure-expression source-syntax syntax-failure-reason)
     'invalid-source-file-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(language-declaration dotenv-component? dotenv-path? resolve-parent-path
                       source-preflight-result regular-file? inspect-source-file
-                      syntax-failure-expression datum-failure-expression? syntax-failure-reason))
+                      syntax-failure-expression source-syntax datum-failure-expression?
+                      syntax-failure-reason))
             (equal? (filter (lambda (form) (and (pair? form) (eq? (car form) 'struct))) forms)
                     '((struct validated-source (path text line column position) #:transparent)
                       (struct source-problem (kind reason line column) #:transparent))))
@@ -1805,7 +1817,8 @@
                                  syntax-failure-expression syntax-failure-reason)))
     'invalid-diagnostics-imports)
    (exact-provide-violations
-    path info '(provide failure->source-problem format-source-problem format-user-name call-with-render-diagnostics)
+    path info '(provide failure->source-problem format-source-problem format-user-name diagnostic-fragment
+                        call-with-render-diagnostics)
     'invalid-diagnostics-exports)
    (if (and (equal? (filter-map top-level-binding-name forms)
                     '(same-source? failure->source-problem diagnostic-fragment format-user-name

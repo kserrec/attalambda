@@ -24,15 +24,6 @@
 (define (prepare-source source #:analysis? [analysis? #f])
   (unless (validated-source? source)
     (raise-argument-error 'prepare-source "validated-source?" source))
-  ;; Macro-generated blame can retain user provenance in origins or children.
-  ;; A trusted failure with none must escape to the command's safe internal error.
-  (define (source-syntax value)
-    (cond [(syntax? value)
-           (or (and (equal? (syntax-source value) (validated-source-path source)) value)
-               (source-syntax (syntax-property value 'origin))
-               (source-syntax (syntax-e value)))]
-          [(pair? value) (or (source-syntax (car value)) (source-syntax (cdr value)))]
-          [else #f]))
   (define parsed
     (parse-source-buffer (validated-source-path source)
                          (validated-source-text source)
@@ -63,8 +54,11 @@
               (with-handlers
                 ([exn:fail:syntax?
                   (lambda (failure)
+                    ;; A trusted failure with no user provenance must escape to
+                    ;; the command's safe internal error.
                     (define expression (syntax-failure-expression failure))
-                    (define attributed (source-syntax (exn:fail:syntax-exprs failure)))
+                    (define attributed
+                      (source-syntax (exn:fail:syntax-exprs failure) (validated-source-path source)))
                     (unless attributed (raise failure))
                     (source-problem
                      'invalid

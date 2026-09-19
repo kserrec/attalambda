@@ -493,6 +493,15 @@
              (collect (cdr remaining) bound))])))
   (define parts (map language-definition-parts definitions))
   (define names (map car parts))
+  (let loop ([remaining names])
+    (unless (null? remaining)
+      (let ([duplicate (language-bound-name (car remaining) (cdr remaining))])
+        (when duplicate
+          (raise-syntax-error
+           #f
+           "duplicate definition; each name is defined once per module"
+           (syntax-property duplicate 'attalambda-duplicate #t))))
+      (loop (cdr remaining))))
   ;; A new local binding supersedes the imported name throughout this module.
   ;; In particular, a previous x must not hide a new def x's self-reference.
   (define retained

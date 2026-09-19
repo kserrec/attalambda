@@ -1,3 +1,110 @@
+# Diagnostics and robustness fixes — active, branch `fix/diagnostics-robustness`
+
+Kyle assigned the 0.9.0 diagnostics/robustness/safety specification (kept
+outside the repository) on 2026-09-19: verify each reported issue on the
+current revision, fix only the real ones with the smallest change, escalate
+policy questions, no release. Work lands on `fix/diagnostics-robustness` off
+main `ea889e5`; merge, tag and release need Kyle. The callable-constraints
+patch below is a separate pending assignment.
+
+## Phase 1 — verify, fix, gate
+
+- [x] 1.1 Reproduce every item (Racket CS 9.3 in a disposable container over
+  this checkout). Real: A1 a `#reader` body extension ran host code and a
+  planted `compiled/<name>_attl.zo` replaced the source in file-run; A2 Ctrl+C
+  printed a stack trace with status 1; A3 a nested `def` reported an
+  expander-internal position; A4 control characters in a name reached stderr
+  raw; A5 a duplicate `def` reported "unknown AttaLambda name"; A7 a closed
+  stderr turned status 66 into 1; B2 a port could not be rebound right after
+  shutdown. Not reproducing, dropped: C1 (`let`-bound `NIL` at two element
+  types passed in twelve shapes: top level, inside `def` with and without
+  parameters, inside lambda, nested `let`, with `len`, `cons`, `list`, `add`)
+  and B3 (the inner fallback code applies only to contract exceptions).
+- [x] 1.2 Fix A1: `lang/reader.rkt` reads the module body with the same
+  locked reader as `--check` and `:load`; `run-source` compiles the source
+  file itself from source, never from a compiled file beside it. A2: a break
+  prints one line and exits 130. A3/A4: `run-source` shares the frontend's
+  provenance walk (`source-syntax`, now in `runner/source-file.rkt`) and the
+  diagnostics escaping. A5: the expander rejects a repeated definition at its
+  later occurrence in every entry path. A7: the message write cannot change
+  the exit status. Regression tests in `tests/runner-test.rkt` and
+  `tests/static-command-test.rkt`; boundary allowlists updated.
+- [x] 1.3 Full gate green on the final revision (104 test files, purity and
+  boundary checks); committed and pushed on the branch.
+- [x] 1.4 Kyle decided A6, B1 and B2 on 2026-09-19. A6: the dotenv refusal
+  now matches only components named `.env` or starting with `.env.`; a name
+  merely containing `env` runs like any other program, and the message says
+  such files are never loaded as source. B1: `write-file` is atomic through a
+  temporary file renamed over the target, so a failed write leaves the target
+  intact; an existing target keeps its mode bits; a symbolic link at the
+  target path is replaced by a regular file, a read-only target in a writable
+  directory is replaced, and a target in an unwritable directory is refused
+  (the former truncate-in-place contract is withdrawn). B2: `tcp-listen`
+  enables address reuse, so a port is bindable again right after shutdown.
+  Each has a regression test that fails on the old behavior.
+- [x] 1.5 Cold review by a fresh agent found the code correct for every item
+  and raised the B1 mode-bit widening, the A6 wording, a Ctrl+C window before
+  the break handler, and three stale comments; all fixed above.
+
+Deferred, Kyle decides (unchanged in code):
+
+- D1/D3: real. `typed-cons` forces its payload through
+  `(raw-is-type error-type)`, which applies an untagged lambda as if it were
+  an object: `(cons (lambda (x) (add x 1)) NIL)` makes `map` and `is-nil`
+  return ERROR(EMPTY-LIST) and the run hangs; `(map (add 1 "a") (cons 1 NIL))`
+  exhausts memory. No contained fix exists without a function tag in
+  `core/objects.rkt`, a representation change.
+- D2: an Error element makes the whole `cons` an Error, so `len`/`is-nil`
+  return that Error. This is the documented `cons` contract ("An Error value
+  propagates") and a language-design decision.
+
+---
+
+# Callable constraints through unknown arguments — active source patch
+
+Kyle assigned the [verification-first patch specification](docs/static-checking-callable-constraints-patch-spec.md)
+on 2026-09-18. This is one diagnostic-correctness phase on `main`, with the
+repository's verified commit/push workflow. No version bump, release, tag or
+asset replacement is authorized. Historical plans below remain historical.
+
+Baseline: clean local and remote main
+`135263fe0774cf1233fe7e7e36e9e034fe94ec2f`, exactly the inspected revision.
+Evidence: `/tmp/attalambda-callable-patch-lgub6lwo/`. An owned source snapshot
+and disposable `attalambda-callable-patch` container isolate the checks.
+The retained image has Racket CS 9.3, Python 3 and Git; its corrections needed
+applying in this new container. Read-only preparation checks now verify the
+pinned promise/Expeditor sources and loaded behavior. Non-root compilation
+uses an owned `/tmp/attalambda-compiled` cache rather than installation writes.
+
+Expected change boundary: modify `runner/static/inference.rkt`, the existing
+incomplete-callable and CLI tests, PLAN.md and HANDOFF.md; create the linked
+verbatim patch specification. Runtime behavior, source syntax, library
+contracts, public API, dependencies, structural gates and versions remain
+behaviorally unchanged. Any neighboring executable change needs reproduction
+evidence showing it is necessary for this same defect.
+
+## Phase 1 — verified diagnostic-correctness patch
+
+- [ ] 1.1 Verify the isolated toolchain, five focused baseline modules and all
+  five public example reports through `--check` only.
+- [ ] 1.2 Record C01/C02 stdout, stderr, status and backend proof state; decide
+  confirmed, already fixed, disproved or blocked before changing production.
+- [ ] 1.3 Retain direct regressions, observe the intended baseline failure and
+  minimally repair only a confirmed missing callable-shape constraint.
+- [ ] 1.4 Pin C03–C06, N01–N05, P01/P02, independent good-definition evidence,
+  real CLI reporting/non-execution and absent speculative signatures; run all
+  static tests with refreshed dependencies.
+- [ ] 1.5 Obtain a fresh read-only focused review of the diff and evidence;
+  reproduce and resolve findings, and record its scope and limitations.
+- [ ] 1.6 Run final diff checks and the complete suite including both structural
+  gates; compare the five example reports, verify exact input identities,
+  update records, commit/push the phase, observe actual-head CI and clean up
+  owned scratch resources. Record Git/CI identity outside the checkout.
+
+Next: complete 1.1. No hypothesis has yet been confirmed by execution.
+
+---
+
 # Trim boilerplate from the `--check` report — completed
 
 Kyle asked on 2026-09-18 for a deletion-only change: the `--check` report no

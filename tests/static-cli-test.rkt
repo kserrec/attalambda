@@ -64,7 +64,7 @@
      (write-source unreadable "#lang attalambda\n1")
      (file-or-directory-permissions unreadable #o000)
      ;; Dotenv spellings are only passed to preflight; no such file is created.
-     (for ([path (list (path->string link) (path->string unreadable) "missing.attl" "service.env.attl" ".ENV.local/source.attl")])
+     (for ([path (list (path->string link) (path->string unreadable) "missing.attl" ".env.attl" ".ENV.local/source.attl")])
        (define result (run (list "--check" path)))
        (verify result 66)
        (check-equal? (command-result-stdout result) #"")))

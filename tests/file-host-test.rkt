@@ -104,14 +104,15 @@
    (lambda (who host-name port mode)
      (void))))
 
-(define no-delete-guard
+(define (deny-guard operation denied-path)
   (make-security-guard
    (current-security-guard)
    (lambda (who path permissions)
-     (when (memq 'delete permissions)
+     (when (and (eq? who operation)
+                (equal? (path->complete-path path) denied-path))
        (raise
         (make-exn:fail:filesystem:errno
-         "delete authority denied"
+         "synthetic filesystem failure"
          (current-continuation-marks)
          (cons 13 'posix)))))
    (lambda (who host-name port mode)
@@ -152,7 +153,7 @@
     (check-ok-unit pending-write)
     (check-equal? (file->bytes content-path) #"outside-change")
 
-    ;; A fresh write truncates an existing longer file. Reads return complete,
+    ;; A fresh write replaces an existing longer file. Reads return complete,
     ;; byte-exact object Strings without a reader or text normalization.
     (define replacement #"short\0\377")
     (check-ok-unit
@@ -179,23 +180,51 @@
                    (build-path temporary-root relative-name))
                   #"")
 
-    ;; Truncation follows a symlink and needs write authority only. In
-    ;; particular, write-file must never fall back to deleting the symlink and
-    ;; creating a different regular file at its path.
+    ;; A write is atomic: the bytes land in a temporary file beside the
+    ;; target that is renamed over it, so the target is never opened for
+    ;; truncation, an existing target keeps its mode bits, and a failed write
+    ;; leaves it intact with nothing left over.
+    (parameterize ([current-security-guard
+                    (deny-guard 'open-output-file content-path)])
+      (check-ok-unit
+       (apply2 write-file-with-host
+               content-path-value
+               (bytes->object-byte-list #"atomic"))))
+    (check-equal? (file->bytes content-path) #"atomic")
+    (file-or-directory-permissions content-path #o600)
+    (check-ok-unit
+     (apply2 write-file-with-host
+             content-path-value
+             (bytes->object-byte-list #"private")))
+    (check-equal? (file->bytes content-path) #"private")
+    (check-equal? (file-or-directory-permissions content-path 'bits) #o600)
+    (define entries-before (directory-list temporary-root))
+    (parameterize ([current-security-guard
+                    (deny-guard 'rename-file-or-directory content-path)])
+      (check-host-failure
+       (apply2 write-file-with-host
+               content-path-value
+               (bytes->object-byte-list #"lost"))
+       #"write-file"
+       #"permission-denied"))
+    (check-equal? (file->bytes content-path) #"private")
+    (check-equal? (directory-list temporary-root) entries-before)
+
+    ;; The rename replaces a symbolic link at the target path with a regular
+    ;; file; the link's former target is untouched.
     (define symlink-target
       (build-path temporary-root "symlink-target.bin"))
     (define symlink-path
       (build-path temporary-root "symlink.bin"))
     (write-host-bytes symlink-target #"target-before")
     (make-file-or-directory-link symlink-target symlink-path)
-    (parameterize ([current-security-guard no-delete-guard])
-      (check-ok-unit
-       (apply2 write-file-with-host
-               (path->object-string symlink-path)
-               (bytes->object-byte-list #"target-after"))))
-    (check-true (link-exists? symlink-path))
-    (check-equal? (file->bytes symlink-target) #"target-after")
+    (check-ok-unit
+     (apply2 write-file-with-host
+             (path->object-string symlink-path)
+             (bytes->object-byte-list #"target-after")))
+    (check-false (link-exists? symlink-path))
     (check-equal? (file->bytes symlink-path) #"target-after")
+    (check-equal? (file->bytes symlink-target) #"target-before")
 
     ;; Missing paths and invalid path encodings are expected host failures.
     (check-host-failure
