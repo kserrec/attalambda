@@ -1,6 +1,6 @@
 # Optional static checking: audited built-in contracts
 
-This inventory describes the static checker released in 0.9.0. The single implementation is [`runner/static/contracts.rkt`](../runner/static/contracts.rkt). All 130 actual public value bindings are classified: 107 complete and 23 partial; none remains pending. Syntax and private scaffolding are excluded. The export test reads the real facade and checks its resolved bindings against this inventory. Every analysis validates the catalog before inference.
+This inventory describes the static checker released in 0.9.0 and extended in 0.10.0. The single implementation is [`runner/static/contracts.rkt`](../runner/static/contracts.rkt). All 130 actual public value bindings are classified: 107 complete and 23 partial; none remains pending. Syntax and private scaffolding are excluded. The export test reads the real facade and checks its resolved bindings against this inventory. Every analysis validates the catalog before inference.
 
 Complete contracts are trusted, audited input preconditions and normal result shapes; the checker does not re-infer library implementations or prove termination, resource availability, or external success. Existing runtime checks and algorithms are unchanged. `Result(a)` contains Ok of `a` or Err of Error; Error is not an unconstrained second parameter.
 

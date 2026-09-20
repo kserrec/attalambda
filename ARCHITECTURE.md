@@ -134,8 +134,8 @@ codec, or host algorithm is inferred or changed. The library, recursive lowering
 and host/codec contracts remain an explicit trusted basis. See the
 [checking reference](docs/API.md#optional-static-checking),
 [contract audit](docs/static-checking-contracts.md), and
-[measured corpus](docs/static-checking-corpus.md). This feature is released in
-0.9.0.
+[measured corpus](docs/static-checking-corpus.md). Checking is released in
+0.9.0; `list-case` and type-system selection are released in 0.10.0.
 
 ## Pure value rendering and printing
 

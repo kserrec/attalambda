@@ -19,31 +19,34 @@ This is a complete AttaLambda program:
 
 ## Try it on Linux
 
-AttaLambda 0.9.0 is available as a self-contained Linux x86-64 archive. It
+AttaLambda 0.10.0 is available as a self-contained Linux x86-64 archive. It
 includes its own runtime, so you do not need to install Racket.
 
-Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.9.0>
+Release page: <https://github.com/kserrec/attalambda/releases/tag/v0.10.0>
 
-Version 0.9.0 adds optional `--check FILE.attl` static checking without running
-the program. It reports full passes, definite conflicts and partial results,
-with exact coverage and inferred signatures. The `atta>` shell, runtime line
+Version 0.10.0 adds the `list-case` List eliminator and a selectable static
+type system (`--check=hm`, the default, and `--check=simple`), and fixes
+file-run diagnostics, interrupt handling, source loading, `write-file`
+atomicity, the dotenv refusal and TCP port reuse. Optional `--check FILE.attl`
+static checking (0.9.0) reports full passes, definite conflicts and partial
+results, with exact coverage and inferred signatures. The `atta>` shell, runtime line
 input, Lisp syntax, pure value rendering and `print`, exact rational
 arithmetic, the complete List API, and the pure `rec` rules remain available.
 The [public API reference](docs/API.md) describes the complete surface, and
 the [acceptance record](docs/ACCEPTANCE.md) records source and published-archive
 verification.
 
-See the [0.9.0 release notes](docs/releases/0.9.0.md) for the new features
+See the [0.10.0 release notes](docs/releases/0.10.0.md) for the new features
 and compatibility.
 
 Download, verify, extract, and run it:
 
 ```sh
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.9.0/attalambda-0.9.0-linux-x86_64.tar.gz
-curl -LO https://github.com/kserrec/attalambda/releases/download/v0.9.0/SHA256SUMS
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.10.0/attalambda-0.10.0-linux-x86_64.tar.gz
+curl -LO https://github.com/kserrec/attalambda/releases/download/v0.10.0/SHA256SUMS
 sha256sum -c SHA256SUMS
-tar -xzf attalambda-0.9.0-linux-x86_64.tar.gz
-cd attalambda-0.9.0-linux-x86_64
+tar -xzf attalambda-0.10.0-linux-x86_64.tar.gz
+cd attalambda-0.10.0-linux-x86_64
 ./bin/attalambda --version
 ./bin/attalambda examples/hello.attl
 ```
@@ -51,7 +54,7 @@ cd attalambda-0.9.0-linux-x86_64
 You should see:
 
 ```text
-AttaLambda 0.9.0
+AttaLambda 0.10.0
 Hello from AttaLambda.
 ```
 
@@ -79,8 +82,8 @@ definition and expression coverage and inferred signatures. Checking needs no
 annotations and performs no program input, output, file, network, or exit effect.
 Ordinary execution and runtime type checks remain available unchanged.
 
-Version 0.10.0 (unreleased until its GitHub release exists) adds `list-case` and
-`--check=SYSTEM FILE.attl`, which selects the type system: `--check=hm` is the default above, and `--check=simple` checks
+Version 0.10.0 adds `list-case` and `--check=SYSTEM FILE.attl`, which selects
+the type system: `--check=hm` is the default above, and `--check=simple` checks
 the same file with monomorphic definitions over the same polymorphic built-ins,
 so a file can pass under one system and fail under the other. The report names
 the system on its `System:` line; see [docs/API.md](docs/API.md#type-systems).
@@ -92,7 +95,7 @@ partial. A full pass relies on audited built-in contracts. See the [checking ref
 [audited contracts](docs/static-checking-contracts.md), and
 [measured results for all five examples](docs/static-checking-corpus.md).
 Exact build and public-download evidence is recorded in the
-[0.9.0 release notes](docs/releases/0.9.0.md) and [HANDOFF.md](HANDOFF.md).
+[0.10.0 release notes](docs/releases/0.10.0.md) and [HANDOFF.md](HANDOFF.md).
 
 ## Run it from source
 
@@ -202,9 +205,10 @@ particular, `file-round-trip.attl` creates or replaces
 
 ## Project status
 
-Version 0.9.0 is the eighth public release. It adds optional static checking
-while preserving ordinary execution, the interactive shell and pure lambda
-calculus.
+Version 0.10.0 is the ninth public release. It adds the `list-case` eliminator
+and a selectable static type system, and fixes file-run robustness, while
+preserving ordinary execution, the interactive shell and pure lambda calculus.
+Version 0.9.0 added optional static checking.
 It includes pure value renderers and generic `print` through the stdout boundary. See
 [Value Rendering and Printing](docs/API.md#value-rendering-and-printing).
 The purity rule against recursive module bindings continues to apply. Rat

@@ -48,7 +48,7 @@ checks do not infer or formally verify library/runtime implementations. Ordinary
 execution remains available for partial files. No claim of termination or
 successful external operations follows from a complete type.
 
-## Measured under `--check=simple` (0.10.0 candidate, unreleased)
+## Measured under `--check=simple` (0.10.0)
 
 Measured from local source `023a110` (branch `milestone-10-comparable-checkers`)
 with corrected Racket CS 9.3 in the isolated container, over the same five

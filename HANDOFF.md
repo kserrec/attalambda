@@ -1,67 +1,50 @@
-# Release 0.10.0 candidate — branch `release-0.10.0`, awaiting Kyle
+# AttaLambda 0.10.0 — published; public download verified
 
-Candidate revision: the head of `release-0.10.0` (see `git log -1`), branched
-from `main` `4eddf4a` after PR #11 merged the `list-case` / selectable-checker
-milestone. Contents beyond 0.9.0: the `--check` report trim (PR #9), the
-file-run diagnostics and robustness fixes (PR #10), the callable-constraints
-checker patch (`9069d11`), `list-case` and `--check=hm` / `--check=simple`
-(PR #11), the cold-review fixes, and the version bump to 0.10.0 with draft
-notes in `docs/releases/0.10.0.md`.
+[Release 0.10.0](https://github.com/kserrec/attalambda/releases/tag/v0.10.0) is
+published and latest, at `2026-09-20T17:57:32Z`, release ID `392521750`. Kyle
+approved the whole sequence on 2026-09-20 (cold review, fixes, archive,
+version bump, merge, tag, publication). PR #11 (features) and PR #12 (release
+candidate) are merged. Linux x86-64 remains the only public binary target.
+This release grants no authority for a later version.
 
-What is done and verified (all in a disposable Racket CS 9.3 container as uid
-1000 over this checkout, host Racket 8.10 unused):
+## Source and verification
 
-- Cold review of PR #11 by a fresh agent: no must-fix; the two should-fix
-  items and two notes are fixed on this branch (PLAN.md records them).
-- Candidate archive built from a clean clone of `main` `4eddf4a` and the
-  isolated Ubuntu consumer test passed on the host; this validated the changed
-  build and consumer scripts (help text, `--check` acceptance).
-- Complete suite and both gates on the branch's final source: all 106 test
-  files, purity check (40 production files) and boundary check passed,
-  wall time 1592 s. The commit that records this changes documents only.
+Build/tag commit `a370b482c82ab4111d0726a20ec840c2fb2c2e08` (merge of PR #12),
+tree `7e01678c84b1f3bef2a222b553eb4e29f9a9ffc6`. Annotated tag `v0.10.0` has object `cff370bb9a224588865d27d22e47629d875a354b`. Merged-head CI run
+35526479283 passed. The later publication record changes documents only.
 
-What awaits Kyle, in order:
+Contents beyond 0.9.0: the `--check` report trim (PR #9), file-run
+diagnostics and robustness fixes (PR #10), the callable-constraints checker
+patch (`9069d11`), `list-case` and `--check=hm` / `--check=simple` (PR #11),
+the cold-review fixes and version bump (PR #12). `docs/releases/0.10.0.md`
+describes them.
 
-1. Merge `release-0.10.0` to `main` (PR opened from this branch).
-2. Build the release archive from the merged `main` commit in a clean clone:
-   `tooling/build-linux-distribution.sh OUTPUT_DIR` inside the container, then
-   `tooling/test-linux-distribution.sh OUTPUT_DIR` on the host.
-3. Tag `v0.10.0` on that commit, upload the archive and `SHA256SUMS`, publish
-   the GitHub release, then replace the pending paragraph in
-   `docs/releases/0.10.0.md` and the README release line with the real URL and
-   timestamp, and verify the public download with the consumer test.
+Evidence, all in a disposable Racket CS 9.3 container as uid 1000 unless
+noted: cold review of PR #11 by a fresh agent, no must-fix; complete suite on
+the release branch's final source, 106 test files / 27097 reported tests, 49
+Python terminal methods, purity (40 modules) and boundary gates, 1592 s;
+release archive built from a clean clone of `a370b48`
+(`attalambda-0.10.0-linux-x86_64.tar.gz`, SHA-256
+`00489a12b9ac974d09a38b5674bc7dd9b426f24d5165bdca1b9357012f742260`,
+19,896,130 bytes; `SHA256SUMS` SHA-256
+`9da043050ab0dae470d771b0cf16e746ad2f2e8433f015c434a751b1e7a93c04`, 104
+bytes); host consumer test on that archive passed (25 terminal methods at both
+paths, 62.161 s and 62.041 s); fresh unauthenticated downloads of both assets
+returned HTTP 200 with matching hashes and the downloaded archive passed the
+same consumer (61.668 s and 62.203 s). Note for the next release: the consumer
+script requires the archive at mode 0644; a file fetched under umask 002 must
+be `chmod 644` first.
 
-To reproduce the checks: `docker run -d --name attl -v "$PWD":/work -w /work
+To reproduce: `docker run -d --name attl -v "$PWD":/work -w /work
 racket/racket:9.3-full sleep infinity`; as root in it
 `racket tooling/prepare-racket-runtime.rkt --apply && chown -R 1000:1000
 /usr/share/racket && apt-get update -qq && apt-get install -y -qq python3 git`;
 then as `-u 1000:1000 -e HOME=/tmp/h`: `raco pkg install --batch --scope user
---link --name attalambda --deps fail --no-docs --fail-fast /work` and
-`./run-all-tests.sh` (about 30 minutes).
-
-# Static checker patch — callable constraints through unknown arguments
-
-Applied on `main` on 2026-09-19 after the diagnostics/robustness merge (PR #10).
-The 0.9.0 release below is unchanged: no version bump, tag, or binary. The
-published 0.9.0 checker still has this gap.
-
-Confirmed before the change: `(def bad f = (add (f (unwrap-ok (make-ok 1))) f))`
-reported PARTIAL with status 2 and no conflict, while the same two uses in the
-other order reported FAIL with status 1. The application branch for an operator
-whose type is an established type variable required an established argument
-type, so an unproved argument left the operator unconstrained. The branch now
-requires the operator to be an arrow whose domain is the argument type when
-known and a fresh variable otherwise. The application's own result stays
-unproved through the joined proof, so no unknown return type, no `unwrap-ok`
-payload, and no definition signature is established by this rule. A
-data-restricted operator meeting the arrow remains an unsupported-domain gap.
-Limits: diagnostics are still not order-independent in general; a failed
-equation is rolled back rather than recorded, exactly as before.
-
-Regressions: `tests/static-incomplete-callables-test.rkt` (C01–C06 conflicts,
-N01–N05 gaps) and `tests/static-cli-test.rkt` (real `--check` runs, the
-`CHECK-MUST-NOT-RUN` marker, a good sibling keeping its signature). The five
-public example reports are byte-identical before and after.
+--link --name attalambda --deps fail --no-docs --fail-fast /work`,
+`./run-all-tests.sh`, and for the archive a clean `git clone /work /tmp/h/clone`
+then `tooling/build-linux-distribution.sh /tmp/h/out` inside the clone;
+`docker cp` the output to the host and run `tooling/test-linux-distribution.sh`
+on it there.
 
 # AttaLambda 0.9.0 — published; public download verified
 

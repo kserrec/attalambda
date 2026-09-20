@@ -1,9 +1,10 @@
-# Release 0.10.0 — candidate on branch `release-0.10.0` (active)
+# Release 0.10.0 — published 2026-09-20 (historical)
 
-Kyle approved on 2026-09-20: cold review of PR #11, fixes, archive build and
-consumer test, then version bump and release notes as a reviewed branch. Not yet
-authorized: merging this branch, the `v0.10.0` tag, asset upload, and the
-GitHub release; each awaits his explicit go.
+Kyle approved on 2026-09-20 the cold review of PR #11, fixes, archive build and
+consumer test, version bump and notes, then merge, tag, and publication. PR #12
+merged as `a370b48`; annotated tag `v0.10.0`; release published at
+`2026-09-20T17:57:32Z` and its public download verified (HANDOFF.md records the
+evidence). Completed releases grant no authority for another release.
 
 - [x] Cold review of PR #11 (`git diff 9069d11..f6fc441`) by a fresh agent in
   the Racket CS 9.3 container: no must-fix. Two should-fix, both addressed here:
@@ -29,8 +30,10 @@ GitHub release; each awaits his explicit go.
   literals, the ledger row, the getting-started template, README.
 - [x] `docs/releases/0.10.0.md` drafted with a pending publication paragraph.
 - [x] `./run-all-tests.sh` on the branch's final source: all 106 test files,
-  purity and boundary checks passed, 1592 s. HANDOFF.md names the candidate
-  and the steps that await Kyle. PR opened from `release-0.10.0`.
+  purity and boundary checks passed, 1592 s. PR #12 merged after green CI.
+- [x] Release archive built from a clean clone of the merged commit and
+  consumer-tested; tag pushed; release created with both assets; fresh public
+  download verified with the same consumer; publication record committed.
 
 ---
 

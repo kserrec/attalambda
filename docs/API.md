@@ -1,7 +1,7 @@
 # Public API
 
-This reference describes the released 0.9.0 API, optional static checker and
-interactive shell, including `read-line`. The full source suite and fresh public
+This reference describes the released 0.10.0 API, optional static checker with
+its two selectable type systems, and interactive shell, including `read-line`. The full source suite and fresh public
 Linux download pass their tests; [the handoff](../HANDOFF.md) records delivery
 evidence. The older 0.8.0 binary lacks static checking; the older 0.7.0 binary
 includes neither shell nor line input.
@@ -32,7 +32,7 @@ The shell's optional automatic echo observes expression values.
 
 ## Optional static checking
 
-From the extracted 0.9.0 archive:
+From the extracted 0.10.0 archive:
 
 ```sh
 ./bin/attalambda --check examples/hello.attl
