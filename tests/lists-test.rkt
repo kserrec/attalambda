@@ -9,6 +9,7 @@
          "../core/tags.rkt"
          "../macros/macros.rkt"
          "../readers/bool.rkt"
+         "../readers/error.rkt"
          "../readers/list.rkt"
          "../readers/raw-boolean.rkt"
          "../readers/type-tag.rkt"
@@ -290,3 +291,55 @@
 (check-true
  (list-value?
   (lazy-apply typed-tail peekable-list)))
+
+;; LIST-CASE selects lazily: NIL takes the default, a populated List applies
+;; the curried callback to head then tail, and the unselected branch is
+;; never forced.
+(check-true
+ (read-bool-object
+  (apply3 typed-list-case
+          sample
+          (lambda (head) (lambda (tail) head))
+          (delay (error 'list-case "forced unselected nil branch")))))
+(check-equal?
+ (list->host-list
+  (apply3 typed-list-case
+          sample
+          (lambda (head) (lambda (tail) tail))
+          (delay (error 'list-case "forced unselected nil branch")))
+  read-bool-object)
+ '(#f #f))
+(check-true
+ (read-bool-object
+  (apply3 typed-list-case
+          NIL
+          (delay (error 'list-case "forced unselected cons branch"))
+          true-object)))
+(check-false
+ (read-bool-object
+  (apply3 typed-list-case
+          NIL
+          (lambda (head) (lambda (tail) head))
+          false-object)))
+
+;; A non-List argument is an ordinary strict mismatch; an incoming Error
+;; bubbles with its kind preserved and the LIST-CASE frame.
+(check-equal?
+ (error-value->string
+  (apply3 typed-list-case true-object (lambda (head) (lambda (tail) head)) false-object))
+ "list-case(arg1 expected LIST got BOOL)")
+(define bubbled-case
+  (apply3 typed-list-case incoming-error (lambda (head) (lambda (tail) head)) false-object))
+(check-true (error-value? bubbled-case))
+(check-true (error-kind=? bubbled-case invalid-nat-kind))
+(check-equal?
+ (error-value->string bubbled-case)
+ "INVALID-NAT\n  -> list-case(arg1 expected LIST)")
+
+;; LIST-CASE remains a chain of unary lambdas at every stage.
+(check-equal? (procedure-arity (lazy-force typed-list-case)) 1)
+(check-equal? (procedure-arity (lazy-force (lazy-apply typed-list-case sample))) 1)
+(check-equal?
+ (procedure-arity
+  (lazy-force (apply2 typed-list-case sample (lambda (head) (lambda (tail) head)))))
+ 1)

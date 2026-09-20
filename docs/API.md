@@ -210,6 +210,7 @@ and `function` denote parameters, not an Any or Function runtime type.
 | `head list` | First value; Error on NIL. |
 | `tail list` | Remaining List; Error on NIL. |
 | `is-nil list` | Bool indicating emptiness. |
+| `list-case list cons-function nil-value` | Strict on the List, lazy on both branches. NIL selects nil-value without applying the function; `(cons h t)` returns `((cons-function h) t)` without evaluating nil-value. The callback's result is returned untouched. A non-List argument produces `ERROR(list-case(arg1 expected LIST got <TAG>))`; an Error argument propagates. |
 | `len list` | Length as a whole Rat. |
 | `take count list`, `drop count list` | Keep or omit the first count elements; require a nonnegative whole Rat. Counts beyond length exhaust the input. |
 | `nth index list` | Some element at the zero-based index, otherwise NONE. Require a nonnegative whole Rat; negative or fractional indices produce InvalidCount. |

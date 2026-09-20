@@ -45,7 +45,8 @@
                   [typed-cons language-cons]
                   [typed-head HEAD]
                   [typed-tail TAIL]
-                  [typed-is-nil IS-NIL])
+                  [typed-is-nil IS-NIL]
+                  [typed-list-case LIST-CASE])
          (only-in "../core/logic.rkt"
                   raw-false
                   raw-true)
@@ -171,6 +172,7 @@
                      [HEAD head]
                      [TAIL tail]
                      [IS-NIL is-nil]
+                     [LIST-CASE list-case]
                      [LEN len]
                      [TAKE take]
                      [DROP drop]
@@ -282,6 +284,7 @@
   (cons #'HEAD "head")
   (cons #'TAIL "tail")
   (cons #'IS-NIL "is-nil")
+  (cons #'LIST-CASE "list-case")
   (cons #'LEN "len")
   (cons #'TAKE "take")
   (cons #'DROP "drop")

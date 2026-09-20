@@ -167,6 +167,8 @@
            '("tests/option-test.rkt") '(0) '(0))
     (entry "option-case" (list (option-type a) (arrow-type a b) b) b
            '(("core/option.rkt" typed-option-case)) '("tests/option-test.rkt") '(0 1) '(0))
+    (entry "list-case" (list (list-type a) (arrow-type a (arrow-type (list-type a) b)) b) b
+           '(("core/lists.rkt" typed-list-case)) '("tests/lists-test.rkt") '(0 1) '(0))
     (entry "make-ok" (list a) (result-type a) '(("core/result.rkt" typed-make-ok))
            '("tests/result-test.rkt") '(0) '(0))
     (entry "make-err" (list error-type) (result-type a) '(("core/result.rkt" typed-make-err))

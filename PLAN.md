@@ -33,18 +33,35 @@ Checkpoint 0: commit `Authorize list-case and selectable static checkers`, push.
 
 ## Phase 1 — `list-case` at runtime
 
-- [ ] 1.1 `list-case-function-name`; `typed-list-case` in `core/lists.rkt`
-  mirroring `typed-option-case`; purity gate passes.
-- [ ] 1.2 `tests/lists-test.rkt`: NIL default; curried callback on head and
-  tail; unselected branch never forced; Error bubbles with kind; non-List text
-  `list-case(arg1 expected LIST got BOOL)`; unary chain.
-- [ ] 1.3 Expander import `[typed-list-case LIST-CASE]`, public rename
-  `list-case`, catalog label; E5 prints `1`, `0`, and the LIST/RAT error line.
-- [ ] 1.4 Catalog row `forall a:data b. List(a) -> (a -> List(a) -> b) -> b -> b`;
-  boundary vocabulary; `tests/static-contracts-test.rkt` passes.
-- [ ] 1.5 `docs/API.md` Bool and List row.
+- [x] 1.1 `list-case-function-name` provided from `core/function-names.rkt`;
+  `typed-list-case` in `core/lists.rkt` mirrors `typed-option-case` using
+  `raw-list-is-nil`/`raw-list-head`/`raw-list-tail` on the List object.
+  `racket tooling/check-purity.rkt`: 40 production files pass.
+- [x] 1.2 `tests/lists-test.rkt` (68 tests pass): NIL default; curried
+  callback receives head then tail; unselected branch under `delay` never
+  forced; Error bubbles with kind and frame text; non-List text
+  `list-case(arg1 expected LIST got BOOL)`; arity 1 at three stages.
+  Mutation spot-check: the spec's `typed-head` swap hangs rather than fails
+  (an Error object applied to two more arguments is not an absorbing lambda),
+  so the two Error-text assertions were checked against `typed-option-case`
+  instead: both fail with the option-case frame text, then restored.
+- [x] 1.3 Expander import `[typed-list-case LIST-CASE]`, public rename
+  `list-case`, catalog label `"list-case"`. The boundary gate reported the
+  expander import/export lists and three identifiers; `check-boundaries.rkt`
+  allowlists extended by exactly those. E5 via `racket runner/attalambda.rkt`
+  in a scratch directory printed `1`, `0`,
+  `ERROR(list-case(arg1 expected LIST got RAT))`, exit 0.
+- [x] 1.4 Catalog row beside `option-case` (variables `(0 1)`, restricted
+  `(0)`, arity 3, locators `core/lists.rkt typed-list-case` and
+  `tests/lists-test.rkt`); `typed-list-case` added to the `static-contracts`
+  vocabulary. `tests/static-contracts-test.rkt` and `tests/language-test.rkt`:
+  196 tests pass; both gates pass.
+- [x] 1.5 `docs/API.md` Bool and List row matches the E5 behavior.
 
-Checkpoint 1: lists, language, all static tests and gates; commit `Add list-case eliminator`, push.
+Checkpoint 1: all `tests/static-*-test.rkt`, `tests/lists-test.rkt`,
+`tests/language-test.rkt` and both gates pass (the one expectation changed is
+`tests/static-boundary-contracts-test.rkt`'s catalog length, 129 → 130, which
+the specification sets). Committed `Add list-case eliminator`, pushed.
 
 ## Phase 2 — `list-case` static behavior
 

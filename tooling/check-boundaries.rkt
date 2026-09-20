@@ -381,7 +381,8 @@
               (typed-cons language-cons)
               (typed-head HEAD)
               (typed-tail TAIL)
-              (typed-is-nil IS-NIL))
+              (typed-is-nil IS-NIL)
+              (typed-list-case LIST-CASE))
      (only-in "../core/logic.rkt" raw-false raw-true)
      (only-in "../core/objects.rkt" raw-make-object)
      (only-in "../core/map.rkt"
@@ -472,6 +473,7 @@
      (HEAD head)
      (TAIL tail)
      (IS-NIL is-nil)
+     (LIST-CASE list-case)
      (LEN len)
      (TAKE take)
      (DROP drop)
@@ -595,7 +597,7 @@
   (remove-duplicates
    (append
     language-direct-public-bindings
-    '(HEAD TAIL IS-NIL LEN TAKE DROP
+    '(HEAD TAIL IS-NIL LIST-CASE LEN TAKE DROP
       NOT AND OR XOR SUCC ADD
       SUB MULT DIV EQ LT LTE
       GT GTE IS-ZERO MAKE-CHAR CHAR-EQ CHAR-LT
@@ -606,7 +608,7 @@
       BYTE-GT BYTE-GTE STRING-TO-BYTES BYTES-TO-STRING SOME IS-SOME
       IS-NONE OPTION-CASE MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
       MAP-CONTAINS? MAP-SET MAP-REMOVE
-      head tail is-nil len take drop nth typed-nth-rat
+      head tail is-nil list-case len take drop nth typed-nth-rat
       take-while drop-while typed-take-while typed-drop-while
       append reverse map filter typed-append typed-reverse typed-map typed-filter
       reduce typed-reduce
@@ -664,7 +666,7 @@
       raw-true remaining rename-out require
       second string->bytes/utf-8 string->list string? stx syntax
       syntax->list syntax-case syntax-e typed-cons typed-drop-rat
-      typed-head typed-if typed-is-nil typed-len-rat typed-rat-abs
+      typed-head typed-if typed-is-nil typed-list-case typed-len-rat typed-rat-abs
       typed-rat-add typed-rat-div typed-rat-equal typed-rat-exp
       typed-rat-floor typed-rat-greater typed-rat-greater-equal
       typed-rat-is-nonnegative-whole typed-rat-is-whole typed-rat-is-zero

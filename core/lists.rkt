@@ -22,6 +22,7 @@
          typed-head
          typed-tail
          typed-is-nil
+         typed-list-case
          raw-fold
          raw-append
          raw-reverse
@@ -106,6 +107,32 @@
      is-nil-function-name)
     list-unary-signature)
    (raw-wrap-return bool-type)))
+
+;; LIST-CASE list cons-function nil-value: strict on the List, lazy on
+;; both branches. A populated List applies the curried callback to the
+;; head and then the tail; NIL selects the caller-supplied value.
+(def typed-list-case list cons-function nil-value =
+  (((raw-if
+     ((raw-is-type error-type) list))
+    ((((raw-bubble-error list)
+       list-case-function-name)
+      argument-position-one)
+     list-type))
+   (((raw-if
+      ((raw-is-type list-type) list))
+     (((raw-if
+        (raw-list-is-nil list))
+       nil-value)
+      ((cons-function (raw-list-head list))
+       (raw-list-tail list))))
+    ((((raw-bubble-error
+        (((raw-make-type-mismatch-error
+           argument-position-one)
+          list-type)
+         (raw-object-type list)))
+       list-case-function-name)
+      argument-position-one)
+     list-type))))
 
 (def raw-fold-step recur function initial list =
   (((raw-if

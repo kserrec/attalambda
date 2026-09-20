@@ -872,6 +872,7 @@
       typed-if
       typed-is-nil
       typed-len-rat
+      typed-list-case
       typed-list-to-string
       typed-make-byte
       typed-make-char-rat
