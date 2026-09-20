@@ -3,7 +3,7 @@
 ;; Pure string construction over a validated whole-file summary. Source text is
 ;; never evaluated or rendered by an object-language operation.
 (require racket/list racket/string "../../lang/static-data.rkt" "analysis.rkt"
-         "coverage.rkt" "inference.rkt" "proof.rkt" "type-display.rkt")
+         "coverage.rkt" "inference.rkt" "proof.rkt" "type-display.rkt" "systems.rkt")
 (provide render-report)
 (define (safe text)
   (apply string-append
@@ -15,7 +15,7 @@
 (define (location-text location)
   (format "~a:~a:~a" (safe (or (source-location-source location) "source"))
           (or (source-location-line location) "?") (or (source-location-column location) "?")))
-(define (render-report summary source-name)
+(define (render-report summary source-name [system hm-system])
   (define result (check-summary-analysis summary))
   (define view (analysis-view result))
   (define definitions (analysis-definitions result))
@@ -79,6 +79,7 @@
    "Static type check: " (case (check-summary-verdict summary) [(full) "FULL PASS"] [(fail) "FAIL"] [(partial) "PARTIAL"]
                           [else (error 'static-report "invalid verdict")]) "\n"
    "Scope: " (safe source-name) "; all source definitions and expressions\n"
+   "System: " (type-system-name system) "\n"
    (count-line "Definitions" (check-summary-definitions-checked summary) (check-summary-definitions-total summary))
    (count-line "Expressions" (check-summary-expressions-checked summary) (check-summary-expressions-total summary))
    (format "Unproved regions: ~a\nType conflicts: ~a\n"

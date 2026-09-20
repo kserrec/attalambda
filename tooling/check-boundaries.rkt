@@ -118,17 +118,19 @@
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
     racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?
     diagnostic-fragment text void complete-path load/use-compiled current-load/use-compiled
-    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs))
+    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs
+    system-ref check-system argument))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
              (only-in "diagnostics.rkt" diagnostic-fragment)
+             (only-in "static/systems.rkt" system-ref)
              (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
     unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
-    requested-source-missing? run-source run-validated-source main))
+    requested-source-missing? run-source run-validated-source check-system main))
 
 (define expected-runner-status-definitions
   '((define command-misuse-status 64)
@@ -381,7 +383,8 @@
               (typed-cons language-cons)
               (typed-head HEAD)
               (typed-tail TAIL)
-              (typed-is-nil IS-NIL))
+              (typed-is-nil IS-NIL)
+              (typed-list-case LIST-CASE))
      (only-in "../core/logic.rkt" raw-false raw-true)
      (only-in "../core/objects.rkt" raw-make-object)
      (only-in "../core/map.rkt"
@@ -472,6 +475,7 @@
      (HEAD head)
      (TAIL tail)
      (IS-NIL is-nil)
+     (LIST-CASE list-case)
      (LEN len)
      (TAKE take)
      (DROP drop)
@@ -595,7 +599,7 @@
   (remove-duplicates
    (append
     language-direct-public-bindings
-    '(HEAD TAIL IS-NIL LEN TAKE DROP
+    '(HEAD TAIL IS-NIL LIST-CASE LEN TAKE DROP
       NOT AND OR XOR SUCC ADD
       SUB MULT DIV EQ LT LTE
       GT GTE IS-ZERO MAKE-CHAR CHAR-EQ CHAR-LT
@@ -606,7 +610,7 @@
       BYTE-GT BYTE-GTE STRING-TO-BYTES BYTES-TO-STRING SOME IS-SOME
       IS-NONE OPTION-CASE MAKE-MAP MAP-EMPTY? MAP-SIZE MAP-LOOKUP
       MAP-CONTAINS? MAP-SET MAP-REMOVE
-      head tail is-nil len take drop nth typed-nth-rat
+      head tail is-nil list-case len take drop nth typed-nth-rat
       take-while drop-while typed-take-while typed-drop-while
       append reverse map filter typed-append typed-reverse typed-map typed-filter
       reduce typed-reduce
@@ -664,7 +668,7 @@
       raw-true remaining rename-out require
       second string->bytes/utf-8 string->list string? stx syntax
       syntax->list syntax-case syntax-e typed-cons typed-drop-rat
-      typed-head typed-if typed-is-nil typed-len-rat typed-rat-abs
+      typed-head typed-if typed-is-nil typed-list-case typed-len-rat typed-rat-abs
       typed-rat-add typed-rat-div typed-rat-equal typed-rat-exp
       typed-rat-floor typed-rat-greater typed-rat-greater-equal
       typed-rat-is-nonnegative-whole typed-rat-is-whole typed-rat-is-zero
@@ -2752,7 +2756,7 @@
           [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
           [(static-frontend) (static-frontend-violations source info root)]
-          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis static-coverage static-report static-command)
+          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-systems static-contracts static-inference static-analysis static-coverage static-report static-command)
            (static-helper-violations source info root class)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]

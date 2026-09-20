@@ -48,6 +48,30 @@ checks do not infer or formally verify library/runtime implementations. Ordinary
 execution remains available for partial files. No claim of termination or
 successful external operations follows from a complete type.
 
+## Measured under `--check=simple` (0.10.0 candidate, unreleased)
+
+Measured from local source `023a110` (branch `milestone-10-comparable-checkers`)
+with corrected Racket CS 9.3 in the isolated container, over the same five
+unchanged example files (same SHA-256 values as below). The `hm` table above
+remains the 0.9.0 record; under `--check` on this revision every report is
+identical to it apart from the added `System: hm` line.
+
+| Example | Status | Definitions | Expressions | Unproved regions | Conflicts |
+| --- | --- | --- | --- | ---: | ---: |
+| [file-round-trip.attl](../examples/file-round-trip.attl) | PARTIAL (2) | 2/2 (100.0%) | 24/32 (75.0%) | 1 | 0 |
+| [foundations.attl](../examples/foundations.attl) | PARTIAL (2) | 1/1 (100.0%) | 126/138 (91.3%) | 3 | 0 |
+| [hello.attl](../examples/hello.attl) | FULL PASS (0) | 0/0 (n/a) | 3/3 (100.0%) | 0 | 0 |
+| [http-server.attl](../examples/http-server.attl) | PARTIAL (2) | 3/5 (60.0%) | 134/199 (67.3%) | 9 | 0 |
+| [stdout.attl](../examples/stdout.attl) | FULL PASS (0) | 0/0 (n/a) | 3/3 (100.0%) | 0 | 0 |
+
+No example reuses a definition at two types, so verdicts, counts, statuses,
+diagnostics, and locations are identical under both systems. The only textual
+differences are `System: simple` on line 3 and one signature in
+`http-server.attl`: `force-result : Result(a) -> (Result(a) -> b) -> b`
+instead of `forall a:data b. Result(a) -> (Result(a) -> b) -> b`, because its
+only use sits in an unproved region that never fixes the variables, so they
+remain open letters under the monomorphic system.
+
 ## file-round-trip.attl
 
 Source SHA-256: `6d93711e3a96fe2372a2037a33d42592a1380dd8d9e56a50e7ac30213a998ba4`.

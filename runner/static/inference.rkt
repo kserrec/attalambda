@@ -3,7 +3,7 @@
 ;; Syntax-directed inference over the trusted source view. A conditional input
 ;; cursor can check remaining arguments, but is never an established value type.
 (require racket/list "../../lang/static-data.rkt" "types.rkt" "proof.rkt"
-         "substitution.rkt" "unification.rkt" "contracts.rkt")
+         "substitution.rkt" "unification.rkt" "contracts.rkt" "systems.rkt")
 (provide (struct-out judgment) (struct-out call-inputs) (struct-out binding-contract)
          infer-expression bind-judgment input-obligations)
 (struct judgment (type proof inputs) #:transparent)
@@ -25,17 +25,22 @@
              (arrow-type (car (type-form-arguments type))
                          (loop (cadr (type-form-arguments type)) (sub1 remaining)))))))
 
-(define (bind-judgment item state environment #:proof [proof (judgment-proof item)] #:name [name #f])
+;; Under a non-generalizing system the binding keeps its solved monotype open:
+;; every later reference shares the same variables through the shared state.
+(define (bind-judgment item state environment #:proof [proof (judgment-proof item)] #:name [name #f]
+                       #:generalize? [generalize? #t])
   (define signatures
     (filter values
             (for/list ([binding (in-hash-values environment)])
               (define inputs (binding-contract-inputs binding))
               (or (binding-contract-signature binding)
                   (and (input-template? inputs) (input-template-signature inputs))))))
+  (define (close type)
+    (if generalize? (generalize state signatures type) (scheme '() (apply-type state type) '())))
   (define inputs (judgment-inputs item))
   (cond
     [(established? (judgment-proof item))
-     (define signature (generalize state signatures (judgment-type item)))
+     (define signature (close (judgment-type item)))
      (binding-contract signature proof
                        (or inputs (and (arrow? (scheme-type signature))
                                        (call-inputs (scheme-type signature) (arrow-count (scheme-type signature)) name 1))))]
@@ -45,13 +50,13 @@
      ;; Captured monomorphic variables stay tied to the substituted environment.
      (binding-contract
       #f proof
-      (and inputs (input-template (generalize state signatures (call-inputs-type inputs))
+      (and inputs (input-template (close (call-inputs-type inputs))
                                   (call-inputs-remaining inputs) (call-inputs-name inputs)
                                   (call-inputs-position inputs))))]))
 
 (define (infer-expression root [environment (hasheqv)]
                           #:fresh [fresh (make-fresh)] #:initial [initial empty-solution]
-                          #:owner [owner #f])
+                          #:owner [owner #f] #:system [system hm-system])
   (define state initial)
   (define nodes (hasheqv))
   (define (finish type proof [inputs #f])
@@ -159,7 +164,8 @@
         [(application) (application node (car children) (cadr children) environment)]
         [(let)
          (define initializer (walk (car children) environment))
-         (define binding (bind-judgment initializer state environment))
+         (define binding
+           (bind-judgment initializer state environment #:generalize? (type-system-generalize? system)))
          (define body (walk (cadr children) (hash-set environment data binding)))
          (finish (judgment-type body) (proof-join (judgment-proof initializer) (judgment-proof body))
                  (judgment-inputs body))]

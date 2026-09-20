@@ -4,12 +4,13 @@
 ;; Private parameters support controlled tests, not CLI flags or environment
 ;; backdoors. Their defaults never evaluate or instantiate the user's module.
 (require "../source-file.rkt" "../diagnostics.rkt" "frontend.rkt"
-         "analysis.rkt" "coverage.rkt" "report.rkt")
+         "analysis.rkt" "coverage.rkt" "report.rkt" "systems.rkt")
 (provide run-check current-check-prepare current-check-analyze)
 (define current-check-prepare
   (make-parameter (lambda (source) (prepare-source source #:analysis? #t))))
-(define current-check-analyze (make-parameter analyze-view))
-(define (run-check source-name)
+(define current-check-analyze
+  (make-parameter (lambda (view system) (analyze-view view #:system system))))
+(define (run-check source-name [system hm-system])
   (define (diagnose status issue)
     ;; A failed diagnostic sink must not change a failure into process success.
     (with-handlers ([(lambda (failure) #t) (lambda (failure) (void))])
@@ -39,8 +40,8 @@
                  (error 'static-command "unexpected frontend failure classification"))
                (diagnose 65 view)]
               [else
-               (define summary (summarize-analysis ((current-check-analyze) view)))
-               (define report (render-report summary source-name))
+               (define summary (summarize-analysis ((current-check-analyze) view system)))
+               (define report (render-report summary source-name system))
                (display report (current-output-port))
                (flush-output (current-output-port))
                ;; Custom output callbacks temporarily disable breaks. Deliver a

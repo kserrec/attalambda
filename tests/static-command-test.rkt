@@ -105,12 +105,12 @@
        (check-equal? (cadr result) "")
        (check-regexp-match #rx"AttaLambda:" (caddr result)))
      (for ([analyzer
-            (list (lambda (view) (error 'private "secret internal details"))
-                  (lambda (view) (raise (exn:fail:syntax "secret syntax details" (current-continuation-marks) '())))
-                  (lambda (view) (raise (exn:fail:filesystem "secret filesystem details" (current-continuation-marks))))
-                  (lambda (view)
+            (list (lambda (view system) (error 'private "secret internal details"))
+                  (lambda (view system) (raise (exn:fail:syntax "secret syntax details" (current-continuation-marks) '())))
+                  (lambda (view system) (raise (exn:fail:filesystem "secret filesystem details" (current-continuation-marks))))
+                  (lambda (view system)
                     (validate-catalog (cons (struct-copy library-contract (car catalog) [status 'pending]) (cdr catalog))))
-                  (lambda (view)
+                  (lambda (view system)
                     (define result (analyze-view view))
                     (struct-copy analysis result [nodes (hasheqv)])))])
        (parameterize ([current-check-analyze analyzer])
@@ -135,7 +135,7 @@
      (write-source "#lang attalambda\n1")
      (parameterize ([current-input-port input] [current-output-port output] [current-error-port error-port]
                     [current-check-analyze
-                     (lambda (view)
+                     (lambda (view system)
                        (set! owned (thread (lambda () (sync never-evt))))
                        (error 'private "resource failure"))])
        (check-equal? (run-check (path->string source)) 70))

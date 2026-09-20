@@ -1,3 +1,205 @@
+# `list-case` and a selectable static checker — active milestone (0.10.0 candidate)
+
+Kyle assigned the comparable-checkers specification (kept outside the
+repository; its Phase 6 release-candidate steps are not part of this work)
+on 2026-09-19. Branch `milestone-10-comparable-checkers` from `main` `9069d11`
+(the spec named `fix/diagnostics-robustness` at `bcee97e`; that branch and the
+callable-constraints patch had both already landed on `main`, so the branch
+base is `main` and no later rebase is needed). Authority: implement, test,
+build and test the archive in a scratch directory, commit and push the branch.
+Not authorized: merge to `main`, tag, publish, or edit published notes. All
+checks run in a disposable Racket CS 9.3 container over this checkout as uid
+1000 (host Racket is 8.10).
+
+Three additive features: public `list-case` with a complete static contract;
+a type-system value threaded launcher → analysis → report (`hm` default, no
+behavior change); and the `simple` system (monomorphic user definitions, one
+shared solution state, polymorphic built-ins). Runtime otherwise unchanged.
+
+## Phase 0 — contracts and plan
+
+- [x] 0.1 Branch `milestone-10-comparable-checkers` created from `main`
+  `9069d11`. Baseline `./run-all-tests.sh` in the Racket CS 9.3 container on
+  `9069d11`: 104 test files, purity check (40 production files) and boundary
+  check passed, wall time 1829 s.
+- [x] 0.2 Dated amendments appended to specifications 01 and 03; hashes and a
+  "before" paragraph in `docs/specifications/README.md`. (The spec file was
+  briefly committed at Checkpoint 0 and removed again at Kyle's direction; the
+  amendments now name it without a link, and the hashes were refreshed.) `sha256sum` of all
+  three files matches the table; `git diff` of the canonical files removes no
+  line. Baseline defect recorded: the README table had listed a stale hash for
+  03 since `f3afa42`; the true pre-amendment hash is recorded there.
+- [x] 0.3 This plan replaces the top of `PLAN.md`; each of the 28 step IDs
+  appears exactly once (grep-verified).
+
+Checkpoint 0: commit `Authorize list-case and selectable static checkers`, push.
+
+## Phase 1 — `list-case` at runtime
+
+- [x] 1.1 `list-case-function-name` provided from `core/function-names.rkt`;
+  `typed-list-case` in `core/lists.rkt` mirrors `typed-option-case` using
+  `raw-list-is-nil`/`raw-list-head`/`raw-list-tail` on the List object.
+  `racket tooling/check-purity.rkt`: 40 production files pass.
+- [x] 1.2 `tests/lists-test.rkt` (68 tests pass): NIL default; curried
+  callback receives head then tail; unselected branch under `delay` never
+  forced; Error bubbles with kind and frame text; non-List text
+  `list-case(arg1 expected LIST got BOOL)`; arity 1 at three stages.
+  Mutation spot-check: the spec's `typed-head` swap hangs rather than fails
+  (an Error object applied to two more arguments is not an absorbing lambda),
+  so the two Error-text assertions were checked against `typed-option-case`
+  instead: both fail with the option-case frame text, then restored.
+- [x] 1.3 Expander import `[typed-list-case LIST-CASE]`, public rename
+  `list-case`, catalog label `"list-case"`. The boundary gate reported the
+  expander import/export lists and three identifiers; `check-boundaries.rkt`
+  allowlists extended by exactly those. E5 via `racket runner/attalambda.rkt`
+  in a scratch directory printed `1`, `0`,
+  `ERROR(list-case(arg1 expected LIST got RAT))`, exit 0.
+- [x] 1.4 Catalog row beside `option-case` (variables `(0 1)`, restricted
+  `(0)`, arity 3, locators `core/lists.rkt typed-list-case` and
+  `tests/lists-test.rkt`); `typed-list-case` added to the `static-contracts`
+  vocabulary. `tests/static-contracts-test.rkt` and `tests/language-test.rkt`:
+  196 tests pass; both gates pass.
+- [x] 1.5 `docs/API.md` Bool and List row matches the E5 behavior.
+
+Checkpoint 1: all `tests/static-*-test.rkt`, `tests/lists-test.rkt`,
+`tests/language-test.rkt` and both gates pass (the one expectation changed is
+`tests/static-boundary-contracts-test.rkt`'s catalog length, 129 → 130, which
+the specification sets). Committed `Add list-case eliminator`, pushed.
+
+## Phase 2 — `list-case` static behavior
+
+- [x] 2.1 `tests/static-lists-test.rkt` (4 test cases pass): `(list-case (list
+  1) (lambda (h t) h) 0)` established as `Rat`; E1 `sum : List(Rat) -> Rat`;
+  String/Rat branch conflict; Rat/List tag conflict; raw-function element
+  unproved with `UNSUPPORTED_DATA_DOMAIN`; E2 `head` sum unproved with two
+  `UNREPRESENTED_ERROR_ALTERNATIVE` problems.
+- [x] 2.2 Fixtures `list-case-sum` (established) and `list-case-branches`
+  (`TYPE_CONFLICT`) in `tests/helpers/static-acceptance.rkt`;
+  `tests/static-cli-test.rkt` passes through the real launcher (5 test cases).
+- [x] 2.3 `docs/static-checking-contracts.md` row and counts 130/107/23; the
+  row's contract string equals `scheme->string` of `(contract-ref 'list-case)`
+  (`racket -e` in the container).
+
+Checkpoint 2: E1 through the launcher is `FULL PASS`, exit 0, `sum : List(Rat)
+-> Rat`; E2 is `PARTIAL`, exit 2, two `UNREPRESENTED_ERROR_ALTERNATIVE`
+diagnostics in `sum` at 2:38 and 2:53. Committed `Give list-case a complete
+static contract`, pushed.
+
+## Phase 3 — type-system selection plumbing
+
+- [x] 3.1 Probe P2 passed: with only `runner/static/systems.rkt` added the
+  boundary gate reported exactly one violation, `unclassified-runner-module`.
+  A `static-systems` rule (no imports; provide and vocabulary as written) in
+  `tooling/static-boundary-contracts.rkt` and the class name in the dispatch
+  `case` of `tooling/check-boundaries.rkt` were sufficient; file discovery
+  needed no change. Gates pass.
+- [x] 3.2 `tests/static-systems-test.rkt` (2 test cases): exact-token lookup,
+  `#f` for anything else, records differ only in `generalize?`.
+- [x] 3.3 `analyze-view #:system` (default `hm-system`), `infer-expression
+  #:system`, `bind-judgment #:generalize?` (when false, both the established
+  and input-template paths bind `(scheme '() solved '())`). No caller passes
+  `simple` yet. The gate reported the `systems.rkt` import and the identifiers
+  `close`, `generalize?`, `hm-system`, `system`, `type-system-generalize?`;
+  the `static-inference` and `static-analysis` rules were extended by exactly
+  those. Every `tests/static-*-test.rkt` passes unchanged.
+- [x] 3.4 `render-report summary source-name [system]` prints `System: NAME`
+  after `Scope:`; `run-check source-name [system]`. Deviation: the private
+  test parameter `current-check-analyze` now receives `(view system)` so an
+  injected analyzer sees the same inputs as the real one; the test lambdas in
+  `tests/static-command-test.rkt` and `tests/helpers/static-cli-driver.rkt`
+  were widened accordingly (no expectation changed). The launcher is left
+  unchanged in this phase because `run-check` defaults to `hm-system`; the
+  `--check=NAME` parse and the `systems.rkt` import land in 5.1 together.
+  `tests/static-report-test.rkt` expectations gained the `System: hm` line.
+  E4: the five example reports captured before and after the change differ
+  only by the inserted `System: hm` line (line 3), with identical exit status
+  and empty stderr.
+
+Checkpoint 3: all `tests/static-*-test.rkt` and `tests/runner-test.rkt` (459
+tests) and both gates pass. Committed `Thread a selectable type system through
+static checking`, pushed.
+
+## Phase 4 — the `simple` system
+
+- [x] 4.1 Probe P1 passed (scratch `racket` script in the container): with a
+  monomorphic `identity` in the environment, `(identity 1)` established `Rat`
+  and `(identity "text")` started from the returned state reported one
+  `TYPE_CONFLICT` at line 4; the failed equation left the state unchanged and
+  the signature under the final state read `Rat -> Rat`. No adaptation needed.
+- [x] 4.2 `analyze-view` keeps one `running` solution when the system does
+  not generalize: each `infer-binding` and each top-level `infer-expression`
+  starts from it (`#:initial`) and advances it; under `hm` every top-level
+  inference still starts from `empty-solution`. `tests/static-simple-system-test.rkt`:
+  E3 yields `conflict` with exactly one `TYPE_CONFLICT` at line 4, verdict
+  `fail`, `Definitions 1/1`, `identity` established.
+- [x] 4.3 Under `simple` a final pass applies the running state to every
+  definition signature, top-level judgment and registered node; `coverage.rkt`
+  accepts the result. Tests: `Rat -> Rat` after E3, `a -> a` for the lone
+  definition, `Bool -> Bool` when a later definition fixes it, and a failed
+  use followed by an agreeing use leaves the agreeing use established.
+- [x] 4.4 Same test file: the shared `let` conflicts under `simple` and
+  establishes under `hm`; `cons`/`NIL`/`if` stay polymorphic under both (two
+  element types in one file, `List(Rat)` and `List(String)` signatures); E1
+  establishes `List(Rat) -> Rat` under both; E2 stays unproved with only
+  `UNREPRESENTED_ERROR_ALTERNATIVE` and no signature; the raw-function element
+  stays `UNSUPPORTED_DATA_DOMAIN`; `double` beside E3 stays established with
+  `Rat -> Rat` while the file fails. Gate reported eight new identifiers in
+  `analysis.rkt`; the `static-analysis` rule was extended by exactly those.
+
+Checkpoint 4: all `tests/static-*-test.rkt` (138 tests) and both gates pass.
+Committed `Add the simple monomorphic-definitions system`, pushed.
+
+## Phase 5 — launcher, help, reference docs
+
+- [x] 5.1 Probe P3: the exact help text is asserted in five places, not two:
+  `runner/attalambda.rkt`, `tests/runner-test.rkt:16`,
+  `tooling/test-linux-distribution.sh:269`, `tooling/test-macos-distribution.sh:415`,
+  `tooling/test-windows-distribution.ps1:722`; `tests/static-cli-test.rkt`
+  only requires a substring; `docs/design/standalone-distribution.md` quotes
+  it. All were updated. The runner's `check-system` matches
+  `^--check(?:=(.*))?$` and resolves the token (default `hm`) through
+  `system-ref` from `static/systems.rkt`; an unknown token falls through to
+  the existing misuse exit 64. Exactly one `dynamic-require check-index
+  'run-check` remains. The gate reported the import, the definition set and
+  `system-ref`/`check-system`/`argument`; runner allowlists extended by those.
+  `tests/static-cli-test.rkt`: `--check=simple` on E3 is exit 1, `FAIL`,
+  `System: simple` on line 3, `identity : Rat -> Rat`, `Definitions 1/1`;
+  `--check=hm` and `--check` give byte-identical FULL PASS reports; E1 under
+  `simple` is exit 0; thirteen misuse shapes (E6 plus `--check==hm`,
+  `--check=simple=hm`, trailing space) exit 64 with empty stdout and
+  `expected attalambda` on stderr. CLI and runner tests: 331 pass.
+- [x] 5.2 The `$'...'` literal in `tooling/test-linux-distribution.sh` was
+  evaluated and compared with `racket runner/attalambda.rkt --help` output
+  using `cmp`: identical.
+- [x] 5.3 `docs/API.md`: three spellings, `System:` line, "Type systems"
+  subsection, E3 with both reports (captured from the launcher on `023a110`),
+  inventory count 130. `README.md`: usage and one paragraph marked unreleased.
+  `ARCHITECTURE.md`: `systems.rkt` in the table row and paragraph.
+  `docs/static-checking-corpus.md`: second table measured under
+  `--check=simple` on `023a110`; counts equal the 0.9.0 table, the only
+  differences are the `System:` line and the open `force-result` signature.
+
+Checkpoint 5: `tests/static-cli-test.rkt`, `tests/runner-test.rkt` and both
+gates pass. Committed `Select the static type system from the launcher`, pushed.
+
+## Verification on the finished branch
+
+- [x] `./run-all-tests.sh` in the Racket CS 9.3 container on the working tree
+  of `a7ff2ef`: all 106 test files, purity check (40 production files) and
+  boundary check passed, wall time 1794 s. Two test files are new
+  (`static-systems`, `static-simple-system`); the only expectations changed
+  across the milestone are the catalog length (130), the report's `System:`
+  line, the help text, and the class/file inventories that now include
+  `runner/static/systems.rkt`.
+
+The assigned specification's Phase 6 (version bump to 0.10.0, release-notes
+draft, distribution build, handoff) was started and then withdrawn at Kyle's
+direction on 2026-09-19: no version, release notes, archive, tag, or merge.
+The branch ends feature-complete at the commit recording this verification.
+Merge to `main` remains Kyle's decision.
+
+---
+
 # Diagnostics and robustness fixes — merged to main via PR #10 on 2026-09-19 (historical)
 
 Kyle assigned the 0.9.0 diagnostics/robustness/safety specification (kept

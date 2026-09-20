@@ -51,7 +51,7 @@ Read only the row for the work you are doing:
 | Representation conversion | the matching exported function in [`runtime/codec.rkt`](runtime/codec.rkt) | raw constructors/accessors imported from `core/` |
 | Source syntax or public exports | [`lang/expander.rkt`](lang/expander.rkt) | [`lang/reader.rkt`](lang/reader.rkt) and [`macros/`](macros) only as needed |
 | Command-line launch | `main` in [`runner/attalambda.rkt`](runner/attalambda.rkt) | file validation/loading or [`runner/repl.rkt`](runner/repl.rkt) |
-| Optional static checking | [`runner/static/command.rkt`](runner/static/command.rkt) | expansion-only frontend, inference, exact coverage, then report construction |
+| Optional static checking | [`runner/static/command.rkt`](runner/static/command.rkt) | expansion-only frontend, inference under a selected type system ([`systems.rkt`](runner/static/systems.rkt)), exact coverage, then report construction |
 | Interactive definitions and lifetime | [`runner/session.rkt`](runner/session.rkt) | shared expander analysis, checked modules, per-entry and per-session custodians |
 | Terminal/history behavior | [`runner/editor.rkt`](runner/editor.rkt) | restricted source reader, scoped editor-output adapter, bounded inert history |
 | Human-readable observation | the matching file in [`readers/`](readers) | one-way conversion only |
@@ -109,6 +109,13 @@ variable; a partial contract's conditional input obligations cannot establish
 its success hint. `contracts.rkt` owns the audited public inventory, including
 data restrictions and explicit Error/unsupported-protocol gaps. Its source/test
 locators are inert strings and identifiers, not runtime imports.
+`systems.rkt` holds the two type-system records, `hm` and `simple`, which
+differ only in whether user bindings are generalized. The launcher resolves the
+`--check=SYSTEM` token to a record and passes it through `command.rkt` to
+`analyze-view`, `infer-expression`, and `render-report`. Under `simple` the
+analysis threads one solution through every binding and top-level expression
+and applies the final state to signatures; under `hm` each top-level inference
+still starts from the empty solution and schemes stay closed.
 
 `coverage.rkt` validates every final definition and registered source node,
 checks dependency/child closure, and derives exact counts and verdicts. It

@@ -160,7 +160,7 @@
       (copy-file (build-path project-root "runner" "session.rkt")
                  (build-path root "runner" "session.rkt"))
       (make-directory (build-path root "runner" "static"))
-      (for ([name '("frontend.rkt" "types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt" "coverage.rkt" "report.rkt" "command.rkt")])
+      (for ([name '("frontend.rkt" "types.rkt" "proof.rkt" "substitution.rkt" "unification.rkt" "type-display.rkt" "systems.rkt" "contracts.rkt" "inference.rkt" "analysis.rkt" "coverage.rkt" "report.rkt" "command.rkt")])
         (copy-file (build-path project-root "runner" "static" name)
                    (build-path root "runner" "static" name)))
       (copy-file (build-path project-root "runner" "source-file.rkt")
@@ -244,7 +244,7 @@
         (map source-classification-class project-classifications))
        symbol<?)
  '(application codec diagnostics editor editor-output effect history host language-expander language-reader macro
-   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-analysis static-command static-contracts static-coverage static-data static-frontend static-inference static-proof static-report static-source static-substitution static-type-display static-types static-unification test tooling))
+   macro-shell package-info pure-core reader repl runner session shell-output source-file source-reader static-analysis static-command static-contracts static-coverage static-data static-frontend static-inference static-proof static-report static-source static-substitution static-systems static-type-display static-types static-unification test tooling))
 
 (check-equal?
  (count (lambda (classification)

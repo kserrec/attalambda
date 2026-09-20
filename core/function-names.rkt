@@ -100,6 +100,7 @@
          is-some-function-name
          is-none-function-name
          option-case-function-name
+         list-case-function-name
          make-map-function-name
          map-empty-function-name
          map-size-function-name
@@ -203,6 +204,7 @@
 (define-function-name is-some-function-name is-some)
 (define-function-name is-none-function-name is-none)
 (define-function-name option-case-function-name option-case)
+(define-function-name list-case-function-name list-case)
 
 (define-function-name make-map-function-name make-map)
 (define-function-name map-empty-function-name map-empty?)

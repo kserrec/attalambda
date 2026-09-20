@@ -61,7 +61,7 @@
         (define view (original-prepare snapshot))
         (if (equal? mode "missing-id") (struct-copy source-view view [registry '()]) view))]
      [current-check-analyze
-      (lambda (view)
+      (lambda (view system)
         (cond
           [(equal? mode "internal") (error 'injected "private internal detail")]
           [(equal? mode "syntax") (raise (exn:fail:syntax "private syntax detail" (current-continuation-marks) '()))]
@@ -69,11 +69,11 @@
           [(equal? mode "pending-catalog")
            (validate-catalog (cons (struct-copy library-contract (car catalog) [status 'pending]) (cdr catalog)))]
           [(equal? mode "missing-state")
-           (struct-copy analysis (original-analyze view) [nodes (hasheqv)])]
+           (struct-copy analysis (original-analyze view system) [nodes (hasheqv)])]
           [(equal? mode "interrupt-analysis")
            (set! owned (thread (lambda () (sync never-evt))))
            (display "analysis-ready\n" (current-error-port))
            (flush-output (current-error-port))
            (sync never-evt)]
-          [else (original-analyze view)]))])
+          [else (original-analyze view system)]))])
   (dynamic-require launcher #f))

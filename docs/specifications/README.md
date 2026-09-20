@@ -63,9 +63,9 @@ and List contracts it explicitly changes; all other contracts remain in force.
 
 | File | SHA-256 |
 | --- | --- |
-| `01-greenfield-core-language.md` | `74a5c90ec3acb4364a14a296f5c4c91fd03124a3012c00b91ec8976ee933328c` |
+| `01-greenfield-core-language.md` | `12fa3e7831327db22f919ac4ed0298fbdf1cd69bb9d3e4af8cf8bbbc1260b308` |
 | `02-type-tags-and-absolute-lambda-purity.md` | `5bbe050ad8ddb223eac1681d738950248e70c2905c47faef4c985fe87be31409` |
-| `03-canonical-public-naming-and-host-isolation.md` | `4498613f146120a8437704eb5dcc9c7f2c094f1682befc357856c383fa8b6a6d` |
+| `03-canonical-public-naming-and-host-isolation.md` | `8a9c9ea1c228bcc810da75b5b4265a119fa3dcb4321c3cb7122431df434da595` |
 
 If a specification copy changes intentionally, update its hash here in the
 same commit and explain why.
@@ -164,3 +164,30 @@ The supplied specification is saved verbatim with SHA-256
 `56aa3e0e8ef7688b439168e8f382698dcafa9e8f043097241fb29f588299f6c0`.
 Phase 0 changes only planning and contracts; later implementation must satisfy
 the unchanged structural gates and each specified acceptance checkpoint.
+
+## List Eliminator and Comparable Checkers Amendments (2026-09-19)
+
+The comparable-checkers specification (assigned 2026-09-19, kept outside the
+repository)
+authorizes one public List eliminator, `list-case`, and a selectable static
+type system (`--check=hm`, the unchanged default, and `--check=simple`,
+monomorphic definitions over the same polymorphic library). These appended
+amendments to the core-language and canonical-naming documents change no
+earlier canonical byte; the type-tag addendum is unchanged. The runtime gains
+only `list-case`, built from existing pure pieces. Implementation is tracked
+in [PLAN.md](../../PLAN.md); merge and publication await separate approval.
+
+The hashes immediately before these amendments were:
+
+- `01-greenfield-core-language.md`: `74a5c90ec3acb4364a14a296f5c4c91fd03124a3012c00b91ec8976ee933328c`.
+- `03-canonical-public-naming-and-host-isolation.md`: `c8309089893d7a19446684628f00d9a5ec48770125c7278464860a77394fa638`.
+  The table above had listed `4498613f146120a8437704eb5dcc9c7f2c094f1682befc357856c383fa8b6a6d`
+  for this file since the 2026-09-18 report-boilerplate removal (`f3afa42`)
+  amended it without refreshing this index; the corrected pre-amendment hash
+  is recorded here and the table now matches the file.
+
+The amendments as first committed linked to a saved copy of that specification
+(`e384705f05041b3490a8b4bb6919688b275215557a6bacf1e5b9edc180efce4f` and
+`86a5be4cf3bd8580a180809aa8d281beb7f6dbaa30462d25d91fb02704fa2c79`). The copy
+was removed from the repository and the link text replaced by a plain
+reference; only that sentence changed, and the table shows the current hashes.

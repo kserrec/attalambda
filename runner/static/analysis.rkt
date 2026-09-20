@@ -2,7 +2,7 @@
 
 ;; Dependency order is for analysis only. No runtime module is reordered or run.
 (require racket/list "../../lang/static-data.rkt" "inference.rkt" "proof.rkt"
-         "types.rkt" "substitution.rkt" "unification.rkt" "contracts.rkt")
+         "types.rkt" "substitution.rkt" "unification.rkt" "contracts.rkt" "systems.rkt")
 (provide (struct-out definition-result) (struct-out analysis) analyze-view analysis-proof)
 (struct definition-result (binding signature proof) #:transparent)
 (struct analysis (view definitions expressions nodes) #:transparent)
@@ -11,7 +11,14 @@
          (append (map definition-result-proof (analysis-definitions result))
                  (map judgment-proof (analysis-expressions result)))))
 
-(define (analyze-view view)
+(define (analyze-view view #:system [system hm-system])
+  (define generalize? (type-system-generalize? system))
+  ;; Monomorphic bindings stay open, so a non-generalizing system threads one
+  ;; solution through every binding and top-level expression in order. Under
+  ;; hm each top-level inference still starts from the empty solution.
+  (define running empty-solution)
+  (define (initial-state) (if generalize? empty-solution running))
+  (define (advance! state) (unless generalize? (set! running state)))
   (validate-catalog catalog)
   (validate-source-view view (length (source-view-forms view)))
   (define bindings (source-view-bindings view))
@@ -44,7 +51,8 @@
           (hash-set environment id (binding-contract (scheme '() assumption '()) established-proof #f))
           environment))
     (define-values (body classified state)
-      (infer-expression (source-binding-value source) context #:fresh fresh #:owner id))
+      (infer-expression (source-binding-value source) context #:fresh fresh #:owner id #:system system
+                        #:initial (initial-state)))
     (define consistency
       (and recursive?
            (let ([obligations (or (judgment-type body) (input-obligations (judgment-inputs body) fresh))])
@@ -97,8 +105,9 @@
         (visit dependency (cons id visiting)))
       (define-values (item classified state)
         (infer-binding source))
+      (advance! state)
       (define entry
-        (bind-judgment item state environment #:name (source-binding-name source)
+        (bind-judgment item state environment #:name (source-binding-name source) #:generalize? generalize?
                        #:proof (if (eq? (proof-status (judgment-proof item)) 'established)
                                    established-proof (proof '() (list id)))))
       (collect classified)
@@ -107,9 +116,25 @@
   (for ([source (in-list bindings)]) (visit (source-binding-id source) '()))
   (define expressions
     (for/list ([source (in-list (source-view-expressions view))])
-      (define-values (item classified state) (infer-expression source environment #:fresh fresh))
+      (define-values (item classified state)
+        (infer-expression source environment #:fresh fresh #:system system #:initial (initial-state)))
+      (advance! state)
       (collect classified)
       item))
   (unless (equal? (sort (hash-keys nodes) <) (sort (map car (source-view-registry view)) <))
     (error 'static-analysis "missing source classification"))
-  (analysis view (map (lambda (source) (hash-ref results (source-binding-id source))) bindings) expressions nodes))
+  ;; Signatures and judgments reflect the final shared state under a
+  ;; non-generalizing system; an unsolved variable stays a letter.
+  (define (finalize-judgment item)
+    (define inputs (judgment-inputs item))
+    (judgment (and (judgment-type item) (apply-type running (judgment-type item)))
+              (judgment-proof item)
+              (and inputs (struct-copy call-inputs inputs [type (apply-type running (call-inputs-type inputs))]))))
+  (define (finalize-definition item)
+    (define signature (definition-result-signature item))
+    (struct-copy definition-result item [signature (and signature (apply-scheme running signature))]))
+  (define definitions (map (lambda (source) (hash-ref results (source-binding-id source))) bindings))
+  (if generalize?
+      (analysis view definitions expressions nodes)
+      (analysis view (map finalize-definition definitions) (map finalize-judgment expressions)
+                (for/hasheqv ([(id item) (in-hash nodes)]) (values id (finalize-judgment item))))))

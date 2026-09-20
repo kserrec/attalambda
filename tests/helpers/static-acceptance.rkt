@@ -11,4 +11,6 @@
      (C15 unproved (UNSUPPORTED_DATA_DOMAIN) "(def pack x = (some (list x))) (pack (lambda (y) y))")
      (C17 unproved (UNREPRESENTED_ERROR_ALTERNATIVE) "(make-map (lambda (x y) (unwrap-ok (div 1 1))))")
      (C18 established () "(unwrap-err (div 1 0))")
+     (list-case-sum established () "(rec sum xs = (list-case xs (lambda (h t) (add h (sum t))) 0)) (sum (list 1 2 3))")
+     (list-case-branches conflict (TYPE_CONFLICT) "(list-case NIL (lambda (h t) \"s\") 0)")
      (section-3.2-complete established () "(def double x = (add x x)) (rec factorial n = (if (is-zero n) 1 (mult n (factorial (sub n 1))))) (stdout (rat-to-string (factorial (double 3))))"))))

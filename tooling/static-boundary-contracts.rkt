@@ -700,6 +700,23 @@
       values
       variable-name
       variables))
+    (static-systems
+     "runner/static/systems.rkt"
+     ()
+     (provide (struct-out type-system) hm-system simple-system system-ref)
+     (cond
+      define
+      else
+      equal?
+      generalize?
+      hm-system
+      name
+      provide
+      simple-system
+      struct
+      struct-out
+      system-ref
+      type-system))
     (static-contracts
      "runner/static/contracts.rkt"
      ((require racket/list "types.rkt"))
@@ -872,6 +889,7 @@
       typed-if
       typed-is-nil
       typed-len-rat
+      typed-list-case
       typed-list-to-string
       typed-make-byte
       typed-make-char-rat
@@ -955,7 +973,8 @@
                "proof.rkt"
                "substitution.rkt"
                "unification.rkt"
-               "contracts.rkt"))
+               "contracts.rkt"
+               "systems.rkt"))
      (provide (struct-out judgment)
               (struct-out call-inputs)
               (struct-out binding-contract)
@@ -1129,7 +1148,12 @@
       values
       walk
       when
-      zero?))
+      zero?
+      close
+      generalize?
+      hm-system
+      system
+      type-system-generalize?))
     (static-analysis
      "runner/static/analysis.rkt"
      ((require racket/list
@@ -1139,7 +1163,8 @@
                "types.rkt"
                "substitution.rkt"
                "unification.rkt"
-               "contracts.rkt"))
+               "contracts.rkt"
+               "systems.rkt"))
      (provide (struct-out definition-result)
               (struct-out analysis)
               analyze-view
@@ -1287,7 +1312,19 @@
       view
       visit
       visiting
-      when))
+      when
+      generalize?
+      hm-system
+      system
+      type-system-generalize?
+      running
+      empty-solution
+      initial-state
+      advance!
+      finalize-judgment
+      finalize-definition
+      definition-result-signature
+      apply-scheme))
     (static-coverage
      "runner/static/coverage.rkt"
      ((require racket/list
@@ -1456,7 +1493,8 @@
                "coverage.rkt"
                "inference.rkt"
                "proof.rkt"
-               "type-display.rkt"))
+               "type-display.rkt"
+               "systems.rkt"))
      (provide render-report)
      (+
       <
@@ -1596,7 +1634,10 @@
       view
       zero?
       zl
-      zp))
+      zp
+      hm-system
+      system
+      type-system-name))
     (static-command
      "runner/static/command.rkt"
      ((require "../source-file.rkt"
@@ -1604,7 +1645,8 @@
                "frontend.rkt"
                "analysis.rkt"
                "coverage.rkt"
-               "report.rkt"))
+               "report.rkt"
+               "systems.rkt"))
      (provide run-check current-check-prepare current-check-analyze)
      (analyze-view
       break-enabled
@@ -1661,4 +1703,6 @@
       unless
       view
       void
-      with-handlers))))
+      with-handlers
+      hm-system
+      system))))

@@ -2589,3 +2589,50 @@ higher-rank polymorphism, polymorphic recursion, recursive types, unions, or
 predicate/range refinements are authorized. Delivery is an unmerged, unpublished
 local candidate with verified local phase commits; remote push, PR, merge, tag,
 asset replacement, or publication requires separate authorization.
+
+---
+
+# List Eliminator and Comparable Checkers Amendment (2026-09-19)
+
+The comparable-checkers specification (assigned 2026-09-19, kept outside the
+repository)
+authorizes one public List eliminator and a second, selectable static type
+system. This amendment takes precedence over earlier text only for the
+contracts stated here; every other rule remains in force.
+
+`list-case` is the public List eliminator, used as
+`(list-case list cons-function nil-value)`. It is strict on its List argument
+and lazy on both branches. An Error argument bubbles with the `list-case`
+frame at argument position 1 expecting List. A non-List argument produces the
+TypeMismatch Error `list-case(arg1 expected LIST got <TAG>)`. `NIL` selects
+`nil-value` without applying `cons-function`. A populated List applies the
+curried `cons-function` to its head and then to its tail, without evaluating
+`nil-value`. The callback's result is returned untouched; no Bool coercion or
+tag check applies to it. `list-case` is a chain of unary lambdas built only
+from existing pure pieces and supports partial application. `head`, `tail`,
+and `is-nil` are unchanged.
+
+The static checker gives `list-case` the complete contract
+`forall a:data b. List(a) -> (a -> List(a) -> b) -> b -> b`. The contract is
+honest for every input because the empty case returns a caller-supplied value.
+
+The checker gains a selectable type system. `hm` is the existing checker
+without behavior change: rank-1 generalization of `def`, `rec`, and source
+`let` initializers. `simple` is the same inference engine with generalization
+switched off: user definitions and source `let` bindings are monomorphic, one
+solution state is shared across the whole file in dependency order, and
+established signatures reflect the final state, with unsolved variables shown
+as letters without `forall`. Built-in contracts keep their audited
+polymorphic types under both systems and are instantiated fresh at each
+reference. Lambda parameters and the recursive self assumption were already
+monomorphic. `simple` is the simply typed lambda calculus over a library of
+polymorphic constants; it is not System F and removes no polymorphism from the
+library. Both systems are checker metadata only. Verdicts, counts, exit
+statuses, and the coverage rules of the Optional Static Checking Amendment are
+unchanged; the report gains exactly one line, `System: hm` or
+`System: simple`, directly after `Scope:`.
+
+The runtime is unchanged except for the addition of `list-case`. No function
+tag, host detection, annotation syntax, product type, or tagged union is
+added. Delivery is a verified release candidate on one milestone branch;
+merge, tag, and publication require separate authorization.

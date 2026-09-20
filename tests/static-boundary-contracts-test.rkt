@@ -8,7 +8,7 @@
 (define (state text) (proof-status (analysis-proof (analyze text))))
 
 (test-case "every export is audited; HTTP parse/render failures remain represented Result Err"
-  (check-equal? (length catalog) 129)
+  (check-equal? (length catalog) 130)
   (check-false (ormap (lambda (entry) (eq? (library-contract-status entry) 'pending)) catalog))
   (check-not-exn (lambda () (validate-catalog catalog)))
   (for ([text '("(parse-http-request \"bad request\")" "(render-http-response -1/2 \"body\")"
