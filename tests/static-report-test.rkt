@@ -13,6 +13,7 @@
   (define expected
     (string-append
      "Static type check: FULL PASS\nScope: golden.attl; all source definitions and expressions\n"
+     "System: hm\n"
      "Definitions: 2/2 fully checked (100.0%)\nExpressions: 8/8 fully checked (100.0%)\n"
      "Unproved regions: 0\nType conflicts: 0\n\nInferred definitions:\n"
      "  identity : forall a. a -> a\n  double : Rat -> Rat\n"))
@@ -23,6 +24,7 @@
    (report "")
    (string-append
     "Static type check: FULL PASS\nScope: golden.attl; all source definitions and expressions\n"
+    "System: hm\n"
     "Definitions: 0/0 fully checked (n/a)\nExpressions: 0/0 fully checked (n/a)\n"
     "Unproved regions: 0\nType conflicts: 0\n"
     "This source contains no definitions or expressions; the pass is vacuous.\n"))

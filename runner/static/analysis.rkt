@@ -2,7 +2,7 @@
 
 ;; Dependency order is for analysis only. No runtime module is reordered or run.
 (require racket/list "../../lang/static-data.rkt" "inference.rkt" "proof.rkt"
-         "types.rkt" "substitution.rkt" "unification.rkt" "contracts.rkt")
+         "types.rkt" "substitution.rkt" "unification.rkt" "contracts.rkt" "systems.rkt")
 (provide (struct-out definition-result) (struct-out analysis) analyze-view analysis-proof)
 (struct definition-result (binding signature proof) #:transparent)
 (struct analysis (view definitions expressions nodes) #:transparent)
@@ -11,7 +11,8 @@
          (append (map definition-result-proof (analysis-definitions result))
                  (map judgment-proof (analysis-expressions result)))))
 
-(define (analyze-view view)
+(define (analyze-view view #:system [system hm-system])
+  (define generalize? (type-system-generalize? system))
   (validate-catalog catalog)
   (validate-source-view view (length (source-view-forms view)))
   (define bindings (source-view-bindings view))
@@ -44,7 +45,7 @@
           (hash-set environment id (binding-contract (scheme '() assumption '()) established-proof #f))
           environment))
     (define-values (body classified state)
-      (infer-expression (source-binding-value source) context #:fresh fresh #:owner id))
+      (infer-expression (source-binding-value source) context #:fresh fresh #:owner id #:system system))
     (define consistency
       (and recursive?
            (let ([obligations (or (judgment-type body) (input-obligations (judgment-inputs body) fresh))])
@@ -98,7 +99,7 @@
       (define-values (item classified state)
         (infer-binding source))
       (define entry
-        (bind-judgment item state environment #:name (source-binding-name source)
+        (bind-judgment item state environment #:name (source-binding-name source) #:generalize? generalize?
                        #:proof (if (eq? (proof-status (judgment-proof item)) 'established)
                                    established-proof (proof '() (list id)))))
       (collect classified)
@@ -107,7 +108,7 @@
   (for ([source (in-list bindings)]) (visit (source-binding-id source) '()))
   (define expressions
     (for/list ([source (in-list (source-view-expressions view))])
-      (define-values (item classified state) (infer-expression source environment #:fresh fresh))
+      (define-values (item classified state) (infer-expression source environment #:fresh fresh #:system system))
       (collect classified)
       item))
   (unless (equal? (sort (hash-keys nodes) <) (sort (map car (source-view-registry view)) <))

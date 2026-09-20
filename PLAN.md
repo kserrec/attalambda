@@ -84,16 +84,37 @@ static contract`, pushed.
 
 ## Phase 3 — type-system selection plumbing
 
-- [ ] 3.1 Probe P2: new `runner/static/systems.rkt`; record boundary-gate
-  violations; add `static-systems` rule and class; gates pass.
-- [ ] 3.2 `tests/static-systems-test.rkt`.
-- [ ] 3.3 `analyze-view #:system`, `infer-expression #:system`,
-  `bind-judgment #:generalize?`; all static tests unchanged; gates pass.
-- [ ] 3.4 `render-report` prints `System: NAME` after `Scope:`; `run-check`
-  takes the system; launcher passes `hm-system`; report/command/CLI tests;
-  E4 example reports differ only by the `System: hm` line.
+- [x] 3.1 Probe P2 passed: with only `runner/static/systems.rkt` added the
+  boundary gate reported exactly one violation, `unclassified-runner-module`.
+  A `static-systems` rule (no imports; provide and vocabulary as written) in
+  `tooling/static-boundary-contracts.rkt` and the class name in the dispatch
+  `case` of `tooling/check-boundaries.rkt` were sufficient; file discovery
+  needed no change. Gates pass.
+- [x] 3.2 `tests/static-systems-test.rkt` (2 test cases): exact-token lookup,
+  `#f` for anything else, records differ only in `generalize?`.
+- [x] 3.3 `analyze-view #:system` (default `hm-system`), `infer-expression
+  #:system`, `bind-judgment #:generalize?` (when false, both the established
+  and input-template paths bind `(scheme '() solved '())`). No caller passes
+  `simple` yet. The gate reported the `systems.rkt` import and the identifiers
+  `close`, `generalize?`, `hm-system`, `system`, `type-system-generalize?`;
+  the `static-inference` and `static-analysis` rules were extended by exactly
+  those. Every `tests/static-*-test.rkt` passes unchanged.
+- [x] 3.4 `render-report summary source-name [system]` prints `System: NAME`
+  after `Scope:`; `run-check source-name [system]`. Deviation: the private
+  test parameter `current-check-analyze` now receives `(view system)` so an
+  injected analyzer sees the same inputs as the real one; the test lambdas in
+  `tests/static-command-test.rkt` and `tests/helpers/static-cli-driver.rkt`
+  were widened accordingly (no expectation changed). The launcher is left
+  unchanged in this phase because `run-check` defaults to `hm-system`; the
+  `--check=NAME` parse and the `systems.rkt` import land in 5.1 together.
+  `tests/static-report-test.rkt` expectations gained the `System: hm` line.
+  E4: the five example reports captured before and after the change differ
+  only by the inserted `System: hm` line (line 3), with identical exit status
+  and empty stderr.
 
-Checkpoint 3: commit `Thread a selectable type system through static checking`, push.
+Checkpoint 3: all `tests/static-*-test.rkt` and `tests/runner-test.rkt` (459
+tests) and both gates pass. Committed `Thread a selectable type system through
+static checking`, pushed.
 
 ## Phase 4 — the `simple` system
 

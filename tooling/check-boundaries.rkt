@@ -2754,7 +2754,7 @@
           [(history) (history-violations source info root)]
           [(session) (session-violations source info root)]
           [(static-frontend) (static-frontend-violations source info root)]
-          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-contracts static-inference static-analysis static-coverage static-report static-command)
+          [(static-data static-source static-types static-proof static-substitution static-unification static-type-display static-systems static-contracts static-inference static-analysis static-coverage static-report static-command)
            (static-helper-violations source info root class)]
           [(package-info) (package-info-violations source info root)]
           [(codec) (codec-violations source info root)]
