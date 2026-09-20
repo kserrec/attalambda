@@ -1,6 +1,7 @@
 # `list-case` and a selectable static checker — active milestone (0.10.0 candidate)
 
-Kyle assigned [docs/comparable-checkers-spec.md](docs/comparable-checkers-spec.md)
+Kyle assigned the comparable-checkers specification (kept outside the
+repository; its Phase 6 release-candidate steps are not part of this work)
 on 2026-09-19. Branch `milestone-10-comparable-checkers` from `main` `9069d11`
 (the spec named `fix/diagnostics-robustness` at `bcee97e`; that branch and the
 callable-constraints patch had both already landed on `main`, so the branch
@@ -22,7 +23,9 @@ shared solution state, polymorphic built-ins). Runtime otherwise unchanged.
   `9069d11`: 104 test files, purity check (40 production files) and boundary
   check passed, wall time 1829 s.
 - [x] 0.2 Dated amendments appended to specifications 01 and 03; hashes and a
-  "before" paragraph in `docs/specifications/README.md`. `sha256sum` of all
+  "before" paragraph in `docs/specifications/README.md`. (The spec file was
+  briefly committed at Checkpoint 0 and removed again at Kyle's direction; the
+  amendments now name it without a link, and the hashes were refreshed.) `sha256sum` of all
   three files matches the table; `git diff` of the canonical files removes no
   line. Baseline defect recorded: the README table had listed a stale hash for
   03 since `f3afa42`; the true pre-amendment hash is recorded there.

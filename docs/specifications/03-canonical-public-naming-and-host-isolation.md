@@ -685,7 +685,8 @@ remain unchanged outside the explicitly added launcher/report surface.
 
 # List Eliminator and Comparable Checkers Amendment (2026-09-19)
 
-The [comparable-checkers specification](../comparable-checkers-spec.md) adds
+The comparable-checkers specification (assigned 2026-09-19, kept outside the
+repository) adds
 exactly one new public spelling, `list-case`, used as
 `(list-case list cons-function nil-value)`. Its private facade binding is
 `LIST-CASE`, renamed only on export; its implementation is `typed-list-case`

@@ -2594,7 +2594,8 @@ asset replacement, or publication requires separate authorization.
 
 # List Eliminator and Comparable Checkers Amendment (2026-09-19)
 
-The [comparable-checkers specification](../comparable-checkers-spec.md)
+The comparable-checkers specification (assigned 2026-09-19, kept outside the
+repository)
 authorizes one public List eliminator and a second, selectable static type
 system. This amendment takes precedence over earlier text only for the
 contracts stated here; every other rule remains in force.
