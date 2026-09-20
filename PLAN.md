@@ -1,4 +1,4 @@
-# `list-case` and a selectable static checker — active milestone (0.10.0 candidate)
+# `list-case` and a selectable static checker — merged to main via PR #11 on 2026-09-19 (historical)
 
 Kyle assigned the comparable-checkers specification (kept outside the
 repository; its Phase 6 release-candidate steps are not part of this work)
@@ -195,8 +195,10 @@ gates pass. Committed `Select the static type system from the launcher`, pushed.
 The assigned specification's Phase 6 (version bump to 0.10.0, release-notes
 draft, distribution build, handoff) was started and then withdrawn at Kyle's
 direction on 2026-09-19: no version, release notes, archive, tag, or merge.
-The branch ends feature-complete at the commit recording this verification.
-Merge to `main` remains Kyle's decision.
+The branch ended feature-complete at the commit recording this verification
+and was merged to `main` as PR #11 (`f6fc441`) with Kyle's approval on
+2026-09-19. No version bump, tag, or release; the published download remains
+0.9.0, which contains neither `list-case` nor `--check=SYSTEM`.
 
 ---
 
