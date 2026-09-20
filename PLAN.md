@@ -182,16 +182,21 @@ Committed `Add the simple monomorphic-definitions system`, pushed.
 Checkpoint 5: `tests/static-cli-test.rkt`, `tests/runner-test.rkt` and both
 gates pass. Committed `Select the static type system from the launcher`, pushed.
 
-## Phase 6 — release candidate
+## Verification on the finished branch
 
-- [ ] 6.1 `VERSION` 0.10.0, `info.rkt` "0.10", build-script table.
-- [ ] 6.2 `docs/releases/0.10.0.md` draft; publication paragraph pending Kyle.
-- [ ] 6.3 `./run-all-tests.sh` on the final revision; count, time, revision.
-- [ ] 6.4 Cold review by a fresh reader; disposition recorded.
-- [ ] 6.5 Distribution build and isolated consumer test; archive SHA-256.
-- [ ] 6.6 `HANDOFF.md`: candidate revision and what awaits Kyle.
+- [x] `./run-all-tests.sh` in the Racket CS 9.3 container on the working tree
+  of `a7ff2ef`: all 106 test files, purity check (40 production files) and
+  boundary check passed, wall time 1794 s. Two test files are new
+  (`static-systems`, `static-simple-system`); the only expectations changed
+  across the milestone are the catalog length (130), the report's `System:`
+  line, the help text, and the class/file inventories that now include
+  `runner/static/systems.rkt`.
 
-Checkpoint 6: commit `Prepare comparable-checkers release candidate 0.10.0`, push. Stop.
+The assigned specification's Phase 6 (version bump to 0.10.0, release-notes
+draft, distribution build, handoff) was started and then withdrawn at Kyle's
+direction on 2026-09-19: no version, release notes, archive, tag, or merge.
+The branch ends feature-complete at the commit recording this verification.
+Merge to `main` remains Kyle's decision.
 
 ---
 
