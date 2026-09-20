@@ -13,7 +13,7 @@
   (simplify-path project-root-path #f))
 
 (define expected-help
-  #"Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --help\n  attalambda --version\n")
+  #"Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --check=SYSTEM FILE.attl\n  attalambda --help\n  attalambda --version\n")
 
 (define (check-runner-failure result expected-status expected-stderr)
   (check-false (command-result-timed-out? result)

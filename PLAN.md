@@ -148,14 +148,36 @@ Committed `Add the simple monomorphic-definitions system`, pushed.
 
 ## Phase 5 — launcher, help, reference docs
 
-- [ ] 5.1 Probe P3; parse `--check` / `--check=hm` / `--check=simple`; help
-  line; E6 misuse shapes and `--check=simple` runs in `tests/static-cli-test.rkt`.
-- [ ] 5.2 Distribution help text equals the runner's byte for byte.
-- [ ] 5.3 `docs/API.md` type systems subsection and E3 example; `README.md`;
-  `ARCHITECTURE.md`; `docs/static-checking-corpus.md` second table under
-  `--check=simple`; every shown command rerun.
+- [x] 5.1 Probe P3: the exact help text is asserted in five places, not two:
+  `runner/attalambda.rkt`, `tests/runner-test.rkt:16`,
+  `tooling/test-linux-distribution.sh:269`, `tooling/test-macos-distribution.sh:415`,
+  `tooling/test-windows-distribution.ps1:722`; `tests/static-cli-test.rkt`
+  only requires a substring; `docs/design/standalone-distribution.md` quotes
+  it. All were updated. The runner's `check-system` matches
+  `^--check(?:=(.*))?$` and resolves the token (default `hm`) through
+  `system-ref` from `static/systems.rkt`; an unknown token falls through to
+  the existing misuse exit 64. Exactly one `dynamic-require check-index
+  'run-check` remains. The gate reported the import, the definition set and
+  `system-ref`/`check-system`/`argument`; runner allowlists extended by those.
+  `tests/static-cli-test.rkt`: `--check=simple` on E3 is exit 1, `FAIL`,
+  `System: simple` on line 3, `identity : Rat -> Rat`, `Definitions 1/1`;
+  `--check=hm` and `--check` give byte-identical FULL PASS reports; E1 under
+  `simple` is exit 0; thirteen misuse shapes (E6 plus `--check==hm`,
+  `--check=simple=hm`, trailing space) exit 64 with empty stdout and
+  `expected attalambda` on stderr. CLI and runner tests: 331 pass.
+- [x] 5.2 The `$'...'` literal in `tooling/test-linux-distribution.sh` was
+  evaluated and compared with `racket runner/attalambda.rkt --help` output
+  using `cmp`: identical.
+- [x] 5.3 `docs/API.md`: three spellings, `System:` line, "Type systems"
+  subsection, E3 with both reports (captured from the launcher on `023a110`),
+  inventory count 130. `README.md`: usage and one paragraph marked unreleased.
+  `ARCHITECTURE.md`: `systems.rkt` in the table row and paragraph.
+  `docs/static-checking-corpus.md`: second table measured under
+  `--check=simple` on `023a110`; counts equal the 0.9.0 table, the only
+  differences are the `System:` line and the open `force-result` signature.
 
-Checkpoint 5: commit `Select the static type system from the launcher`, push.
+Checkpoint 5: `tests/static-cli-test.rkt`, `tests/runner-test.rkt` and both
+gates pass. Committed `Select the static type system from the launcher`, pushed.
 
 ## Phase 6 — release candidate
 

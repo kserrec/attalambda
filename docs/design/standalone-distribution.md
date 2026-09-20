@@ -119,6 +119,7 @@ Usage:
   attalambda --repl [--no-history]
   attalambda FILE.attl
   attalambda --check FILE.attl
+  attalambda --check=SYSTEM FILE.attl
   attalambda --help
   attalambda --version
 ```

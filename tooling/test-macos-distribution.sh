@@ -412,7 +412,7 @@ check_captured_output "AttaLambda $product_version"$'\n' "packaged version"
 
 run_attalambda --help >"$stdout_file" 2>"$stderr_file"
 check_captured_output \
-  $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --help\n  attalambda --version\n' \
+  $'Usage:\n  attalambda [--no-history]\n  attalambda --repl [--no-history]\n  attalambda FILE.attl\n  attalambda --check FILE.attl\n  attalambda --check=SYSTEM FILE.attl\n  attalambda --help\n  attalambda --version\n' \
   "packaged help"
 
 (cd "$first_root" && run_attalambda examples/hello.attl \

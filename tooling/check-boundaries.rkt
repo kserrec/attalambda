@@ -118,17 +118,19 @@
     current-input-port current-error-port define-runtime-module-path-index interactive? member or
     racket/runtime-path repl-index run-repl terminal-port? check-index run-check exn:break?
     diagnostic-fragment text void complete-path load/use-compiled current-load/use-compiled
-    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs))
+    current-load parameterize path name source-syntax attributed exn:fail:syntax-exprs
+    system-ref check-system argument))
 
 (define expected-runner-requires
   '((require "source-file.rkt" racket/runtime-path
              (only-in "diagnostics.rkt" diagnostic-fragment)
+             (only-in "static/systems.rkt" system-ref)
              (for-syntax racket/base (only-in racket/path path-only)))))
 
 (define expected-runner-definitions
   '(command-misuse-status invalid-source-status unavailable-source-status
     unexpected-failure-status repl-index check-index help-text embedded-product-version stop validate-source
-    requested-source-missing? run-source run-validated-source main))
+    requested-source-missing? run-source run-validated-source check-system main))
 
 (define expected-runner-status-definitions
   '((define command-misuse-status 64)

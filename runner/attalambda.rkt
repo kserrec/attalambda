@@ -2,6 +2,7 @@
 
 (require "source-file.rkt" racket/runtime-path
          (only-in "diagnostics.rkt" diagnostic-fragment)
+         (only-in "static/systems.rkt" system-ref)
          (for-syntax racket/base
                      (only-in racket/path path-only)))
 
@@ -19,6 +20,7 @@
    "  attalambda --repl [--no-history]\n"
    "  attalambda FILE.attl\n"
    "  attalambda --check FILE.attl\n"
+   "  attalambda --check=SYSTEM FILE.attl\n"
    "  attalambda --help\n"
    "  attalambda --version\n"))
 
@@ -126,6 +128,11 @@
                           (load/use-compiled path name)))])
       (dynamic-require source-path #f))))
 
+;; `--check` means `--check=hm`; any other `--check=` token is command misuse.
+(define (check-system argument)
+  (define matched (regexp-match #px"^--check(?:=(.*))?$" argument))
+  (and matched (system-ref (or (cadr matched) "hm"))))
+
 (define (main)
   (define arguments
     (vector->list (current-command-line-arguments)))
@@ -137,7 +144,7 @@
      (display "AttaLambda ")
      (display product-version)
      (newline)]
-    [(and (= (length arguments) 2) (equal? (car arguments) "--check")
+    [(and (= (length arguments) 2) (check-system (car arguments))
           (not (regexp-match? #px"^-" (cadr arguments))))
      (with-handlers ([exn:break? (lambda (_)
                                  (stop 130 #f "static checking interrupted"))]
@@ -145,7 +152,7 @@
                                  (stop unexpected-failure-status #f
                                        "unexpected static checking failure; verify the AttaLambda installation"))])
        (define run-check (dynamic-require check-index 'run-check))
-       (exit (run-check (cadr arguments))))]
+       (exit (run-check (cadr arguments) (check-system (car arguments)))))]
     [(and (= (length arguments) 1)
           (not (regexp-match? #px"^-" (car arguments))))
      (run-source (car arguments))]

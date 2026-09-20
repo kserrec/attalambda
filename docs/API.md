@@ -40,7 +40,17 @@ From the extracted 0.9.0 archive:
 
 From a registered source checkout, the equivalent command is
 `racket runner/attalambda.rkt --check examples/hello.attl`.
-Exactly one path is accepted; no other flags accompany `--check`. All existing
+Exactly one path is accepted. Three spellings select the type system:
+
+```sh
+attalambda --check FILE.attl          # same as --check=hm
+attalambda --check=hm FILE.attl
+attalambda --check=simple FILE.attl
+```
+
+Any other `--check=` token is command misuse (status 64). The report names
+the system on its third line, `System: hm` or `System: simple`, directly after
+`Scope:`; nothing else in the report format changes between systems. All existing
 source-path, lowercase-extension, UTF-8, declaration, reader, binding, symlink,
 and dotenv restrictions remain in force. Checking reads one validated snapshot,
 expands it through the real language frontend, and infers types without
@@ -113,7 +123,7 @@ gaps. A possible Error return cannot become a verified success signature through
 an alias, callback, partial application, nested function, or caller. Restricted
 generic rendering cannot establish arbitrary function or direct Error overloads;
 use the explicit `error-to-string` contract for Error rendering. The complete
-[129-binding inventory](static-checking-contracts.md) records all supported and
+[130-binding inventory](static-checking-contracts.md) records all supported and
 partial contracts and their reasons.
 
 Coverage has two exact denominators: every source `def`/`rec` binding, and every
@@ -133,6 +143,77 @@ relative to trusted built-in contracts, recursive lowering, and host/codec
 contracts. Function types describe input preconditions and normal result shape.
 Coverage is neither a probability of correctness nor test coverage; no formal
 verification theorem is claimed. Runtime tags and strict checks are retained.
+
+### Type systems
+
+`hm` is the checker described above and is unchanged from 0.9.0: `def`, `rec`,
+and source `let` initializers are generalized to rank-1 schemes, so one
+definition can be reused at several types. `simple` is the same inference
+engine with generalization switched off, the simply typed lambda calculus over
+a library of polymorphic constants:
+
+- User definitions and source `let` bindings are monomorphic. Every reference
+  to a definition shares the same type variables, so the whole file must agree
+  on one type for it.
+- Built-in contracts keep their audited polymorphic types under both systems
+  and are instantiated fresh at each reference; `NIL` can still be `List(Rat)`
+  in one place and `List(String)` in another.
+- One solution state is shared across the file in dependency order. A conflict
+  is reported where the disagreeing use occurs; a failed equation commits
+  nothing, so the definition itself stays established.
+- Established signatures reflect the final state. A variable the file never
+  fixes is shown as a letter without `forall`, for example `identity : a -> a`
+  when `identity` is never applied. A `:data` restriction on such an open
+  variable is still enforced through the shared state but is not displayed.
+
+Lambda parameters and a recursive definition's self assumption were already
+monomorphic under `hm`. Verdicts, counts, and statuses are computed the same
+way under both systems. `simple` is not System F and removes no polymorphism
+from the library; no annotation syntax exists, so it cannot be given a
+signature to check against. For example:
+
+```racket
+#lang attalambda
+(def identity x = x)
+(identity 1)
+(identity "text")
+```
+
+Under `--check` (abridged) the file passes:
+
+```text
+Static type check: FULL PASS
+Scope: e3.attl; all source definitions and expressions
+System: hm
+Definitions: 1/1 fully checked (100.0%)
+Expressions: 7/7 fully checked (100.0%)
+...
+  identity : forall a. a -> a
+```
+
+Under `--check=simple` the third form disagrees with the second (status 1):
+
+```text
+Static type check: FAIL
+Scope: e3.attl; all source definitions and expressions
+System: simple
+Definitions: 1/1 fully checked (100.0%)
+Expressions: 6/7 fully checked (85.7%)
+Unproved regions: 0
+Type conflicts: 1
+
+Inferred definitions:
+  identity : Rat -> Rat
+
+Diagnostics:
+e3.attl:4:10 [TYPE_CONFLICT]
+  application argument expects Rat; this expression has type String.
+```
+
+`(rec sum xs = (list-case xs (lambda (h t) (add h (sum t))) 0))` is `FULL PASS`
+with `sum : List(Rat) -> Rat` under both systems, while the `head`/`tail`
+formulation stays `PARTIAL` under both: `list-case` represents the empty case,
+`head` does not.
 
 You may explicitly check and then run using two invocations:
 
