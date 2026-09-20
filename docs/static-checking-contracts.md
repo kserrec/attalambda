@@ -1,6 +1,6 @@
 # Optional static checking: audited built-in contracts
 
-This inventory describes the static checker released in 0.9.0. The single implementation is [`runner/static/contracts.rkt`](../runner/static/contracts.rkt). All 129 actual public value bindings are classified: 106 complete and 23 partial; none remains pending. Syntax and private scaffolding are excluded. The export test reads the real facade and checks its resolved bindings against this inventory. Every analysis validates the catalog before inference.
+This inventory describes the static checker released in 0.9.0. The single implementation is [`runner/static/contracts.rkt`](../runner/static/contracts.rkt). All 130 actual public value bindings are classified: 107 complete and 23 partial; none remains pending. Syntax and private scaffolding are excluded. The export test reads the real facade and checks its resolved bindings against this inventory. Every analysis validates the catalog before inference.
 
 Complete contracts are trusted, audited input preconditions and normal result shapes; the checker does not re-infer library implementations or prove termination, resource availability, or external success. Existing runtime checks and algorithms are unchanged. `Result(a)` contains Ok of `a` or Err of Error; Error is not an unconstrained second parameter.
 
@@ -76,6 +76,7 @@ Implementation locators below name actual definitions, checked by `tests/static-
 | `is-whole` | complete | `Rat -> Bool` | 1 | [`typed-rat-is-whole`](../core/typed-rat.rkt); [`raw-make-rat`](../core/rat.rkt) | [typed-rat-test.rkt](../tests/typed-rat-test.rkt); [rat-test.rkt](../tests/rat-test.rkt) | — |
 | `is-zero` | complete | `Rat -> Bool` | 1 | [`typed-rat-is-zero`](../core/typed-rat.rkt); [`raw-make-rat`](../core/rat.rkt) | [typed-rat-test.rkt](../tests/typed-rat-test.rkt); [rat-test.rkt](../tests/rat-test.rkt) | — |
 | `len` | complete | `forall a:data. List(a) -> Rat` | 1 | [`typed-len-rat`](../core/list-nat.rkt) | [list-nat-test.rkt](../tests/list-nat-test.rkt) | — |
+| `list-case` | complete | `forall a:data b. List(a) -> (a -> List(a) -> b) -> b -> b` | 3 | [`typed-list-case`](../core/lists.rkt) | [lists-test.rkt](../tests/lists-test.rkt) | — |
 | `list-to-string` | complete | `forall a:data. List(a) -> String` | 1 | [`typed-list-to-string`](../core/to-string.rkt); [`raw-value-to-chars`](../core/render-value.rkt) | [to-string-test.rkt](../tests/to-string-test.rkt) | — |
 | `lt` | complete | `Rat -> Rat -> Bool` | 2 | [`typed-rat-less`](../core/typed-rat.rkt); [`raw-make-rat`](../core/rat.rkt) | [typed-rat-test.rkt](../tests/typed-rat-test.rkt); [rat-test.rkt](../tests/rat-test.rkt) | — |
 | `lte` | complete | `Rat -> Rat -> Bool` | 2 | [`typed-rat-less-equal`](../core/typed-rat.rkt); [`raw-make-rat`](../core/rat.rkt) | [typed-rat-test.rkt](../tests/typed-rat-test.rkt); [rat-test.rkt](../tests/rat-test.rkt) | — |

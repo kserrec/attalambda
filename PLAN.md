@@ -65,15 +65,22 @@ the specification sets). Committed `Add list-case eliminator`, pushed.
 
 ## Phase 2 — `list-case` static behavior
 
-- [ ] 2.1 `tests/static-lists-test.rkt`: established `Rat`; E1 `sum :
-  List(Rat) -> Rat`; branch conflict; tag conflict; data-domain gap; E2
-  `head` sum still unproved.
-- [ ] 2.2 CLI fixtures (established E1, branch conflict) in
-  `tests/helpers/static-acceptance.rkt`; `tests/static-cli-test.rkt` passes.
-- [ ] 2.3 `docs/static-checking-contracts.md` row and counts (130/107/23),
-  string verified against `contract-ref`.
+- [x] 2.1 `tests/static-lists-test.rkt` (4 test cases pass): `(list-case (list
+  1) (lambda (h t) h) 0)` established as `Rat`; E1 `sum : List(Rat) -> Rat`;
+  String/Rat branch conflict; Rat/List tag conflict; raw-function element
+  unproved with `UNSUPPORTED_DATA_DOMAIN`; E2 `head` sum unproved with two
+  `UNREPRESENTED_ERROR_ALTERNATIVE` problems.
+- [x] 2.2 Fixtures `list-case-sum` (established) and `list-case-branches`
+  (`TYPE_CONFLICT`) in `tests/helpers/static-acceptance.rkt`;
+  `tests/static-cli-test.rkt` passes through the real launcher (5 test cases).
+- [x] 2.3 `docs/static-checking-contracts.md` row and counts 130/107/23; the
+  row's contract string equals `scheme->string` of `(contract-ref 'list-case)`
+  (`racket -e` in the container).
 
-Checkpoint 2: commit `Give list-case a complete static contract`, push.
+Checkpoint 2: E1 through the launcher is `FULL PASS`, exit 0, `sum : List(Rat)
+-> Rat`; E2 is `PARTIAL`, exit 2, two `UNREPRESENTED_ERROR_ALTERNATIVE`
+diagnostics in `sum` at 2:38 and 2:53. Committed `Give list-case a complete
+static contract`, pushed.
 
 ## Phase 3 — type-system selection plumbing
 
