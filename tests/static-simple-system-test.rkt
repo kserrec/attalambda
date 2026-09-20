@@ -47,6 +47,15 @@
                 '(established conflict established))
   (check-equal? (signature recovered 0) "Rat -> Rat"))
 
+(test-case "definitions are solved before top-level expressions, so the later-checked use is the one flagged"
+  (define ordered (analyze "(def a x = x)\n(a 1)\n(def b = (a \"s\"))" simple-system))
+  (check-eq? (proof-status (analysis-proof ordered)) 'conflict)
+  (check-equal? (codes ordered) '(TYPE_CONFLICT))
+  (check-equal? (lines ordered) '(3))
+  (check-equal? (signature ordered 0) "String -> String")
+  (check-equal? (signature ordered 1) "String")
+  (check-eq? (status "(def a x = x)\n(a 1)\n(def b = (a \"s\"))" hm-system) 'established))
+
 (test-case "source let is monomorphic under simple while built-ins stay polymorphic under both systems"
   (define shared-let "(let id = (lambda (x) x) (add (id 1) (string-length (id \"s\"))))")
   (check-eq? (status shared-let simple-system) 'conflict)

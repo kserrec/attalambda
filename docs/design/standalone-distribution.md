@@ -183,7 +183,7 @@ The exact reasons are:
 
 | Class | Status | Reason |
 | --- | ---: | --- |
-| command misuse | 64 | `expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --help, or attalambda --version` |
+| command misuse | 64 | `expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --check=SYSTEM FILE.attl, attalambda --help, or attalambda --version` |
 | implicit nonterminal startup | 64 | `a terminal is required; use attalambda --repl for redirected source` |
 | forbidden path | 66 | `refused source path because dotenv files are never read` |
 | wrong extension | 65 | `source file name must end in lowercase .attl` |
@@ -269,6 +269,7 @@ different syntax, so build tooling checks this closed projection:
 | `0.7.0` | `0.7` |
 | `0.8.0` | `0.8` |
 | `0.9.0` | `0.9` |
+| `0.10.0` | `0.10` |
 
 A new version state requires an explicit plan change. Kyle authorized the
 completed 0.9.0 release after its verified local candidate and independent review.

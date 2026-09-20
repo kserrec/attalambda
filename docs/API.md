@@ -158,13 +158,17 @@ a library of polymorphic constants:
 - Built-in contracts keep their audited polymorphic types under both systems
   and are instantiated fresh at each reference; `NIL` can still be `List(Rat)`
   in one place and `List(String)` in another.
-- One solution state is shared across the file in dependency order. A conflict
-  is reported where the disagreeing use occurs; a failed equation commits
-  nothing, so the definition itself stays established.
+- One solution state is shared across the file: definitions are checked first,
+  in dependency order, then top-level expressions in source order. A conflict
+  is reported at whichever use is checked second, so when a later definition
+  fixes a type, an earlier top-level use can be the one flagged. A failed
+  equation commits nothing, so the definition itself stays established.
 - Established signatures reflect the final state. A variable the file never
   fixes is shown as a letter without `forall`, for example `identity : a -> a`
-  when `identity` is never applied. A `:data` restriction on such an open
-  variable is still enforced through the shared state but is not displayed.
+  when `identity` is never applied. Letters restart at `a` in every signature,
+  so under `simple` the same letter in two signatures need not be the same
+  variable. A `:data` restriction on such an open variable is still enforced
+  through the shared state but is not displayed.
 
 Lambda parameters and a recursive definition's self assumption were already
 monomorphic under `hm`. Verdicts, counts, and statuses are computed the same

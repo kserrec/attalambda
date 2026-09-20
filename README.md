@@ -79,8 +79,8 @@ definition and expression coverage and inferred signatures. Checking needs no
 annotations and performs no program input, output, file, network, or exit effect.
 Ordinary execution and runtime type checks remain available unchanged.
 
-On this branch (unreleased, 0.10.0 candidate) `--check=SYSTEM FILE.attl` selects
-the type system: `--check=hm` is the default above, and `--check=simple` checks
+Version 0.10.0 (unreleased until its GitHub release exists) adds `list-case` and
+`--check=SYSTEM FILE.attl`, which selects the type system: `--check=hm` is the default above, and `--check=simple` checks
 the same file with monomorphic definitions over the same polymorphic built-ins,
 so a file can pass under one system and fail under the other. The report names
 the system on its `System:` line; see [docs/API.md](docs/API.md#type-systems).
