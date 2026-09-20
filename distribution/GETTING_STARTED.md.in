@@ -98,8 +98,11 @@ Check the program without running it:
 The checker reports exact coverage and inferred types, using the same existing
 source syntax without annotations. It reads one source snapshot and never
 executes the program, consumes its answers, performs its file/network/output or
-exit effects, or accesses shell history. Other command flags cannot accompany
-`--check`. Ordinary execution and runtime type checks remain unchanged.
+exit effects, or accesses shell history. `--check=SYSTEM my-program.attl`
+selects the type system: `hm` (the default above, generalized definitions) or
+`simple` (monomorphic definitions over the same built-in contracts); the report
+names it on its `System:` line. No other flag accompanies `--check`. Ordinary
+execution and runtime type checks remain unchanged.
 
 | Check status | Meaning |
 | ---: | --- |
@@ -231,6 +234,15 @@ from a directory and operating-system account whose files and network access
 you are willing to expose.
 
 ## Release notes
+
+Version 0.10.0 adds the `list-case` List eliminator, which represents the empty
+case statically so a recursive List function can fully check, and a selectable
+static type system: `--check=hm` (the unchanged default) and `--check=simple`
+(monomorphic definitions). The report gains one `System:` line. It also fixes
+file-run diagnostics and interrupt handling, locks the module reader against
+`#reader` extensions, compiles a launched file from source only, makes
+`write-file` atomic, narrows the dotenv refusal, and lets `tcp-listen` rebind a
+port right after shutdown. Every existing name keeps its behavior.
 
 Version 0.9.0 adds optional `--check FILE.attl` static checking without running
 the program. It reports full passes, definite conflicts and partial results,

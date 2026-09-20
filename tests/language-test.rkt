@@ -304,6 +304,10 @@ PROGRAM
 (check (is-some (some 1)))
 (check (is-none NONE))
 (check (option-case NONE (lambda (value) FALSE) TRUE))
+(check (eq (list-case (list 1 2) (lambda (h t) (add h (head t))) 0) 3))
+(check (eq (list-case NIL (lambda (h t) (head NIL)) 7) 7))
+(check (string-prefix? (error-to-string (list-case (list 1) (lambda (h t) (head NIL)) 0)) "ERROR(EMPTY-LIST"))
+(check (not (string-contains? (error-to-string (list-case (list 1) (lambda (h t) (head NIL)) 0)) "list-case")))
 (check (map-empty? (make-map eq)))
 (check (not (map-empty? table)))
 (check (eq (map-size table) 1))
@@ -318,7 +322,7 @@ PROGRAM
                   racket-executable
                   (list (path->string lowercase-program))
                   20)
-     (make-bytes 63 46))
+     (make-bytes 67 46))
 
     ;; Expand a real language module for each retired name in one process.
     ;; Rejection must be an unbound identifier, not another expansion failure.

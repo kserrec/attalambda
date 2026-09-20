@@ -1,3 +1,44 @@
+# Release 0.10.0 candidate — branch `release-0.10.0`, awaiting Kyle
+
+Candidate revision: the head of `release-0.10.0` (see `git log -1`), branched
+from `main` `4eddf4a` after PR #11 merged the `list-case` / selectable-checker
+milestone. Contents beyond 0.9.0: the `--check` report trim (PR #9), the
+file-run diagnostics and robustness fixes (PR #10), the callable-constraints
+checker patch (`9069d11`), `list-case` and `--check=hm` / `--check=simple`
+(PR #11), the cold-review fixes, and the version bump to 0.10.0 with draft
+notes in `docs/releases/0.10.0.md`.
+
+What is done and verified (all in a disposable Racket CS 9.3 container as uid
+1000 over this checkout, host Racket 8.10 unused):
+
+- Cold review of PR #11 by a fresh agent: no must-fix; the two should-fix
+  items and two notes are fixed on this branch (PLAN.md records them).
+- Candidate archive built from a clean clone of `main` `4eddf4a` and the
+  isolated Ubuntu consumer test passed on the host; this validated the changed
+  build and consumer scripts (help text, `--check` acceptance).
+- Complete suite and both gates on the branch's final source: all 106 test
+  files, purity check (40 production files) and boundary check passed,
+  wall time 1592 s. The commit that records this changes documents only.
+
+What awaits Kyle, in order:
+
+1. Merge `release-0.10.0` to `main` (PR opened from this branch).
+2. Build the release archive from the merged `main` commit in a clean clone:
+   `tooling/build-linux-distribution.sh OUTPUT_DIR` inside the container, then
+   `tooling/test-linux-distribution.sh OUTPUT_DIR` on the host.
+3. Tag `v0.10.0` on that commit, upload the archive and `SHA256SUMS`, publish
+   the GitHub release, then replace the pending paragraph in
+   `docs/releases/0.10.0.md` and the README release line with the real URL and
+   timestamp, and verify the public download with the consumer test.
+
+To reproduce the checks: `docker run -d --name attl -v "$PWD":/work -w /work
+racket/racket:9.3-full sleep infinity`; as root in it
+`racket tooling/prepare-racket-runtime.rkt --apply && chown -R 1000:1000
+/usr/share/racket && apt-get update -qq && apt-get install -y -qq python3 git`;
+then as `-u 1000:1000 -e HOME=/tmp/h`: `raco pkg install --batch --scope user
+--link --name attalambda --deps fail --no-docs --fail-fast /work` and
+`./run-all-tests.sh` (about 30 minutes).
+
 # Static checker patch — callable constraints through unknown arguments
 
 Applied on `main` on 2026-09-19 after the diagnostics/robustness merge (PR #10).

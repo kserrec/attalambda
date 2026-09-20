@@ -171,6 +171,6 @@
                        #:history? (not (member "--no-history" arguments)))))]
     [else
      (stop command-misuse-status #f
-           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --help, or attalambda --version")]))
+           "expected attalambda [--repl] [--no-history], attalambda FILE.attl, attalambda --check FILE.attl, attalambda --check=SYSTEM FILE.attl, attalambda --help, or attalambda --version")]))
 
 (main)

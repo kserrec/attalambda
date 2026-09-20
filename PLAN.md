@@ -1,3 +1,39 @@
+# Release 0.10.0 — candidate on branch `release-0.10.0` (active)
+
+Kyle approved on 2026-09-20: cold review of PR #11, fixes, archive build and
+consumer test, then version bump and release notes as a reviewed branch. Not yet
+authorized: merging this branch, the `v0.10.0` tag, asset upload, and the
+GitHub release; each awaits his explicit go.
+
+- [x] Cold review of PR #11 (`git diff 9069d11..f6fc441`) by a fresh agent in
+  the Racket CS 9.3 container: no must-fix. Two should-fix, both addressed here:
+  the API sentence on where a `simple` conflict is reported (definitions are
+  solved before top-level expressions, so the later-checked use is flagged; a
+  test now pins the reviewer's counterexample) and a missing language-level
+  runtime test for `list-case` (four checks added to `tests/language-test.rkt`,
+  including that a callback Error propagates without a `list-case` frame).
+  Notes also addressed: the misuse message names `--check=SYSTEM`; the API
+  documents that letters restart per signature under `simple`. Notes left as
+  is: `check-system` is evaluated twice in the launcher (pure, cosmetic; the
+  runner allowlist is not worth widening); `hash-values` in the
+  `static-inference` allowlist is unused and predates this work.
+- [x] Candidate archive built from a clean clone of `main` `4eddf4a` in the
+  container (`attalambda-0.9.0-linux-x86_64.tar.gz`, SHA-256
+  `d7400d50e9f2fde6807d7e9f83090499c89660a21c4526539809150b0a93afbc`,
+  19,895,124 bytes) and the isolated consumer test passed on the host
+  (`consumer_acceptance=passed`, `static_checking_acceptance=passed-at-both-paths`).
+  This validated the changed build and consumer scripts; the archive Kyle
+  publishes must be rebuilt from the merged 0.10.0 source.
+- [x] Version plumbing: `VERSION` 0.10.0, `info.rkt` "0.10", the three build
+  scripts and two consumer scripts, the boundary table, the pinned test
+  literals, the ledger row, the getting-started template, README.
+- [x] `docs/releases/0.10.0.md` drafted with a pending publication paragraph.
+- [x] `./run-all-tests.sh` on the branch's final source: all 106 test files,
+  purity and boundary checks passed, 1592 s. HANDOFF.md names the candidate
+  and the steps that await Kyle. PR opened from `release-0.10.0`.
+
+---
+
 # `list-case` and a selectable static checker — merged to main via PR #11 on 2026-09-19 (historical)
 
 Kyle assigned the comparable-checkers specification (kept outside the
