@@ -118,16 +118,33 @@ static checking`, pushed.
 
 ## Phase 4 — the `simple` system
 
-- [ ] 4.1 Probe P1: shared solver state across two `infer-expression` calls.
-- [ ] 4.2 Shared state threading under `simple`; new
-  `tests/static-simple-system-test.rkt`: E3 conflict at line 4, `identity`
-  still established.
-- [ ] 4.3 Final-state signatures: `Rat -> Rat` after E3, `a -> a` alone.
-- [ ] 4.4 Semantics: monomorphic `let`; polymorphic built-ins; `rec` (E1);
-  partial stays partial (E2); data restriction; independent definitions
-  survive a conflict; `hm` contrast asserted alongside.
+- [x] 4.1 Probe P1 passed (scratch `racket` script in the container): with a
+  monomorphic `identity` in the environment, `(identity 1)` established `Rat`
+  and `(identity "text")` started from the returned state reported one
+  `TYPE_CONFLICT` at line 4; the failed equation left the state unchanged and
+  the signature under the final state read `Rat -> Rat`. No adaptation needed.
+- [x] 4.2 `analyze-view` keeps one `running` solution when the system does
+  not generalize: each `infer-binding` and each top-level `infer-expression`
+  starts from it (`#:initial`) and advances it; under `hm` every top-level
+  inference still starts from `empty-solution`. `tests/static-simple-system-test.rkt`:
+  E3 yields `conflict` with exactly one `TYPE_CONFLICT` at line 4, verdict
+  `fail`, `Definitions 1/1`, `identity` established.
+- [x] 4.3 Under `simple` a final pass applies the running state to every
+  definition signature, top-level judgment and registered node; `coverage.rkt`
+  accepts the result. Tests: `Rat -> Rat` after E3, `a -> a` for the lone
+  definition, `Bool -> Bool` when a later definition fixes it, and a failed
+  use followed by an agreeing use leaves the agreeing use established.
+- [x] 4.4 Same test file: the shared `let` conflicts under `simple` and
+  establishes under `hm`; `cons`/`NIL`/`if` stay polymorphic under both (two
+  element types in one file, `List(Rat)` and `List(String)` signatures); E1
+  establishes `List(Rat) -> Rat` under both; E2 stays unproved with only
+  `UNREPRESENTED_ERROR_ALTERNATIVE` and no signature; the raw-function element
+  stays `UNSUPPORTED_DATA_DOMAIN`; `double` beside E3 stays established with
+  `Rat -> Rat` while the file fails. Gate reported eight new identifiers in
+  `analysis.rkt`; the `static-analysis` rule was extended by exactly those.
 
-Checkpoint 4: commit `Add the simple monomorphic-definitions system`, push.
+Checkpoint 4: all `tests/static-*-test.rkt` (138 tests) and both gates pass.
+Committed `Add the simple monomorphic-definitions system`, pushed.
 
 ## Phase 5 — launcher, help, reference docs
 

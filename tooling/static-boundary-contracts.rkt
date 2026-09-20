@@ -1316,7 +1316,15 @@
       generalize?
       hm-system
       system
-      type-system-generalize?))
+      type-system-generalize?
+      running
+      empty-solution
+      initial-state
+      advance!
+      finalize-judgment
+      finalize-definition
+      definition-result-signature
+      apply-scheme))
     (static-coverage
      "runner/static/coverage.rkt"
      ((require racket/list
